@@ -1,0 +1,210 @@
+XCOMM $XFree86: xc/Imakefile,v 3.37 2007/03/04 16:33:30 tsi Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags CDEBUGFLAGS="$(CDEBUGFLAGS)"
+
+#ifdef XFree86VersionString
+#ifndef XFree86CustomVersion
+VERSTRING = " "version XFree86VersionString "("XFree86DateString")"
+#else
+VERSTRING = " "version XFree86VersionString "("XFree86DateString") ("XFree86CustomVersion")"
+#endif
+#endif
+
+#ifndef OSName
+#define OSName Unknown Operating System!
+#endif
+
+#if BuildFonts
+        FONTSDIR = fonts
+#endif
+#ifndef Win32Architecture
+#if BuildDocs
+        DOCSDIR = doc
+#endif
+#if BuildNLS
+        NLSSUBDIR = nls
+#endif
+#endif
+
+#if UseMemLeak || UseStackTrace
+        MEMLEAKDIR = util/memleak
+#endif
+
+        SUBDIRS = include config lib $(NLSSUBDIR) $(MEMLEAKDIR) \
+                  programs $(FONTSDIR) $(DOCSDIR)
+  LNINSTALLDIRS = lib
+
+#if HasParallelMake
+#ifdef ParallelDefines
+        TOPPARALLELMFLAGS = TopParallelDefines
+#endif
+#endif
+
+MakeSubdirs($(SUBDIRS))
+
+MakeLintSubdirs($(LNINSTALLDIRS),install.ln,install.ln)
+
+MakeLintSubdirs($(LNINSTALLDIRS),external.ln,lintlib)
+
+DependSubdirs($(SUBDIRS))
+
+#define IHaveSpecialMakefileTarget
+
+#ifndef Win32Architecture
+#ifdef XFree86VersionString
+VerifyOS::
+	@echo ""
+	@echo Building XFree86$(VERSTRING).
+#endif
+#ifdef OSRelVersion
+VerifyOS::
+	@echo ""
+	@echo Building on OSName "("OSMajorVersion"."OSMinorVersion"."OSTeenyVersion") ("OSRelVersion")"
+	@echo ""
+#else
+VerifyOS::
+	@echo ""
+	@echo Building on OSName "("OSMajorVersion"."OSMinorVersion"."OSTeenyVersion")"
+	@echo ""
+#endif
+#ifdef LinuxArchitecture
+VerifyOS::
+	@echo Linux Distribution: LinuxDistName
+	@echo libc version: LinuxCLibMajorVersion"."LinuxCLibMinorVersion"."LinuxCLibTeenyVersion
+	@echo binutils version: `expr LinuxBinUtilsMajorVersion / 10`.`expr LinuxBinUtilsMajorVersion % 10`
+	@echo ""
+#endif
+#if defined(GccMajorVersion) && defined(GccMinorVersion)
+VerifyOS::
+	@echo GCC version: GccMajorVersion"."GccMinorVersion
+	@echo ""
+#endif
+
+#ifdef XFree86Version
+#ifndef OS2Architecture
+version.def::
+	$(RM) $(IRULESRC)/version.def
+	$(RM) $(IRULESRC)/date.def
+	$(LN) ../../$(XF86SRC)/xf86Version.h $(IRULESRC)/version.def
+	$(LN) ../../$(XF86SRC)/xf86Date.h $(IRULESRC)/date.def
+#else /*OS2Architecture*/
+version.def::
+	$(RM) $(IRULESRC)/version.def
+	$(RM) $(IRULESRC)/date.def
+	$(CP) $(XF86SRC)/xf86Version.h $(IRULESRC)/version.def
+	$(CP) $(XF86SRC)/xf86Date.h $(IRULESRC)/date.def
+#endif
+#else
+version.def::
+#endif
+
+includes::
+	MakeDir($(BUILDINCDIR))
+	MakeDir($(BUILDLIBDIR))
+	MakeDir($(BUILDBINDIR))
+
+XCOMM
+XCOMM Watch out!!!  Make sure you do make includes after removing X11....
+XCOMM
+clean::
+	$(RM) -r $(BUILDINCDIR)
+	$(RM) -r $(BUILDLIBDIR)
+	$(RM) -r $(BUILDBINDIR)
+
+      MAKE_OPTS = -f xmakefile
+
+World::
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) $(TOPPARALLELMFLAGS) all
+
+Everything::
+	@echo ""
+	@echo Rebuilding XFree86$(VERSTRING).
+	@echo ""
+	@date
+	@echo ""
+	cd $(IMAKESRC) && if [ -f Makefile ]; then \
+	    $(MAKE) $(PASSMFLAGS) BOOTSTRAPCFLAGS="$(BOOTSTRAPCFLAGS)"; \
+	else \
+	    $(MAKE) $(PASSMFLAGS) -f Makefile.ini BOOTSTRAPCFLAGS="$(BOOTSTRAPCFLAGS)"; \
+	fi
+	-$(RM) xmakefile.bak; $(MV) xmakefile xmakefile.bak
+	$(MAKE) $(PASSMFLAGS) xmakefile
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) Makefiles
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) includes
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) depend
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) $(WORLDOPTS)
+	@echo ""
+	@date
+	@echo ""
+	@echo Rebuild of XFree86$(VERSTRING) complete.
+	@echo ""
+
+XCOMM clean out link tree looking for stuff that should get checked in
+dangerous_strip_clean::
+	$(MAKE) -k distclean
+	find . -type l -exec rm {} \;
+	find . \( \! -type d \) -print
+
+#else /* not Win32Architecture else */
+VerifyOS::
+	@echo :
+	@echo Building on OSName.
+	@echo :
+
+includes::
+	MakeDir($(BUILDINCDIR:/=\))
+
+XCOMM
+XCOMM Watch out!!!  Make sure you do make includes after removing X11....
+XCOMM
+clean::
+	RmTreeCmd $(BUILDINCDIR:/=\)
+	RmTreeCmd $(BUILDLIBDIR:/=\)
+
+Everything::
+	@echo :
+	@echo Rebuilding XFree86$(VERSTRING).
+	@echo :
+	@echo :
+	cd $(IMAKESRC)
+	$(MAKE) $(PASSMFLAGS) -f Makefile.ini imake.exe
+	cd ..\..
+	RMoveToBakFile(xmakefile)
+	$(MAKE) $(PASSMFLAGS) xmakefile
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) Makefiles
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) includes
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) depend
+	$(MAKE) $(PASSMFLAGS) $(MAKE_OPTS) $(WORLDOPTS)
+	@echo :
+	@echo :
+	@echo Rebuild of XFree86$(VERSTRING) complete.
+	@echo :
+
+#ifdef ProjectRoot
+install::
+	MakeDir($(PROJECTROOT:/=\))
+#endif
+
+install::
+	MakeDir($(INCROOT:/=\))
+	MakeDir($(USRLIBDIR:/=\))
+	MakeDir($(LIBDIR:/=\))
+
+#endif /* not Win32Architecture else */
+
+XCOMM special target to determine if the xmakefile exists. 
+XCOMM Works on both Unix and NMAKE.EXE
+xmakefile-exists::
+
+#ifndef MakeManKeywords
+#define MakeManKeywords YES	/* install.man rebuilds "man -k" database? */
+#endif
+
+#ifndef MakeHtmlManIndex
+#define MakeHtmlManIndex YES	/* install.man generates HTML man page index */
+#endif
+
+#undef BootstrapCleanSubdirs
+#define BootstrapCleanSubdirs BOOTSTRAPSUBDIRS="$(BOOTSTRAPSUBDIRS)"
+BOOTSTRAPSUBDIRS = imake makedepend

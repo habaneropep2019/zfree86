@@ -1,0 +1,645 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>The XFree86 X Video Extension (Xv) Device Dependent Layer </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN15.html"><EM>DGA Extension </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN17.html"><EM>The Loader </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="64"></A>16. The XFree86 X Video Extension (Xv) Device Dependent Layer </H2>
+
+<p>XFree86 offers the X Video Extension which allows clients to treat video
+as any another primitive and ``Put'' video into drawables.  By default,
+the extension reports no video adaptors as being available since the
+DDX layer has not been initialized.  The driver can initialize the DDX
+layer by filling out one or more <code>XF86VideoAdaptorRecs</code>
+as described later in this document and passing a list of
+<code>XF86VideoAdaptorPtr</code> pointers to the following function:</p>
+<p>
+<blockquote>
+<code>Bool xf86XVScreenInit(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ScreenPtr pScreen,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XF86VideoAdaptorPtr *adaptPtrs,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int num)</code>
+</blockquote>
+</p>
+<p>After doing this, the extension will report video adaptors as being
+available, providing the data in their respective
+<code>XF86VideoAdaptorRecs</code> was valid.
+<code>xf86XVScreenInit()</code> <em>copies</em> data from the structure
+passed to it so the driver may free it after the initialization.  At
+the moment, the DDX only supports rendering into Window drawables.
+Pixmap rendering will be supported after a sufficient survey of suitable
+hardware is completed.</p>
+<p>The <code>XF86VideoAdaptorRec</code>:</p>
+<p>
+<blockquote>
+<p>
+<pre>
+typedef struct {
+	unsigned int type;
+	int flags;
+	char *name;
+	int nEncodings;
+	XF86VideoEncodingPtr pEncodings;
+	int nFormats;
+	XF86VideoFormatPtr pFormats;
+	int nPorts;
+	DevUnion *pPortPrivates;
+	int nAttributes;
+	XF86AttributePtr pAttributes;
+	int nImages;
+	XF86ImagePtr pImages;
+	PutVideoFuncPtr PutVideo;
+	PutStillFuncPtr PutStill;
+	GetVideoFuncPtr GetVideo;
+	GetStillFuncPtr GetStill;
+	StopVideoFuncPtr StopVideo;
+	SetPortAttributeFuncPtr SetPortAttribute;
+	GetPortAttributeFuncPtr GetPortAttribute;
+	QueryBestSizeFuncPtr QueryBestSize;
+	PutImageFuncPtr PutImage;
+	QueryImageAttributesFuncPtr QueryImageAttributes;
+} XF86VideoAdaptorRec, *XF86VideoAdaptorPtr;
+</pre>
+</p>
+<p>Each adaptor will have its own XF86VideoAdaptorRec.  The fields are
+as follows:</p>
+<p><code>type</code>
+<blockquote>
+<p>This can be any of the following flags OR'd together.</p>
+<p><code>XvInputMask</code>
+<code>XvOutputMask</code>
+<blockquote>
+<p>These refer to the target drawable and are similar to a Window's
+class. <code>XvInputMask</code> indicates that the adaptor
+can put video into a drawable.  <code>XvOutputMask</code>
+indicates that the adaptor can get video from a drawable.</p>
+</blockquote>
+</p>
+<p><code>XvVideoMask</code>
+<code>XvStillMask</code>
+<code>XvImageMask</code>
+<blockquote>
+<p>These indicate that the adaptor supports video, still or
+image primitives respectively.</p>
+</blockquote>
+</p>
+<p><code>XvWindowMask</code>
+<code>XvPixmapMask</code>
+<blockquote>
+<p>These indicate the types of drawables the adaptor is capable
+of rendering into.  At the moment, Pixmap rendering is not
+supported and the <code>XvPixmapMask</code> flag is ignored.</p>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>flags</code>
+<blockquote>
+<p>Currently, the following flags are defined:</p>
+<p><code>VIDEO_NO_CLIPPING</code>
+<blockquote>
+<p>This indicates that the video adaptor does not support
+clipping.  The driver will never receive ``Put'' requests
+where less than the entire area determined by
+<code>drw_x</code>, <code>drw_y</code>,
+<code>drw_w</code> and <code>drw_h</code> is visible.
+This flag does not apply to ``Get'' requests.  Hardware
+that is incapable of clipping ``Gets'' may punt or get
+the extents of the clipping region passed to it.</p>
+
+</blockquote>
+</p>
+<p><code>VIDEO_INVERT_CLIPLIST</code>
+<blockquote>
+<p>This indicates that the video driver requires the clip
+list to contain the regions which are obscured rather
+than the regions which are are visible.</p>
+
+</blockquote>
+</p>
+<p><code>VIDEO_OVERLAID_STILLS</code>
+<blockquote>
+<p>Implementing PutStill for hardware that does video as an
+overlay can be awkward since it's unclear how long to leave
+the video up for.  When this flag is set, StopVideo will be
+called whenever the destination gets clipped or moved so that
+the still can be left up until then.</p>
+
+</blockquote>
+</p>
+<p><code>VIDEO_OVERLAID_IMAGES</code>
+<blockquote>
+<p>Same as <code>VIDEO_OVERLAID_STILLS</code> but for images.</p>
+</blockquote>
+</p>
+<p><code>VIDEO_CLIP_TO_VIEWPORT</code>
+<blockquote>
+<p>Indicates that the clip region passed to the driver functions
+should be clipped to the visible portion of the screen in the
+case where the viewport is smaller than the virtual desktop.</p>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>name</code>
+<blockquote>
+<p>The name of the adaptor.</p>
+
+</blockquote>
+</p>
+<p><code>nEncodings<br>
+pEncodings</code>
+<blockquote>
+<p>The number of encodings the adaptor is capable of and pointer
+to the <code>XF86VideoEncodingRec</code> array.  The
+<code>XF86VideoEncodingRec</code> is described later on.
+For drivers that only support XvImages there should be an encoding
+named "XV_IMAGE" and the width and height should specify
+the maximum size source image supported.</p>
+
+</blockquote>
+</p>
+<p><code>nFormats<br>
+pFormats</code>
+<blockquote>
+<p>The number of formats the adaptor is capable of and pointer to
+the <code>XF86VideoFormatRec</code> array.  The
+<code>XF86VideoFormatRec</code> is described later on.</p>
+
+</blockquote>
+</p>
+<p><code>nPorts<br>
+pPortPrivates</code>
+<blockquote>
+<p>The number of ports is the number of separate data streams which
+the adaptor can handle simultaneously.  If you have more than
+one port, the adaptor is expected to be able to render into more
+than one window at a time.  <code>pPortPrivates</code> is
+an array of pointers or ints - one for each port.  A port's
+private data will be passed to the driver any time the port is
+requested to do something like put the video or stop the video.
+In the case where there may be many ports, this enables the
+driver to know which port the request is intended for.  Most
+commonly, this will contain a pointer to the data structure
+containing information about the port.  In Xv, all ports on
+a particular adaptor are expected to be identical in their
+functionality.</p>
+
+</blockquote>
+</p>
+<p><code>nAttributes<br>
+pAttributes</code>
+<blockquote>
+<p>The number of attributes recognized by the adaptor and a pointer to
+the array of <code>XF86AttributeRecs</code>.  The
+<code>XF86AttributeRec</code> is described later on.</p>
+
+</blockquote>
+</p>
+<p><code>nImages<br>
+pImages</code>
+<blockquote>
+<p>The number of <code>XF86ImageRecs</code> supported by the adaptor
+and a pointer to the array of <code>XF86ImageRecs</code>. The
+<code>XF86ImageRec</code> is described later on.</p>
+
+</blockquote>
+</p>
+
+<p><code>PutVideo PutStill GetVideo GetStill StopVideo
+SetPortAttribute GetPortAttribute QueryBestSize PutImage
+QueryImageAttributes</code>
+<blockquote>
+<p>These functions define the DDX-&gt;driver interface.  In each
+case, the pointer <code>data</code> is passed to the driver.
+This is the port private for that port as described above.  All
+fields are required except under the following conditions:</p>
+<p>
+<ol>
+<li><code>PutVideo</code>, <code>PutStill</code> and
+the image routines <code>PutImage</code> and
+<code>QueryImageAttributes</code> are not required when the
+adaptor type does not contain <code>XvInputMask</code>.
+</li>
+<li><code>GetVideo</code> and <code>GetStill</code>
+are not required when the adaptor type does not contain
+<code>XvOutputMask</code>.
+</li>
+<li><code>GetVideo</code> and <code>PutVideo</code>
+are not required when the adaptor type does not contain
+<code>XvVideoMask</code>.
+</li>
+<li><code>GetStill</code> and <code>PutStill</code>
+are not required when the adaptor type does not contain
+<code>XvStillMask</code>.
+</li>
+<li><code>PutImage</code> and <code>QueryImageAttributes</code>
+are not required when the adaptor type does not contain
+<code>XvImageMask</code>.
+</li>
+</ol>
+</p>
+<p>With the exception of <code>QueryImageAttributes</code>, these
+functions should return <code>Success</code> if the operation was
+completed successfully.  They can return <code>XvBadAlloc</code>
+otherwise. <code>QueryImageAttributes</code> returns the size
+of the XvImage queried.</p>
+<p>If the <code>VIDEO_NO_CLIPPING</code>
+flag is set, the <code>clipBoxes</code> may be ignored by
+the driver.  <code>ClipBoxes</code> is an <code>X-Y</code>
+banded region identical to those used throughout the server.
+The clipBoxes represent the visible portions of the area determined
+by <code>drw_x</code>, <code>drw_y</code>,
+<code>drw_w</code> and <code>drw_h</code> in the Get/Put
+function.  The boxes are in screen coordinates, are guaranteed
+not to overlap and an empty region will never be passed.
+If the driver has specified <code>VIDEO_INVERT_CLIPLIST</code>,
+<code>clipBoxes</code> will indicate the areas of the primitive
+which are obscured rather than the areas visible.</p>
+
+</blockquote>
+</p>
+<p><code>typedef  int (* PutVideoFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_x, short vid_y, short drw_x, short drw_y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_w, short vid_h, short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RegionPtr clipBoxes, pointer data )</code>
+<blockquote>
+<p>This indicates that the driver should take a subsection
+<code>vid_w</code> by <code>vid_h</code> at location
+<code>(vid_x,vid_y)</code> from the video stream and direct
+it into the rectangle <code>drw_w</code> by <code>drw_h</code>
+at location <code>(drw_x,drw_y)</code> on the screen, scaling as
+necessary.  Due to the large variations in capabilities of
+the various hardware expected to be used with this extension,
+it is not expected that all hardware will be able to do this
+exactly as described.  In that case the driver should just do
+``the best it can,'' scaling as closely to the target rectangle
+as it can without rendering outside of it.  In the worst case,
+the driver can opt to just not turn on the video.</p>
+
+</blockquote>
+</p>
+<p><code>typedef  int (* PutStillFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_x, short vid_y, short drw_x, short drw_y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_w, short vid_h, short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RegionPtr clipBoxes, pointer data )</code>
+<blockquote>
+<p>This is same as <code>PutVideo</code> except that the driver
+should place only one frame from the stream on the screen.</p>
+
+</blockquote>
+</p>
+<p><code>typedef int (* GetVideoFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_x, short vid_y, short drw_x, short drw_y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_w, short vid_h, short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RegionPtr clipBoxes, pointer data )</code>
+<blockquote>
+<p>This is same as <code>PutVideo</code> except that the driver
+gets video from the screen and outputs it.  The driver should
+do the best it can to get the requested dimensions correct
+without reading from an area larger than requested.</p>
+
+</blockquote>
+</p>
+<p><code>typedef int (* GetStillFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_x, short vid_y, short drw_x, short drw_y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short vid_w, short vid_h, short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RegionPtr clipBoxes, pointer data )</code>
+<blockquote>
+<p>This is the same as <code>GetVideo</code> except that the
+driver should place only one frame from the screen into the
+output stream.</p>
+
+</blockquote>
+</p>
+<p><code>typedef void (* StopVideoFuncPtr)(ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pointer data, Bool cleanup)</code>
+<blockquote>
+<p>This indicates the driver should stop displaying the video.
+This is used to stop both input and output video.  The
+<code>cleanup</code> field indicates that the video is
+being stopped because the client requested it to stop or
+because the server is exiting the current VT.  In that case
+the driver should deallocate any offscreen memory areas (if
+there are any) being used to put the video to the screen.  If
+<code>cleanup</code> is not set, the video is being stopped
+temporarily due to clipping or moving of the window, etc...
+and video will likely be restarted soon so the driver should
+not deallocate any offscreen areas associated with that port.</p>
+
+</blockquote>
+
+<code>typedef int (* SetPortAttributeFuncPtr)(ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atom attribute,INT32 value, pointer data)</code></p>
+<p><code>typedef int (* GetPortAttributeFuncPtr)(ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atom attribute,INT32 *value, pointer data)</code></p>
+<p>
+<blockquote>
+<p>A port may have particular attributes such as hue,
+saturation, brightness or contrast.  Xv clients set and
+get these attribute values by sending attribute strings
+(Atoms) to the server.  Such requests end up at these
+driver functions.  It is recommended that the driver provide
+at least the following attributes mentioned in the Xv client
+library docs:
+<blockquote>
+<code>XV_ENCODING<br>
+XV_HUE<br>
+XV_SATURATION<br>
+XV_BRIGHTNESS<br>
+XV_CONTRAST</code>
+</blockquote>
+
+but the driver may recognize as many atoms as it wishes.  If
+a requested attribute is unknown by the driver it should return
+<code>BadMatch</code>.  <code>XV_ENCODING</code> is the
+attribute intended to let the client specify which video
+encoding the particular port should be using (see the description
+of <code>XF86VideoEncodingRec</code> below).  If the
+requested encoding is unsupported, the driver should return
+<code>XvBadEncoding</code>.  If the value lies outside the
+advertised range <code>BadValue</code> may be returned.
+<code>Success</code> should be returned otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>typedef void (* QueryBestSizeFuncPtr)(ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bool motion, short vid_w, short vid_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unsigned int *p_w, unsigned int *p_h, pointer data)</code>
+<blockquote>
+<p><code>QueryBestSize</code> provides the client with a way
+to query what the destination dimensions would end up being
+if they were to request that an area
+<code>vid_w</code> by <code>vid_h</code> from the video
+stream be scaled to rectangle of
+<code>drw_w</code> by <code>drw_h</code> on the screen.
+Since it is not expected that all hardware will be able to
+get the target dimensions exactly, it is important that the
+driver provide this function.</p>
+
+</blockquote>
+</p>
+<p><code>typedef  int (* PutImageFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short src_x, short src_y, short drw_x, short drw_y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;short src_w, short src_h, short drw_w, short drw_h,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int image, char *buf, short width, short height,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bool sync, RegionPtr clipBoxes, pointer data )</code>
+<blockquote>
+<p>This is similar to <code>PutStill</code> except that the
+source of the video is not a port but the data stored in a system
+memory buffer at <code>buf</code>.  The data is in the format
+indicated by the <code>image</code> descriptor and represents a
+source of size <code>width</code> by <code>height</code>.
+If <code>sync</code> is TRUE the driver should not return
+from this function until it is through reading the data
+from <code>buf</code>.  Returning when <code>sync</code>
+is TRUE indicates that it is safe for the data at <code>buf</code>
+to be replaced, freed, or modified.</p>
+
+</blockquote>
+</p>
+<p><code>typedef  int (* QueryImageAttributesFuncPtr)( ScrnInfoPtr pScrn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int image, short *width, short *height,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *pitches, int *offsets)</code>
+<blockquote>
+<p>This function is called to let the driver specify how data for
+a particular <code>image</code> of size <code>width</code>
+by <code>height</code> should be stored.  Sometimes only
+the size and corrected width and height are needed.  In that
+case <code>pitches</code> and <code>offsets</code> are
+NULL.  The size of the memory required for the image is returned
+by this function.  The <code>width</code> and
+<code>height</code> of the requested image can be altered by
+the driver to reflect format limitations (such as component
+sampling periods that are larger than one).  If
+<code>pitches</code> and <code>offsets</code> are not NULL,
+these will be arrays with as many elements in them as there
+are planes in the <code>image</code> format.  The driver
+should specify the pitch (in bytes) of each scanline in the
+particular plane as well as the offset to that plane (in bytes)
+from the beginning of the image.</p>
+
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p>The XF86VideoEncodingRec:
+<blockquote>
+<p>
+<pre>
+typedef struct {
+	int id;
+	char *name;
+	unsigned short width, height;
+	XvRationalRec rate;
+} XF86VideoEncodingRec, *XF86VideoEncodingPtr;
+</pre>
+
+The <code>XF86VideoEncodingRec</code> specifies what encodings
+the adaptor can support.  Most of this data is just informational
+and for the client's benefit, and is what will be reported by
+<code>XvQueryEncodings</code>.  The <code>id</code> field is
+expected to be a unique identifier to allow the client to request a
+certain encoding via the <code>XV_ENCODING</code> attribute string.</p>
+
+</blockquote>
+</p>
+<p>The XF86VideoFormatRec:</p>
+<p>
+<blockquote>
+<p>
+<pre>
+typedef struct {
+	char  depth;
+	short class;
+} XF86VideoFormatRec, *XF86VideoFormatPtr;
+</pre>
+</p>
+<p>This specifies what visuals the video is viewable in.
+<code>depth</code> is the depth of the visual (not bpp).
+<code>class</code> is the visual class such as
+<code>TrueColor</code>, <code>DirectColor</code> or
+<code>PseudoColor</code>.  Initialization of an adaptor will fail
+if none of the visuals on that screen are supported.</p>
+
+</blockquote>
+</p>
+<p>The XF86AttributeRec:</p>
+<p>
+<blockquote>
+<p>
+<pre>
+typedef struct {
+	int   flags;
+	int   min_value;
+	int   max_value;
+	char  *name;
+} XF86AttributeListRec, *XF86AttributeListPtr;
+</pre>
+</p>
+<p>Each adaptor may have an array of these advertising the attributes
+for its ports.  Currently defined flags are <code>XvGettable</code>
+and <code>XvSettable</code> which may be OR'd together indicating that
+attribute is ``gettable'' or ``settable'' by the client.  The
+<code>min</code> and <code>max</code> field specify the valid range
+for the value.  <code>Name</code> is a text string describing the
+attribute by name.</p>
+
+</blockquote>
+</p>
+<p>The XF86ImageRec:</p>
+<p>
+<blockquote>
+<p>
+<pre>
+typedef struct {
+	int id;
+	int type;
+	int byte_order;
+	char guid[16];
+	int bits_per_pixel;
+	int format;
+	int num_planes;
+
+	/* for RGB formats */
+	int depth;
+	unsigned int red_mask;
+	unsigned int green_mask;
+	unsigned int blue_mask;
+
+	/* for YUV formats */
+	unsigned int y_sample_bits;
+	unsigned int u_sample_bits;
+	unsigned int v_sample_bits;
+	unsigned int horz_y_period;
+	unsigned int horz_u_period;
+	unsigned int horz_v_period;
+	unsigned int vert_y_period;
+	unsigned int vert_u_period;
+	unsigned int vert_v_period;
+	char component_order[32];
+	int scanline_order;
+} XF86ImageRec, *XF86ImagePtr;
+</pre>
+</p>
+<p>XF86ImageRec describes how video source data is laid out in memory.
+The fields are as follows:</p>
+<p><code>id</code>
+<blockquote>
+<p>This is a unique descriptor for the format.  It is often good to
+set this value to the FOURCC for the format when applicable.</p>
+</blockquote>
+</p>
+<p><code>type</code>
+<blockquote>
+<p>This is <code>XvRGB</code> or <code>XvYUV</code>.</p>
+</blockquote>
+</p>
+<p><code>byte_order</code>
+<blockquote>
+<p>This is <code>LSBFirst</code> or <code>MSBFirst</code>.</p>
+</blockquote>
+</p>
+<p><code>guid</code>
+<blockquote>
+<p>This is the Globally Unique IDentifier for the format.  When
+not applicable, all characters should be NULL.</p>
+</blockquote>
+</p>
+<p><code>bits_per_pixel</code>
+<blockquote>
+<p>The number of bits taken up (but not necessarily used) by each
+pixel.  Note that for some planar formats which have fractional
+bits per pixel (such as IF09) this number may be rounded _down_.</p>
+</blockquote>
+</p>
+<p><code>format</code>
+<blockquote>
+<p>This is <code>XvPlanar</code> or <code>XvPacked</code>.</p>
+</blockquote>
+</p>
+<p><code>num_planes</code>
+<blockquote>
+<p>The number of planes in planar formats.  This should be set to
+one for packed formats.</p>
+</blockquote>
+</p>
+<p><code>depth</code>
+<blockquote>
+<p>The significant bits per pixel in RGB formats (analgous to the
+depth of a pixmap format).</p>
+</blockquote>
+</p>
+<p><code>red_mask</code>
+<code>green_mask</code>
+<code>blue_mask</code>
+<blockquote>
+<p>The red, green and blue bitmasks for packed RGB formats.</p>
+</blockquote>
+</p>
+<p><code>y_sample_bits</code>
+<code>u_sample_bits</code>
+<code>v_sample_bits</code>
+<blockquote>
+<p>The y, u and v sample sizes (in bits).</p>
+</blockquote>
+</p>
+<p><code>horz_y_period</code>
+<code>horz_u_period</code>
+<code>horz_v_period</code>
+<blockquote>
+<p>The y, u and v sampling periods in the horizontal direction.</p>
+</blockquote>
+</p>
+<p><code>vert_y_period</code>
+<code>vert_u_period</code>
+<code>vert_v_period</code>
+<blockquote>
+<p>The y, u and v sampling periods in the vertical direction.</p>
+</blockquote>
+</p>
+<p><code>component_order</code>
+<blockquote>
+<p>Uppercase ascii characters representing the order that
+samples are stored within packed formats.  For planar formats
+this represents the ordering of the planes.  Unused characters
+in the 32 byte string should be set to NULL.</p>
+</blockquote>
+</p>
+<p><code>scanline_order</code>
+<blockquote>
+<p>This is <code>XvTopToBottom</code> or <code>XvBottomToTop</code>.</p>
+</blockquote>
+</p>
+<p>Since some formats (particular some planar YUV formats) may not
+be completely defined by the parameters above, the guid, when
+available, should provide the most accurate description of the
+format.</p>
+
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN15.html"><EM>DGA Extension </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN17.html"><EM>The Loader </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728765" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

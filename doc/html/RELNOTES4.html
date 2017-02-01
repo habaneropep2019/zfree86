@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Drivers</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="RELNOTES.html"><EM>Release Notes for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Drivers</EM><BR>
+<b>Previous:</b> <A HREF="RELNOTES3.html"><EM>Summary of new features in 4.8.0. </EM></A><BR>
+<b>Next:</b> <A HREF="RELNOTES5.html"><EM>Known Problems </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="20"></A>4. Drivers<A NAME="drivertables"></A> 
+</H2>
+
+
+<H3><A NAME="21"></A>4.1. Video Drivers </H3>
+
+<p>XFree86 4.8.0 includes the following video drivers:</p>
+<p>
+<TABLE border=1   align="CENTER"  >
+<br>
+<tr><td>Driver Name</td><td>Description</td><td>Further Information</td></tr>
+<tr><td><code>apm</code></td><td>Alliance Pro Motion</td><td><A href="apm.html">README.apm</A></td></tr>
+<tr><td><code>ark</code></td><td>Ark Logic</td><td>&nbsp;</td></tr>
+<tr><td><code>aspeed</code></td><td>ASPEED Technology</td><td>&nbsp;</td></tr>
+<tr><td><code>ati</code></td><td>ATI</td><td><A href="ati.html">README.ati</A>, <A href="r128.html">README.r128</A>,</td></tr>
+<tr><td><code>&nbsp;</code></td><td>&nbsp;</td><td><A href="r128.4.html">r128(4)</A>, <A href="radeon.4.html">radeon(4)</A></td></tr>
+<tr><td><code>chips</code></td><td>Chips &amp; Technologies</td><td><A href="chips.html">README.chips</A>, <A href="chips.4.html">chips(4)</A></td></tr>
+<tr><td><code>cirrus</code></td><td>Cirrus Logic</td><td>&nbsp;</td></tr>
+<tr><td><code>cyrix</code> (*)</td><td>Cyrix MediaGX</td><td><A href="cyrix.html">README.cyrix</A></td></tr>
+<tr><td><code>fbdev</code></td><td>Linux framebuffer device</td><td><A href="fbdev.4.html">fbdev(4)</A></td></tr>
+<tr><td><code>glide</code></td><td>Glide2x (3Dfx)</td><td><A href="glide.4.html">glide(4)</A></td></tr>
+<tr><td><code>glint</code></td><td>3Dlabs, TI</td><td><A href="glint.4.html">glint(4)</A></td></tr>
+<tr><td><code>i128</code></td><td>Number Nine</td><td><A href="I128.html">README.I128</A>, <A href="i128.4.html">i128(4)</A></td></tr>
+<tr><td><code>i740</code></td><td>Intel i740</td><td><A href="i740.html">README.i740</A></td></tr>
+<tr><td><code>i810</code></td><td>Intel i8xx</td><td><A href="i810.html">README.i810</A>, <A href="i810.4.html">i810(4)</A></td></tr>
+<tr><td><code>imstt</code></td><td>Integrated Micro Solns</td><td>&nbsp;</td></tr>
+<tr><td><code>mga</code></td><td>Matrox</td><td><A href="mga.4.html">mga(4)</A></td></tr>
+<tr><td><code>neomagic</code></td><td>NeoMagic</td><td><A href="neomagic.4.html">neomagic(4)</A></td></tr>
+<tr><td><code>newport</code> (-)</td><td>SGI Newport</td><td><A href="newport.html">README.newport</A>, <A href="newport.4.html">newport(4)</A></td></tr>
+<tr><td><code>nsc</code></td><td>National Semiconductor</td><td><A href="nsc.4.html">nsc(4)</A></td></tr>
+<tr><td><code>nv</code></td><td>NVIDIA</td><td><A href="nv.4.html">nv(4)</A></td></tr>
+<tr><td><code>pnozz</code> (+)</td><td>Weitek P9100</td><td><A href="pnozz.4.html">pnozz(4)</A></td></tr>
+<tr><td><code>rendition</code></td><td>Rendition</td><td><A href="rendition.html">README.rendition</A>, <A href="rendition.4.html">rendition(4)</A></td></tr>
+<tr><td><code>s3</code></td><td>S3 (not ViRGE or Savage)</td><td>&nbsp;</td></tr>
+<tr><td><code>s3virge</code></td><td>S3 ViRGE</td><td><A href="s3virge.html">README.s3virge</A>, <A href="s3virge.4.html">s3virge(4)</A></td></tr>
+<tr><td><code>savage</code></td><td>S3 Savage</td><td><A href="savage.4.html">savage(4)</A></td></tr>
+<tr><td><code>siliconmotion</code></td><td>Silicon Motion</td><td><A href="siliconmotion.4.html">siliconmotion(4)</A></td></tr>
+<tr><td><code>sis</code></td><td>SiS</td><td><A href="SiS.html">README.SiS</A>, <A href="sis.4.html">sis(4)</A></td></tr>
+<tr><td><code>sunbw2</code> (+)</td><td>Sun bw2</td><td>&nbsp;</td></tr>
+<tr><td><code>suncg14</code> (+)</td><td>Sun cg14</td><td>&nbsp;</td></tr>
+<tr><td><code>suncg3</code> (+)</td><td>Sun cg3</td><td>&nbsp;</td></tr>
+<tr><td><code>suncg6</code> (+)</td><td>Sun GX and Turbo GX</td><td>&nbsp;</td></tr>
+<tr><td><code>sunffb</code> (+)</td><td>Sun Creator/3D, Elite 3D</td><td>&nbsp;</td></tr>
+<tr><td><code>sunleo</code> (+)</td><td>Sun Leo (ZX)</td><td>&nbsp;</td></tr>
+<tr><td><code>suntcx</code> (+)</td><td>Sun TCX</td><td>&nbsp;</td></tr>
+<tr><td><code>tdfx</code></td><td>3Dfx</td><td><A href="tdfx.4.html">tdfx(4)</A></td></tr>
+<tr><td><code>tga</code></td><td>DEC TGA</td><td><A href="DECtga.html">README.DECtga</A></td></tr>
+<tr><td><code>trident</code></td><td>Trident</td><td><A href="trident.4.html">trident(4)</A></td></tr>
+<tr><td><code>tseng</code></td><td>Tseng Labs</td><td>&nbsp;</td></tr>
+<tr><td><code>vesa</code></td><td>VESA</td><td><A href="vesa.4.html">vesa(4)</A></td></tr>
+<tr><td><code>vga</code></td><td>Generic VGA</td><td><A href="vga.4.html">vga(4)</A></td></tr>
+<tr><td><code>via</code></td><td>VIA</td><td><A href="via.4.html">via(4)</A></td></tr>
+<tr><td><code>vmware</code></td><td>VMWare guest OS</td><td><A href="vmware.4.html">vmware(4)</A></td></tr>
+<tr><td><code>xgi</code></td><td>Xabre Graphics Inc</td><td><A href="xgi.4.html">xgi(4)</A></td></tr>
+</TABLE>
+</p>
+<p>Drivers marked with (*) are present in a preliminary form in this release,
+but are not complete and/or stable yet.</p>
+
+<p>Drivers marked with (+) are for SPARC only.</p>
+
+<p>Drivers marked with (-) are for Linux/mips only.</p>
+
+<p>Darwin/Mac OS X uses IOKit drivers and does not use the module loader drivers
+listed above. Further information can be found in
+<A href="Darwin.html">README.Darwin</A>.</p>
+<H3><A NAME="22"></A>4.2. Input Drivers </H3>
+
+<p>XFree86 4.8.0 includes the following input drivers:</p>
+<p>
+<TABLE border=1   align="CENTER"  >
+<br>
+<tr><td>Driver Name</td><td>Description</td><td>Further Information</td></tr>
+<tr><td><code>aiptek(*)</code></td><td>Aiptek USB tablet</td><td><A href="aiptek.4.html">aiptek(4)</A></td></tr>
+<tr><td><code>calcomp</code></td><td>Calcomp</td><td>&nbsp;</td></tr>
+<tr><td><code>citron</code></td><td>Citron</td><td><A href="citron.4.html">citron(4)</A></td></tr>
+<tr><td><code>digitaledge</code></td><td>DigitalEdge</td><td>&nbsp;</td></tr>
+<tr><td><code>dmc</code></td><td>DMC</td><td><A href="dmc.4.html">dmc(4)</A></td></tr>
+<tr><td><code>dynapro</code></td><td>Dynapro</td><td>&nbsp;</td></tr>
+<tr><td><code>elographics</code></td><td>EloGraphics</td><td>&nbsp;</td></tr>
+<tr><td><code>eloinput</code></td><td>Elo 2500U USB</td><td><A href="eloinput.4.html">eloinput(4)</A></td></tr>
+<tr><td><code>fpit</code></td><td>Fujitsu Stylistic Tablet PCs</td><td><A href="fpit.4.html">fpit(4)</A></td></tr>
+<tr><td><code>hyperpen</code></td><td>Aiptek HyperPen 6000</td><td>&nbsp;</td></tr>
+<tr><td><code>js_x</code></td><td>JamStudio pentablet</td><td><A href="js_x.4.html">js_x(4)</A></td></tr>
+<tr><td><code>kbd</code></td><td>generic keyboards (alternate)</td><td><A href="kbd.4.html">kbd(4)</A></td></tr>
+<tr><td><code>keyboard</code></td><td>generic keyboards</td><td><A href="keyboard.4.html">keyboard(4)</A></td></tr>
+<tr><td><code>magictouch</code></td><td>MagicTouch ProE-X</td><td><A href="magictouch.4.html">magictouch(4)</A></td></tr>
+<tr><td><code>microtouch</code></td><td>MicroTouch</td><td>&nbsp;</td></tr>
+<tr><td><code>mouse</code></td><td>most mouse devices</td><td><A href="mouse.4.html">mouse(4)</A></td></tr>
+<tr><td><code>mutouch</code></td><td>MicroTouch</td><td>&nbsp;</td></tr>
+<tr><td><code>palmax</code></td><td>Palmax PD1000/PD1100</td><td><A href="palmax.4.html">palmax(4)</A></td></tr>
+<tr><td><code>penmount</code></td><td>PenMount</td><td>&nbsp;</td></tr>
+<tr><td><code>spaceorb</code></td><td>SpaceOrb</td><td>&nbsp;</td></tr>
+<tr><td><code>summa</code></td><td>SummaGraphics</td><td>&nbsp;</td></tr>
+<tr><td><code>tek4957</code></td><td>Tektronix 4957 tablet</td><td><A href="tek4957.4.html">tek4957(4)</A></td></tr>
+<tr><td><code>ur98(*)</code></td><td>Union Reality UR-F98 headtracker</td><td><A href="ur98.4.html">ur98(4)</A></td></tr>
+<tr><td><code>void</code></td><td>dummy device</td><td><A href="void.4.html">void(4)</A></td></tr>
+<tr><td><code>wacom</code></td><td>Wacom tablets</td><td><A href="wacom.4.html">wacom(4)</A></td></tr>
+</TABLE>
+</p>
+<p>Drivers marked with (*) are available for Linux only.</p>
+
+ <HR NOSHADE>
+<A HREF="RELNOTES.html"><EM>Release Notes for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Drivers</EM><BR>
+<b>Previous:</b> <A HREF="RELNOTES3.html"><EM>Summary of new features in 4.8.0. </EM></A><BR>
+<b>Next:</b> <A HREF="RELNOTES5.html"><EM>Known Problems </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728742" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

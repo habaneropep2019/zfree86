@@ -1,0 +1,29 @@
+XCOMM $XFree86: xc/config/Imakefile,v 1.6 2005/06/07 08:02:13 dawes Exp $
+#define IHaveSubdirs
+#define PassCDebugFlags CDEBUGFLAGS="$(CDEBUGFLAGS)"
+
+#undef BootstrapCleanSubdirs
+#define BootstrapCleanSubdirs BOOTSTRAPSUBDIRS="$(BOOTSTRAPSUBDIRS)"
+
+BOOTSTRAPSUBDIRS = imake makedepend
+#if BuildDPSLibrary || BuildDPSTkLibrary
+PSWRAPDIR = pswrap
+#endif
+SUBDIRS = cf util $(BOOTSTRAPSUBDIRS) $(PSWRAPDIR)
+
+#if defined(XFree86VersionString) && defined(ProjectRoot) && \
+	defined(BuildBindist)
+all:: version
+
+version: cf/version.def
+	RemoveFile(version)
+	echo XFree86VersionString > version
+
+InstallNamedNonExec(version,.XFree86_Version,ProjectRoot)
+
+clean::
+	RemoveFile(version)
+#endif
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

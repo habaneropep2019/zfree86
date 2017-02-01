@@ -1,0 +1,528 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   1mX Display Power Management Signaling (DPMS) Extension0m
+
+		   1mLibrary Specification0m
+
+
+
+			Version 1.0
+		  X Project Team Standard
+		 X Version 11, Release 6.4
+
+
+
+
+
+
+			Rob Lembree
+		    4mlembree@zk3.dec.com0m
+	       Digital Equipment Corporation
+		       24 April 1996
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © Digital Equipment Corporation, 1996
+
+Permission to use, copy, modify, distribute, and sell this
+documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice and this permission
+notice appear in all copies.  Digital Equipment Corporation
+makes no representations about the suitability for any pur-
+pose of the information in this document.  This documenta-
+tion is provided ``as is'' without express or implied war-
+ranty.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview0m
+
+This extension provides X Protocol control over the VESA
+Display Power Management Signaling (DPMS) characteristics of
+video boards under control of the X Window System.
+
+Traditionally, the X Window System has provided for both
+blanking and non-blanking screen savers.  Timeouts associ-
+ated with these built-in screen saver mechanisms are limited
+to idle (dwell) time, and a change timeout that specifies
+the change interval for non-blanking screen savers.
+
+The United States' Environmental Protection Agency (EPA)
+Energy Star program requires that monitors power down after
+some idle time by default.  While it is possible to simply
+overload the existing screen saver timeouts, this solution
+leaves the non-privileged user little to no control over the
+DPMS characteristics of his or her system.  For example,
+disabling DPMS would require some unintended side effect in
+the core screen saver, such as disabling the changing of a
+non-blanking screen saver.  Providing clients with this con-
+trol requires an extension to the core X Window System Pro-
+tocol, and this extension seeks to fill this gap.
+
+There are four power levels specified by the Video Electron-
+ics Standards Association (VESA) Display Power Management
+Signaling (DPMS) standard.  These are mapped onto the X DPMS
+Extension like this:
+
+
+4mDPMS24m 4mExtension24m 4mPower24m 4mLevels0m
+  0	       DPMSModeOn	   In use
+  1	       DPMSModeStandby	   Blanked, low power
+  2	       DPMSModeSuspend	   Blanked, lower power
+  3	       DPMSModeOff	   Shut off, awaiting activity
+
+
+
+1m2.  DPMS Functions0m
+
+4mDPMSQueryExtension0m
+
+
+Bool DPMSQueryExtension (4mdisplay,24m 4mevent_base,24m 4merror_base24m)
+
+	 Display 4m*display;0m
+	 int 4m*event_base,24m 4m*error_base;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+4mevent_base24m	    Specifies the return location for the
+assigned base event
+-----------
+1. 4mX24m 4mWindow24m 4mSystem24m is a trademark of X Consortium,
+Inc.
+
+
+
+			      1m10m
+
+
+
+
+
+1mDisplay Power Management Signaling (DPMS) Extension0m
+
+
+4merror_base24m	    Specifies the return location for the
+assigned base error
+
+
+The DPMSQueryExtension function queries the X server to
+determine the availability of the DPMS Extension.  If the
+extension is available, the return value is TRUE, and
+4mevent_base24m and 4merror_base24m are set to the base event number
+and base error number for the extension, respectively.	Oth-
+erwise, the return value is FALSE, and the values of
+4mevent_base24m and 4merror_base24m are undefined.
+
+
+4mDPMSGetVersion0m
+
+
+Status DPMSGetVersion(4mdisplay,24m 4mmajor_version,24m 4mminor_version24m)
+
+	 Display 4m*display;0m
+	 int	 4m*major_version,24m 4m*minor_version;0m
+
+4mdisplay24m	    Specifies the connection to the X server.
+4mmajor_version24m  Specifies the return location for the exten-
+sion major version.
+4mminor_version24m  Specifies the return location for the exten-
+sion minor version.
+
+
+The DPMSGetVersion function returns the version of the DPMS
+extension implemented by the X server.	The version is
+returned in 4mmajor_version24m and 4mminor_version24m.	The major ver-
+sion and minor version for this specification are '1' and
+'1', respectively.  The major version will be incremented
+for protocol incompatible changes, and the minor version
+will be incremented for small, upwardly compatible changes.
+
+
+4mDPMSCapable0m
+
+
+Bool DPMSCapable(4mdisplay24m)
+
+	 Display 4m*display;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+
+
+The DPMSCapable function returns the DPMS capability of the
+X server, either TRUE (capable of DPMS) or FALSE (incapable
+of DPMS).  The capability of an X server is implementation
+defined.  For example, if a multi-headed  X server is capa-
+ble of DPMS on one head, and incapable on another, the truth
+value of this function is defined by the X server implemen-
+tation.
+
+
+
+			      1m20m
+
+
+
+
+
+1mDisplay Power Management Signaling (DPMS) Extension0m
+
+
+4mDPMSSetTimeouts0m
+
+
+
+Status DPMSSetTimeouts(4mdisplay,24m 4mstandby,24m 4msuspend,24m 4moff24m)
+
+	 Display 4m*display;0m
+	 CARD16 4mstandby,24m 4msuspend,24m 4moff;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+4mstandby24m   Specifies the new standby timeout in seconds.
+4msuspend24m   Specifies the new suspend timeout in seconds.
+4moff24m       Specifies the new off timeout in seconds.
+
+
+The DPMSSetTimeouts function permits applications to set the
+timeout values used by the X server for DPMS timings.
+
+The value 4mstandby24m is the amount of time of inactivity in
+seconds before standby mode is invoked. The actual effects
+of this mode are implementation defined, but in the case of
+DPMS compliant hardware, it is implemented by shutting off
+the horizontal sync signal, and pulsing the vertical sync
+signal.	 Standby mode provides the quickest monitor recovery
+time.  Note also that many monitors implement this mode
+identically to suspend mode.  A value of zero disables this
+mode.
+
+The value 4msuspend24m is the amount of time of inactivity in
+seconds before the second level of power savings is invoked.
+Suspend mode's physical and electrical characteristics are
+implementation defined, but in DPMS compliant hardware,
+results in the pulsing of the horizontal sync signal, and
+shutting off of the vertical sync signal.  Suspend mode
+recovery is considered to be slower than standby mode, but
+faster than off mode, however this is monitor dependent.  As
+noted above, many monitors implement this mode identically
+to standby mode.  A value of zero disables this mode.
+
+The value 4moff24m is the amount of time of inactivity in seconds
+before the third and final level of power savings is
+invoked. Off mode's physical and electrical characteristics
+are implementation defined, but in DPMS compliant hardware,
+is implemented by shutting off both horizontal and vertical
+sync signals, resulting in the power-down of the monitor.
+Recovery time is implementation dependant, but frequently is
+similar to the power-up time of the monitor.  A value of
+zero disables this mode.
+
+Chronologically, standby mode occurs before or simultane-
+ously with suspend mode, and suspend mode must occur before
+or simultaneously with off mode.  Therefore, non-zero mode
+timeout values must be greater than or equal to the timeout
+values of earlier modes.  If inconsistent values are
+
+
+
+			      1m30m
+
+
+
+
+
+1mDisplay Power Management Signaling (DPMS) Extension0m
+
+
+supplied, a BadValue error will result.
+
+
+4mDPMSGetTimeouts0m
+
+
+
+Bool DPMSGetTimeouts(4mdisplay,24m 4mstandby,24m 4msuspend,24m 4moff24m)
+
+	 Display 4m*display;0m
+	 CARD16 4m*standby,24m 4m*suspend,24m 4m*off;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+4mstandby24m   Specifies the current standby timeout in seconds.
+4msuspend24m   Specifies the current suspend timeout in seconds.
+4moff24m       Specifies the current off timeout in seconds.
+
+
+The DPMSGetTimeouts function retrieves the timeout values
+used by the X server for DPMS timings.
+
+The value 4mstandby24m is the amount of time of inactivity in
+seconds before standby mode is invoked. A value of zero
+indicates that this mode has been disabled.
+
+The value 4msuspend24m is the amount of time of inactivity in
+seconds before the second level of power savings is invoked.
+A value of zero indicates that this mode has been disabled.
+
+The value 4moff24m is the amount of time of inactivity in seconds
+before the third and final level of power savings is
+invoked. A value of zero indicates that this mode has been
+disabled.
+
+
+4mDPMSEnable0m
+
+
+
+Status DPMSEnable(4mdisplay24m)
+
+	 Display 4m*display;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+
+
+The DPMSEnable function enables DPMS on the specified dis-
+play.  When enabled, DPMS will use the currently saved time-
+out values, and will invoke the DPMS power mode appropriate
+for the amount of time that the workstation input devices
+have been idle.	 If DPMSEnable is invoked on a display with
+DPMS already enabled, no change is made, and no error is
+returned.  If DPMSEnable is invoked on a display without
+support for DPMS, no change is made and no error is
+
+
+
+			      1m40m
+
+
+
+
+
+1mDisplay Power Management Signaling (DPMS) Extension0m
+
+
+returned.
+
+
+4mDPMSDisable0m
+
+
+
+Status DPMSDisable(4mdisplay24m)
+
+	 Display 4m*display;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+
+
+The DPMSDisable function disables DPMS on the specified dis-
+play.  When disabled, DPMS returns the display to DPMSMod-
+eOn.  If DPMSDisable is invoked on a display with DPMS
+already disabled, no change is made, and no error is
+returned.  If DPMSDisable is invoked on a display without
+support for DPMS, no change is made and no error is
+returned.
+
+
+4mDPMSForceLevel0m
+
+
+
+Status DPMSForceLevel(4mdisplay,24m 4mlevel24m)
+
+	 Display 4m*display;0m
+	 CARD16 4mlevel;0m
+
+4mdisplay24m   Specifies the connection to the X server.
+4mlevel24m     Specifies the level to force power to.
+
+
+The DPMSForceLevel function forces a DPMS capable display
+into the specified power level.	 The 4mlevel24m must be one of
+DPMSModeOn, DPMSModeStandby, DPMSModeSuspend, or DPMSMode-
+Off.  Values other than these will result in a BadValue
+error.	If DPMS is disabled on the display, a BadMatch pro-
+tocol error will result.
+
+
+4mDPMSInfo0m
+
+
+
+Status DPMSInfo(4mdisplay,24m 4mpower_level,24m 4mstate24m)
+
+	 Display 4m*display;0m
+	 CARD16 4m*power_level;0m
+	 BOOL 4m*state;0m
+
+
+
+
+			      1m50m
+
+
+
+
+
+1mDisplay Power Management Signaling (DPMS) Extension0m
+
+
+4mdisplay24m	    Specifies the connection to the X server.
+4mpower_level24m	 Specifies the current power level.
+4mstate24m		 Specifies the current DPMS state
+
+
+The DPMSInfo function returns information about the current
+DPMS state.  The 4mstate24m return parameter indicates whether or
+not DPMS is enabled (TRUE) or disabled (FALSE).	 The
+4mpower_level24m return parameter indicates the current power
+level (one of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend,
+or DPMSModeOff.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m60m
+
+

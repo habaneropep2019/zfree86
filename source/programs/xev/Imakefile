@@ -1,0 +1,6 @@
+XCOMM $XFree86: xc/programs/xev/Imakefile,v 1.2 2006/01/09 15:01:08 dawes Exp $
+
+        DEPLIBS = $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XONLYLIB)
+
+SimpleProgramTarget(xev)

@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Modelines </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Modelines </EM><BR>
+<b>Previous:</b> <A HREF="chips3.html"><EM>XF86Config Options </EM></A><BR>
+<b>Next:</b> <A HREF="chips5.html"><EM>Dual Display Channel</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="7"></A>4. Modelines </H2>
+
+<p>When constructing a modeline for use with the Chips and Technologies
+driver you'll needed to considered several points</p>
+<p>
+<dl>
+<dt><b> * Virtual Screen Size </b><dd><p>It is the virtual screen size that determines the amount
+of memory used by a mode. So if you have a virtual screen size
+set to 1024x768 using a 800x600 at 8bpp, you use 768kB for the
+mode. Further to this some of the XAA acceleration requires that
+the display pitch is a multiple of 64 pixels. So the driver will
+attempt to round-up the virtual X dimension to a multiple of 64,
+but leave the virtual resolution untouched. This might further
+reduce the available memory.</p>
+<dt><b> * 16/24/32 Bits Per Pixel </b><dd><p>Hi-Color and True-Color modes are implemented in the
+server. The clocks in the 6554x series of chips are internally
+divided by 2 for 16bpp and 3 for 24bpp, allowing one modeline to
+be used at all depths.  The effect of this is that the maximum
+dot clock visible to the user is a half or a third of the value
+at 8bpp. The HiQV series of chips doesn't need to use additional
+clock cycles to display higher depths, and so the same modeline
+can be used at all depths, without needing to divide the clocks.
+Also 16/24/32 bpp modes will need 2 , 3 or 4 times respectively more
+video ram.</p>
+<dt><b> * Frame Acceleration</b><dd><p>Many DSTN screens use frame acceleration to improve the
+performance of the screen. This can be done by using an external
+frame buffer, or incorporating the framebuffer at the top of video
+ram depending on the particular implementation. The Xserver assumes
+that the framebuffer, if used, will be at the top of video ram.
+The amount of ram required for the framebuffer will vary depending
+on the size of the screen, and will reduce the amount of video
+ram available to the modes. Typical values for the size of the
+framebuffer will be 61440 bytes (640x480 panel), 96000 bytes
+(800x600 panel) and 157287 bytes (1024x768 panel).</p>
+<dt><b> * H/W Acceleration </b><dd><p>The H/W cursor will need 1kB for the 6554x and 4kb for the
+65550. On the 64300 chips the H/W cursor is stored in registers and
+so no allowance is needed for the H/W cursor. In addition to this
+many graphics operations are speeded up using a
+"<code>pixmap cache</code>". Leaving too little memory available for
+the cache will only have a detrimental effect on the graphics
+performance.</p>
+<dt><b> * PseudoColor Overlay </b><dd><p>If you use the "<code>overlay</code>" option, then there are
+actually two framebuffers in the video memory. An 8bpp one and a
+16bpp one. The total memory requirements in this mode of operation
+is therefore similar to a 24bpp mode. The overlay consumes memory
+bandwidth, so that the maximum dotclock will be similar to a 24bpp
+mode.</p>
+<dt><b> * XVideo extension* </b><dd><p>Like the overlays, the Xvideo extension uses a part of the
+video memory for a second framebuffer. In this case enough memory
+needs to be left for the largest unscaled video window that will be 
+displayed.</p>
+<dt><b> * VESA like modes </b><dd><p>We recommend that you try and pick a mode that is similar
+to a standard VESA mode. If you don't a suspend/resume or LCD/CRT
+switch might mess up the screen. This is a problem with the video
+BIOS not knowing about all the funny modes that might be selected.</p>
+<dt><b> * Dot Clock </b><dd><p>For LCD screens, the lowest clock that gives acceptable
+contrast and flicker is usually the best one. This also gives
+more memory bandwidth for use in the drawing operations. Some
+users prefer to use clocks that are defined by their BIOS. This
+has the advantage that the BIOS will probably restore the clock
+they specified after a suspend/resume or LCD/CRT switch. For a
+complete discussion on the dot clock limitations, see the next
+section.</p>
+<dt><b> * Dual-head display </b><dd><p>Dual-head display has two effects on the modelines. Firstly,
+the memory requirements of both heads must fit in the available
+memory. Secondly, the memory bandwidth of the video processor is
+shared between the two heads. Hence the maximum dot-clock might 
+need to be limited.</p>
+</dl>
+</p>
+<p>The driver is capable of driving both a CRT and a flat panel
+display. In fact the timing for the flat panel are dependent on the
+specification of the panel itself and are independent of the particular
+mode chosen. For this reason it is recommended to use one of the programs
+that automatically generate XF86Config files, such as "<code>xf86config</code>"
+or "<code>XF86Setup</code>".</p>
+<p>However there are many older machines, particularly those with 800x600
+screen or larger, that need to reprogram the panel timings. The reason
+for this is that the manufacturer has used the panel timings to get a
+standard EGA mode to work on flat panel, and these same timings don't
+work for an SVGA mode. For these machines the "<code>UseModeline</code>"
+and/or possibly the "<code>FixPanelSize</code>" option might be needed. Some
+machines that are known to need these options include.</p>
+<p>
+<blockquote>
+<pre>
+Modeline "640x480@8bpp"	  25.175  640  672  728  816   480  489  501  526
+Modeline "640x480@16bpp"  25.175  640  672  728  816   480  489  501  526
+Options: "UseModeline"
+Tested on a Prostar 8200, (640x480, 65548, 1Mbyte)
+</pre>
+</blockquote>
+</p>
+<p>
+<blockquote>
+<pre>
+Modeline "800x600@8bpp"	  28.322  800  808  848  936   600  600  604  628
+Options: "FixPanelSize", "UseModeline"
+Tested on a HP OmniBook 5000CTS (800x600 TFT, 65548, 1Mbyte)
+</pre>
+</blockquote>
+</p>
+<p>
+<blockquote>
+<pre>
+Modeline "800x600@8bpp"	  30.150  800  896  960 1056   600  600  604  628
+Options: "FixPanelSize", "UseModeline"
+Tested on a Zeos Meridan 850c (800x600 DSTN, 65545, 1Mbyte)
+</pre>
+</blockquote>
+</p>
+<p>The IBM PC110  works best with a 15MHz clock (Thanks to Alan Cox):
+<blockquote>
+<pre>
+Modeline "640x480"        15.00   640  672  728  816   480  489  496  526
+Options: "TextClockFreq" "15.00"
+IBM PC110 (65535, Citizen L6481L-FF DSTN) 
+</pre>
+</blockquote>
+</p>
+<p>The NEC Versa 4080 just needs the "FixPanelSize" option. To the best of my
+knowledge no machine with a HiQV needs the "UseModeline" or "FixPanelSize"
+options.</p>
+
+ <HR NOSHADE>
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Modelines </EM><BR>
+<b>Previous:</b> <A HREF="chips3.html"><EM>XF86Config Options </EM></A><BR>
+<b>Next:</b> <A HREF="chips5.html"><EM>Dual Display Channel</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728823" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

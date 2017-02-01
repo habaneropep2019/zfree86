@@ -1,0 +1,35 @@
+XCOMM $XFree86: xc/lib/font/util/Imakefile,v 1.8 2005/10/14 15:16:06 tsi Exp $
+
+#include <Server.tmpl>
+
+        INCLUDES = -I../include
+#ifdef FontFormatDefines
+     FORMAT_DEFS = FontFormatDefines
+#endif
+
+#if defined(SunArchitecture) && (OSMajorVersion == 5) && (OSMinorVersion <= 6)
+    /* Work around a problem with __ctype being a "relocation against
+       allocatable but non-writable section" on Solaris 2.6.  Hopefully
+       it doesn't break anything. */
+     SYS_DEFINES = -D__XPG4_CHAR_CLASS__
+#endif
+         DEFINES = StrcasecmpDefines $(SYS_DEFINES)
+
+            SRCS = utilbitmap.c fontnames.c fontutil.c fontxlfd.c format.c \
+		   fontaccel.c atom.c miscutil.c private.c patcache.c
+
+            OBJS = utilbitmap.o fontnames.o fontutil.o fontxlfd.o format.o \
+		   fontaccel.o atom.o miscutil.o private.o patcache.o
+
+#define DoNormalLib NormalLibFont
+#define DoSharedLib SharedLibFont
+#define DoDebugLib DebugLibFont
+#define DoProfileLib ProfileLibFont
+#include <Library.tmpl>
+LibraryObjectRule()
+
+SubdirLibraryRule($(OBJS))
+NormalLintTarget($(SRCS))
+
+DependTarget()
+

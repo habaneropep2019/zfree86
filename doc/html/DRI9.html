@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>General Trouble Shooting </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>General Trouble Shooting </EM><BR>
+<b>Previous:</b> <A HREF="DRI8.html"><EM>Using 3D Acceleration </EM></A><BR>
+<b>Next:</b> <A HREF="DRI10.html"><EM>Hardware-Specific Information and Troubleshooting </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="19"></A>9. General Trouble Shooting </H2>
+<p>This section contains information to help you diagnose general
+problems.
+See below for additional information for specific hardware.</p>
+
+<H3><A NAME="20"></A>9.1. Bus Mastering </H3>
+<p>DMA-based DRI drivers (that's most DRI drivers) cannot function
+unless bus mastering is enabled for your graphics card.
+By default, some systems don't having bus mastering on.
+You should enable it in your BIOS.</p>
+<p>Alternately, you can check the status of bus mastering and change
+the setting from within Linux.  There may be similar procedures for
+other operating systems.</p>
+<p>Run <code>lspci</code> (as root) and find the information
+describing your graphics adapter.  For example:</p>
+
+<p>
+<pre>
+    00:00.0 Host bridge: Intel Corporation 440BX/ZX - 82443BX/ZX Host bridge (rev 03)
+    00:01.0 PCI bridge: Intel Corporation 440BX/ZX - 82443BX/ZX AGP bridge (rev 03)
+    00:07.0 ISA bridge: Intel Corporation 82371AB PIIX4 ISA (rev 02)
+    00:07.1 IDE interface: Intel Corporation 82371AB PIIX4 IDE (rev 01)
+    00:07.2 USB Controller: Intel Corporation 82371AB PIIX4 USB (rev 01)
+    00:07.3 Bridge: Intel Corporation 82371AB PIIX4 ACPI (rev 02)
+    00:11.0 Ethernet controller: Intel Corporation 82557 [Ethernet Pro 100] (rev 08)
+    00:12.0 SCSI storage controller: Symbios Logic Inc. (formerly NCR) 53c895 (rev 02)
+    00:14.0 Multimedia audio controller: Ensoniq ES1371 [AudioPCI-97] (rev 08)
+    01:00.0 VGA compatible controller: 3Dfx Interactive, Inc.: Unknown device 0009 (rev 01)
+        
+</pre>
+</p>
+<p>The bus, device, and function number comprise the device id,
+which is conventionally written in the form bus:dev.func, or 
+in this case 01:00.0.</p>
+<p>Use the <code>setpci</code> command to examine bit two of register 4 for
+your graphics card.  This will indicate whether or not bus mastering
+is enabled.</p>
+<p>
+<pre>
+        setpci -s 01:00.0 4.w
+        
+</pre>
+</p>
+<p>A hexadecimal value will be printed.  Convert the least significant
+digit to binary.  For example, if you see 3, that's 0011 in binary
+(bit two is 0).  If you see 7, that's 0111 in binary (bit two is 1).
+In the first example, bus mastering is disabled.  It's enabled in
+the second example.</p>
+<p>The following shell script will enabled bus mastering for your
+graphics card and host bridge.  Run it as root.
+<pre>
+    #!/bin/bash
+    dev=01:00.0   # change as appropriate
+    echo Enabling bus mastering on device $dev
+    setpci -s $dev 4.w=$(printf %x $((0x$(setpci -s $dev 4.w)|4)))
+    dev=00:00.0
+    echo Enabling bus mastering on host bridge $dev
+    setpci -s $dev 4.w=$(printf %x $((0x$(setpci -s $dev 4.w)|4)))
+        
+</pre>
+</p>
+<p>You can check if this worked by running the first setpci command again.</p>
+
+
+
+<H3><A NAME="21"></A>9.2. The X Server </H3>
+<p>
+<ol>
+<li>Before you start the X server, verify the appropriate 3D kernel
+module is installed.
+Type <code>lsmod</code> and look for the appropriate kernel module.
+For 3dfx hardware you should see <code>tdfx</code>, for example.
+</li>
+<li>Verify you're running XFree86 4.0 (or newer) and not an
+older version.
+If you run <code>xdpyinfo</code> and look for the following line near
+the top:
+<pre>
+            vendor release number:    4000
+        
+</pre>
+
+</li>
+<li>Verify that your XF86Config file (usually found at
+/etc/X11/XF86Config) loads the glx and dri modules and
+has a DRI section.
+<p>See the Software Resources section below for sample
+XF86Config files.</p>
+
+</li>
+<li>Examine the messages printed during X server startup and check
+that the DRM module loaded.
+Using the Voodoo3 as an example:
+<pre>
+        (==) TDFX(0): Write-combining range (0xf0000000,0x2000000)
+        (II) TDFX(0): Textures Memory 7.93 MB
+        (0): [drm] created "tdfx" driver at busid "PCI:1:0:0"
+        (0): [drm] added 4096 byte SAREA at 0xc65dd000
+        (0): [drm] mapped SAREA 0xc65dd000 to 0x40013000
+        (0): [drm] framebuffer handle = 0xf0000000
+        (0): [drm] added 1 reserved context for kernel
+        (II) TDFX(0): [drm] Registers = 0xfc000000
+        (II) TDFX(0): visual configs initialized
+        (II) TDFX(0): Using XFree86 Acceleration Architecture (XAA)
+                Screen to screen bit blits
+                Solid filled rectangles
+                8x8 mono pattern filled rectangles
+                Indirect CPU to Screen color expansion
+                Solid Lines
+                Dashed Lines
+                Offscreen Pixmaps
+                Driver provided NonTEGlyphRenderer replacement
+                Setting up tile and stipple cache:
+                        10 128x128 slots
+        (==) TDFX(0): Backing store disabled
+        (==) TDFX(0): Silken mouse enabled
+        (0): X context handle = 0x00000001
+        (0): [drm] installed DRM signal handler
+        (0): [DRI] installation complete
+        (II) TDFX(0): direct rendering enabled
+        
+</pre>
+
+</li>
+<li>After the X server has started, verify that the required X server
+extensions are loaded.
+Run <code>xdpyinfo</code> and look for the following entries in the
+extensions list:
+<pre>
+	  GLX
+	  SGI-GLX
+	  XFree86-DRI
+        
+</pre>
+
+</li>
+</ol>
+</p>
+
+<H3><A NAME="22"></A>9.3. Linking, running and verifying 3D acceleration </H3>
+<p>After you've verified that the X server and DRI have started
+correctly it's time to verify that the GL library and hardware
+drivers are working correctly.</p>
+<p>
+<ol>
+<li>Verify that you're using the correct libGL.so library with
+<code>ldd</code>.
+The /usr/lib and /usr/X11R6/lib directories are expected
+locations for libGL.so.
+<p>Example:
+<pre>
+        % ldd /usr/local/bin/glxinfo
+                libglut.so.3 =&gt; /usr/local/lib/libglut.so.3 (0x40019000)
+                libGLU.so.1 =&gt; /usr/local/lib/libGLU.so.1 (0x40051000)
+                libGL.so.1 =&gt; /usr/lib/libGL.so.1 (0x40076000)
+                libXmu.so.6 =&gt; /usr/X11R6/lib/libXmu.so.6 (0x402ee000)
+                libXi.so.6 =&gt; /usr/X11R6/lib/libXi.so.6 (0x40301000)
+                libm.so.6 =&gt; /lib/libm.so.6 (0x40309000)
+                libc.so.6 =&gt; /lib/libc.so.6 (0x40325000)
+                libX11.so.6 =&gt; /usr/X11R6/lib/libX11.so.6 (0x40419000)
+                libXt.so.6 =&gt; /usr/X11R6/lib/libXt.so.6 (0x404bd000)
+                libSM.so.6 =&gt; /usr/X11R6/lib/libSM.so.6 (0x40509000)
+                libICE.so.6 =&gt; /usr/X11R6/lib/libICE.so.6 (0x40512000)
+                libXext.so.6 =&gt; /usr/X11R6/lib/libXext.so.6 (0x40529000)
+                libvga.so.1 =&gt; /usr/lib/libvga.so.1 (0x40537000)
+                libpthread.so.0 =&gt; /lib/libpthread.so.0 (0x4057d000)
+                /lib/ld-linux.so.2 =&gt; /lib/ld-linux.so.2 (0x40000000)
+        
+</pre>
+</p>
+
+</li>
+<li>You may also double check that libGL.so is in fact DRI-capable.
+Run <code>strings libGL.so.1.2 | grep DRI</code> and look for
+symbols prefixed with "XF86DRI", such as "XF86DRIQueryExtension".
+</li>
+<li>To be safe one should run <code>ldconfig</code> after installing libGL.so
+to be sure the runtime loader will find the proper library.
+</li>
+<li>Verify that the appropriate 3D driver is in
+/usr/X11R6/lib/modules/dri/
+For example, the 3dfx driver will be named <code>tdfx_dri.so</code>.
+</li>
+<li>Set the <code>LIBGL_DEBUG</code> environment variable.
+This will cause libGL.so to print an error message if it fails
+to load a DRI driver.
+Any error message printed should be self-explanatory.
+</li>
+<li>Run <code>glxinfo</code>.  Note the line labeled "OpenGL renderer string".
+It should have a value which starts with "Mesa DRI" followed by
+the name of your hardware.
+</li>
+<li>Older Linux OpenGL applications may have been linked against
+Mesa's GL library and will not automatically use libGL.so.
+In some cases, making symbolic links from the Mesa GL library
+to libGL.so.1 will solve the problem:
+<pre>
+        ln -s libGL.so.1 libMesaGL.so.3
+        
+</pre>
+
+In other cases, the application will have to be relinked
+against the new XFree86 libGL.so.
+<p>It is reported that part of the problem is that running
+<code>ldconfig</code> will silently rewrite symbolic links based
+on the SONAME field in libraries.</p>
+</li>
+</ol>
+</p>
+
+<p>If you're still having trouble, look in the next section for
+information specific to your graphics card.</p>
+
+
+
+ <HR NOSHADE>
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>General Trouble Shooting </EM><BR>
+<b>Previous:</b> <A HREF="DRI8.html"><EM>Using 3D Acceleration </EM></A><BR>
+<b>Next:</b> <A HREF="DRI10.html"><EM>Hardware-Specific Information and Troubleshooting </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728784" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

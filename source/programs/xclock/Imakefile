@@ -1,0 +1,23 @@
+XCOMM $XFree86: xc/programs/xclock/Imakefile,v 1.11 2007/05/18 18:02:00 tsi Exp $
+
+#ifndef XClockUseRender
+#define XClockUseRender BuildRenderLibrary
+#endif
+
+#if XClockUseRender
+    XRENDERDEFS = -DXRENDER
+    XRENDERDEPS = XftClientDepLibs
+    XRENDERLIBS = XftClientLibs MathLibrary
+    XRENDERINCS = $(XFTINCLUDES) $(XRENDERINCLUDES)
+#endif
+        DEPLIBS = $(XRENDERDEPS) XkbClientDepLibs XawClientDepLibs
+LOCAL_LIBRARIES = $(XRENDERLIBS) XkbClientLibs XawClientLibs
+           SRCS = xclock.c Clock.c
+           OBJS = xclock.o Clock.o
+        HEADERS = ClockP.h Clock.h
+       INCLUDES = $(XRENDERINCS)
+        DEFINES = $(XRENDERDEFS) XkbClientDefines
+
+ComplexProgramTarget(xclock)
+InstallAppDefaults(XClock)
+InstallAppDefaultsLong(XClk-col,XClock-color)

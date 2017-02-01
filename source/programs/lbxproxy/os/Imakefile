@@ -1,0 +1,42 @@
+XCOMM $XFree86: xc/programs/lbxproxy/os/Imakefile,v 1.11 2006/01/29 02:31:23 tsi Exp $
+
+#include <Server.tmpl>
+
+#if !HasSnprintf
+
+SNPRINTF_SRC = snprintf.c
+SNPRINTF_OBJ  = snprintf.o
+
+LinkSourceFile(snprintf.c,$(LIBSRC)/misc)
+
+#endif
+
+ DEFINES = $(CONNECTION_FLAGS) $(RPC_DEFINES) BigReqDefines \
+           AllocateLocalDefines ServerOSDefines $(SIGNAL_DEFINES)
+DEPEND_DEFINES = $(TRANS_INCLUDES) DependDefines
+
+INCLUDES = -I../include
+
+    SRCS = connection.c io.c WaitFor.c osinit.c transport.c $(SNPRINTF_SRC)
+
+    OBJS = connection.o io.o WaitFor.o osinit.o transport.o $(SNPRINTF_OBJ)
+
+CONN_DEFINES = -DLBXPROXY_t -DTRANS_SERVER
+
+#if HasBSD44Sockets
+SOCK_DEFINES = -DBSD44SOCKETS
+#endif
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(os,$(OBJS))
+LintLibraryTarget(os,$(SRCS))
+NormalLintTarget($(SRCS))
+
+LinkSourceFile(transport.c,$(TRANSCOMMSRC))
+
+SpecialCObjectRule(io,$(ICONFIGFILES),$(CONN_DEFINES))
+SpecialCObjectRule(connection,$(ICONFIGFILES),$(CONN_DEFINES) $(SOCK_DEFINES))
+SpecialCObjectRule(transport,$(ICONFIGFILES),$(TRANS_INCLUDES) $(CONN_DEFINES) $(SOCK_DEFINES))
+
+DependTarget()
+

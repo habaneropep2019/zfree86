@@ -1,0 +1,1560 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:17:28 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Requests">2. Requests</a><br>
+<a href="#3. Events and Errors">3. Events and Errors</a><br>
+<a href="#4. Encoding">4. Encoding</a><br>
+
+<hr>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>X
+Display Power Management Signaling (DPMS) Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small>Protocol
+Specification</small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Version
+1.0 X Project Team Standard X Version 11, Release
+6.4</small></small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Rob
+Lembree <i>lembree@zk3.dec.com</i> <br>
+Digital Equipment Corporation <br>
+24 April 1996</small></small></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+Digital Equipment Corporation, 1996</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, distribute, and sell this documentation for
+any purpose is hereby granted without fee, provided that the
+above copyright notice and this permission notice appear in
+all copies. Digital Equipment Corporation makes no
+representations about the suitability for any purpose of the
+information in this document. This documentation is provided
+&lsquo;&lsquo;as is&rsquo;&rsquo; without express or implied
+warranty.</p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension
+provides X Protocol control over the VESA Display Power
+Management Signaling (DPMS) characteristics of video boards
+under control of the X Window System.</p>
+
+
+<p align=center valign="top"><img src="DPMS1.png" alt="Image DPMS1.png"></p>
+
+<p style="margin-top: 1em" valign="top">Traditionally, the
+X Window System has provided for both blanking and
+non-blanking screen savers. Timeouts associated with these
+built-in screen saver mechanisms are limited to idle (dwell)
+time, and a change timeout that specifies the change
+interval for non-blanking screen savers.</p>
+
+<p style="margin-top: 1em" valign="top">The United
+States&rsquo; Environmental Protection Agency (EPA) Energy
+Star program requires that monitors power down after some
+idle time by default. While it is possible to simply
+overload the existing screen saver timeouts, this solution
+leaves the non-privileged user little to no control over the
+DPMS characteristics of his or her system. For example,
+disabling DPMS would require some unintended side effect in
+the core screen saver, such as disabling the changing of a
+non-blanking screen saver. Providing clients with this
+control requires an extension to the core X Window System
+Protocol, and this extension seeks to fill this gap.</p>
+
+<p style="margin-top: 1em" valign="top">The design goal of
+the DPMS extension is to be a logical extension to the
+traditional screen saver. The protocol and sample
+implementation is designed to use the same date types and
+time units as the screen saver. The sample implementation
+works independently from the screen saver so that policy as
+it pertains to the interaction between screen saver and DPMS
+can be deferred to the user or screen saver application. The
+extension has been tested with and shown to work correctly
+with both the internal blanking and non-blanking screen
+savers, as well as with screen saver extension clients.</p>
+
+<p style="margin-top: 1em" valign="top">The DPMS extension
+is designed to be simple, yet export sufficient VESA DPMS
+information to enable full function clients to be written.
+Included is the ability to sense DPMS capability, set and
+get DPMS timeouts, enable and disable individual DPMS modes,
+enable and disable DPMS (without destroying timeout values),
+and sense current DPMS on/off state and power level.</p>
+
+<p style="margin-top: 1em" valign="top">There are four
+power levels specified by the Video Electronics Standards
+Association (VESA) Display Power Management Signaling (DPMS)
+standard. These are:</p>
+
+<p style="margin-top: 1em" valign="top"><i>DPMS Extension
+Power Levels</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOn</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">In use</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeStandby</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Blanked, low power</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeSuspend</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Blanked, lower power</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOff</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Shut off, awaiting activity</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">It is logical to
+assume that successive DPMS modes be chronologically at the
+same time or later than one another, and the protocol is
+designed to enforce this rule.</p>
+
+<p style="margin-top: 1em" valign="top">Note however that a
+concious decision is made to decouple the timeouts
+associated with screen saver from the DPMS timeouts. While
+it might be considered logical to require that the first
+non-zero DPMS timeout be greater than or equal to the screen
+saver timeout, this is intentionally omitted, leaving this
+policy decision to the user or the screen saver application.
+In the case of a laptop where power may be scarce, the
+importance of power savings should supersede the screen
+saver. If the laptop user plugs the unit in and power is no
+longer a scarce commodity, it may be decided to make DPMS
+less aggressive, or disable it completely.</p>
+
+<a name="2. Requests"></a>
+<h2>2. Requests</h2>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetVersion</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>client_major_version</i>:
+CARD16 <i><br>
+client_minor_version</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>server_major_version</i>:
+CARD16 <i><br>
+server_minor_version</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">If supplied, the
+<i>client_major_version</i> and <i>client_minor_version</i>
+indicate what version of the protocol the client wants the
+server to implement. The server version numbers returned
+indicate the protocol this extension actually supports. This
+might not equal the version sent by the client. An
+implementation can (but need not) support more than one
+version simultaneously. The <i>server_major_version</i> and
+the <i>server_minor_version</i> are a mechanism to support
+future revisions of the Display Power Management Signaling
+protocol which may be necessary. In general, the major
+version would increment for incompatible changes, and the
+minor version would increment for small, upward-compatible
+changes. Servers that support the protocol defined in this
+document will return a <i>server_major_version</i> of one
+(1), and a <i>server_minor_version</i> of one (1).</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSCapable</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>capable</i>:
+BOOL</p>
+
+<p style="margin-top: 1em" valign="top">This request is
+used to determine whether or not the currently running
+server&rsquo;s devices are capable of DPMS operations. The
+truth value of this request is implementation defined, but
+is generally based on the capabilities of the graphic card
+and monitor combination. Also, the return value in the case
+of heterogeneous multi-head servers is implementation
+defined.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetTimeouts</i></p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>standby_timeout</i>:
+CARD16 <i><br>
+suspend_timeout</i>: CARD16 <i><br>
+off_timeout</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">This request
+returns the current values of the DPMS timeout values. All
+values are in units of seconds.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>standby_timeout</i>
+is the amount of time of inactivity before standby mode is
+invoked. The actual effects of this mode are implementation
+defined, but in the case of DPMS compliant hardware, it is
+implemented by shutting off the horizontal sync signal, and
+pulsing the vertical sync signal. Standby mode provides the
+quickest monitor recovery time. Note also that many monitors
+implement this mode identically to suspend mode. A value of
+zero indicates that this mode is disabled.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>suspend_timeout</i>
+is the amount of time of inactivity before the second level
+of power savings is invoked. Suspend mode&rsquo;s physical
+and electrical characteristics are implementation defined,
+but in DPMS compliant hardware, results in the pulsing of
+the horizontal sync signal, and shutting off of the vertical
+sync signal. Suspend mode recovery is considered to be
+slower than standby mode, but faster than off mode, however
+this is monitor dependent. As noted above, many monitors
+implement this mode identically to standby mode. A value of
+zero indicates that this mode is disabled.</p>
+
+<p style="margin-top: 1em" valign="top"><i>off_timeout</i>
+is the amount of time of inactivity before the third and
+final level of power savings is invoked. Off mode&rsquo;s
+physical and electrical characteristics are implementation
+defined, but in DPMS compliant hardware, is implemented by
+shutting off both horizontal and vertical sync signals,
+resulting in the power-down of the monitor. Recovery time is
+implementation dependant, but frequently is similar to the
+power-up time of the monitor. A value of zero indicates that
+this mode is disabled.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSSetTimeouts</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>standby_timeout</i>:
+CARD16 <i><br>
+suspend_timeout</i>: CARD16 <i><br>
+off_timeout</i>: CARD16 <br>
+=&gt;</p>
+
+<p style="margin-top: 1em" valign="top">All values are in
+units of seconds. <i>standby_timeout</i> is the amount of
+time of inactivity before standby mode will be invoked. This
+is the lightest level of power savings, and the monitor is
+generally immediately ready upon detection of user activity.
+This is most often implemented by shutting off the
+horizontal sync signal to the monitor. A value of zero
+disables this mode.</p>
+
+<p style="margin-top: 1em" valign="top">The
+<i>suspend_timeout</i> specifies the amount of time of
+inactivity before the screen is placed into suspend mode.
+Suspend mode is the middle level of power savings, resulting
+in a slightly longer recovery upon detection of activity.
+Suspend mode is most often implemented by pulsing the
+horizontal sync signal, and removing the vertical sync
+signal. A value of zero disables this mode.</p>
+
+<p style="margin-top: 1em" valign="top">The
+<i>off_timeout</i> specifies the amount of time of
+inactivity before the monitor is shut off. Off mode is the
+deepest level of power management, resulting in the greatest
+power savings and the longest recovery time. Off mode is
+most often implemented by removing both the horizontal and
+vertical signals. A value of zero disables this mode.</p>
+
+<p style="margin-top: 1em" valign="top">The values of
+successive power levels must be greater than or equal to the
+value of the previous (non-zero) level. A BadValue error is
+generated if an illegal combination is detected.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSEnable</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">=&gt;</p>
+
+<p style="margin-top: 1em" valign="top">This request
+enables the DPMS characteristics of the server, using the
+server&rsquo;s currently stored timeouts. If DPMS is already
+enabled, no change is effected.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSDisable</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">=&gt;</p>
+
+<p style="margin-top: 1em" valign="top">This request
+disables the DPMS characteristics of the server. It does not
+affect the core or extension screen savers. If DPMS is
+already disabled, no change is effected. This request is
+provided so that DPMS may be disabled without damaging the
+server&rsquo;s stored timeout values.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSForceLevel</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>power_level</i>:
+CARD16 <br>
+=&gt;</p>
+
+<p style="margin-top: 1em" valign="top">This request forces
+a specific DPMS level on the server. If DPMS is disabled, a
+BadMatch error is generated. If an erroneous power level is
+specified, a BadValue error is returned, and the error value
+contains the bad value. If the power level specified is
+already in effect, no changes occur. Power Level must be one
+of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend or
+DPMSModeOff.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSInfo</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>power_level</i>:
+CARD16 <i><br>
+state</i>: BOOL</p>
+
+<p style="margin-top: 1em" valign="top">This request
+returns information about the current DPMS state of the
+display. <i>state</i> is one of DPMSEnabled or DPMSDisabled.
+If <i>state</i> is DPMSEnabled, <i>power_level</i> is
+returned as one of DPMSModeOn, DPMSModeStandby,
+DPMSModeSuspend or DPMSModeOff, otherwise it is
+undefined.</p>
+
+<a name="3. Events and Errors"></a>
+<h2>3. Events and Errors</h2>
+
+
+<p style="margin-top: 1em" valign="top">No new events or
+errors are defined by this extension.</p>
+
+<a name="4. Encoding"></a>
+<h2>4. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">Please refer to the
+X11 Protocol Encoding document as this document uses
+conventions established there.</p>
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &quot;DPMS&quot;.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_minor_version</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_minor_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSCapable</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">capable</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">23</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetTimeouts</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">standby_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">suspend_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">off_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">18</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSSetTimeouts</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">standby_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">suspend_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">off_timeout</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSEnable</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSDisable</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">5</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSForceLevel</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">6</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">power_level</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOn</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeStandby</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeSuspend</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOff</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSInfo</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">7</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">DPMS opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">power_level</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOn</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeStandby</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeSuspend</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOff</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">state</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">21</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729484" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

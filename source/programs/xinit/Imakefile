@@ -1,0 +1,51 @@
+XCOMM $XFree86: xc/programs/xinit/Imakefile,v 3.21 2007/01/04 03:33:44 tsi Exp $
+
+#if HasVFork
+  VFORK_DEFINES = -DHAS_VFORK
+#endif
+#ifdef XFree86Version
+        OS_DEFS = -DXFREE86
+#endif
+#ifdef OS2Architecture
+        DEFFILE = xinit.def
+#endif
+        DEFINES = $(CONNECTION_FLAGS) $(VFORK_DEFINES) $(SIGNAL_DEFINES) \
+		  $(PAMDEFINES) -DBINDIR=\"$(BINDIR)\" $(OS_DEFS) -DDONTKILL
+        DEPLIBS = $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XONLYLIB)
+          SRCS1 = xinit.c 
+          OBJS1 = xinit.o 
+#ifndef OS2Architecture
+   SAMPLECONFIG = xinitrc
+#else
+   SAMPLECONFIG = xinitrc.cmd
+#endif
+       PROGRAMS = ProgramTargetName(xinit)
+#if HasCookieMaker
+     COOKIEDEFS = -DHAS_COOKIE_MAKER -DMK_COOKIE=MkCookieCmd
+#endif
+
+all:: startx $(SAMPLECONFIG)
+
+ComplexProgramTarget_1(xinit,$(LOCAL_LIBRARIES),$(DEFFILE))
+
+MakeScriptFromCpp(xinitrc, -DXINITDIR=$(XINITDIR))
+
+MakeScriptFromCpp(startx, -DXINITDIR=$(XINITDIR) -DBINDIR=$(BINDIR) $(COOKIEDEFS))
+
+EXTRAMANDEFS=-D__xinitdir__=$(XINITDIR)
+
+InstallNamedProg(startx,startx,$(BINDIR))
+#ifdef OS2Architecture
+InstallNamedProg(startx.cmd,startx.cmd,$(BINDIR))
+#endif
+InstallManPage(startx,$(MANDIR))
+
+#if InstallXinitConfig
+InstallNonExecFile($(SAMPLECONFIG),$(XINITDIR))
+#else
+InstallNonExecFileNoClobber($(SAMPLECONFIG),$(XINITDIR))
+#endif
+
+LinkConfDirectory(xinit,.,xinit,.)
+

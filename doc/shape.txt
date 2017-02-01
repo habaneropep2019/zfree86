@@ -1,0 +1,1056 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		  1mX Nonrectangular Window0m
+
+		  1mShape Extension Protocol0m
+
+
+
+			Version 1.1
+		   X Consortium Standard
+		 X Version 11, Release 6.4
+
+
+
+
+
+
+		       Keith Packard
+		      MIT X Consortium
+		     Intel Corporation
+
+
+
+
+
+
+
+
+
+Copyright © 1989 X Consortium
+Copyright © 2006 Keith Packard
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+
+
+
+
+
+
+
+
+
+
+
+
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the copy-
+right holders shall not be used in advertising or otherwise
+to promote the sale, use or other dealings in this Software
+without prior written authorization from the copyright hold-
+ers.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview0m
+
+This extension provides arbitrary window and border shapes
+within the X11 protocol.
+
+The restriction of rectangular windows within the X protocol
+is a significant limitation in the implementation of many
+styles of user interface.  For example, many transient win-
+dows would like to display a ``drop shadow'' to give the
+illusion of 3 dimensions.  As another example, some user
+interface style guides call for buttons with rounded cor-
+ners; the full simulation of a nonrectangular shape, partic-
+ularly with respect to event distribution and cursor shape,
+is not possible within the core X protocol.  As a final
+example, round clocks and nonrectangular icons are desirable
+visual addition to the desktop.
+
+This extension provides mechanisms for changing both the
+visible and interactive shape of a window to arbitrary, pos-
+sibly disjoint, nonrectangular forms.  The intent of the
+extension is to supplement the existing semantics, not
+replace them.  In particular, it is desirable for clients
+that are unaware of the extension to still be able to cope
+reasonably with shaped windows.	 For example, window man-
+agers should still be able to negotiate screen real estate
+in rectangular pieces.	Toward this end, any shape specified
+for a window is clipped by the bounding rectangle for the
+window as specified by the window's geometry in the core
+protocol.  An expected convention would be that client pro-
+grams expand their shape to fill the area offered by the
+window manager.
+
+1m2.  Description0m
+
+Each window (even with no shapes specified) is defined by
+three regions:	the 4mbounding24m 4mregion24m, the 4mclip24m 4mregion24m and the
+4minput24m 4mregion24m.	 The bounding region is the area of the parent
+window that the window will occupy (including border). The
+clip region is the subset of the bounding region that is
+available for subwindows and graphics.	The area between the
+bounding region and the clip region is defined to be the
+border of the window. The input region is the subset of the
+bounding region that can ``contain'' the pointer.
+
+A nonshaped window will have a bounding region that is a
+rectangle spanning the window, including its border; the
+clip region will be a rectangle filling the inside dimen-
+sions (not including the border); the input region will
+match the bounding region.  In this document, these areas
+are referred to as the 4mdefault24m 4mbounding24m 4mregion24m, the 4mdefault0m
+4mclip24m 4mregion24m and the 4mdefault24m 4minput24m 4mregion24m.  For a window with
+inside size of 4mwidth24m by 4mheight24m and border width 4mbwidth24m, the
+default bounding, clip and input regions are the rectangles
+(relative to the window origin):
+
+
+
+			      1m10m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+__
+|
+bounding.x = -4mbwidth0m
+bounding.y = -4mbwidth0m
+bounding.width = 4mwidth24m + 2 * 4mbwidth0m
+bounding.height = 4mheight24m + 2 * 4mbwidth0m
+
+clip.x = 0
+clip.y = 0
+clip.width = 4mwidth0m
+clip.height = 4mheight0m
+
+input.x = -4mbwidth0m
+input.y = -4mbwidth0m
+input.width = 4mwidth24m + 2 * 4mbwidth0m
+input.height = 4mheight24m + 2 * 4mbwidth0m
+
+
+|__
+
+This extension allows a client to modify any combination of
+the bounding, clip or input regions by specifying new
+regions that combine with the default regions.	These new
+regions are called the 4mclient24m 4mbounding24m 4mregion24m, the 4mclient0m
+4mclip24m 4mregion24m and the 4mclient24m 4minput24m 4mregion24m.  They are specified
+relative to the origin of the window and are always defined
+by offsets relative to the window origin (that is, region
+adjustments are not required when the window is moved).
+Three mechanisms for specifying regions are provided:  a
+list of rectangles, a bitmap, and an existing bounding or
+clip region from a window.  This is modeled on the specifi-
+cation of regions in graphics contexts in the core protocol
+and allows a variety of different uses of the extension.
+
+When using an existing window shape as an operand in speci-
+fying a new shape, the client region is used, unless none
+has been set, in which case the default region is used
+instead.
+
+The 4meffective24m 4mbounding24m 4mregion24m of a window is defined to be
+the intersection of the client bounding region with the
+default bounding region.  Any portion of the client bounding
+region that is not included in the default bounding region
+will not be included in the effective bounding region on the
+screen.	 This means that window managers (or other geometry
+managers) used to dealing with rectangular client windows
+will be able to constrain the client to a rectangular area
+of the screen.
+
+Construction of the effective bounding region is dynamic;
+the client bounding region is not mutated to obtain the
+effective bounding region.  If a client bounding region is
+specified that extends beyond the current default bounding
+region, and the window is later enlarged, the effective
+bounding region will be enlarged to include more of the
+
+
+
+			      1m20m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+client bounding region.
+
+The 4meffective24m 4mclip24m 4mregion24m of a window is defined to be the
+intersection of the client clip region with both the default
+clip region and the client bounding region.  Any portion of
+the client clip region that is not included in both the
+default clip region and the client bounding region will not
+be included in the effective clip region on the screen.
+
+Construction of the effective clip region is dynamic; the
+client clip region is not mutated to obtain the effective
+clip region.  If a client clip region is specified that
+extends beyond the current default clip region and the win-
+dow or its bounding region is later enlarged, the effective
+clip region will be enlarged to include more of the client
+clip region if it is included in the effective bounding
+region.
+
+The border of a window is defined to be the difference
+between the effective bounding region and the effective clip
+region.	 If this region is empty, no border is displayed.
+If this region is nonempty, the border is filled using the
+border-tile or border-pixel of the window as specified in
+the core protocol.  Note that a window with a nonzero border
+width will never be able to draw beyond the default clip
+region of the window.  Also note that a zero border width
+does not prevent a window from having a border, since the
+clip shape can still be made smaller than the bounding
+shape.
+
+All output to the window and visible regions of any subwin-
+dows will be clipped to the effective clip region.  The
+server must not retain window contents beyond the effective
+bounding region with backing store.  The window's origin
+(for graphics operations, background tiling, and subwindow
+placement) is not affected by the existence of a bounding
+region or clip region.
+
+The 4meffective24m 4minput24m 4mregion24m of a window is defined to be the
+intersection of the client input region with both the
+default input region and the client bounding region.  Any
+portion of the client input region that is not included in
+both the default input region and the client bounding region
+will not be included in the effective input region on the
+screen.
+
+Construction of the effective input region is dynamic; the
+client input region is not mutated to obtain the effective
+input region.  If a client input region is specified that
+extends beyond the current default input region and the win-
+dow or its bounding region is later enlarged, the effective
+input region will be enlarged to include more of the client
+input region if it is included in the effective bounding
+region.
+
+
+
+			      1m30m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+Areas that are inside the default bounding region but out-
+side the effective bounding region are not part of the win-
+dow; these areas of the screen will be occupied by other
+windows.  Input events that occur within the default bound-
+ing region but outside the effective bounding region will be
+delivered as if the window was not occluding the event posi-
+tion.  Events that occur in a nonrectangular border of a
+window will be delivered to that window, just as for events
+that occur in a normal rectangular border.
+
+An 4mInputOnly24m window can have its bounding or input region
+set, but it is a 4mMatch24m error to attempt to set a clip region
+on an 4mInputOnly24m window or to specify its clip region as a
+source to a request in this extension.
+
+The server must accept changes to the clip and input regions
+of a root window, but the server is permitted to ignore
+requested changes to the bounding region of a root window.
+If the server accepts bounding region changes, the contents
+of the screen outside the bounding region are implementation
+dependent.
+
+1m3.  Types0m
+
+The following types are used in the request and event defi-
+nitions in subsequent sections.
+
+SHAPE_KIND: {4mBounding24m, 4mClip24m, 4mInput24m}
+
+SHAPE_OP: {4mSet24m, 4mUnion24m, 4mIntersect24m, 4mSubtract24m, 4mInvert24m}
+
+4mSet24m indicates that the region specified as an explicit
+source in the request is stored unaltered as the new desti-
+nation client region.  4mUnion24m indicates that the source and
+destination regions are unioned together to produce the new
+destination client region.  4mIntersect24m indicates that the
+source and destination regions are intersected together to
+produce the new destination client region.  4mSubtract24m indi-
+cates that the source region is subtracted from the destina-
+tion region to produce the new destination region.  4mInvert0m
+indicates that the destination region is subtracted from the
+source region to produce the new destination region.
+
+1m4.  Requests0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m40m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+__
+|    4mShapeQueryVersion0m
+
+   =>
+
+     majorVersion: CARD16
+     minorVersion: CARD16
+|__
+
+This request can be used to ensure that the server version
+of the SHAPE extension is usable by the client.	 This docu-
+ment defines major version one (1), minor version one (1).
+
+__
+|    4mShapeRectangles0m
+
+     4mdest24m: WINDOW
+     4mdestKind24m: SHAPE_KIND
+     4mop24m: SHAPE_OP
+     4mxOff,24m 4myOff24m: INT16
+     4mrectangles24m: LISTofRECTANGLES
+     4mordering24m: {4mUnSorted24m, 4mYSorted24m, 4mYXSorted24m, 4mYXBanded24m}
+
+     Errors: 4mWindow24m, 4mLength24m, 4mMatch24m, 4mValue0m
+|__
+
+This request specifies an array of rectangles, relative to
+the origin of the window plus the specified offset (xOff and
+yOff) that together define a region.  This region is com-
+bined (as specified by the operator op) with the existing
+client region (specified by destKind) of the destination
+window, and the result is stored as the specified client
+region of the destination window.  Note that the list of
+rectangles can be empty, specifying an empty region; this is
+not the same as passing 4mNone24m to 4mShapeMask24m.
+
+If known by the client, ordering relations on the rectangles
+can be specified with the ordering argument.  This may pro-
+vide faster operation by the server.  The meanings of the
+ordering values are the same as in the core protocol 4mSet-0m
+4mClipRectangles24m request.  If an incorrect ordering is speci-
+fied, the server may generate a 4mMatch24m error, but it is not
+required to do so.  If no error is generated, the graphics
+results are undefined.	Except for 4mUnSorted24m, the rectangles
+should be nonintersecting, or the resulting region will be
+undefined.  4mUnSorted24m means that the rectangles are in arbi-
+trary order.  4mYSorted24m means that the rectangles are nonde-
+creasing in their Y origin.  4mYXSorted24m additionally con-
+strains 4mYSorted24m order in that all rectangles with an equal Y
+origin are nondecreasing in their X origin.  4mYXBanded24m addi-
+tionally constrains 4mYXSorted24m by requiring that, for every
+possible Y scanline, all rectangles that include that scan-
+line have identical Y origins and Y extents.
+
+
+
+
+
+			      1m50m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+__
+|    4mShapeMask0m
+
+     4mdest24m: WINDOW
+     4mdestKind24m: SHAPE_KIND
+     4mop24m: SHAPE_OP
+     4mxOff,24m 4myOff24m: INT16
+     4msource24m: PIXMAP or 4mNone0m
+
+     Errors: 4mWindow24m, 4mPixmap24m, 4mMatch24m, 4mValue0m
+|__
+
+The source in this request is a 1-bit deep pixmap, or 4mNone24m.
+If source is 4mNone24m, the specified client region is removed
+from the window, causing the effective region to revert to
+the default region.  The 4mShapeNotify24m event generated by this
+request and subsequent 4mShapeQueryExtents24m will report that a
+client shape has not been specified.  If a valid pixmap is
+specified, it is converted to a region, with bits set to one
+included in the region and bits set to zero excluded, and an
+offset from the window origin as specified by xOff and yOff.
+The resulting region is then combined (as specified by the
+operator op) with the existing client region (indicated by
+destKind) of the destination window, and the result is
+stored as the specified client region of the destination
+window.	 The source pixmap and destination window must have
+been created on the same screen, or else a 4mMatch24m error
+results.
+
+__
+|    4mShapeCombine0m
+
+     4mdest24m: WINDOW
+     4mdestKind24m: SHAPE_KIND
+     4mop24m: SHAPE_OP
+     4mxOff,24m 4myOff24m: INT16
+     4msource24m: WINDOW
+     4msourceKind24m: SHAPE_KIND
+
+     Errors: 4mWindow24m, 4mMatch24m, 4mValue0m
+|__
+
+The client region, indicated by sourceKind, of the source
+window is offset from the window origin by xOff and yOff and
+combined with the client region, indicated by destKind, of
+the destination window.	 The result is stored as the speci-
+fied client region of the destination window.  The source
+and destination windows must be on the same screen, or else
+a 4mMatch24m error results.
+
+
+
+
+
+
+
+
+
+			      1m60m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+__
+|    4mShapeOffset0m
+
+     4mdest24m: WINDOW
+     4mdestKind24m: SHAPE_KIND
+     4mxOff,24m 4myOff24m: INT16
+
+     Errors: 4mWindow24m, 4mMatch24m, 4mValue0m
+|__
+
+The client region, indicated by destKind, is moved relative
+to its current position by the amounts xOff and yOff.
+
+__
+|    4mShapeQueryExtents0m
+
+     4mdest24m: WINDOW
+
+   =>
+
+     boundingShaped: BOOL
+     clipShaped: BOOL
+     xBoundingShape: INT16
+     yBoundingShape: INT16
+     widthBoundingShape: CARD16
+     heightBoundingShape: CARD16
+     xClipShape: INT16
+     yClipShape: INT16
+     widthClipShape: CARD16
+     heightClipShape: CARD16
+
+     Errors: 4mWindow0m
+|__
+
+The boundingShaped and clipShaped results are 4mTrue24m if the
+corresponding client regions have been specified, else they
+are 4mFalse24m.	 The x, y, width, and height values define the
+extents of the client regions, when a client region has not
+been specified, the extents of the corresponding default
+region are reported.
+
+__
+|    4mShapeSelectInput0m
+
+     4mwindow24m: WINDOW
+     4menable24m: BOOL
+
+     Errors: 4mWindow24m, 4mValue0m
+|__
+
+Specifying enable as 4mTrue24m causes the server to send the
+requesting client a 4mShapeNotify24m event whenever the bounding,
+clip or input region of the specified window is altered by
+any client.  Specifying enable as 4mFalse24m causes the server to
+stop sending such events.
+
+
+
+			      1m70m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+__
+|    4mShapeInputSelected0m
+
+     4mwindow24m: WINDOW
+
+   =>
+
+     enable: BOOL
+
+     Errors: 4mWindow0m
+|__
+
+If enable is 4mTrue24m, then 4mShapeNotify24m events for the window
+are generated for this client.
+
+__
+|    4mShapeGetRectangles0m
+
+     4mwindow24m: WINDOW
+     4mkind24m: SHAPE_KIND
+
+   =>
+
+     rectangles: LISTofRECTANGLE
+     ordering: {4mUnSorted24m, 4mYSorted24m, 4mYXSorted24m, 4mYXBanded24m}
+
+     Errors: 4mWindow,24m 4mMatch0m
+|__
+
+A list of rectangles describing the region indicated by
+kind, and the ordering of those rectangles, is returned.
+The meaning of the ordering values is the same as in the
+4mShapeRectangles24m request.
+
+1m5.  Events0m
+
+__
+|    4mShapeNotify0m
+
+     4mwindow24m: WINDOW
+     4mkind24m: SHAPE_KIND
+     4mshaped24m: BOOL
+     4mx24m, 4my24m: INT16
+     4mwidth24m, 4mheight24m: CARD16
+     4mtime24m: TIMESTAMP
+|__
+
+Whenever the client bounding, clip or input shape of a win-
+dow is modified, a 4mShapeNotify24m event is sent to each client
+that has used 4mShapeSelectInput24m to request it.
+
+Kind indicates which client region (bounding or clip) has
+been modified; shaped is 4mTrue24m when the window has a client
+shape of type kind, and is 4mFalse24m when the window no longer
+has a client shape of this type.  The x, y, width, and
+
+
+
+			      1m80m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+height indicate the extents of the current shape.  When
+shaped is 4mFalse24m these will indicate the extents of the
+default region.	 The timestamp indicates the server time
+when the shape was changed.
+
+1m6.  Encoding0m
+
+Please refer to the X11 Protocol Encoding document as this
+document uses conventions established there.
+
+The name of this extension is ``SHAPE''.
+
+
+1m6.1.	New Types0m
+
+
+SHAPE_KIND
+       0	 Bounding
+       1	 Clip
+       2	 Input
+
+
+
+SHAPE_OP
+       0	 Set
+       1	 Union
+       2	 Intersect
+       3	 Subtract
+       4	 Invert
+
+
+1m6.2.	Requests0m
+
+
+4mShapeQueryVersion0m
+  1  CARD8		 opcode
+  1  0			 shape opcode
+  2  1			 request length
+
+
+ =>
+  1  1			 Reply
+  1			 unused
+  2  CARD16		 sequence number
+  4  0			 length
+  2  CARD16		 major version
+  2  CARD16		 minor version
+  20			 unused
+
+
+
+4mShapeRectangles0m
+  1  CARD8		 opcode
+  1  1			 shape opcode
+
+
+
+			      1m90m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+  2  4+2n		 request length
+  1  SHAPE_OP		 operation
+  1  SHAPE_KIND		 destination kind
+  1			 ordering
+     0	       UnSorted
+     1	       YSorted
+     2	       YXSorted
+     3	       YXBanded
+  1			 unused
+  4  WINDOW		 destination window
+  2  INT16		 x offset
+  2  INT16		 y offset
+  8n LISTofRECTANGLE	 rectangles
+
+
+
+4mShapeMask0m
+  1  CARD8		 opcode
+  1  2			 shape opcode
+  2  5			 request length
+  1  SHAPE_OP		 operation
+  1  SHAPE_KIND		 destination kind
+  2			 unused
+  4  WINDOW		 destination window
+  2  INT16		 x offset
+  2  INT16		 y offset
+  4  PIXMAP		 source bitmap
+     0	       None
+
+
+
+4mShapeCombine0m
+  1  CARD8		 opcode
+  1  3			 shape opcode
+  2  5			 request length
+  1  SHAPE_OP		 operation
+  1  SHAPE_KIND		 destination kind
+  1  SHAPE_KIND		 source kind
+  1			 unused
+  4  WINDOW		 destination window
+  2  INT16		 x offset
+  2  INT16		 y offset
+  4  WINDOW		 source window
+
+
+
+4mShapeOffset0m
+  1  CARD8		 opcode
+  1  4			 shape opcode
+  2  4			 request length
+  1  SHAPE_KIND		 destination kind
+  3			 unused
+  4  WINDOW		 destination window
+  2  INT16		 x offset
+
+
+
+			     1m100m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+  2  INT16		 y offset
+
+
+
+4mShapeQueryExtents0m
+  1  CARD8		 opcode
+  1  5			 shape opcode
+  2  2			 request length
+  4  WINDOW		 destination window
+
+
+ =>
+  1  1			 Reply
+  1			 unused
+  2  CARD16		 sequence number
+  4  0			 reply length
+  1  BOOL		 bounding shaped
+  1  BOOL		 clip shaped
+  2			 unused
+  2  INT16		 bounding shape extents x
+  2  INT16		 bounding shape extents y
+  2  CARD16		 bounding shape extents width
+  2  CARD16		 bounding shape extents height
+  2  INT16		 clip shape extents x
+  2  INT16		 clip shape extents y
+  2  CARD16		 clip shape extents width
+  2  CARD16		 clip shape extents height
+  4			 unused
+
+
+
+4mShapeSelectInput0m
+  1  CARD8		 opcode
+  1  6			 shape opcode
+  2  3			 request length
+  4  WINDOW		 destination window
+  1  BOOL		 enable
+  3			 unused
+
+
+
+4mShapeInputSelected0m
+  1  CARD8		 opcode
+  1  6			 shape opcode
+  2  2			 request length
+  4  WINDOW		 destination window
+
+
+ =>
+  1  1			 Reply
+  1  BOOL		 enabled
+  2  CARD16		 sequence number
+  4  0			 reply length
+  24			 unused
+
+
+
+			     1m110m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+4mShapeGetRectangles0m
+  1  CARD8		 opcode
+  1  7			 shape opcode
+  2  3			 request length
+  4  WINDOW		 window
+  1  SHAPE_KIND		 source kind
+  3			 unused
+
+
+ =>
+  1  1			 Reply
+  1			 ordering
+     0	       UnSorted
+     1	       YSorted
+     2	       YXSorted
+     3	       YXBanded
+  2  CARD16		 sequence number
+  4  2n			 reply length
+  4  CARD32		 nrects
+  20			 unused
+  8n LISTofRECTANGLE	 rectangles
+
+
+1m6.3.	Events0m
+
+
+
+4mShapeNotify0m
+  1  CARD8		 type (0 + extension event base)
+  1  SHAPE_KIND		 shape kind
+  2  CARD16		 sequence number
+  4  WINDOW		 affected window
+  2  INT16		 x value of extents
+  2  INT16		 y value of extents
+  2  CARD16		 width of extents
+  2  CARD16		 height of extents
+  4  TIMESTAMP		 server time
+  1  BOOL		 shaped
+  11			 unused
+
+
+1m7.  Glossary0m
+
+1mbounding region0m
+
+     The area of the parent window that this window will
+     occupy.  This area is divided into two parts:  the bor-
+     der and the interior.
+
+
+
+
+
+
+
+
+
+			     1m120m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+1mclip region0m
+
+     The interior of the window, as a subset of the bounding
+     region.  This region describes the area that will be
+     painted with the window background when the window is
+     cleared, will contain all graphics output to the win-
+     dow, and will clip any subwindows.
+
+1minput region0m
+
+     The subset of the bounding region which can ``contain''
+     the pointer.
+
+1mdefault bounding region0m
+
+     The rectangular area, as described by the core protocol
+     window size, that covers the interior of the window and
+     its border.
+
+1mdefault clip region0m
+
+     The rectangular area, as described by the core protocol
+     window size, that covers the interior of the window and
+     excludes the border.
+
+1mdefault input region0m
+
+     The rectangular area, as described by the core protocol
+     window size, that covers the interior of the window and
+     its border.
+
+1mclient bounding region0m
+
+     The region associated with a window that is directly
+     modified via this extension when specified by 4mShape-0m
+     4mBounding24m.  This region is used in conjunction with the
+     default bounding region to produce the effective bound-
+     ing region.
+
+1mclient clip region0m
+
+     The region associated with a window that is directly
+     modified via this extension when specified by
+     4mShapeClip24m.  This region is used in conjunction with the
+     default clip region and the client bounding region to
+     produce the effective clip region.
+
+
+
+
+
+
+
+
+
+
+
+			     1m130m
+
+
+
+
+
+     X11 Nonrectangular Window Shape Extension Protocol
+
+
+1mclient input region0m
+
+     The region associated with a window that is directly
+     modified via this extension when specified by 4mShapeIn-0m
+     4mput24m.	This region is used in conjunction with the
+     default input region and the client bounding region to
+     produce the effective input region.
+
+1meffective bounding region0m
+
+     The actual shape of the window on the screen, including
+     border and interior (but excluding the effects of over-
+     lapping windows).	When a window has a client bounding
+     region, the effective bounding region is the intersec-
+     tion of the default bounding region and the client
+     bounding region.  Otherwise, the effective bounding
+     region is the same as the default bounding region.
+
+1meffective clip region0m
+
+     The actual shape of the interior of the window on the
+     screen (excluding the effects of overlapping windows).
+     When a window has a client clip region or a client
+     bounding region, the effective clip region is the
+     intersection of the default clip region, the client
+     clip region (if any) and the client bounding region (if
+     any).  Otherwise, the effective clip region is the same
+     as the default clip region.
+
+1meffective input region0m
+
+     The actual shape of the window on the screen (excluding
+     the effects of overlapping windows) which can ``con-
+     tain'' the pointer.  When a window has a client input
+     region or a client bounding region, the effective input
+     region is the intersection of the default input region,
+     the client input region (if any) and the client bound-
+     ing region (if any).  Otherwise, the effective input
+     region is the same as the default input region.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m140m
+
+

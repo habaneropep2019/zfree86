@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/SM/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(SMlib,SMlib.PS.gz)
+InstallHardcopyDoc(xsmp,xsmp.PS.gz)
+

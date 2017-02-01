@@ -1,0 +1,1914 @@
+
+
+
+
+
+
+
+
+
+
+	       1mX Session Management Protocol0m
+
+		       1mX.Org Standard0m
+
+		 1mX Version 11, Release 6.70m
+
+
+			4mMike24m 4mWexler0m
+	       Kubota Pacific Computer, Inc.
+
+
+			  4mABSTRACT0m
+
+     This document specifies a protocol that facili-
+     tates the management of groups of client applica-
+     tions by a session manager.  The session manager
+     can cause clients to save their state, to shut
+     down, and to be restarted into a previously saved
+     state.  This protocol is layered on top of the
+     X.Org ICE protocol.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     X Window System is a trademark of The Open Group.
+
+     Copyright � 1992, 1993, 1994, 2002 The Open Group.
+
+
+
+
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     ii
+
+
+
+
+
+
+
+
+1m1.  Acknowledgements0m
+
+First I would like to thank the entire ICCCM and Intrinsics
+working groups for the comments and suggestions. I would
+like to make special thanks to the following people (in
+alphabetical order), Jordan Brown, Ellis Cohen, Donna Con-
+verse, Vania Joloboff, Stuart Marks, Ralph Mor and Bob
+Scheifler.
+
+1m2.  Definitions and Goals0m
+
+The purpose of the X Session Management Protocol (XSMP) is
+to provide a uniform mechanism for users to save and restore
+their sessions.	 A 4msession24m is a group of clients, each of
+which has a particular state.  The session is controlled by
+a network service called the 4msession24m 4mmanager24m.	 The session
+manager issues commands to its clients on behalf of the
+user.  These commands may cause clients to save their state
+or to terminate.  It is expected that the client will save
+its state in such a way that the client can be restarted at
+a later time and resume its operation as if it had never
+been terminated.  A client's state might include information
+about the file currently being edited, the current position
+of the insertion point within the file, or the start of an
+uncommitted transaction.  The means by which clients are
+restarted is unspecified by this protocol.
+
+For purposes of this protocol, a 4mclient24m of the session man-
+ager is defined as a connection to the session manager.	 A
+client is typically, though not necessarily, a process run-
+ning an application program connected to an X Window System
+display.  However, a client may be connected to more than
+one X display or not be connected to any X displays at all.
+
+This protocol is layered on top of the X Consortium's ICE
+protocol and relies on the ICE protocol to handle connection
+management and authentication.
+
+
+1m3.  Overview of the Protocol0m
+
+Clients use XSMP to register themselves with the session
+manager (SM).  When a client starts up, it should connect to
+the SM.	 The client should remain connected for as long as
+it runs.  A client may resign from the session by issuing
+the proper protocol messages before disconnecting.  Termina-
+tion of the connection without notice will be taken as an
+indication that the client died unexpectedly.
+
+Clients are expected to save their state in such a way as to
+allow multiple instantiations of themselves to be managed
+independently.	A unique value called a 4mclient-ID24m is pro-
+vided by the protocol for the purpose of disambiguating mul-
+tiple instantiations of clients.  Clients may use this ID,
+
+
+
+			      1m10m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+for example, as part of a filename in which to store the
+state for a particular instantiation.  The client-ID should
+be saved as part of the command used to restart this client
+(the 4mRestartCommand24m) so that the client will retain the same
+ID after it is restarted.  Certain small pieces of state
+might also be stored in the RestartCommand.   For example,
+an X11 client might place a `-twoWindow' option in its
+RestartCommand to indicate that it should start up in two
+window mode when it is restarted.
+
+The client finds the network address of the SM in a system-
+dependent way.	On POSIX systems an environment variable
+called SESSION_MANAGER will contain a list of network IDs.
+Each id will contain the transport name followed by a slash
+and the (transport-specific) address.  A TCP/IP address
+would look like this:
+
+	  tcp/4mhostname24m:4mportnumber0m
+
+where the hostname is a fully qualified domain name.  A Unix
+Domain address looks like this:
+
+	  local/4mhostname24m:4mpath0m
+
+A DECnet address would look like this:
+
+	  decnet/4mnodename24m::4mobjname0m
+
+If multiple network IDs are specified, they should be sepa-
+rated by commas.
+
+			 Rationale
+
+     There was much discussion over whether the XSMP
+     protocol should use X as the transport protocol or
+     whether it should use its own independent trans-
+     port.  It was decided that it would use an inde-
+     pendent protocol for several reasons.  First, the
+     Session Manager should be able to manage programs
+     that do not maintain an X connection.  Second, the
+     X protocol is not appropriate to use as a general-
+     purpose transport protocol.  Third, a session
+     might span multiple displays.
+
+     The protocol is connection based, because there is
+     no other way for the SM to determine reliably when
+     clients terminate.
+
+     It should be noted that this protocol introduces
+     another single point of failure into the system.
+     Although it is possible for clients to continue
+     running after the SM has exited, this will proba-
+     bly not be the case in normal practice.  Normally
+     the program that starts the SM will consider the
+
+
+
+			      1m20m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+     session to be terminated when the SM exits (either
+     normally or abnormally).
+
+     To get around this would require some sort of ren-
+     dezvous server that would also introduce a single
+     point of failure.	In the absence of a generally
+     available rendezvous server, XSMP is kept simple
+     in the hopes of making simple reliable SMs.
+
+
+Some clients may wish to manage the programs they start.
+For example, a mail program could start a text editor for
+editing the text of a mail message.  A client that does this
+is a session manager itself; it should supply the clients it
+starts with the appropriate connection information (i.e.,
+the SESSION_MANAGER environment variable) that specifies a
+connection to itself instead of to the top level session
+manager.
+
+Each client has associated with it a list of properties.  A
+property set by one client is not visible to any other
+client.	 These properties are used for the client to inform
+the SM of the client's current state.  When a client ini-
+tially connects to the SM, there are no properties set.
+
+1m4.  Data Types0m
+
+XSMP messages contain several types of data.  Both the SM
+and the client always send messages in their native byte
+order.	Thus, both sides may need to byte-swap the messages
+received.  The need to do byte-swapping is determined at
+run-time by the ICE protocol.
+
+If an invalid value is specified for a field of any of the
+enumerated types, a 4mBadValue24m error message must be sent by
+the receiver of the message to the sender of the message.
+
+------------------------------------------------------------------------------------
+1mType Name	   Description0m
+------------------------------------------------------------------------------------
+BOOL		 4mFalse24m or 4mTrue0m
+INTERACT_STYLE	 4mNone24m, 4mErrors24m, or 4mAny0m
+DIALOG_TYPE	 4mError24m or 4mNormal0m
+SAVE_TYPE	 4mGlobal24m, 4mLocal24m, or 4mBoth0m
+CARD8		 a one-byte unsigned integer
+CARD16		 a two-byte unsigned integer
+CARD32		 a four-byte unsigned integer
+ARRAY8		 a sequence of CARD8s
+LISTofARRAY8	 a sequence of ARRAY8s
+PROPERTY	 a property name (an ARRAY8), a type name, and a value of that type
+LISTofPROPERTY	 a counted collection of PROPERTYs.
+------------------------------------------------------------------------------------
+
+
+
+
+
+			      1m30m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+1m5.  Protocol Setup and Message Format0m
+
+To start the XSMP protocol, the client sends the server an
+ICE 4mProtocolSetup24m message.	 All XSMP messages are in the
+standard ICE message format.  The message's major opcode is
+assigned to XSMP by ICE at run-time.  The different parties
+(client and SM) may be assigned different major opcodes for
+XSMP.  Once assigned, all XSMP messages issued by this party
+will use the same major opcode.	 The message's minor opcode
+specifies which protocol message this message contains.
+
+1m6.  Client Identification String0m
+
+A client ID is a string of XPCS characters encoded in ISO
+Latin 1 (ISO 8859-1).  No null characters are allowed in
+this string.  The client ID string is used in the 4mRegister-0m
+4mClient24m and 4mRegisterClientReply24m messages.
+
+Client IDs consist of the pieces described below.  The ID is
+formed by concatenating the pieces in sequence, without sep-
+arator characters.  All pieces are padded on the left with
+'0' characters so as to fill the specified length.  Decimal
+numbers are encoded using the characters `0' through `9',
+and hexadecimal numbers using the characters `0' through `9'
+and `A' through `F'.
+
+�   Version.  This is currently the character `1'.
+
+�   Address type and address.  The address type will be one
+    of
+
+	 `1'  a 4-byte IPv4 address encoded as 8 hexadecimal digits
+	 `2'  a 6-byte DECNET address encoded as 12 hexadecimal digits
+	 `6'  a 16-byte IPv6 address encoded as 32 hexadecimal digits
+
+
+    The address is the one of the network addresses of the
+    machine where the session manager (not the client) is
+    running.  For example, the IP address 198.112.45.11
+    would be encoded as the string "C6702D0B".
+
+�   Time stamp.	 A 13-digit decimal number specifying the
+    number of milliseconds since 00:00:00 UTC, January 1,
+    1970.
+
+�   Process-ID type and process-ID.  The process-ID type
+    will be one of
+
+	 `1'  a POSIX process-ID encoded as a 10-digit decimal number.
+
+
+    The process-ID is the process-ID of the session manager,
+    not of a client.
+
+
+
+
+			      1m40m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+�   Sequence number.  This is a four-digit decimal number.
+    It is incremented every time the session manager creates
+    an ID.  After reaching "9999" it wraps to "0000".
+
+			   Rationale
+
+	 Once a client ID has been assigned to the
+	 client, the client keeps this ID indefinitely.
+	 If the client is terminated and restarted, it
+	 will be reassigned the same ID.  It is desir-
+	 able to be able to pass client IDs around from
+	 machine to machine, from user to user, and
+	 from session manager to session manager, while
+	 retaining the identity of the client.	This,
+	 combined with the indefinite persistence of
+	 client IDs, means that client IDs need to be
+	 globally unique.  The construction specified
+	 above will ensure that any client ID created
+	 by any user, session manager, and machine will
+	 be different from any other.
+
+
+1m7.  Protocol0m
+
+The protocol consists of a sequence of messages as described
+below.	Each message type is specified by an ICE minor
+opcode.	 A given message type is sent either from a client
+to the session manager or from the session manager to a
+client; the appropriate direction is listed with each mes-
+sage's description.  For each message type, the set of valid
+responses and possible error messages are listed.  The ICE
+severity is given in parentheses following each error class.
+
+__
+|    4mRegisterClient24m [Client -> SM]
+
+     4mprevious-ID24m: ARRAY8
+
+     Valid Responses: 4mRegisterClientReply0m
+
+|__	  Possible Errors: 4mBadValue24m (4mCanContinue24m)
+
+
+The client must send this message to the SM to register the
+client's existence.  If a client is being restarted from a
+previous session, the previous-ID field must contain the
+client ID from the previous session.  For new clients, pre-
+vious-ID should be of zero length.
+
+If previous-ID is not valid, the SM will send a 4mBadValue0m
+error message to the client.  At this point the SM reverts
+to the register state and waits for another 4mRegisterClient24m.
+The client should then send a 4mRegisterClient24m with a null
+previous-ID field.
+
+
+
+			      1m50m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+__
+|    4mRegisterClientReply24m [Client <- SM]
+
+|__	  4mclient-ID24m: ARRAY8
+
+
+The client-ID specifies a unique identification for this
+client.	 If the client had specified an ID in the previous-
+ID field of the 4mRegisterClient24m message, client-ID will be
+identical to the previously specified ID.  If previous-ID
+was null, client-ID will be a unique ID freshly generated by
+the SM.	 The client-ID format is specified in section 6.
+
+If the client didn't supply a previous-ID field to the
+4mRegisterClient24m message, the SM must send a 4mSaveYourself24m mes-
+sage with type = Local, shutdown = False, interact-style =
+None, and fast = False immediately after the 4mRegisterClien-0m
+4mtReply24m.  The client should respond to this like any other
+4mSaveYourself24m message.
+
+__
+|    4mSaveYourself24m [Client <- SM]
+
+     4mtype24m: SAVE_TYPE
+     4mshutdown24m: BOOL
+     4minteract-style24m: INTERACT_STYLE
+     4mfast24m: BOOL
+
+     Valid Responses: 4mSetProperties24m, 4mDeleteProperties24m, 4mGet-0m
+     4mProperties24m, 4mSaveYourselfDone24m, 4mSaveYourself-0m
+|__	  4mPhase2Request24m, 4mInteractRequest0m
+
+
+The SM sends this message to a client to ask it to save its
+state.	The client writes a state file, if necessary, and,
+if necessary, uses 4mSetProperties24m to inform the SM of how to
+restart it and how to discard the saved state.	During this
+process it can, if allowed by interact-style, request per-
+mission to interact with the user by sending an 4mInteractRe-0m
+4mquest24m message.  After the state has been saved, or if it
+cannot be successfully saved, and the properties are appro-
+priately set, the client sends a 4mSaveYourselfDone24m message.
+If the client wants to save additional information after all
+the other clients have finished changing their own state,
+the client should send 4mSaveYourselfPhase2Request24m instead of
+4mSaveYourselfDone24m.	The client must then freeze interaction
+with the user and wait until it receives a 4mSaveComplete24m,
+4mDie24m, or a 4mShutdownCancelled24m message.
+
+If interact-style is 4mNone24m, the client must not interact with
+the user while saving state.  If the interact-style is
+4mErrors24m, the client may interact with the user only if an
+error condition arises.	 If interact-style is 4mAny24m, then the
+client may interact with the user for any purpose.  This is
+done by sending an 4mInteractRequest24m message.  The SM will
+
+
+
+			      1m60m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+send an 4mInteract24m message to each client that sent an
+4mInteractRequest24m.  The client must postpone all interaction
+until it gets the 4mInteract24m message.  When the client is done
+interacting it should send the SM an 4mInteractDone24m message.
+The 4mInteractRequest24m message can be sent any time after a
+4mSaveYourself24m and before a 4mSaveYourselfDone24m.
+
+Unusual circumstances may dictate multiple interactions.
+The client may initiate as many 4mInteractRequest24m - 4mInteract24m -
+4mInteractDone24m sequences as it needs before it sends 4mSaveYour-0m
+4mselfDone24m.
+
+When a client receives 4mSaveYourself24m and has not yet
+responded 4mSaveYourselfDone24m to a previous 4mSaveYourself24m, it
+must send a 4mSaveYourselfDone24m and may then begin responding
+as appropriate to the newly received 4mSaveYourself24m.
+
+The type field specifies the type of information that should
+be saved: 4mGlobal24m, 4mLocal24m, or 4mBoth24m.  The 4mLocal24m type indicates
+that the application must update the properties to reflect
+its current state, send a 4mSaveYourselfDone24m and continue.
+Specifically it should save enough information to restore
+the state as seen by the user of this client.  It should not
+affect the state as seen by other users.  The 4mGlobal24m type
+indicates that the user wants the client to commit all of
+its data to permanent, globally-accessible storage.  4mBoth0m
+indicates that the client should do both of these.  If 4mBoth0m
+is specified, the client should first commit the data to
+permanent storage before updating its SM properties.
+
+			  Examples
+
+     If a word processor was sent a 4mSaveYourself24m with a
+     type of 4mLocal24m, it could create a temporary file
+     that included the current contents of the file,
+     the location of the cursor, and other aspects of
+     the current editing session.  It would then update
+     its 4mRestartCommand24m property with enough informa-
+     tion to find the temporary file, and its 4mDiscard-0m
+     4mCommand24m with enough information to remove it.
+
+     If a word processor was sent a 4mSaveYourself24m with a
+     type of 4mGlobal24m, it would simply save the currently
+     edited file.
+
+     If a word processor was sent a 4mSaveYourself24m with a
+     type of 4mBoth24m, it would first save the currently
+     edited file.  It would then create a temporary
+     file with information such as the current position
+     of the cursor and what file is being edited.  It
+     would then update its 4mRestartCommand24m property with
+     enough information to find the temporary file, and
+     its 4mDiscardCommand24m with enough information to
+     remove it.
+
+
+
+			      1m70m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+     Once the SM has send 4mSaveYourself24m to a client, it
+     can't send another 4mSaveYourself24m to that client
+     until the client either responds with a 4mSaveYour-0m
+     4mselfDone24m or the SM sends a 4mShutdownCancelled24m.
+
+
+		   Advice to Implementors
+
+     If the client stores local any state in a file or
+     similar "external" storage, it must create a dis-
+     tinct copy in response to each 4mSaveYourself24m mes-
+     sage.  It 4mmust24m 4mnot24m simply refer to a previous
+     copy, because the SM may discard that previous
+     saved state using a 4mDiscardCommand24m without knowing
+     that it is needed for the new checkpoint.
+
+
+The shutdown field specifies whether the system is being
+shut down.
+
+			 Rationale
+
+     The interaction may be different depending on
+     whether or not shutdown is set.
+
+The client must save and then must prevent interaction until
+it receives a 4mSaveComplete24m, 4mDie24m, or a 4mShutdownCancelled24m,
+because anything the user does after the save will be lost.
+
+The fast field specifies whether or not the client should
+save its state as quickly as possible.	For example, if the
+SM knows that power is about to fail, it should set the fast
+field to 4mTrue24m.
+
+__
+|    4mSaveYourselfPhase224m [Client <- SM]
+
+
+     Valid Responses: 4mSetProperties24m, 4mDeleteProperties24m, 4mGet-0m
+|__	  4mProperties24m, 4mSaveYourselfDone24m, 4mInteractRequest0m
+
+
+The SM sends this message to a client that has previously
+sent a 4mSaveYourselfPhase2Request24m message.	This message
+informs the client that all other clients are in a fixed
+state and this client can save state that is associated with
+other clients.
+
+			 Rationale
+
+     Clients that manager other clients (window man-
+     agers, workspace managers, etc) need to know when
+     all clients they are managing are idle, so that
+     the manager can save state related to each of the
+
+
+
+			      1m80m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+     clients without being concerned with that state
+     changing.
+
+The client writes a state file, if necessary, and, if neces-
+sary, uses 4mSetProperties24m to inform the SM of how to restart
+it and how to discard the saved state.	During this process
+it can request permission to interact with the user by send-
+ing an 4mInteractRequest24m message.  This should only be done if
+an error occurs that requires user interaction to resolve.
+After the state has been saved, or if it cannot be success-
+fully saved, and the properties are appropriately set, the
+client sends a 4mSaveYourselfDone24m message.
+
+
+__
+|    4mSaveYourselfRequest24m [Client -> SM]
+
+     4mtype24m: SAVE_TYPE
+     4mshutdown24m: BOOL
+     4minteract-style24m: INTERACT_STYLE
+     4mfast24m: BOOL
+     4mglobal24m: BOOL
+
+|__	  Valid Responses: 4mSaveYourself0m
+
+
+An application sends this to the SM to request a checkpoint.
+When the SM receives this request it may generate a 4mSaveY-0m
+4mourself24m message in response and it may leave the fields
+intact.
+
+			  Example
+
+     A vendor of a UPS (Uninterruptible Power Supply)
+     might include an SM client that would monitor the
+     status of the UPS and generate a fast shutdown if
+     the power is about to be lost.
+
+
+If global is set to 4mTrue24m, then the resulting 4mSaveYourself0m
+should be sent to all applications.  If global is set to
+4mFalse24m, then the resulting 4mSaveYourself24m should be sent to the
+application that sent the 4mSaveYourselfRequest24m.
+
+__
+|    4mInteractRequest24m [Client -> SM]
+
+     4mdialog-type24m: DIALOG_TYPE
+
+     Valid Responses: 4mInteract24m, 4mShutdownCancelled0m
+
+|__	  Possible Errors: 4mBadState24m (4mCanContinue24m)
+
+
+
+
+
+			      1m90m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+During a checkpoint or session-save operation, only one
+client at a time might be granted the privilege of interact-
+ing with the user.  The 4mInteractRequest24m message causes the
+SM to emit an 4mInteract24m message at some later time if the
+shutdown is not cancelled by another client first.
+
+The dialog-type field specifies either 4mErrors24m, indicating
+that the client wants to start an error dialog or 4mNormal24m,
+meaning the client wishes to start a non-error dialog.
+
+__
+|    4mInteract24m [Client <- SM]
+
+     Valid Responses: 4mInteractDone0m
+|__
+
+
+This message grants the client the privilege of interacting
+with the user.	When the client is done interacting with the
+user it must send an 4mInteractDone24m message to the SM unless a
+shutdown cancel is received.
+
+		   Advice to Implementors
+
+     If a client receives a ShutdownCancelled after
+     receiving an 4mInteract24m message, but before sending
+     a 4mInteractDone24m, the client should abort the inter-
+     action and send a 4mSaveYourselfDone24m.
+
+
+__
+|    4mInteractDone24m [Client -> SM]
+
+     4mcancel-shutdown24m: BOOL
+
+     Valid Responses: 4mShutdownCancelled0m
+|__
+
+
+This message is used by a client to notify the SM that it is
+done interacting.
+
+Setting the cancel-shutdown field to 4mTrue24m indicates that the
+user has requested that the entire shutdown be cancelled.
+Cancel-shutdown may only be 4mTrue24m if the corresponding 4mSaveY-0m
+4mourself24m message specified 4mTrue24m for the shutdown field and
+4mAny24m or 4mErrors24m for the interact-style field.  Otherwise, can-
+cel-shutdown must be 4mFalse24m.
+
+
+
+
+
+
+
+
+
+			     1m100m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+__
+|    4mSaveYourselfDone24m [Client -> SM]
+
+     4msuccess24m: BOOL
+
+     Valid Responses: 4mSaveComplete24m, 4mDie24m, 4mShutdownCancelled0m
+|__
+
+
+This message is sent by a client to indicate that all of the
+properties representing its state have been updated.  After
+sending 4mSaveYourselfDone24m the client must wait for a 4mSaveCom-0m
+4mplete24m, 4mShutdownCancelled24m, or 4mDie24m message before changing its
+state.	If the 4mSaveYourself24m operation was successful, then
+the client should set the success field to 4mTrue24m; otherwise
+the client should set it to 4mFalse24m.
+
+			  Example
+
+     If a client tries to save its state and runs out
+     of disk space, it should return 4mFalse24m in the suc-
+     cess field of the 4mSaveYourselfDone24m message.
+
+
+__
+|    4mSaveYourselfPhase2Request24m [Client -> SM]
+
+     Valid Responses: 4mShutdownCancelled24m, 4mSaveYourselfPhase20m
+|__
+
+
+This message is sent by a client to indicate that it needs
+to be informed when all the other clients are quiescent, so
+it can continue its state.
+
+__
+|    4mDie24m [Client <- SM]
+
+|__	  Valid Responses: 4mConnectionClosed0m
+
+
+When the SM wants a client to die it sends a 4mDie24m message.
+Before the client dies it responds by sending a 4mConnection-0m
+4mClosed24m message and may then close its connection to the SM
+at any time.
+
+__
+|    4mSaveComplete24m [Client <- SM]
+
+|__	  Valid Responses:
+
+
+When the SM is done with a checkpoint, it will send each of
+the clients a 4mSaveComplete24m message.  The client is then free
+to change its state.
+
+
+
+			     1m110m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+__
+|__  4mShutdownCancelled24m [Client <- SM]
+
+
+The shutdown currently in process has been aborted.  The
+client can now continue as if the shutdown had never hap-
+pened.	If the client has not sent 4mSaveYourselfDone24m yet, the
+client can either abort the save and send 4mSaveYourselfDone0m
+with the success field set to 4mFalse24m, or it can continue with
+the save and send a 4mSaveYourselfDone24m with the success field
+set to reflect the outcome of the save.
+
+__
+|    4mConnectionClosed24m [Client -> SM]
+
+|__	  4mreason24m: LISTofARRAY8
+
+
+Specifies that the client has decided to terminate.  It
+should be immediately followed by closing the connection.
+
+The reason field specifies why the client is resigning from
+the session.  It is encoded as an array of Compound Text
+strings.  If the resignation is expected by the user, there
+will typically be zero ARRAY8s here.  But if the client
+encountered an unexpected fatal error, the error message
+(which might otherwise be printed on stderr on a POSIX sys-
+tem) should be forwarded to the SM here, one ARRAY8 per line
+of the message.	 It is the responsibility of the SM to dis-
+play this reason to the user.
+
+After sending this message, the client must not send any
+additional XSMP messages to the SM.
+
+		   Advice to Implementors
+
+     If additional messages are received, they should
+     be discarded.
+
+
+			 Rationale
+
+     The reason for sending the 4mConnectionClosed24m mes-
+     sage before actually closing the connections is
+     that some transport protocols will not provide
+     immediate notification of connection closure.
+
+
+__
+|    4mSetProperties24m [Client -> SM]
+
+|__	  4mproperties24m: LISTofPROPERTY
+
+
+
+
+
+
+			     1m120m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+Sets the specified properties to the specified values.
+Existing properties not specified in the 4mSetProperties24m mes-
+sage are unaffected.  Some properties have predefined seman-
+tics.  See section 11, "Predefined Properties."
+
+The protocol specification recommends that property names
+used for properties not defined by the standard should begin
+with an underscore.  To prevent conflicts among organiza-
+tions, additional prefixes should be chosen (for example,
+_KPC_FAST_SAVE_OPTION).	 The organizational prefixes should
+be registered with the X Registry.  The XSMP reserves all
+property names not beginning with an underscore for future
+use.
+
+__
+|    4mDeleteProperties24m [Client -> SM]
+
+|__	  4mproperty-names24m: LISTofARRAY8
+
+
+Removes the named properties.
+
+__
+|    4mGetProperties24m [Client -> SM]
+
+|__	  Valid Responses: 4mGetPropertiesReply0m
+
+
+Requests that the SM respond with the values of all the
+properties for this client.
+
+__
+|    4mGetPropertiesReply24m [Client <- SM]
+
+|__	  4mvalues24m: LISTofPROPERTY
+
+
+This message is sent in reply to a 4mGetProperties24m message and
+includes the values of all the properties.
+
+1m8.  Errors0m
+
+When the receiver of a message detects an error condition,
+the receiver sends an ICE error message to the sender.
+There are only two types of errors that are used by the
+XSMP: 4mBadValue24m and 4mBadState24m.	These are both defined in the
+ICE protocol.
+
+Any message received out-of-sequence will generate a 4mBad-0m
+4mState24m error message.
+
+
+
+
+
+
+
+			     1m130m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+1m9.  State Diagrams0m
+
+These state diagrams are designed to cover all actions of
+both the client and the SM.
+
+1m9.1.	Client State Diagram0m
+
+
+4mstart:0m
+     ICE protocol setup complete -> register
+
+
+
+4mregister:0m
+     send 1mRegisterClient 22m-> collect-id
+
+
+
+4mcollect-id:0m
+     receive 1mRegisterClientReply 22m-> idle
+
+
+
+4mshutdown-cancelled:0m
+     send 1mSaveYourselfDone 22m-> idle
+
+
+
+4midle:24m [Undoes any freeze of interaction with user.]
+     receive 1mDie 22m-> die
+     receive 1mSaveYourself 22m-> freeze-interaction
+     send 1mGetProperties 22m-> idle
+     receive 1mGetPropertiesReply 22m-> idle
+     send 1mSetProperties 22m-> idle
+     send 1mDeleteProperties 22m-> idle
+     send 1mConnectionClosed 22m-> connection-closed
+     send 1mSaveYourselfRequest 22m-> idle
+
+
+
+4mdie:0m
+     send 1mConnectionClosed 22m-> connection-closed
+
+
+
+4mfreeze-interaction:0m
+     freeze interaction with user -> save-yourself
+
+
+
+
+
+
+
+
+
+
+			     1m140m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+4msave-yourself:0m
+     receive 1mShutdownCancelled 22m-> shutdown-cancelled
+     send 1mSetProperties 22m-> save-yourself
+     send 1mDeleteProperties 22m-> save-yourself
+     send 1mGetProperties 22m-> save-yourself
+     receive 1mGetPropertiesReply 22m-> save-yourself
+     send 1mInteractRequest 22m-> interact-request
+     send 1mSaveYourselfPhase2Request 22m-> waiting-for-phase2
+     if shutdown mode:
+	  send 1mSaveYourselfDone 22m-> save-yourself-done
+     otherwise:
+	  send 1mSaveYourselfDone 22m-> idle
+
+
+
+4mwaiting-for-phase2:0m
+     receive 1mShutdownCancelled 22m-> shutdown-cancelled
+     receive 1mSaveYourselfPhase2 22m-> phase2
+
+
+
+4mphase2:0m
+     receive 1mShutdownCancelled 22m-> shutdown-cancelled
+     send 1mSetProperties 22m-> save-yourself
+     send 1mDeleteProperties 22m-> save-yourself
+     send 1mGetProperties 22m-> save-yourself
+     receive 1mGetPropertiesReply 22m-> save-yourself
+     send 1mInteractRequest 22m-> interact-request (errors only)
+     if shutdown mode:
+	  send 1mSaveYourselfDone 22m-> save-yourself-done
+     otherwise:
+	  send 1mSaveYourselfDone 22m-> idle
+
+
+
+4minteract-request:0m
+     receive 1mInteract 22m-> interact
+     receive 1mShutdownCancelled 22m-> shutdown-cancelled
+
+
+
+4minteract:0m
+     send 1mInteractDone 22m-> save-yourself
+     receive 1mShutdownCancelled 22m-> shutdown-cancelled
+
+
+
+4msave-yourself-done:24m (changing state is forbidden)
+     receive 1mSaveComplete 22m-> idle
+     receive 1mDie 22m-> die
+     receive 1mShutdownCancelled 22m-> idle
+
+
+
+
+
+
+			     1m150m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+4mconnection-closed:0m
+     client stops participating in session
+
+
+1m9.2.	Session Manager State Diagram0m
+
+
+4mstart:0m
+     receive 1mProtocolSetup 22m-> protocol-setup
+
+
+
+4mprotocol-setup:0m
+     send 1mProtocolSetupReply 22m-> register
+
+
+
+4mregister:0m
+     receive 1mRegisterClient 22m-> acknowledge-register
+
+
+
+4macknowledge-register:0m
+     send 1mRegisterClientReply 22m-> idle
+
+
+
+4midle:0m
+     receive 1mSetProperties 22m-> idle
+     receive 1mDeleteProperties 22m-> idle
+     receive 1mConnectionClosed 22m-> start
+     receive 1mGetProperties 22m-> get-properties
+     receive 1mSaveYourselfRequest 22m-> save-yourself
+     send 1mSaveYourself 22m-> saving-yourself
+
+
+
+4msave-yourself:0m
+     send 1mSaveYourself 22m-> saving-yourself
+
+
+
+4mget-properties:0m
+     send 1mGetPropertiesReply 22m-> idle
+
+
+
+4msaving-get-properties:0m
+     send 1mGetPropertiesReply 22m-> saving-yourself
+
+
+
+
+
+
+
+
+			     1m160m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+4msaving-yourself:0m
+     receive 1mInteractRequest 22m-> saving-yourself
+     send 1mInteract 22m-> saving-yourself
+     send 1mShutdownCancelled 22m-> idle
+     receive 1mInteractDone 22m-> saving-yourself
+     receive 1mSetProperties 22m-> saving-yourself
+     receive 1mDeleteProperties 22m-> saving-yourself
+     receive 1mGetProperties 22m-> saving-get-properties
+     receive 1mSaveYourselfPhase2Request 22m-> start-phase2
+     receive 1mSaveYourselfDone 22m-> save-yourself-done
+
+
+
+4mstart-phase2:0m
+     If all clients have sent either 1mSaveYourselfPhase2Request 22mor 1mSaveYourselfDone22m:
+	  send 1mSaveYourselfPhase2 22m-> phase2
+     else
+	  -> saving-yourself
+
+
+
+4mphase2:0m
+     receive 1mInteractRequest 22m-> saving-yourself
+     send 1mInteract 22m-> saving-yourself
+     send 1mShutdownCancelled 22m-> idle
+     receive 1mInteractDone 22m-> saving-yourself
+     receive 1mSetProperties 22m-> saving-yourself
+     receive 1mDeleteProperties 22m-> saving-yourself
+     receive 1mGetProperties 22m-> saving-get-properties
+     receive 1mSaveYourselfDone 22m-> save-yourself-done
+
+
+
+4msave-yourself-done:0m
+     If all clients are saved:
+	  If shutting down:
+	       send 1mDie 22m-> die
+	  otherwise
+	       send 1mSaveComplete 22m-> idle
+
+     If some clients are not saved:
+     -> saving-yourself
+
+
+
+4mdie:0m
+     SM stops accepting connections
+
+
+1m10.  Protocol Encoding0m
+
+
+
+
+
+
+
+			     1m170m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+1m10.1.	 Types0m
+
+BOOL
+  0  False
+  1  True
+
+INTERACT_STYLE
+  0  None
+  1  Errors
+  2  Any
+
+DIALOG_TYPE
+  0  Error
+  1  Normal
+
+SAVE_TYPE
+  0  Global
+  1  Local
+  2  Both
+
+ARRAY8
+  4  CARD32	    length
+  n  LISTofCARD8    the array
+  p		    p = pad (4 + n, 8)
+
+LISTofARRAY8
+  4  CARD32	    count
+  4		    unused
+  a  ARRAY8	    first array
+  b  ARRAY8	    second array
+  .
+  .
+  .
+  q  ARRAY8	    last array
+
+PROPERTY
+  a  ARRAY8	    name
+  b  ARRAY8	    type (XPCS encoded in Latin-1, case sensitive)
+  c  LISTofARRAY8   values
+
+LISTofPROPERTY
+  4	  CARD32    count
+  4		    unused
+  a	  PROPERTY  first property
+  b	  PROPERTY  second property
+  .
+  .
+  .
+  q  PROPERTY	    last property
+
+1m10.2.	 Messages0m
+
+XSMP is a sub-protocol of ICE.	The major opcode is assigned
+at run-time by ICE and is represented here by `?'.
+
+
+
+			     1m180m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+To start the XSMP protocol, the client sends the server an
+ICE 4mProtocolSetup24m message.	 The protocol-name field should
+be specified as "XSMP", the major version of the protocol is
+1, the minor version is 0.  These values may change if the
+protocol is revised.  The minor version number will be
+incremented if the change is compatible, otherwise the major
+version number will be incremented.
+
+In 4mProtocolReply24m message sent by the session manager, the
+XSMP protocol defines the vendor parameter as product iden-
+tification of the session manager, and defines the release
+parameter as the software release identification of the ses-
+sion manager.  The session manager should supply this infor-
+mation in the ICE 4mProtocolReply24m message.
+
+4mRegisterClient0m
+  1  ?		    XSMP
+  1  1		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  ARRAY8	    previous-ID
+
+4mRegisterClientReply0m
+  1  ?		    XSMP
+  1  2		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  ARRAY8	    client-ID
+
+4mSaveYourself0m
+  1  ?		    XSMP
+  1  3		    opcode
+  2		    unused
+  4  1		    length of remaining data in 8-byte units
+  1  SAVE_TYPE	    type
+  1  BOOL	    shutdown
+  1  INTERACT_STYLE interact-style
+  1  BOOL	    fast
+  4		    unused
+
+4mSaveYourselfRequest0m
+  1  ?		    XSMP
+  1  4		    opcode
+  2		    unused
+  4  1		    length of remaining data in 8-byte units
+  1  SAVE_TYPE	    type
+  1  BOOL	    shutdown
+  1  INTERACT_STYLE interact-style
+  1  BOOL	    fast
+  1  BOOL	    global
+  3		    unused
+
+
+
+
+
+
+			     1m190m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+4mInteractRequest0m
+  1  ?		    XSMP
+  1  5		    opcode
+  1  DIALOG_TYPE    dialog type
+  1		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mInteract0m
+  1  ?		    XSMP
+  1  6		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mInteractDone0m
+  1  ?		    XSMP
+  1  7		    opcode
+  1  BOOL	    cancel-shutdown
+  1		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mSaveYourselfDone0m
+  1  ?		    XSMP
+  1  8		    opcode
+  1  BOOL	    success
+  1		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mDie0m
+  1  ?		    XSMP
+  1  9		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mShutdownCancelled0m
+  1  ?		    XSMP
+  1  10		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mConnectionClosed0m
+  1  ?		    XSMP
+  1  11		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  LISTofARRAY8   reason
+
+4mSetProperties0m
+  1  ?		    XSMP
+  1  12		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  LISTofPROPERTY properties
+
+
+
+
+
+			     1m200m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+4mDeleteProperties0m
+  1  ?		    XSMP
+  1  13		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  LISTofARRAY8   properties
+
+4mGetProperties0m
+  1  ?		    XSMP
+  1  14		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mGetPropertiesReply0m
+  1  ?		    XSMP
+  1  15		    opcode
+  2		    unused
+  4  a/8	    length of remaining data in 8-byte units
+  a  LISTofPROPERTY properties
+
+4mSaveYourselfPhase2Request0m
+  1  ?		    XSMP
+  1  16		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+4mSaveYourselfPhase20m
+  1  ?		    XSMP
+  1  17		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+
+4mSaveComplete0m
+  1  ?		    XSMP
+  1  18		    opcode
+  2		    unused
+  4  0		    length of remaining data in 8-byte units
+
+
+1m11.  Predefined Properties0m
+
+All property values are stored in a LISTofARRAY8.  If the
+type of the property is CARD8, the value is stored as a
+LISTofARRAY8 with one ARRAY8 that is one byte long.  That
+single byte contains the CARD8.	 If the type of the property
+is ARRAY8, the value is stored in the first element of a
+single element LISTofARRAY8.
+
+The required properties must be set each time a client con-
+nects with the SM.  The properties must be set after the
+client sends 4mRegisterClient24m and before the client sends
+4mSaveYourselfDone24m.	Otherwise, the behavior of the session
+manager is not defined.
+
+
+
+			     1m210m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+Clients may set, get, and delete nonstandard properties.
+The lifetime of stored properties does not extend into sub-
+sequent sessions.
+
+----------------------------------------------------------
+1mName		     Type	   Posix Type	  Required?0m
+----------------------------------------------------------
+CloneCommand	   OS-specific	 LISTofARRAY8	   Yes
+CurrentDirectory   OS-specific	 ARRAY8		   No
+DiscardCommand	   OS-specific	 LISTofARRAY8	   No*
+Environment	   OS-specific	 LISTofARRAY8	   No
+ProcessID	   OS-specific	 ARRAY8		   No
+Program		   OS-specific	 ARRAY8		   Yes
+RestartCommand	   OS-specific	 LISTofARRAY8	   Yes
+ResignCommand	   OS-specific	 LISTofARRAY8	   No
+RestartStyleHint   CARD8	 CARD8		   No
+ShutdownCommand	   OS-specific	 LISTofARRAY8	   No
+UserID		   ARRAY8	 ARRAY8		   Yes
+----------------------------------------------------------
+
+
+* Required if any state is stored in an external repository
+(e.g., state file).
+
+CloneCommand
+   This is like the 4mRestartCommand24m except it restarts a copy
+   of the application.	The only difference is that the
+   application doesn't supply its client id at register
+   time.  On POSIX systems the type should be a LISTofAR-
+   RAY8.
+
+CurrentDirectory
+   On POSIX-based systems specifies the value of the current
+   directory that needs to be set up prior to starting the
+   program and should be of type ARRAY8.
+
+DiscardCommand
+   The discard command contains a command that when deliv-
+   ered to the host that the client is running on (deter-
+   mined from the connection), will cause it to discard any
+   information about the current state.	 If this command is
+   not specified, the SM will assume that all of the
+   client's state is encoded in the 4mRestartCommand24m.  On
+   POSIX systems the type should be LISTofARRAY8.
+
+Environment
+   On POSIX based systems, this will be of type LISTofARRAY8
+   where the ARRAY8s alternate between environment variable
+   name and environment variable value.
+
+ProcessID
+   This specifies an OS-specific identifier for the process.
+   On POSIX systems this should of type ARRAY8 and contain
+   the return value of getpid() turned into a Latin-1
+
+
+
+			     1m220m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+   (decimal) string.
+
+Program
+   The name of the program that is running.  On POSIX sys-
+   tems this should be the first parameter passed to execve
+   and should be of type ARRAY8.
+
+RestartCommand
+   The restart command contains a command that when deliv-
+   ered to the host that the client is running on (deter-
+   mined from the connection), will cause the client to
+   restart in its current state.  On POSIX-based systems
+   this is of type LISTofARRAY8 and each of the elements in
+   the array represents an element in the argv array.  This
+   restart command should ensure that the client restarts
+   with the specified client-ID.
+
+ResignCommand
+   A client that sets the 4mRestartStyleHint24m to 4mRestartAnyway0m
+   uses this property to specify a command that undoes the
+   effect of the client and removes any saved state.
+
+			    Example
+
+	A user runs xmodmap.  xmodmap registers with
+	the SM, sets 4mRestartStyleHint24m to 4mRestartAnyway24m,
+	and then terminates.  In order to allow the SM
+	(at the user's request) to undo this, xmodmap
+	would register a 4mResignCommand24m that undoes the
+	effects of the xmodmap.
+
+
+RestartStyleHint
+
+   If the RestartStyleHint property is present, it will con-
+   tain the style of restarting the client prefers.  If this
+   flag isn't specified, 4mRestartIfRunning24m is assumed.  The
+   possible values are as follows:
+
+   ---------------------------
+   1mName		  Value0m
+   ---------------------------
+   RestartIfRunning	  0
+   RestartAnyway	  1
+   RestartImmediately	  2
+   RestartNever		  3
+   ---------------------------
+
+
+   The 4mRestartIfRunning24m style is used in the usual case.
+   The client should be restarted in the next session if it
+   is connected to the session manager at the end of the
+   current session.
+
+
+
+
+			     1m230m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+   The 4mRestartAnyway24m style is used to tell the SM that the
+   application should be restarted in the next session even
+   if it exits before the current session is terminated.  It
+   should be noted that this is only a hint and the SM will
+   follow the policies specified by its users in determining
+   what applications to restart.
+
+
+			   Rationale
+
+	This can be specified by a client which sup-
+	ports (as MS-Windows clients do) a means for
+	the user to indicate while exiting that
+	restarting is desired.	It can also be used for
+	clients that spawn other clients and then go
+	away, but which want to be restarted.
+
+
+   A client that uses 4mRestartAnyway24m should also set the
+   4mResignCommand24m and 4mShutdownCommand24m properties to commands
+   that undo the state of the client after it exits.
+
+   The 4mRestartImmediately24m style is like 4mRestartAnyway24m, but
+   in addition, the client is meant to run continuously.  If
+   the client exits, the SM should try to restart it in the
+   current session.
+
+		    Advice to Implementors
+
+	It would be wise to sanity-check the frequency
+	which which 4mRestartImmediately24m clients are
+	restarted, to avoid a sick client being
+	restarted continuously.
+
+   The 4mRestartNever24m style specifies that the client does not
+   wish to be restarted in the next session.
+
+		    Advice To Implementors
+
+	This should be used rarely, if at all.	It will
+	cause the client to be silently left out of
+	sessions when they are restarted and will prob-
+	ably be confusing to users.
+
+
+ShutdownCommand
+   This command is executed at shutdown time to clean up
+   after a client that is no longer running but retained its
+   state by setting 4mRestartStyleHint24m to 4mRestartAnyway24m.  The
+   command must not remove any saved state as the client is
+   still part of the session.
+
+
+
+
+
+
+			     1m240m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+			    Example
+
+	A client is run at start up time that turns on
+	a camera.  This client then exits.  At session
+	shutdown, the user wants the camera turned off.
+	This client would set the 4mRestartStyleHint24m to
+	4mRestartAnyway24m and would register a 4mShutdown-0m
+	4mCommand24m that would turn off the camera.
+
+
+UserID
+   Specifies the user's ID.  On POSIX-based systems this
+   will contain the the user's name (the pw_name field of
+   struct passwd).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m250m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m260m
+
+
+
+
+
+1mX Session Management Protocol		      X11, Release 6.40m
+
+
+
+		       1mTable of Contents0m
+
+
+   1. Acknowledgements . . . . . . . . . . . . . . . . .   1
+   2. Definitions and Goals  . . . . . . . . . . . . . .   1
+   3. Overview of the Protocol . . . . . . . . . . . . .   1
+   4. Data Types . . . . . . . . . . . . . . . . . . . .   3
+   5. Protocol Setup and Message Format	 . . . . . . . .   4
+   6. Client Identification String . . . . . . . . . . .   4
+   7. Protocol . . . . . . . . . . . . . . . . . . . . .   5
+   8. Errors . . . . . . . . . . . . . . . . . . . . . .  13
+   9. State Diagrams . . . . . . . . . . . . . . . . . .  14
+   9.1. Client State Diagram . . . . . . . . . . . . . .  14
+   9.2. Session Manager State Diagram  . . . . . . . . .  16
+   10. Protocol Encoding . . . . . . . . . . . . . . . .  17
+   10.1. Types . . . . . . . . . . . . . . . . . . . . .  18
+   10.2. Messages  . . . . . . . . . . . . . . . . . . .  18
+   11. Predefined Properties . . . . . . . . . . . . . .  21
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     iii
+
+

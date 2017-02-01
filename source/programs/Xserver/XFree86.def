@@ -1,0 +1,5 @@
+NAME XFree86 NOTWINDOWCOMPAT
+DESCRIPTION "@#XFREE86:4.6.0#@ $XFree86: xc/programs/Xserver/XFree86.def,v 1.7 2006/04/08 18:30:24 dawes Exp $"
+PROTMODE
+EXETYPE OS2
+

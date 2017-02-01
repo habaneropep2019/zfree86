@@ -1,0 +1,3168 @@
+
+
+
+
+
+
+
+
+
+		1mX Session Management Library0m
+
+			1mVersion 1.00m
+
+		   1mX Consortium Standard0m
+
+		 1mX Version 11, Release 6.40m
+
+
+			 4mRalph24m 4mMor0m
+			X Consortium
+
+
+
+	    Copyright © 1993, 1994 X Consortium
+
+
+
+
+
+
+
+Permission  is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated  documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights  to
+use,  copy,  modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice  shall
+be  included  in  all  copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF	 ANY
+KIND,  EXPRESS	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE  AND  NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES  OR  OTHER  LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  THE	 USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except	as  contained in this notice, the name of the X Con-
+sortium shall not be used in  advertising  or  otherwise  to
+promote	 the  sale,  use  or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+X Window System is a trademark of X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview of Session Management0m
+
+The purpose of the X Session Management Protocol  (XSMP)  is
+to provide a uniform mechanism for users to save and restore
+their sessions.	 A 4msession24m is a group of  clients,	 each  of
+which  has a particular state.	The session is controlled by
+a network service called the 4msession24m 4mmanager24m.	  The  session
+manager	 issues	 commands  to  its  clients on behalf of the
+user.  These commands may cause clients to save their  state
+or  to	terminate.  It is expected that the client will save
+its state in such a way that the client can be restarted  at
+a  later  time	and  resume its operation as if it had never
+been terminated.  A client's state might include information
+about  the file currently being edited, the current position
+of the insertion point within the file, or the start  of  an
+uncommitted  transaction.   The	 means	by which clients are
+restarted is unspecified by this protocol.
+
+For purposes of this protocol, a 4mclient24m of the session  man-
+ager  is  defined as a connection to the session manager.  A
+client is typically, though not necessarily, a process	run-
+ning an application program connected to an X display.	How-
+ever, a client may be connected to more than one  X  display
+or not be connected to any X displays at all.
+
+1m2.  The Session Management Library0m
+
+The  Session  Management  Library (SMlib) is a low-level "C"
+language interface to XSMP.   It  is  expected	that  higher
+level toolkits, such as Xt, will hide many of the details of
+session management  from  clients.   Higher  level  toolkits
+might  also be developed for session managers to use, but no
+such effort is currently under way.
+
+SMlib has two parts to it:
+
+·    One set of functions for clients that want to  be	part
+     of a session
+
+·    One set of functions for session managers to call
+
+Some applications will use both sets of functions and act as
+4mnested24m 4msession24m 4mmanagers24m.	 That is, they will be both a  ses-
+sion manager and a client of another session.  An example is
+a mail program that could start a text	editor	for  editing
+the  text  of a mail message.  The mail program is part of a
+regular session and, at the same time, is also acting  as  a
+session manager to the editor.
+
+Clients	 initialize by connecting to the session manager and
+obtaining a 4mclient-ID24m that uniquely identifies them  in  the
+session.  The session manager maintains a list of properties
+for each client in the session.	 These	properties  describe
+the client's environment and, most importantly, describe how
+
+
+
+			    - 1 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+the client  can	 be  restarted	(via  an  4mSmRestartCommand24m).
+Clients are expected to save their state in such a way as to
+allow multiple instantiations of themselves  to	 be  managed
+independently.	For example, clients may use their client-ID
+as part of a filename in which to store the state for a par-
+ticular	 instantiation.	  The  client-ID  should be saved as
+part of the 4mSmRestartCommand24m so that the client will  retain
+the same ID after it is restarted.
+
+Once the client initializes itself with the session manager,
+it must be ready to respond to	messages  from	the  session
+manager.   For	example, it might be asked to save its state
+or to terminate.  In the case of  a  shutdown,	the  session
+manager might give each client a chance to interact with the
+user and cancel the shutdown.
+
+1m3.  Understanding SMlib's Dependence on ICE0m
+
+The X Session Management Protocol is layered on top  of	 the
+Inter-Client  Exchange	(ICE) Protocol.	 The ICE protocol is
+designed to multiplex several protocols over a	single	con-
+nection.   As a result, working with SMlib requires a little
+knowledge of how the ICE library works.
+
+The ICE library	 utilizes  callbacks  to  process  messages.
+When  a	 client detects that there is data to read on an ICE
+connection, it should call the 4mIceProcessMessages24m	function.
+4mIceProcessMessages24m	 will read the message header and look at
+the major opcode in order to determine	which  protocol	 the
+message	 was intended for.  The appropriate protocol library
+will then be triggered to unpack the message and hand it off
+to the client via a callback.
+
+The  main  point to be aware of is that an application using
+SMlib must have some code that detects when there is data to
+read  on  an  ICE connection.  This can be done via a 4mselect0m
+call on the file descriptor for the ICE connection, but more
+typically, 4mXtAppAddInput24m will be used to register a callback
+that will invoke 4mIceProcessMessages24m each time there is  data
+to read on the ICE connection.
+
+To further complicate things, knowing which file descriptors
+to call 4mselect24m on requires an understanding of how ICE  con-
+nections  are  created.	  On the client side, a call must be
+made to 4mSmcOpenConnection24m in order to open a connection with
+a session manager.  4mSmcOpenConnection24m will internally make a
+call into 4mIceOpenConnection24m, which will, in turn,	determine
+if  an	ICE connection already exists between the client and
+session manager.  Most likely, a connection will not already
+exist  and  a  new ICE connection will be created.  The main
+point to be aware of is that, on the client side, it is	 not
+obvious	 when  ICE  connections	 get  created  or destroyed,
+because connections are shared when possible.  To deal	with
+this,  the  ICE	 library lets the application register watch
+
+
+
+			    - 2 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+procedures that will be invoked each time an ICE  connection
+is  opened  or closed.	These watch procedures could be used
+to add or remove ICE  file  descriptors	 from  the  list  of
+descriptors to call 4mselect24m on.
+
+On  the session manager side, things work a bit differently.
+The session manager has complete control over  the  creation
+of  ICE	 connections.  The session manager has to first call
+4mIceListenForConnections24m in order to start listening for con-
+nections   from	 clients.   Once  a  connection	 attempt  is
+detected, 4mIceAcceptConnection24m must be called, and	the  ses-
+sion  manager  can simply add the new ICE file descriptor to
+the list of descriptors to call 4mselect24m on.
+
+For further information on the library functions related  to
+ICE connections, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m stan-
+dard.
+
+1m4.  Header Files and Library Name0m
+
+Applications (both  session  managers  and  clients)  should
+include	 the header file <4mX11/SM/SMlib.h24m>.	 This header file
+defines all of the SMlib data structures and function proto-
+types.	 4mSMlib.h24m  includes	 the  header  file <4mX11/SM/SM.h24m>,
+which defines all of the SMlib constants.
+
+Because SMlib is dependent on ICE, applications should	link
+against SMlib and ICElib by using 4m-lSM24m 4m-lICE24m.
+
+1m5.  Session Management Client (Smc) Functions0m
+
+This section discusses how Session Management clients:
+
+·    Connect to the Session Manager
+
+·    Close the connection
+
+·    Modify callbacks
+
+·    Set, delete, and retrieve Session Manager properties
+
+·    Interact with the user
+
+·    Request a ``Save Yourself''
+
+·    Request a ``Save Yourself Phase 2''
+
+·    Complete a ``Save Yourself''
+
+·    Use Smc informational functions
+
+·    Handle Errors
+
+
+
+
+
+			    - 3 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m5.1.	Connecting to the Session Manager0m
+
+To open a connection with a session manager, use 4mSmcOpenCon-0m
+4mnection24m.
+__
+|
+SmcConn SmcOpenConnection(4mnetwork_ids_list24m, 4mcontext24m, 4mxsmp_major_rev24m, 4mxsmp_minor_rev24m,
+		    4mmask24m, 4mcallbacks24m, 4mprevious_id24m, 4mclient_id_ret24m, 4merror_length24m, 4merror_string_ret24m)
+    char *4mnetwork_ids_list24m;
+    SmPointer 4mcontext24m;
+    int 4mxsmp_major_rev24m;
+    int 4mxsmp_minor_rev24m;
+    unsigned long 4mmask24m;
+    SmcCallbacks *4mcallbacks24m;
+    char *4mprevious_id24m;
+    char **4mclient_id_ret24m;
+    int 4merror_length24m;
+    char *4merror_string_ret24m;
+
+
+4mnetwork_ids_list0m
+	  Specifies the network ID(s) of  the  session	man-
+	  ager.
+
+4mcontext24m   A  pointer  to  an opaque object or NULL.  Used to
+	  determine if an ICE connection can be shared	(see
+	  below).
+
+4mxsmp_major_rev0m
+	  The highest major version of the XSMP the applica-
+	  tion supports.
+
+4mxsmp_minor_rev0m
+	  The highest minor version of the XSMP the applica-
+	  tion	supports (for the specified xsmp_major_rev).
+
+4mmask24m      A mask indicating which callbacks to register.
+
+4mcallbacks24m The callbacks to register.   These  callbacks  are
+	  used	to respond to messages from the session man-
+	  ager.
+
+4mprevious_id0m
+	  The client ID from the previous session.
+
+4mclient_id_ret0m
+	  The client ID for the current session is returned.
+
+4merror_length0m
+	  Length of the error_string_ret argument passed in.
+
+4merror_string_ret0m
+	  Returns a null-terminated error message,  if	any.
+	  The	error_string_ret  argument  points  to	user
+
+
+
+			    - 4 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+	  supplied memory.  No more than error_length  bytes
+	  are used.
+|__
+
+The  network_ids_list  argument	 is a null-terminated string
+containing a list of network IDs for  the  session  manager,
+separated by commas.  If network_ids_list is NULL, the value
+of the 4mSESSION_MANAGER24m environment variable  will	be  used.
+Each network ID has the following format:
+
+     tcp/<hostname>:<portnumber>    or
+     decnet/<hostname>::<objname>   or
+     local/<hostname>:<path>
+
+
+An  attempt  will  be  made to use the first network ID.  If
+that fails, an attempt will be made using the second network
+ID, and so on.
+
+After  the connection is established, 4mSmcOpenConnection24m reg-
+isters the client with the session manager.  If	 the  client
+is  being  restarted  from  a  previous session, previous_id
+should contain a null  terminated  string  representing	 the
+client ID from the previous session.  If the client is first
+joining the session, previous_id should be set to NULL.	  If
+previous_id  is specified but is determined to be invalid by
+the session manager, SMlib will re-register the client	with
+previous_id set to NULL.
+
+If  4mSmcOpenConnection24m succeeds, it returns an opaque connec-
+tion pointer of type 4mSmcConn24m and the client_id_ret	 argument
+contains  the  client  ID  to be used for this session.	 The
+client_id_ret should be freed with a call to  4mfree24m	 when  no
+longer	needed.	 On failure, 4mSmcOpenConnection24m returns NULL,
+and the reason for failure is returned in  error_string_ret.
+
+Note that SMlib uses the ICE protocol to establish a connec-
+tion with the session manager.	If an ICE connection already
+exists	between	 the client and session manager, it might be
+possible for the same ICE connection to be used for  session
+management.
+
+The  context argument indicates how willing the client is to
+share the ICE connection with other protocols.	 If  context
+is NULL, then the caller is always willing to share the con-
+nection.  If context is not NULL, then	the  caller  is	 not
+willing to use a previously opened ICE connection that has a
+different non-NULL context associated with it.
+
+As previously discussed (section 3, ``Understanding  SMlib's
+Dependence  on ICE''), the client will have to keep track of
+when ICE connections are created or destroyed (using 4mIceAdd-0m
+4mConnectionWatch24m and 4mIceRemoveConnectionWatch24m), and will have
+to call 4mIceProcessMessages24m each time  a  4mselect24m  shows  that
+
+
+
+			    - 5 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+there  is  data	 to  read on an ICE connection.	 For further
+information, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+The  callbacks	argument contains a set of callbacks used to
+respond to session manager events.  The mask argument speci-
+fies  which  callbacks are set.	 All of the callbacks speci-
+fied in this version of SMlib are mandatory.  The mask argu-
+ment is necessary in order to maintain backwards compatibil-
+ity in future versions of the library.
+
+The following values may be ORed together to obtain  a	mask
+value:
+
+
+4mSmcSaveYourselfProcMask0m
+4mSmcDieProcMask0m
+4mSmcSaveCompleteProcMask0m
+4mSmcShutdownCancelledProcMask0m
+
+
+For  each  callback,  the  client  can register a pointer to
+client data.  When SMlib invokes the callback, it will	pass
+the client data pointer.
+
+__
+|
+typedef struct {
+
+     struct {
+	  SmcSaveYourselfProc callback;
+	  SmPointer client_data;
+     } save_yourself;
+
+     struct {
+	  SmcDieProc callback;
+	  SmPointer client_data;
+     } die;
+
+     struct {
+	  SmcSaveCompleteProc callback;
+	  SmPointer client_data;
+     } save_complete;
+
+     struct {
+	  SmcShutdownCancelledProc callback;
+	  SmPointer client_data;
+     } shutdown_cancelled;
+
+} SmcCallbacks;
+
+|__
+
+
+
+
+
+
+			    - 6 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m5.1.1.  The Save Yourself Callback0m
+
+The Save Yourself callback is of type 4mSmcSaveYourselfProc24m.
+__
+|
+typedef void (*SmcSaveYourselfProc)();
+
+void SaveYourselfProc(4msmc_conn24m, 4mclient_data24m, 4msave_type24m, 4mshutdown24m, 4minteract_style24m, 4mfast24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+    int 4msave_type24m;
+    Bool 4mshutdown24m;
+    int 4minteract_style24m;
+    Bool 4mfast24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+
+4msave_type24m Specifies the type of information that  should  be
+	  saved.
+
+4mshutdown24m  Specifies if a shutdown is taking place.
+
+4minteract_style0m
+	  The type of interaction allowed with the user.
+
+4mfast24m      If  4mTrue24m,  the  client  should  save  its state as
+	  quickly as possible.
+|__
+
+The session manager sends a ``Save Yourself'' message  to  a
+client either to checkpoint it or just before termination so
+that it can save its state.  The client responds  with	zero
+or  more  calls to 4mSmcSetProperties24m to update the properties
+indicating how to restart the client.  When all the  proper-
+ties have been set, the client calls 4mSmcSaveYourselfDone24m.
+
+If  interact_style  is	4mSmInteractStyleNone24m, the client must
+not interact with the user while saving	 state.	  If  inter-
+act_style  is 4mSmInteractStyleErrors24m, the client may interact
+with the user only if an error condition arises.  If  inter-
+act_style  is 4mSmInteractStyleAny24m, then the client may inter-
+act with the user for any purpose.  Because only one  client
+can  interact  with the user at a time, the client must call
+4mSmcInteractRequest24m and wait for an ``Interact'' message from
+the  session  manager.	 When the client is done interacting
+with the user, it calls	 4mSmcInteractDone24m.	 The  client  may
+only  call  4mSmcInteractRequest24m  after  it	receives a ``Save
+Yourself'' message and before it calls	4mSmcSaveYourselfDone24m.
+
+
+
+
+			    - 7 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+If  save_type  is  4mSmSaveLocal24m,  the  client must update the
+properties to reflect its current state.   Specifically,  it
+should	save enough information to restore the state as seen
+by the user of this client.  It should not affect the  state
+as  seen  by other users.  If save_type is 4mSmSaveGlobal24m, the
+user wants the client to commit all of its  data  to  perma-
+nent,  globally accessible storage.  If save_type is 4mSmSave-0m
+4mBoth24m, the client should do both of these  (it  should  first
+commit	the  data  to  permanent storage before updating its
+properties).
+
+Some examples are as follows:
+
+
+·    If a word processor were sent a ``Save Yourself''	with
+     a type of 4mSmSaveLocal24m, it could create a temporary file
+     that included the current contents	 of  the  file,	 the
+     location  of  the cursor, and other aspects of the cur-
+     rent  editing  session.   It  would  then	update	 its
+     SmRestartCommand  property	 with  enough information to
+     find this temporary file.
+
+·    If a word processor were sent a ``Save Yourself''	with
+     a	type  of 4mSmSaveGlobal24m, it would simply save the cur-
+     rently edited file.
+
+·    If a word processor were sent a ``Save Yourself''	with
+     a type of 4mSmSaveBoth24m, it would first save the currently
+     edited file.  It would then  create  a  temporary	file
+     with  information	such  as the current position of the
+     cursor and what file  is  being  edited.	Finally,  it
+     would  update its SmRestartCommand property with enough
+     information to find the temporary file.
+
+The shutdown argument specifies whether the system is  being
+shut  down.   The  interaction	is  different  depending  on
+whether or not shutdown is set.	 If not shutting  down,	 the
+client	should	save  its  state  and wait for a ``Save Com-
+plete'' message.  If shutting down,  the  client  must	save
+state  and then prevent interaction until it receives either
+a ``Die'' or a ``Shutdown Cancelled.''
+
+The fast argument specifies that the client should save	 its
+state  as  quickly as possible.	 For example, if the session
+manager knows that power is about to fail, it would set fast
+to 4mTrue24m.
+
+1m5.1.2.  The Die Callback0m
+
+The Die callback is of type 4mSmcDieProc24m.
+__
+|
+
+
+
+
+
+			    - 8 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+typedef void (*SmcDieProc)();
+
+void DieProc(4msmc_conn24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+|__
+
+The session manager sends a ``Die'' message to a client when
+it  wants  it  to die.	The client should respond by calling
+4mSmcCloseConnection24m.  A session manager that behaves properly
+will  send  a  ``Save  Yourself'' message before the ``Die''
+message.
+
+1m5.1.3.  The Save Complete Callback0m
+
+The Save Complete callback is of type 4mSmcSaveCompleteProc24m.
+__
+|
+typedef void (*SmcSaveCompleteProc)();
+
+void SaveCompleteProc(4msmc_conn24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+|__
+
+When  the session manager is done with a checkpoint, it will
+send each of the clients a ``Save Complete''  message.	 The
+client is then free to change its state.
+
+1m5.1.4.  The Shutdown Cancelled Callback0m
+
+The  Shutdown  Cancelled callback is of type 4mSmcShutdownCan-0m
+4mcelledProc24m.
+__
+|
+
+
+
+
+
+
+
+
+			    - 9 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+typedef void (*SmcShutdownCancelledProc)();
+
+void ShutdownCancelledProc(4msmc_conn24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+|__
+
+The  session  manager sends a ``Shutdown Cancelled'' message
+when the user cancelled the shutdown during  an	 interaction
+(see  section  5.5,  ``Interacting  With  the  User'').	 The
+client can now continue as if the shutdown  had	 never	hap-
+pened.	 If  the  client  has not called 4mSmcSaveYourselfDone0m
+yet, it can either abort the save and then call 4mSmcSaveYour-0m
+4mselfDone24m  with  the success argument set to 4mFalse24m, or it can
+continue with the save	and  then  call	 4mSmcSaveYourselfDone0m
+with  the success argument set to reflect the outcome of the
+save.
+
+1m5.2.	Closing the Connection0m
+
+To close a connection with a session manager, use 4mSmcCloseC-0m
+4monnection24m.
+
+__
+|
+SmcCloseStatus SmcCloseConnection(4msmc_conn24m, 4mcount24m, 4mreason_msgs24m)
+    SmcConn 4msmc_conn24m;
+    int 4mcount24m;
+    char **4mreason_msgs24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mcount24m     The number of reason messages.
+
+4mreason_msgs0m
+	  The reasons for closing the connection.
+|__
+
+The  reason_msgs argument will most likely be NULL if resig-
+nation is expected by the client.  Otherwise, it contains  a
+list  of  null-terminated Compound Text strings representing
+the reason for termination.  The session manager should dis-
+play these reason messages to the user.
+
+Note that SMlib used the ICE protocol to establish a connec-
+tion with the session manager, and various  protocols  other
+
+
+
+			   - 10 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+than session management may be active on the ICE connection.
+When 4mSmcCloseConnection24m is called, the ICE	 connection  will
+be  closed  only  if all protocols have been shutdown on the
+connection.  Check the ICElib standard for 4mIceAddConnection-0m
+4mWatch24m  and 4mIceRemoveConnectionWatch24m to learn how to set up a
+callback to be invoked each time an ICE connection is opened
+or  closed.   Typically	 this  callback adds/removes the ICE
+file descriptor from the list of active descriptors to	call
+4mselect24m on (or calls 4mXtAppAddInput24m or 4mXtRemoveInput24m).
+
+4mSmcCloseConnection24m returns one of the following values:
+
+·    4mSmcClosedNow24m	-  the	ICE connection was closed at this
+     time, the watch procedures were invoked, and  the	con-
+     nection was freed.
+
+·    4mSmcClosedASAP24m - an IO error had occurred on the connec-
+     tion, but 4mSmcCloseConnection24m is being called	within	a
+     nested  4mIceProcessMessages24m.	The watch procedures have
+     been invoked at this time, but the connection  will  be
+     freed  as	soon  as  possible  (when  the nesting level
+     reaches zero and 4mIceProcessMessages24m returns a status of
+     4mIceProcessMessagesConnectionClosed24m).
+
+·    4mSmcConnectionInUse24m  -	 the connection was not closed at
+     this time, because it is being  used  by  other  active
+     protocols.
+
+1m5.3.	Modifying Callbacks0m
+
+To modify callbacks set up in 4mSmcOpenConnection24m, use 4mSmcMod-0m
+4mifyCallbacks24m.
+__
+|
+void SmcModifyCallbacks(4msmc_conn24m, 4mmask24m, 4mcallbacks24m)
+    SmcConn 4msmc_conn24m;
+    unsigned long 4mmask24m;
+    SmcCallbacks *4mcallbacks24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mmask24m      A mask indicating which callbacks to modify.
+
+4mcallbacks24m The new callbacks.
+|__
+
+When specifying a value for the mask argument, the following
+values may be ORed together:
+
+
+4mSmcSaveYourselfProcMask0m
+4mSmcDieProcMask0m
+4mSmcSaveCompleteProcMask0m
+
+
+
+			   - 11 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4mSmcShutdownCancelledProcMask0m
+
+
+1m5.4.	 Setting,  Deleting, and Retrieving Session Management0m
+1mProperties0m
+
+To  set	 session  management properties for this client, use
+4mSmcSetProperties24m.
+__
+|
+void SmcSetProperties(4msmc_conn24m, 4mnum_props24m, 4mprops24m)
+    SmcConn 4msmc_conn24m;
+    int 4mnum_props24m;
+    SmProp **4mprops24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mnum_props24m The number of properties.
+
+4mprops24m     The list of properties to set.
+|__
+
+The properties are specified as an array of property  point-
+ers.   Previously  set	property  values may be over-written
+using the 4mSmcSetProperties24m function.  Note that the  session
+manager	 is not expected to restore property values when the
+session is restarted.  Because of this, clients	 should	 not
+try  to	 use  the  session manager as a database for storing
+application specific state.
+
+For a description of session management properties  and	 the
+4mSmProp24m  structure, see section 7, ``Session Management Prop-
+erties.''
+
+
+To delete properties  previously  set  by  the	client,	 use
+4mSmcDeleteProperties24m.
+__
+|
+void SmcDeleteProperties(4msmc_conn24m, 4mnum_props24m, 4mprop_names24m)
+    SmcConn 4msmc_conn24m;
+    int 4mnum_props24m;
+    char **4mprop_names24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mnum_props24m The number of properties.
+
+4mprop_names0m
+	  The list of properties to delete.
+
+
+
+
+
+			   - 12 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+|__
+
+
+To  get	 properties  previously	 stored	 by  the client, use
+4mSmcGetProperties24m.
+__
+|
+Status SmcGetProperties(4msmc_conn24m, 4mprop_reply_proc24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmcPropReplyProc 4mprop_reply_proc24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mprop_reply_proc0m
+	  The callback to be  invoked  when  the  properties
+	  reply comes back.
+
+4mclient_data0m
+	  This	pointer to client data will be passed to the
+	  4mSmcPropReplyProc24m callback.
+|__
+
+The return value of 4mSmcGetProperties24m is zero for failure and
+a positive value for success.
+
+Note  that  the	 library does not block until the properties
+reply comes back.  Rather, a  callback	of  type  4mSmcPropRe-0m
+4mplyProc24m is invoked when the data is ready.
+__
+|
+typedef void (*SmcPropReplyProc)();
+
+void PropReplyProc(4msmc_conn24m, 4mclient_data24m, 4mnum_props24m, 4mprops24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+    int 4mnum_props24m;
+    SmProp **4mprops24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+
+4mnum_props24m The number of properties returned.
+
+4mprops24m     The list of properties returned.
+|__
+
+To free each property, use 4mSmFreeProperty24m	(see  section  8,
+``Freeing  Data'').   To  free the actual array of pointers,
+
+
+
+			   - 13 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+use 4mfree24m.
+
+1m5.5.	Interacting With the User0m
+
+After receiving a ``Save Yourself'' message with  an  inter-
+act_style  of  4mSmInteractStyleErrors24m  or 4mSmInteractStyleAny24m,
+the client may choose to interact with	the  user.   Because
+only  one  client  can interact with the user at a time, the
+client must call 4mSmcInteractRequest24m and wait for an ``Inter-
+act'' message from the session manager.
+__
+|
+Status SmcInteractRequest(4msmc_conn24m, 4mdialog_type24m, 4minteract_proc24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    int 4mdialog_type24m;
+    SmcInteractProc 4minteract_proc24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mdialog_type0m
+	  The type of dialog the client wishes to present to
+	  the user.
+
+4minteract_proc0m
+	  The callback to be invoked when  the	``Interact''
+	  message arrives from the session manager.
+
+4mclient_data0m
+	  This	pointer to client data will be passed to the
+	  4mSmcInteractProc24m	callback  when	the  ``Interact''
+	  message arrives.
+|__
+
+The  return  value of 4mSmcInteractRequest24m is zero for failure
+and a positive value for success.
+
+The dialog_type	 argument  specifies  either  4mSmDialogError24m,
+indicating  that  the client wants to start an error dialog,
+or 4mSmDialogNormal24m, meaning that the client wishes to start a
+nonerror dialog.
+
+Note  that  if	a shutdown is in progress, the user may have
+the option of cancelling the shutdown.	If the	shutdown  is
+cancelled, the clients that have not interacted yet with the
+user will receive a ``Shutdown Cancelled''  message  instead
+of the ``Interact'' message.
+
+The  4mSmcInteractProc24m  callback  will  be  invoked	when  the
+``Interact'' message arrives from the session manager.
+__
+|
+
+
+
+
+			   - 14 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+typedef void (*SmcInteractProc)();
+
+void InteractProc(4msmc_conn24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mclient_data0m
+	  Client data specified when the callback was regis-
+	  tered.
+|__
+
+
+After  interacting with the user (in response to an ``Inter-
+act'' message), you should call 4mSmcInteractDone24m.
+__
+|
+void SmcInteractDone(4msmc_conn24m, 4mcancel_shutdown24m)
+    SmcConn 4msmc_conn24m;
+    Bool 4mcancel_shutdown24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mcancel_shutdown0m
+	  If 4mTrue24m, indicates that the user requests that the
+	  entire shutdown be cancelled.
+|__
+
+The  cancel_shutdown argument may only be 4mTrue24m if the corre-
+sponding ``Save Yourself'' specified 4mTrue24m for  shutdown  and
+4mSmInteractStyleErrors24m  or	4mSmInteractStyleAny24m for the inter-
+act_style.
+
+1m5.6.	Requesting a Save Yourself0m
+
+To request a checkpoint from the session manager, use 4mSmcRe-0m
+4mquestSaveYourself24m.
+__
+|
+void SmcRequestSaveYourself(4msmc_conn24m, 4msave_type24m, 4mshutdown24m, 4minteract_style24m, 4mfast24m, 4mglobal24m)
+    SmcConn 4msmc_conn24m;
+    int 4msave_type24m;
+    Bool 4mshutdown24m;
+    int 4minteract_style24m;
+    Bool 4mfast24m;
+    Bool 4mglobal24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+
+
+
+
+			   - 15 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4msave_type24m Specifies  the  type of information that should be
+	  saved.
+
+4mshutdown24m  Specifies if a shutdown is taking place.
+
+4minteract_style0m
+	  The type of interaction allowed with the user.
+
+4mfast24m      If 4mTrue24m, the  client  should  save	its  state  as
+	  quickly as possible.
+
+4mglobal24m    Controls who gets the ``Save Yourself.''
+|__
+
+The  save_type, shutdown, interact_style, and fast arguments
+are discussed in more detail in section	 5.1.1,	 ``The	Save
+Yourself Callback.''
+
+If  global  is	set to 4mTrue24m, then the resulting ``Save Your-
+self'' should be sent to all clients in	 the  session.	 For
+example,  a  vendor  of a Uninterruptible Power Supply (UPS)
+might include a Session Management client that would monitor
+the  status  of	 the UPS and generate a fast shutdown if the
+power is about to be lost.
+
+If global is set to 4mFalse24m, then the ``Save Yourself'' should
+only be sent to the client that requested it.
+
+1m5.7.	Requesting a Save Yourself Phase 20m
+
+In  response to a ``Save Yourself, the client may request to
+be informed when all the other clients are quiescent so that
+it  can save their state.  To do so, use 4mSmcRequestSaveYour-0m
+4mselfPhase224m.
+__
+|
+Status SmcRequestSaveYourselfPhase2(4msmc_conn24m, 4msave_yourself_phase2_proc24m, 4mclient_data24m)
+    SmcConn 4msmc_conn24m;
+    SmcSaveYourselfPhase2Proc 4msave_yourself_phase2_proc24m;
+    SmPointer 4mclient_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4msave_yourself_phase2_proc0m
+	  The callback to be invoked when the  ``Save  Your-
+	  self	Phase  2''  message arrives from the session
+	  manager.
+
+4mclient_data0m
+	  This pointer to client data will be passed to	 the
+	  4mSmcSaveYourselfPhase2Proc24m callback when the ``Save
+	  Yourself Phase 2'' message arrives.
+
+
+
+
+			   - 16 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+|__
+
+The return value of 4mSmcRequestSaveYourselfPhase224m is zero for
+failure and a positive value for success.
+
+This  request is needed by clients that manage other clients
+(for example, window managers, workspace  managers,  and  so
+on).   The  manager  must  make sure that all of the clients
+that are being managed are in an idle state  so	 that  their
+state can be saved.
+
+1m5.8.	Completing a Save Yourself0m
+
+After  saving  state in response to a ``Save Yourself'' mes-
+sage, you should call 4mSmcSaveYourselfDone24m.
+__
+|
+void SmcSaveYourselfDone(4msmc_conn24m, 4msuccess24m)
+    SmcConn 4msmc_conn24m;
+    Bool 4msuccess24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4msuccess24m   If 4mTrue24m, the ``Save Yourself'' operation was  com-
+	  pleted successfully.
+|__
+
+Before calling 4mSmcSaveYourselfDone24m, the client must have set
+each required property at least once since the client regis-
+tered with the session manager.
+
+1m5.9.	Using Smc Informational Functions0m
+
+__
+|
+int SmcProtocolVersion(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcProtocolVersion24m	 returns the major version of the session
+management protocol associated with this session.
+
+
+__
+|
+int SmcProtocolRevision(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcProtocolRevision24m returns the minor version of the session
+management protocol associated with this session.
+
+
+
+
+
+			   - 17 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+__
+|
+char *SmcVendor(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcVendor24m returns a string that provides some identification
+of the owner of the session manager.  The string  should  be
+freed with a call to 4mfree24m.
+
+
+__
+|
+char *SmcRelease(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcRelease24m returns a string that provides the release number
+of the session manager.	 The string should be freed  with  a
+call to 4mfree24m.
+
+
+__
+|
+char *SmcClientID(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcClientID24m  returns a null-terminated string for the client
+ID associated with this connection.   This  information	 was
+also  returned in 4mSmcOpenConnection24m (it is provided here for
+convenience).  Call 4mfree24m on this pointer when the client  ID
+is no longer needed.
+
+
+__
+|
+IceConn SmcGetIceConnection(4msmc_conn24m)
+    SmcConn 4msmc_conn24m;
+|__
+
+4mSmcGetIceConnection24m  returns the ICE connection object asso-
+ciated with this session management connection object.	 The
+ICE  connection	 object	 can  be used to get some additional
+information about the connection.  Some of the	more  useful
+functions  which  can  be used on the IceConn are 4mIceConnec-0m
+4mtionNumber24m, 4mIceConnectionString24m,  4mIceLastSentSequenceNumber24m,
+4mIceLastReceivedSequenceNumber24m,  and  4mIcePing24m.	  For  further
+information, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+1m5.10.	 Error Handling0m
+
+If the client receives an unexpected protocol error from the
+session manager, an error handler is invoked  by  SMlib.   A
+default	 error	handler	 exists that simply prints the error
+
+
+
+			   - 18 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+message to 4mstderr24m and exits if the severity of the error  is
+fatal.	 The client can change this error handler by calling
+the 4mSmcSetErrorHandler24m function.
+__
+|
+SmcErrorHandler SmcSetErrorHandler(4mhandler24m)
+    SmcErrorHandler 4mhandler24m;
+
+
+4mhandler24m   The  error  handler.   You  should  pass	 NULL  to
+	  restore the default handler.
+|__
+
+4mSmcSetErrorHandler24m returns the previous error handler.
+
+The 4mSmcErrorHandler24m has the following type:
+__
+|
+typedef void (*SmcErrorHandler)();
+
+void ErrorHandler(4msmc_conn24m, 4mswap24m, 4moffending_minor_opcode24m, 4moffending_sequence_num24m, 4merror_class24m, 4mseverity24m, 4mvalues24m)
+    SmcConn 4msmc_conn24m;
+    Bool 4mswap24m;
+    int 4moffending_minor_opcode24m;
+    unsigned long 4moffending_sequence_num24m;
+    int 4merror_class24m;
+    int 4mseverity24m;
+    IcePointer 4mvalues24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mswap24m      A flag that indicates if the specified values need
+	  byte swapping.
+
+4moffending_minor_opcode0m
+	  The minor opcode of the offending message.
+
+4moffending_sequence_num0m
+	  The sequence number of the offending message.
+
+4merror_class0m
+	  The error class of the offending message.
+
+4mseverity24m  4mIceCanContinue24m, 4mIceFatalToProtocol24m, or 4mIceFatalTo-0m
+	  4mConnection24m.
+
+4mvalues24m    Any  additional error values specific to the minor
+	  opcode and class.
+|__
+
+Note that this error handler is invoked for protocol related
+errors.	  To  install an error handler to be invoked when an
+IO error  occurs,  use	4mIceSetIOErrorHandler24m.   For  further
+
+
+
+			   - 19 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+information, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+1m6.  Session Management Server (Sms) Functions0m
+
+This section discusses how Session Management servers:
+
+·    Initialize the library
+
+·    Register the client
+
+·    Send a ``Save Yourself'' message
+
+·    Send a ``Save Yourself Phase 2'' message
+
+·    Send an ``Interact'' message
+
+·    Send a ``Save Complete'' message
+
+·    Send a ``Die'' message
+
+·    Cancel a shutdown
+
+·    Return properties
+
+·    Ping a client
+
+·    Clean up after a client disconnects
+
+·    Use Sms informational functions
+
+·    Handle errors
+
+1m6.1.	Initializing the Library0m
+
+4mSmsInitialize24m is the first SMlib  function	 that  should  be
+called	by a session manager.  It provides information about
+the session manager and registers a callback  that  will  be
+invoked	 each time a new client connects to the session man-
+ager.
+__
+|
+Status SmsInitialize(4mvendor24m, 4mrelease24m, 4mnew_client_proc24m, 4mmanager_data24m, 4mhost_based_auth_proc24m,
+		    4merror_length24m, 4merror_string_ret24m)
+    char *4mvendor24m;
+    char *4mrelease24m;
+    SmsNewClientProc 4mnew_client_proc24m;
+    SmPointer 4mmanager_data24m;
+    IceHostBasedAuthProc 4mhost_based_auth_proc24m;
+    int 4merror_length24m;
+    char *4merror_string_ret24m;
+
+
+4mvendor24m    A string specifying the session manager vendor.
+
+
+
+
+			   - 20 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4mrelease24m   A string specifying the	session	 manager  release
+	  number.
+
+4mnew_client_proc0m
+	  Callback to be invoked each time a new client con-
+	  nects to the session manager.
+
+4mmanager_data0m
+	  When the  4mSmsNewClientProc24m  callback  is	 invoked,
+	  this pointer to manager data will be passed.
+
+4mhost_based_auth_proc0m
+	  Host based authentication callback.
+
+4merror_length0m
+	  Length of the error_string_ret argument passed in.
+
+4merror_string_ret0m
+	  Returns a null-terminated error message,  if	any.
+	  The  error_string_ret points to user supplied mem-
+	  ory.	No more than error_length bytes are used.
+|__
+
+After the 4mSmsInitialize24m function is called, the session man-
+ager  should  call  the	 4mIceListenForConnections24m function to
+listen for new connections.  Afterwards, each time a  client
+connects,  the	session manager should call 4mIceAcceptConnec-0m
+4mtion24m.
+
+See section  9,	 ``Authentication  of  Clients,''  for	more
+details	 on authentication (including host based authentica-
+tion).	Also see the 4mInter-Client24m 4mExchange24m 4mLibrary24m  standard
+for  further details on listening for and accepting ICE con-
+nections.
+
+Each time a new client connects to the session manager,	 the
+4mSmsNewClientProc24m  callback	 is invoked.  The session manager
+obtains a new opaque connection object that  it	 should	 use
+for  all  future interaction with the client.  At this time,
+the session manager must also register a set of callbacks to
+respond	 to  the  different  messages  that the client might
+send.
+__
+|
+typedef Status (*SmsNewClientProc)();
+
+Status NewClientProc(4msms_conn24m, 4mmanager_data24m, 4mmask_ret24m, 4mcallbacks_ret24m, 4mfailure_reason_ret24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    unsigned long *4mmask_ret24m;
+    SmsCallbacks *4mcallbacks_ret24m;
+    char **4mfailure_reason_ret24m;
+
+
+
+
+
+			   - 21 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4msms_conn24m  A new opaque connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4mmask_ret24m  On  return,  indicates which callbacks were set by
+	  the session manager.
+
+4mcallbacks_ret0m
+	  On return, contains the  callbacks  registered  by
+	  the session manager.
+
+4mfailure_reason_ret0m
+	  Failure reason returned.
+|__
+
+If  a  failure	occurs, the 4mSmsNewClientProc24m should return a
+zero status as well as allocate and return a failure  reason
+string in failure_reason_ret.  SMlib will be responsible for
+freeing this memory.
+
+The session manager must register  a  set  of  callbacks  to
+respond	 to  client events.  The mask_ret argument specifies
+which callbacks are set.  All of the callbacks specified  in
+this  version of SMlib are mandatory.  The mask_ret argument
+is necessary in order to maintain backwards compatibility in
+future versions of the library.
+
+The  following	values may be ORed together to obtain a mask
+value:
+
+
+4mSmsRegisterClientProcMask0m
+4mSmsInteractRequestProcMask0m
+4mSmsInteractDoneProcMask0m
+4mSmsSaveYourselfRequestProcMask0m
+4mSmsSaveYourselfP2RequestProcMask0m
+4mSmsSaveYourselfDoneProcMask0m
+4mSmsCloseConnectionProcMask0m
+4mSmsSetPropertiesProcMask0m
+4mSmsDeletePropertiesProcMask0m
+4mSmsGetPropertiesProcMask0m
+
+
+For each  callback,  the  session  manager  can	 register  a
+pointer	 to  manager  data  specific to that callback.	This
+pointer will be passed to the callback when it is invoked by
+SMlib.
+__
+|
+
+typedef struct {
+     struct {
+
+
+
+			   - 22 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+	  SmsRegisterClientProc callback;
+	  SmPointer manager_data;
+     } register_client;
+
+     struct {
+	  SmsInteractRequestProc callback;
+	  SmPointer manager_data;
+     } interact_request;
+
+     struct {
+	  SmsInteractDoneProc callback;
+	  SmPointer manager_data;
+     } interact_done;
+
+     struct {
+	  SmsSaveYourselfRequestProc callback;
+	  SmPointer manager_data;
+     } save_yourself_request;
+
+     struct {
+	  SmsSaveYourselfPhase2RequestProc callback;
+	  SmPointer manager_data;
+     } save_yourself_phase2_request;
+
+     struct {
+	  SmsSaveYourselfDoneProc callback;
+	  SmPointer manager_data;
+     } save_yourself_done;
+
+     struct {
+	  SmsCloseConnectionProc callback;
+	  SmPointer manager_data;
+     } close_connection;
+
+     struct {
+	  SmsSetPropertiesProc callback;
+	  SmPointer manager_data;
+     } set_properties;
+
+     struct {
+	  SmsDeletePropertiesProc callback;
+	  SmPointer manager_data;
+     } delete_properties;
+
+     struct {
+	  SmsGetPropertiesProc callback;
+	  SmPointer manager_data;
+     } get_properties;
+
+} SmsCallbacks;
+
+|__
+
+
+
+
+
+			   - 23 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m6.1.1.  The Register Client Callback0m
+
+The Register Client callback is the first callback that will
+be invoked after the client connects to the session manager.
+Its type is 4mSmsRegisterClientProc24m.
+__
+|
+typedef Status (*SmsRegisterClientProc();
+
+Status RegisterClientProc(4msms_conn24m, 4mmanager_data24m, 4mprevious_id24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    char *4mprevious_id24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager  data specified when the callback was reg-
+	  istered.
+
+4mprevious_id0m
+	  The client ID from the previous session.
+|__
+
+Before any further interaction takes place with the  client,
+the client must be registered with the session manager.
+
+If  the	 client	 is being restarted from a previous session,
+previous_id will contain a null-terminated string represent-
+ing  the  client ID from the previous session.	Call 4mfree24m on
+the previous_id pointer when it is no longer needed.  If the
+client	is  first  joining  the session, previous_id will be
+NULL.
+
+If previous_id is invalid, the session	manager	 should	 not
+register  the  client  at  this	 time.	This callback should
+return a status of zero, which will cause an  error  message
+to  be	sent  to  the client.  The client should re-register
+with previous_id set to NULL.
+
+Otherwise, the session manager should  register	 the  client
+with  a unique client ID by calling the 4mSmsRegisterClientRe-0m
+4mply24m function (to be discussed shortly), and the 4mSmsRegister-0m
+4mClientProc24m callback should return a status of one.
+
+1m6.1.2.  The Interact Request Callback0m
+
+The Interact Request callback is of type 4mSmsInteractRequest-0m
+4mProc24m.
+__
+|
+
+
+
+
+
+			   - 24 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+typedef void (*SmsInteractRequestProc)();
+
+void InteractRequestProc(4msms_conn24m, 4mmanager_data24m, 4mdialog_type24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    int 4mdialog_type24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4mdialog_type0m
+	  The type of dialog the client wishes to present to
+	  the user.
+|__
+
+When a client receives a ``Save Yourself'' message  with  an
+interact_style	 of   4mSmInteractStyleErrors24m  or  4mSmInteract-0m
+4mStyleAny24m, the client may choose to interact with  the  user.
+Because	 only  one  client  can	 interact with the user at a
+time, the client must request to  interact  with  the  user.
+The session manager should keep a queue of all clients wish-
+ing to interact.  It should send an ``Interact'' message  to
+one  client at a time and wait for an ``Interact Done'' mes-
+sage before continuing with the next client.
+
+The dialog_type	 argument  specifies  either  4mSmDialogError24m,
+indicating  that  the client wants to start an error dialog,
+or 4mSmDialogNormal24m, meaning that the client wishes to start a
+nonerror dialog.
+
+If  a  shutdown is in progress, the user may have the option
+of cancelling the shutdown.  If the  shutdown  is  cancelled
+(specified  in	the  ``Interact Done'' message), the session
+manager should send a ``Shutdown Cancelled'' message to each
+client that requested to interact.
+
+1m6.1.3.  The Interact Done Callback0m
+
+When  the  client  is  done  interacting  with the user, the
+4mSmsInteractDoneProc24m callback will be invoked.
+__
+|
+typedef void (*SmsInteractDoneProc)();
+
+void InteractDoneProc(4msms_conn24m, 4mmanager_data24m, 4mcancel_shutdown24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    Bool 4mcancel_shutdown24m;
+
+
+
+
+
+			   - 25 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4mcancel_shutdown0m
+	  Specifies  if	 the  user  requests that the entire
+	  shutdown be cancelled.
+|__
+
+Note that the shutdown can be cancelled only if	 the  corre-
+sponding  ``Save  Yourself'' specified 4mTrue24m for shutdown and
+4mSmInteractStyleErrors24m or 4mSmInteractStyleAny24m for  the	inter-
+act_style.
+
+1m6.1.4.  The Save Yourself Request Callback0m
+
+The  Save  Yourself Request callback is of type 4mSmsSaveYour-0m
+4mselfRequestProc24m.
+__
+|
+typedef void (*SmsSaveYourselfRequestProc)();
+
+void SaveYourselfRequestProc(4msms_conn24m, 4mmanager_data24m, 4msave_type24m, 4mshutdown24m, 4minteract_style24m, 4mfast24m, 4mglobal24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    int 4msave_type24m;
+    Bool 4mshutdown24m;
+    int 4minteract_style24m;
+    Bool 4mfast24m;
+    Bool 4mglobal24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4msave_type24m Specifies  the  type of information that should be
+	  saved.
+
+4mshutdown24m  Specifies if a shutdown is taking place.
+
+4minteract_style0m
+	  The type of interaction allowed with the user.
+
+4mfast24m      If 4mTrue24m, the  client  should  save	its  state  as
+	  quickly as possible.
+
+4mglobal24m    Controls who gets the ``Save Yourself.''
+
+
+
+
+
+			   - 26 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+|__
+
+The  Save  Yourself  Request  prompts the session manager to
+initiate a checkpoint or shutdown.  For information  on	 the
+save_type, shutdown, interact_style, and fast arguments, see
+section 6.3, ``Sending a Save Yourself Message.''
+
+If global is set to 4mTrue24m, then the	 resulting  ``Save  Your-
+self'' should be sent to all applications.  If global is set
+to 4mFalse24m, then the ``Save Yourself'' should only be sent  to
+the client that requested it.
+
+1m6.1.5.  The Save Yourself Phase 2 Request Callback0m
+
+The Save Yourself  Phase  2  Request  callback	is  of	type
+4mSmsSaveYourselfPhase2RequestProc24m.
+__
+|
+typedef void (*SmsSaveYourselfPhase2RequestProc)();
+
+void SmsSaveYourselfPhase2RequestProc(4msms_conn24m, 4mmanager_data24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager  data specified when the callback was reg-
+	  istered.
+|__
+
+This request is sent by clients that  manage  other  clients
+(for  example,	window	managers, workspace managers, and so
+on).  Such managers must make sure that all of	the  clients
+that  are  being  managed are in an idle state so that their
+state can be saved.
+
+1m6.1.6.  The Save Yourself Done Callback0m
+
+When the client is done saving its state in  response  to  a
+``Save	Yourself'' message, the 4mSmsSaveYourselfDoneProc24m will
+be invoked.
+__
+|
+typedef void (*SmsSaveYourselfDoneProc)();
+
+void SaveYourselfDoneProc(4msms_conn24m, 4mmanager_data24m, 4msuccess24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    Bool 4msuccess24m;
+
+
+
+
+
+
+			   - 27 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4msuccess24m   If 4mTrue24m, the Save Yourself operation was completed
+	  successfully.
+|__
+
+Before the ``Save Yourself Done'' was sent, the client	must
+have  set each required property at least once since it reg-
+istered with the session manager.
+
+1m6.1.7.  The Connection Closed Callback0m
+
+If the client properly terminates (that is,  it	 calls	4mSmc-0m
+4mCloseConnection24m),	the  4mSmsCloseConnectionProc24m  callback  is
+invoked.
+__
+|
+typedef void (*SmsCloseConnectionProc)();
+
+void CloseConnectionProc(4msms_conn24m, 4mmanager_data24m, 4mcount24m, 4mreason_msgs24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    int 4mcount24m;
+    char **4mreason_msgs24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4mcount24m     The number of reason messages.
+
+4mreason_msgs0m
+	  The reasons for closing the connection.
+|__
+
+The  reason_msgs  argument  will most likely be NULL and the
+count argument zero (0) if resignation is  expected  by	 the
+user.  Otherwise, it contains a list of null-terminated Com-
+pound Text strings representing the reason for	termination.
+The  session manager should display these reason messages to
+the user.
+
+Call 4mSmFreeReasons24m to free the reason messages.  For further
+information, see section 8, ``Freeing Data.''
+
+
+
+
+
+
+			   - 28 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m6.1.8.  The Set Properties Callback0m
+
+When the client sets session management properties, the 4mSms-0m
+4mSetPropertiesProc24m callback will be invoked.
+__
+|
+typedef void (*SmsSetPropertiesProc)();
+
+void SetPropertiesProc(4msms_conn24m, 4mmanager_data24m, 4mnum_props24m, 4mprops24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    int 4mnum_props24m;
+    SmProp **4mprops24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+
+4mnum_props24m The number of properties.
+
+4mprops24m     The list of properties to set.
+|__
+
+The  properties are specified as an array of property point-
+ers.  For a description of session management properties and
+the  4mSmProp24m  structure,  see section 7, ``Session Management
+Properties.''
+
+Previously set property values may  be	over-written.	Some
+properties  have  predefined semantics.	 The session manager
+is required to store nonpredefined properties.
+
+To free each  property,	 use  4mSmFreeProperty24m.   For  further
+information,  see  section  8, ``Freeing Data.''  You should
+free the actual array of pointers with a call to 4mfree24m.
+
+1m6.1.9.  The Delete Properties Callback0m
+
+When the client deletes session management  properties,	 the
+4mSmsDeletePropertiesProc24m callback will be invoked.
+__
+|
+typedef void (*SmsDeletePropertiesProc)();
+
+void DeletePropertiesProc(4msms_conn24m, 4mmanager_data24m, 4mnum_props24m, 4mprop_names24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+    int 4mnum_props24m;
+    char **4mprop_names24m;
+
+
+
+
+
+			   - 29 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4msmc_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager  data specified when the callback was reg-
+	  istered.
+
+4mnum_props24m The number of properties.
+
+4mprop_names0m
+	  The list of properties to delete.
+|__
+
+The properties are specified as an array of strings.  For  a
+description  of session management properties and the 4mSmProp0m
+structure, see section 7, ``Session Management Properties.''
+
+1m6.1.10.  The Get Properties Callback0m
+
+The 4mSmsGetPropertiesProc24m callback is invoked when the client
+wants to retrieve properties it set.
+__
+|
+typedef void (*SmsGetPropertiesProc)();
+
+void GetPropertiesProc(4msms_conn24m, 4mmanager_data24m)
+    SmsConn 4msms_conn24m;
+    SmPointer 4mmanager_data24m;
+
+
+4msmc_conn24m  The session management connection object.
+
+4mmanager_data0m
+	  Manager data specified when the callback was	reg-
+	  istered.
+|__
+
+The session manager should respond by calling 4mSmsReturnProp-0m
+4merties24m.  All of the properties set for this client should be
+returned.
+
+1m6.2.	Registering the Client0m
+
+To register a client (in response to a 4mSmsRegisterClientProc0m
+callback), use 4mSmsRegisterClientReply24m.
+__
+|
+Status SmsRegisterClientReply(4msms_conn24m, 4mclient_id24m)
+    SmsConn 4msms_conn24m;
+    char *4mclient_id24m;
+
+
+4msms_conn24m  The session management connection object.
+
+
+
+
+
+			   - 30 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+4mclient_id24m A null-terminated  string  representing	a  unique
+	  client ID.
+|__
+
+The return value of 4mSmsRegisterClientReply24m is zero for fail-
+ure and a positive value for success.  Failure will occur if
+SMlib  can  not allocate memory to hold a copy of the client
+ID for it's own internal needs.
+
+If a non-NULL previous_id was specified when the client reg-
+istered	 itself,  client_id  should  be	 identical to previ-
+ous_id.
+
+Otherwise, client_id should be a unique ID freshly generated
+by  the	 session  manager.  In addition, the session manager
+should send a ``Save Yourself'' message with type  =  Local,
+shutdown  =  False,  interact-style = None, and fast = False
+immediately after registering the client.
+
+Note that once a client ID has been assigned to the  client,
+the  client  keeps  this  ID indefinitely.  If the client is
+terminated and restarted, it will be reassigned the same ID.
+It  is	desirable  to be able to pass client IDs around from
+machine to machine, from user to user, and from session man-
+ager to session manager, while retaining the identity of the
+client.	 This, combined with the indefinite  persistence  of
+client	IDs,  means  that  client  IDs	need  to be globally
+unique.
+
+You should call the 4mSmsGenerateClientID24m function to generate
+a globally unique client ID.
+__
+|
+char *SmsGenerateClientID(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+NULL  will  be	returned  if  the ID could not be generated.
+Otherwise, the return value of the function  is	 the  client
+ID.   It  should be freed with a call to 4mfree24m when no longer
+needed.
+
+1m6.3.	Sending a Save Yourself Message0m
+
+To send a ``Save Yourself'' to a  client,  use	4mSmsSaveYour-0m
+4mself24m.
+__
+|
+
+
+
+
+
+
+			   - 31 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+void SmsSaveYourself(4msms_conn24m, 4msave_type24m, 4mshutdown24m, 4minteract_style24m, 4mfast24m)
+    SmsConn 4msms_conn24m;
+    int 4msave_type24m;
+    Bool 4mshutdown24m;
+    int 4minteract_style24m;
+    Bool 4mfast24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4msave_type24m Specifies  the  type of information that should be
+	  saved.
+
+4mshutdown24m  Specifies if a shutdown is taking place.
+
+4minteract_style0m
+	  The type of interaction allowed with the user.
+
+4mfast24m      If 4mTrue24m, the  client  should  save	its  state  as
+	  quickly as possible.
+|__
+
+The  session  manager sends a ``Save Yourself'' message to a
+client either to checkpoint it or just before termination so
+that  it  can save its state.  The client responds with zero
+or more ``Set Properties'' messages to update the properties
+indicating  how to restart the client.	When all the proper-
+ties have been set,  the  client  sends	 a  ``Save  Yourself
+Done'' message.
+
+If  interact_style  is	4mSmInteractStyleNone24m, the client must
+not interact with the user while saving	 state.	  If  inter-
+act_style  is 4mSmInteractStyleErrors24m, the client may interact
+with the user only if an error condition arises.  If  inter-
+act_style  is 4mSmInteractStyleAny24m, then the client may inter-
+act with the user for any purpose.  The client must send  an
+``Interact  Request''  message	and wait for an ``Interact''
+message from the session manager before it can interact with
+the  user.   When  the	client	is done interacting with the
+user, it should send  an  ``Interact  Done''  message.	 The
+``Interact  Request''  message	can be sent any time after a
+``Save Yourself'' and before a ``Save Yourself Done.''
+
+If save_type is 4mSmSaveLocal24m,  the	client	must  update  the
+properties  to	reflect its current state.  Specifically, it
+should save enough information to restore the state as	seen
+by  the user of this client.  It should not affect the state
+as seen by other users.	 If save_type  is  4mSmSaveGlobal24m  the
+user  wants  the  client to commit all of its data to perma-
+nent, globally accessible storage.  If save_type is  4mSmSave-0m
+4mBoth24m,  the	 client	 should do both of these (it should first
+commit the data to permanent  storage  before  updating	 its
+properties).
+
+
+
+
+			   - 32 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+The shutdown argument specifies whether the session is being
+shut  down.   The  interaction	is  different  depending  on
+whether	 or not shutdown is set.  If not shutting down, then
+the client can save and resume normal operation.   If  shut-
+ting down, the client must save and then must prevent inter-
+action until it receives either a ``Die''  or  a  ``Shutdown
+Cancelled,''  because  anything the user does after the save
+will be lost.
+
+The fast argument specifies that the client should save	 its
+state  as  quickly as possible.	 For example, if the session
+manager knows that power is about to  fail,  it	 should	 set
+fast to 4mTrue24m.
+
+1m6.4.	Sending a Save Yourself Phase 2 Message0m
+
+In  order  to  send a ``Save Yourself Phase 2'' message to a
+client, use 4mSmsSaveYourselfPhase224m.
+__
+|
+void SmsSaveYourselfPhase2(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+The session manager sends this message to a client that	 has
+previously sent a ``Save Yourself Phase 2 Request'' message.
+This message informs the client that all other	clients	 are
+in  a  fixed  state  and  this client can save state that is
+associated with other clients.
+
+1m6.5.	Sending an Interact Message0m
+
+To send an ``Interact'' message to a client,  use  4mSmsInter-0m
+4mact24m.
+__
+|
+void SmsInteract(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+The  ``Interact'' message grants the client the privilege of
+interacting with the user.  When the client is	done  inter-
+acting with the user, it must send an ``Interact Done'' mes-
+sage to the session manager.
+
+
+
+
+
+
+
+			   - 33 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m6.6.	Sending a Save Complete Message0m
+
+To send	 a  ``Save  Complete''	message	 to  a	client,	 use
+4mSmsSaveComplete24m.
+__
+|
+void SmsSaveComplete(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+The  session manager sends this message when it is done with
+a checkpoint.  The client is then free to change its  state.
+
+1m6.7.	Sending a Die Message0m
+
+To send a ``Die'' message to a client, use 4mSmsDie24m.
+__
+|
+void SmsDie(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+Before	the session manager terminates, it should wait for a
+``Connection Closed'' message from each client that it	sent
+a ``Die'' message to, timing out appropriately.
+
+1m6.8.	Cancelling a Shutdown0m
+
+To cancel a shutdown, use 4mSmsShutdownCancelled24m.
+__
+|
+void SmsShutdownCancelled(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+The  client  can  now  continue as if the shutdown had never
+happened.  If the client has  not  sent	 a  ``Save  Yourself
+Done''	message yet, it can either abort the save and send a
+``Save Yourself Done'' with  the  success  argument  set  to
+4mFalse24m,  or	 it  can continue with the save and send a ``Save
+Yourself Done'' with the success argument set to reflect the
+outcome of the save.
+
+
+
+
+
+
+			   - 34 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m6.9.	Returning Properties0m
+
+In  response  to  a  ``Get Properties'' message, the session
+manager should call 4mSmsReturnProperties24m.
+__
+|
+void SmsReturnProperties(4msms_conn24m, 4mnum_props24m, 4mprops24m)
+    SmsConn 4msms_conn24m;
+    int 4mnum_props24m;
+    SmProp **4mprops24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mnum_props24m The number of properties.
+
+4mprops24m     The list of properties to return to the client.
+|__
+
+The properties are returned as an array of  property  point-
+ers.  For a description of session management properties and
+the 4mSmProp24m structure, see section	7,  ``Session  Management
+Properties.''
+
+1m6.10.	 Pinging a Client0m
+
+To  check  that	 a client is still alive, you should use the
+4mIcePing24m function provided by the ICE library.  To do so, the
+ICE  connection	 must be obtained using the 4mSmsGetIceConnec-0m
+4mtion24m (see section	6.12,  ``Using	Sms  Informational  Func-
+tions'').
+
+__
+|
+void IcePing(4mice_conn24m, 4mping_reply_proc24m, 4mclient_data24m)
+    IceConn 4mice_conn24m;
+    IcePingReplyProc 4mping_reply_proc24m;
+    IcePointer 4mclient_data24m;
+
+
+4mice_conn24m  A valid ICE connection object.
+
+4mping_reply_proc0m
+	  The	callback  to  invoke  when  the	 Ping  reply
+	  arrives.
+
+4mclient_data0m
+	  This pointer will  be	 passed	 to  the  4mIcePingRe-0m
+	  4mplyProc24m callback.
+|__
+
+When the Ping reply is ready (if ever), the 4mIcePingReplyProc0m
+callback will be invoked.  A  session  manager	should	have
+some  sort  of	timeout	 period,  after which it assumes the
+
+
+
+			   - 35 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+client has unexpectedly died.
+
+__
+|
+typedef void (*IcePingReplyProc)();
+
+void PingReplyProc(4mice_conn24m, 4mclient_data24m)
+    IceConn 4mice_conn24m;
+    IcePointer 4mclient_data24m;
+
+
+4mice_conn24m  The ICE connection object.
+
+4mclient_data0m
+	  The client data specified in the call to  4mIcePing24m.
+|__
+
+
+1m6.11.	 Cleaning Up After a Client Disconnects0m
+
+When  the  session  manager receives a ``Connection Closed''
+message or otherwise detects that  the	client	aborted	 the
+connection,  it should call the 4mSmsCleanUp24m function in order
+to free up the connection object.
+__
+|
+void SmsCleanUp(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+4msms_conn24m  The session management connection object.
+|__
+
+
+1m6.12.	 Using Sms Informational Functions0m
+
+__
+|
+int SmsProtocolVersion(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+|__
+
+4mSmsProtocolVersion24m returns the major version of the  session
+management protocol associated with this session.
+
+
+__
+|
+int SmsProtocolRevision(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+
+
+
+
+
+			   - 36 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+|__
+
+4mSmsProtocolRevision24m returns the minor version of the session
+management protocol associated with this session.
+
+
+__
+|
+char *SmsClientID(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+
+|__
+
+4mSmsClientID24m returns a null-terminated string for the  client
+ID associated with this connection.  You should call 4mfree24m on
+this pointer when the client ID is no longer needed.
+
+
+To obtain the host name of a client, use  4mSmsClientHostName24m.
+This host name will be needed to restart the client.
+__
+|
+char *SmsClientHostName(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+|__
+
+The  string returned is of the form 4mprotocol24m/4mhostname24m, where
+4mprotocol24m is one of {tcp, decnet, local}.	You  should  call
+4mfree24m on the string returned when it is no longer needed.
+
+
+__
+|
+IceConn SmsGetIceConnection(4msms_conn24m)
+    SmsConn 4msms_conn24m;
+|__
+
+4mSmsGetIceConnection24m  returns the ICE connection object asso-
+ciated with this session management connection object.	 The
+ICE  connection	 object	 can  be used to get some additional
+information about the connection.  Some of the	more  useful
+functions  which  can  be used on the IceConn are 4mIceConnec-0m
+4mtionNumber24m, and 4mIceLastSequenceNumber24m.  For further informa-
+tion, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+1m6.13.	 Error Handling0m
+
+If the session manager receives an unexpected protocol error
+from a client, an error handler	 is  invoked  by  SMlib.   A
+default	 error	handler exists which simply prints the error
+message (it does not exit).  The session manager can  change
+
+
+
+
+
+
+			   - 37 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+this error handler by calling 4mSmsSetErrorHandler24m.
+__
+|
+SmsErrorHandler SmsSetErrorHandler(4mhandler24m)
+    SmsErrorHandler 4mhandler24m;
+
+
+4mhandler24m   The  error  handler.   You  should  pass	 NULL  to
+	  restore the default handler.
+|__
+
+4mSmsSetErrorHandler24m returns the previous error handler.   The
+4mSmsErrorHandler24m has the following type:
+__
+|
+typedef void (*SmsErrorHandler)();
+
+void ErrorHandler(4msms_conn24m, 4mswap24m, 4moffending_minor_opcode24m, 4moffending_sequence_num24m, 4merror_class24m, 4mseverity24m, 4mvalues24m)
+    SmsConn 4msms_conn24m;
+    Bool 4mswap24m;
+    int 4moffending_minor_opcode24m;
+    unsigned long 4moffending_sequence_num24m;
+    int 4merror_class24m;
+    int 4mseverity24m;
+    IcePointer 4mvalues24m;
+
+
+4msms_conn24m  The session management connection object.
+
+4mswap24m      A  flag	which  indicates  if the specified values
+	  need byte swapping.
+
+4moffending_minor_opcode0m
+	  The minor opcode of the offending message.
+
+4moffending_sequence_num0m
+	  The sequence number of the offending message.
+
+4merror_class0m
+	  The error class of the offending message.
+
+4mseverity24m  4mIceCanContinue24m, 4mIceFatalToProtocol24m, or 4mIceFatalTo-0m
+	  4mConnection24m.
+
+4mvalues24m    Any  additional error values specific to the minor
+	  opcode and class.
+|__
+
+Note that this error handler is invoked for protocol related
+errors.	  To  install an error handler to be invoked when an
+IO error  occurs,  use	4mIceSetIOErrorHandler24m.   For  further
+information, see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+
+
+
+
+			   - 38 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+1m7.  Session Management Properties0m
+
+Each property is defined by the 4mSmProc24m structure:
+
+
+typedef struct {
+     char *name;	 /* name of property */
+     char *type;	 /* type of property */
+     int num_vals;	 /* number of values */
+     SmPropValue *vals;	 /* the list of values */
+} SmProp;
+
+typedef struct {
+     int length;	 /* the length of the value */
+     SmPointer value;	 /* the value */
+} SmPropValue;
+
+
+The X Session Management Protocol defines a list  of  prede-
+fined properties, several of which are required to be set by
+the client.  The following table  specifies  the  predefined
+properties  and	 indicates  which  ones	 are required.	Each
+property has a type associated with it.
+
+A type of SmCARD8 indicates that there is  a  single  1-byte
+value.	 A type of SmARRAY8 indicates that there is a single
+array of bytes.	 A type	 of  SmLISTofARRAY8  indicates	that
+there is a list of array of bytes.
+
+
+-------------------------------------------------------------
+1mName		       Type	     POSIX Type	      Required0m
+-------------------------------------------------------------
+SmCloneCommand	     OS-specific   SmLISTofARRAY8     Yes
+SmCurrentDirectory   OS-specific   SmARRAY8	       No
+SmDiscardCommand     OS-specific   SmLISTofARRAY8     No*
+SmEnvironment	     OS-specific   SmLISTofARRAY8      No
+SmProcessID	     OS-specific   SmARRAY8	       No
+SmProgram	     OS-specific   SmARRAY8	      Yes
+SmRestartCommand     OS-specific   SmLISTofARRAY8     Yes
+SmResignCommand	     OS-specific   SmLISTofARRAY8      No
+SmRestartStyleHint   SmCARD8	   SmCARD8	       No
+SmShutdownCommand    OS-specific   SmLISTofARRAY8      No
+SmUserID	     SmARRAY8	   SmARRAY8	      Yes
+-------------------------------------------------------------
+
+
+*  Required if any state is stored in an external repository
+(for example, state file).
+
+·    SmCloneCommand
+
+     This is like the SmRestartCommand, except it restarts a
+     copy  of  the application.	 The only difference is that
+
+
+
+			   - 39 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+     the application does not supply its client ID at regis-
+     ter  time.	  On  POSIX  systems, this should be of type
+     SmLISTofARRAY8.
+
+·    SmCurrentDirectory
+
+     On POSIX-based systems, this specifies the value of the
+     current  directory	 that  needs  to  be set up prior to
+     starting the SmProgram and should of type SmARRAY8.
+
+·    SmDiscardCommand
+
+     The discard command contains a command that when deliv-
+     ered  to the host that the client is running on (deter-
+     mined from the connection), will cause  it	 to  discard
+     any  information about the current state.	If this com-
+     mand is not specified, the Session Manager will  assume
+     that  all	of  the	 client's  state  is  encoded in the
+     SmRestartCommand.	On POSIX systems, the type should be
+     SmLISTofARRAY8.
+
+·    SmEnvironment
+
+     On	 POSIX	based systems, this will be of type SmLISTo-
+     fARRAY8, where the ARRAY8s alternate  between  environ-
+     ment variable name and environment variable value.
+
+·    SmProcessID
+
+     This   specifies  an  OS-specific	identifier  for	 the
+     process.  On POSIX systems,  this	should	contain	 the
+     return  value of 4mgetpid24m turned into a Latin-1 (decimal)
+     string.
+
+·    SmProgram
+
+     This is the name of the program that  is  running.	  On
+     POSIX systems, this should be first parameter passed to
+     4mexecve24m and should be of type SmARRAY8.
+
+·    SmRestartCommand
+
+     The restart  command  contains  a	command	 that,	when
+     delivered	to  the	 host  that the client is running on
+     (determined from the connection), will cause the client
+     to	 restart  in its current state.	 On POSIX-based sys-
+     tems, this is of type SmLISTofARRAY8, and each  of	 the
+     elements in the array represents an element in the 4margv0m
+     array.  This restart command  should  ensure  that	 the
+     client restarts with the specified client-ID.
+
+·    SmResignCommand
+
+
+
+
+
+			   - 40 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+     A	client that sets the SmRestartStyleHint to SmRestar-
+     tAnway uses this property to  specify  a  command	that
+     undoes  the  effect of the client and removes any saved
+     state.  As	 an  example,  consider	 a  user  that	runs
+     4mxmodmap24m, which registers with the Session Manager, sets
+     SmRestartStyleHint to SmRestartAnyway, and then  termi-
+     nates.   To  allow	 the  Session Manager (at the user's
+     request) to undo this, 4mxmodmap24m would register	 a  SmRe-
+     signCommand that undoes the effects of the 4mxmodmap24m.
+
+·    SmRestartStyleHint
+
+     If	 the  RestartStyleHint	property is present, it will
+     contain the style of restarting the client prefers.  If
+     this  style  is  not  specified,  SmRestartIfRunning is
+     assumed.  The possible values are as follows:
+
+     -----------------------------
+     1mName		      Value0m
+     -----------------------------
+     SmRestartIfRunning	      0
+     SmRestartAnyway	      1
+     SmRestartImmediately     2
+     SmRestartNever	      3
+     -----------------------------
+
+
+     The SmRestartIfRunning style is used in the usual case.
+     The  client  should be restarted in the next session if
+     it was running at the end of the current session.
+
+     The SmRestartAnyway style is used to tell	the  Session
+     Manager that the application should be restarted in the
+     next session even if it exits before the  current	ses-
+     sion  is  terminated.   It should be noted that this is
+     only a hint and the Session  Manager  will	 follow	 the
+     policies  specified  by  its  users in determining what
+     applications to restart.
+
+     A client that uses SmRestartAnyway should also set	 the
+     SmResignCommand  and  SmShutdownCommand  properties  to
+     commands that undo the state of  the  client  after  it
+     exits.
+
+     The SmRestartImmediately style is like SmRestartAnyway,
+     but, in addition, the client is meant to  run  continu-
+     ously.  If the client exits, the Session Manager should
+     try to restart it in the current session.
+
+     SmRestartNever style specifies that the client does not
+     wish to be restarted in the next session.
+
+·    SmShutdownCommand
+
+
+
+
+			   - 41 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+     This  command  is executed at shutdown time to clean up
+     after a client that is no longer running  but  retained
+     its  state	 by  setting SmRestartStyleHint to SmRestar-
+     tAnyway.  The client must not remove any saved state as
+     the  client  is still part of the session.	 As an exam-
+     ple, consider a client that turns on a camera at  start
+     up time.  This client then exits.	At session shutdown,
+     the user wants the	 camera	 turned	 off.	This  client
+     would set the SmRestartStyleHint to SmRestartAnyway and
+     would register a SmShutdownCommand that would turn	 off
+     the camera.
+
+·    SmUserID
+
+     Specifies	the  user  ID.	On POSIX-based systems, this
+     will contain the user's name  (the	 pw_name  member  of
+     struct 4mpasswd24m).
+
+1m8.  Freeing Data0m
+
+To free an individual property, use 4mSmFreeProperty24m.
+__
+|
+void SmFreeProperty(4mprop24m)
+    SmProp *4mprop24m;
+
+
+4mprop24m      The property to free.
+|__
+
+
+To  free  the reason strings from the 4mSmsCloseConnectionProc0m
+callback, use 4mSmFreeReasons24m.
+__
+|
+void SmFreeReasons(4mcount24m, 4mreasons24m)
+    int 4mcount24m;
+    char **4mreasons24m;
+
+
+4mcount24m     The number of reason strings.
+
+4mreasons24m   The list of reason strings to free.
+|__
+
+
+1m9.  Authentication of Clients0m
+
+As stated earlier, the session management protocol  is	lay-
+ered  on top of ICE.  Authentication occurs at two levels in
+the ICE protocol:
+
+·    The first is when an ICE connection is opened.
+
+
+
+
+			   - 42 -
+
+
+
+
+
+1mX Session Management Library		      X11, Release 6.40m
+
+
+·    The second is when a Protocol Setup occurs	 on  an	 ICE
+     connection.
+
+The  authentication methods that are available are implemen-
+tation-dependent (that is.,  dependent	on  the	 ICElib	 and
+SMlib implementations in use).	For further information, see
+the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+1m10.  Working in a Multi-Threaded Environment0m
+
+To declare that multiple threads in an application  will  be
+using SMlib (or any other library layered on top of ICElib),
+you should call 4mIceInitThreads24m.   For  further  information,
+see the 4mInter-Client24m 4mExchange24m 4mLibrary24m standard.
+
+1m11.  Acknowledgements0m
+
+Thanks	to  the	 following people for their participation in
+the X Session Management design: Jordan Brown, Ellis  Cohen,
+Donna  Converse,  Stephen  Gildea,  Vania  Joloboff,  Stuart
+Marks, Bob Scheifler, Ralph Swick, and Mike Wexler.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			   - 43 -
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			   - 44 -
+
+
+
+
+
+
+
+
+
+		     1mTable of Contents0m
+
+
+1. Overview of Session Management  . . . . . . . . . . .   1
+2. The Session Management Library  . . . . . . . . . . .   1
+3. Understanding SMlib's Dependence on ICE . . . . . . .   2
+4. Header Files and Library Name . . . . . . . . . . . .   3
+5. Session Management Client (Smc) Functions . . . . . .   3
+5.1. Connecting to the Session Manager . . . . . . . . .   4
+5.1.1. The Save Yourself Callback  . . . . . . . . . . .   7
+5.1.2. The Die Callback	 . . . . . . . . . . . . . . . .   8
+5.1.3. The Save Complete Callback  . . . . . . . . . . .   9
+5.1.4. The Shutdown Cancelled Callback . . . . . . . . .   9
+5.2. Closing the Connection  . . . . . . . . . . . . . .  10
+5.3. Modifying Callbacks . . . . . . . . . . . . . . . .  11
+5.4. Setting, Deleting, and Retrieving Session Man-
+agement Properties . . . . . . . . . . . . . . . . . . .  12
+5.5. Interacting With the User . . . . . . . . . . . . .  14
+5.6. Requesting a Save Yourself	 . . . . . . . . . . . .  15
+5.7. Requesting a Save Yourself Phase 2	 . . . . . . . .  16
+5.8. Completing a Save Yourself	 . . . . . . . . . . . .  17
+5.9. Using Smc Informational Functions . . . . . . . . .  17
+5.10. Error Handling . . . . . . . . . . . . . . . . . .  18
+6. Session Management Server (Sms) Functions . . . . . .  20
+6.1. Initializing the Library  . . . . . . . . . . . . .  20
+6.1.1. The Register Client Callback  . . . . . . . . . .  24
+6.1.2. The Interact Request Callback . . . . . . . . . .  24
+6.1.3. The Interact Done Callback  . . . . . . . . . . .  25
+6.1.4. The Save Yourself Request Callback  . . . . . . .  26
+6.1.5. The Save Yourself Phase 2 Request Callback  . . .  27
+6.1.6. The Save Yourself Done Callback . . . . . . . . .  27
+6.1.7. The Connection Closed Callback  . . . . . . . . .  28
+6.1.8. The Set Properties Callback . . . . . . . . . . .  29
+6.1.9. The Delete Properties Callback  . . . . . . . . .  29
+6.1.10. The Get Properties Callback  . . . . . . . . . .  30
+6.2. Registering the Client  . . . . . . . . . . . . . .  30
+6.3. Sending a Save Yourself Message . . . . . . . . . .  31
+6.4. Sending a Save Yourself Phase 2 Message . . . . . .  33
+6.5. Sending an Interact Message . . . . . . . . . . . .  33
+6.6. Sending a Save Complete  Message  . . . . . . . . .  34
+6.7. Sending a Die Message . . . . . . . . . . . . . . .  34
+6.8. Cancelling a Shutdown . . . . . . . . . . . . . . .  34
+6.9. Returning Properties  . . . . . . . . . . . . . . .  35
+6.10. Pinging a Client . . . . . . . . . . . . . . . . .  35
+6.11. Cleaning Up After a Client Disconnects . . . . . .  36
+6.12. Using Sms Informational Functions	 . . . . . . . .  36
+6.13. Error Handling . . . . . . . . . . . . . . . . . .  37
+7. Session Management Properties . . . . . . . . . . . .  39
+8. Freeing Data	 . . . . . . . . . . . . . . . . . . . .  42
+9. Authentication of Clients . . . . . . . . . . . . . .  42
+10. Working in a Multi-Threaded Environment  . . . . . .  43
+11. Acknowledgements . . . . . . . . . . . . . . . . . .  43
+
+
+
+
+			     iii
+
+

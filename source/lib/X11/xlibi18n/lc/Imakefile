@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/lib/X11/xlibi18n/lc/Imakefile,v 1.2 2006/01/09 14:58:59 dawes Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags CDEBUGFLAGS="$(CDEBUGFLAGS)"
+
+SUBDIRS = gen def Utf8 xlocale
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))
+MakeLintLibSubdirs($(LINTSUBDIRS))
+MakeLintSubdirs($(LINTSUBDIRS),install.ln,install.ln)

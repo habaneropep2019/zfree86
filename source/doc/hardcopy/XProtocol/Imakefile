@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/XProtocol/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(proto,proto.PS.gz)
+InstallHardcopyDoc(proto.idx,proto.idx.PS.gz)
+

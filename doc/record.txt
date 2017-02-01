@@ -1,0 +1,1386 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	  1mRecord Extension Protocol Specification0m
+
+			1mVersion 1.130m
+
+		   1mX Consortium Standard0m
+
+		 1mX Version 11, Release 6.40m
+
+
+
+
+
+
+			Martha Zimet
+	      Network Computing Devices, Inc.
+
+
+
+
+
+
+			 edited by
+		       Stephen Gildea
+			X Consortium
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © 1994 Network Computing Devices, Inc.
+
+Permission to use, copy, modify, distribute, and sell this
+documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice and this permission
+notice appear in all copies.  Network Computing Devices,
+Inc.  makes no representations about the suitability for any
+purpose of the information in this document.  This documen-
+tation is provided "as is" without express or implied war-
+ranty.
+
+Copyright © 1994, 1995	X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom
+the Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium and shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+1m1.  Introduction0m
+
+Several proposals have been written over the past few years that
+address some of the issues surrounding the recording and playback
+of user actions in the X Window System1:
+
+·  4mSome24m 4mProposals24m 4mfor24m 4ma24m 4mMinimal24m 4mX1124m 4mTesting24m 4mExtension24m, Kieron
+   Drake, UniSoft Ltd., April 1991
+
+·  4mX1124m 4mInput24m 4mSynthesis24m 4mExtension24m 4mProposal24m, Larry Woestman,
+   Hewlett Packard, November 1991
+
+·  4mXTrap24m 4mArchitecture24m, Dick Annicchiario, et al, Digital Equip-
+   ment Corporation, July 1991
+
+·  4mXTest24m 4mExtension24m 4mRecording24m 4mSpecification24m, Yochanan Slonim, Mer-
+   cury Interactive, December 1992
+
+This document both unifies and extends the previous diverse
+approaches to generate a proposal for an X extension that pro-
+vides support for the recording of all core X protocol and arbi-
+trary extension protocol.  Input synthesis, or playback, has
+already been implemented in the XTest extension, an X Consortium
+standard.  Therefore, this extension is limited to recording.
+
+In order to provide both record and playback functionality, a
+hypothetical record application could use this extension to cap-
+ture both user actions and their consequences.	For example, a
+button press (a user action) may cause a window to be mapped and
+a corresponding 4mMapNotify24m event to be sent (a consequence).  This
+information could be stored for later use by a playback applica-
+tion.
+
+The playback application could use the recorded actions as input
+for the XTest extension's 4mXTestFakeInput24m operation to synthesize
+the appropriate input events.  The "consequence" or synchroniza-
+tion information is then used as a synchronization point during
+playback.  That is, the playback application does not generate
+specific synthesized events until their matching synchronization
+condition occurs.  When the condition occurs the processing of
+synthesized events continues.  Determination that the condition
+has occurred may be made by capturing the consequences of the
+synthesized events and comparing them to the previously recorded
+synchronization information.  For example, if a button press was
+followed by a 4mMapNotify24m event on a particular window in the
+recorded data, the playback application might synthesize the but-
+ton press then wait for the 4mMapNotify24m event on the appropriate
+window before proceeding with subsequent synthesized input.
+
+Because it is impossible to predict what synchronization informa-
+tion will be required by a particular application, the extension
+provides facilities to record any subset of core X protocol and
+-----------
+  1 4mX24m 4mWindow24m 4mSystem24m is a trademark of X Consortium, Inc.
+
+
+
+				1m10m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+arbitrary extension protocol.  As such, this extension does not
+enforce a specific synchronization methodology; any method based
+on information in the X protocol stream (e.g., watching for win-
+dow mapping/unmapping, cursor changes, drawing of certain text
+strings, etc.) can capture the information it needs using RECORD
+facilities.
+
+1m1.1.	Acknowledgements0m
+
+The document represents the culmination of two years of debate
+and experiments done under the auspices of the X Consortium xtest
+working group.	Although this was a group effort, the author
+remains responsible for any errors or omissions.  Two years ago,
+Robert Chesler of Absol-puter, Kieron Drake of UniSoft Ltd., Marc
+Evans of Synergytics and Ken Miller of Digitial shared the vision
+of a standard extension for recording and were all instrumental
+in the early protocol development.  During the last two years,
+Bob Scheifler of the X Consortium and Jim Fulton of NCD continu-
+ously provided input to the protocol design, as well as encour-
+agement to the author.	In the last few months, Stephen Gildea
+and Dave Wiggins, both X Consortium staff, have spent consider-
+able time fine tuning the protocol design and reviewing the pro-
+tocol specifications.  Most recently, Amnon Cohen of Mercury
+Interactive has assisted in clarification of the recorded event
+policy, and Kent Siefkes of Performance Awareness has assisted in
+clarification of the timestamp policy.
+
+1m1.2.	Goals0m
+
+
+     ·	To provide a standard for recording, whereby both device
+	events and synchronization information in the form of
+	device event consequences are recorded.
+
+     ·	To record contextual information used in synchronized
+	playback without prior knowledge of the application that
+	is being recorded.
+
+     ·	To provide the ability to record arbitrary X protocol
+	extensions.
+
+1m1.3.	Requirements0m
+
+The extension should function as follows:
+
+     ·	It should not be dependent on other clients or extensions
+	for its operation.
+
+     ·	It should not significantly impact performance.
+
+     ·	It should support the recording of all device input (core
+	devices and XInput devices).
+
+
+
+
+
+				1m20m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+     ·	It should be extendible.
+
+     ·	It should support the recording of synchronization infor-
+	mation for user events.
+
+
+1m2.  Design0m
+
+This section gives an overview of the RECORD extension and dis-
+cusses its overall operation and data types.
+
+
+1m2.1.	Overview0m
+
+The mechanism used by this extension for recording is to inter-
+cept core X protocol and arbitrary X extension protocol entirely
+within the X server itself.  When the extension has been
+requested to intercept specific protocol by one or more clients,
+the protocol data are formatted and returned to the recording
+clients.
+
+The extension provides a mechanism for capturing all events,
+including input device events that go to no clients, that is
+analogous to a client expressing "interest" in all events in all
+windows, including the root window.  Event filtering in the
+extension provides a mechanism for feeding device events to
+recording clients; it does not provide a mechanism for in-place,
+synchronous event substitution, modification, or withholding.  In
+addition, the extension does not provide data compression before
+intercepted protocol is returned to the recording clients.
+
+1m2.1.1.  Data Delivery0m
+
+Because events are limited in size to 32 bytes, using events to
+return intercepted protocol data to recording clients is prohibi-
+tive in terms of performance.  Therefore, intercepted protocol
+data are returned to recording clients through multiple replies
+to the extension request to begin protocol interception and
+reporting.  This utilization is consistent with 4mListFontsWith-0m
+4mInfo24m, for example, where a single request has multiple replies.
+
+Individual requests, replies, events or errors intercepted by the
+extension on behalf of recording clients cannot be split across
+reply packets.	In order to reduce overhead, multiple intercepted
+requests, replies, events and errors might be collected into a
+single reply.  Nevertheless, all data are returned to the client
+in a timely manner.
+
+1m2.1.2.  Record Context0m
+
+The extension adds a record context resource (RC) to the set of
+resources managed by the server.  All the extension operations
+take an RC as an argument.  Although the protocol permits sharing
+of RCs between clients, it is expected that clients will use
+
+
+
+				1m30m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+their own RCs.	The attributes used in extension operations are
+stored in the RCs, and these attributes include the protocol and
+clients to intercept.
+
+The terms "register" and "unregister" are used to describe the
+relationship between clients to intercept and the RC.  To regis-
+ter a client with an RC means the client is added to the list of
+clients to intercept; to unregister a client means the client is
+deleted from the list of clients to intercept.	When the server
+is requested to register or unregister clients from an RC, it is
+required to do so immediately.	That is, it is not permissible
+for the server to wait until recording is enabled to register
+clients or recording is disabled to unregister clients.
+
+1m2.1.3.  Record Client Connections0m
+
+The typical communication model for a recording client is to open
+two connections to the server and use one for RC control and the
+other for reading protocol data.
+
+The "control" connection can execute requests to obtain informa-
+tion about the supported protocol version, create and destroy
+RCs, specify protocol types to intercept and clients to be
+recorded, query the current state of an RC, and to stop intercep-
+tion and reporting of protocol data.  The "data" connection can
+execute a request to enable interception and reporting of speci-
+fied protocol for a particular RC.  When the "enable" request is
+issued, intercepted protocol is sent back on the same connection,
+generally in more than one reply packet.  Until the last reply to
+the "enable" request is sent by the server, signifying that the
+request execution is complete, no other requests will be executed
+by the server on that connection.  That is, the connection that
+data are being reported on cannot issue the "disable" request
+until the last reply to the "enable" request is sent by the
+server.	 Therefore, unless a recording client never has the need
+to disable the interception and reporting of protocol data, two
+client connections are necessary.
+
+1m2.1.4.  Events0m
+
+The terms "delivered events" and "device events" are used to
+describe the two event classes recording clients may select for
+interception.  These event classes are handled differently by the
+extension.  Delivered events are core X events or X extension
+events the server actually delivers to one or more clients.
+Device events are events generated by core X devices or extension
+input devices that the server may or may not deliver to any
+clients.  When device events are selected for interception by a
+recording client, the extension guarantees each device event is
+recorded and will be forwarded to the recording client in the
+same order it is generated by the device.
+
+The recording of selected device events is not affected by server
+grabs.	Delivered events, on the other hand, can be affected by
+
+
+
+				1m40m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+server grabs.  If a recording client selects both a device event
+and delivered events that result from that device event, the
+delivered events are recorded after the device event.  In the
+absence of grabs, the delivered events for a device event precede
+later device events.
+
+Requests that have side effects on devices, such as 4mWarpPointer0m
+and 4mGrabPointer24m with a confine-to window, will cause RECORD to
+record an associated device event.  The XTEST extension request
+4mXTestFakeInput24m causes a device event to be recorded; the device
+events are recorded in the same order that the 4mXTestFakeInput0m
+requests are received by the server.
+
+If a key autorepeats, multiple 4mKeyPress24m and 4mKeyRelease24m device
+events are reported.
+
+1m2.1.5.  Timing0m
+
+Requests are recorded just before they are executed; the time
+associated with a request is the server time when it is recorded.
+
+
+1m2.2.	Types0m
+
+
+The following new types are used in the request definitions that
+appear in section 3.
+
+
+RC:   CARD32
+
+
+The 4mRC24m type is a resource identifier for a server record context.
+
+
+RANGE8:	    [4mfirst24m, 4mlast24m:   CARD8]
+RANGE16:    [4mfirst24m, 4mlast24m:   CARD16]
+EXTRANGE:   [4mmajor24m:	 RANGE8
+	    4mminor24m:		 RANGE16]
+
+
+
+RECORDRANGE:   [4mcore-requests24m:	RANGE8
+	       4mcore-replies24m:	RANGE8
+	       4mext-requests24m:	EXTRANGE
+	       4mext-replies24m:	EXTRANGE
+	       4mdelivered-events24m:	RANGE8
+	       4mdevice-events24m:	RANGE8
+	       4merrors24m:		RANGE8
+	       4mclient-started24m:	BOOL
+	       4mclient-died24m:	BOOL]
+
+
+
+
+
+
+				1m50m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+The 4mRECORDRANGE24m structure contains the protocol values to inter-
+cept.  Typically, this structure is sent by recording clients
+over the control connection when creating or modifying an RC.
+
+4mcore-requests0m
+     Specifies core X protocol requests with an opcode field
+     between 4mfirst24m and 4mlast24m inclusive.  If 4mfirst24m is equal to 0
+     and 4mlast24m is equal to 0, no core requests are specified by
+     this RECORDRANGE.	If 4mfirst24m is greater than 4mlast24m, a 4mValue0m
+     error results.
+
+4mcore-replies0m
+     Specifies replies resulting from core X protocol requests
+     with an opcode field between 4mfirst24m and 4mlast24m inclusive.  If
+     4mfirst24m is equal to 0 and 4mlast24m is equal to 0, no core replies
+     are specified by this RECORDRANGE.	 If 4mfirst24m is greater than
+     4mlast24m, a 4mValue24m error results.
+
+4mext-requests0m
+     Specifies extension protocol requests with a major opcode
+     field between 4mmajor.first24m and 4mmajor.last24m and a minor opcode
+     field between 4mminor.first24m and 4mminor.last24m inclusive.  If
+     4mmajor.first24m and 4mmajor.last24m are equal to 0, no extension pro-
+     tocol requests are specified by this RECORDRANGE.	If
+     4mmajor.first24m or 4mmajor.last24m is less than 128 and greater than
+     0, if 4mmajor.first24m is greater than 4mmajor.last24m, or if
+     4mminor.first24m is greater than 4mminor.last24m, a 4mValue24m error
+     results.
+
+4mext-replies0m
+     Specifies replies resulting from extension protocol requests
+     with a major opcode field between 4mmajor.first24m and 4mmajor.last0m
+     and a minor opcode field between 4mminor.first24m and 4mminor.last0m
+     inclusive.	 If 4mmajor.first24m and 4mmajor.last24m are equal to 0, no
+     extension protocol replies are specified by this RECORD-
+     RANGE.  If 4mmajor.first24m or 4mmajor.last24m is less than 128 and
+     greater than 0, if 4mmajor.first24m is greater than 4mmajor.last24m,
+     or if 4mminor.first24m is greater than 4mminor.last24m, a 4mValue24m error
+     results.
+
+4mdelivered-events0m
+     This is used for both core X protocol events and arbitrary
+     extension events.	Specifies events that are delivered to at
+     least one client that have a code field between 4mfirst24m and
+     4mlast24m inclusive.  If 4mfirst24m is equal to 0 and 4mlast24m is equal to
+     0, no events are specified by this RECORDRANGE.  Otherwise,
+     if 4mfirst24m is less than 2 or 4mlast24m is less than 2, or if 4mfirst0m
+     is greater than 4mlast24m, a 4mValue24m error results.
+
+4mdevice-events0m
+     This is used for both core X device events and X extension
+     device events that may or may not be delivered to a client.
+     Specifies device events that have a code field between 4mfirst0m
+     and 4mlast24m inclusive.  If 4mfirst24m is equal to 0 and 4mlast24m is
+
+
+
+				1m60m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+     equal to 0, no device events are specified by this RECORD-
+     RANGE.  Otherwise, if 4mfirst24m is less than 2 or 4mlast24m is less
+     than 2, or if 4mfirst24m is greater than 4mlast24m, a 4mValue24m error
+     results.
+
+     Because the generated device event may or may not be associ-
+     ated with a client, unlike other RECORDRANGE components,
+     which select protocol for a specific client, selecting for
+     device events in any RECORDRANGE in an RC causes the record-
+     ing client to receive one instance for each device event
+     generated that is in the range specified.
+
+4merrors0m
+     This is used for both core X protocol errors and arbitrary
+     extension errors.	Specifies errors that have a code field
+     between 4mfirst24m and 4mlast24m inclusive.  If 4mfirst24m is equal to 0
+     and 4mlast24m is equal to 0, no errors are specified by this
+     RECORDRANGE.  If 4mfirst24m is greater than 4mlast24m, a 4mValue24m error
+     results.
+
+4mclient-started0m
+     Specifies the connection setup reply.  If 4mFalse24m, the connec-
+     tion setup reply is not specified by this RECORDRANGE.
+
+4mclient-died0m
+     Specifies notification when a client disconnects.	If 4mFalse24m,
+     notification when a client disconnects is not specified by
+     this RECORDRANGE.
+
+
+ELEMENT_HEADER:	  [4mfrom-server-time24m:      BOOL
+		  4mfrom-client-time24m:       BOOL
+		  4mfrom-client-sequence24m:   BOOL]
+
+
+The 4mELEMENT_HEADER24m structure specifies additional data that pre-
+cedes each protocol element in the 4mdata24m field of a 4mRecordEnable-0m
+4mContext24m reply.
+
+·  If 4mfrom-server-time24m is 4mTrue24m, each intercepted protocol element
+   with category 4mFromServer24m is preceded by the server time when
+   the protocol was recorded.
+
+·  If 4mfrom-client-time24m is 4mTrue24m, each intercepted protocol element
+   with category 4mFromClient24m is preceded by the server time when
+   the protocol was recorded.
+
+·  If 4mfrom-client-sequence24m is 4mTrue24m, each intercepted protocol
+   element with category 4mFromClient24m or 4mClientDied24m is preceded by
+   the 32-bit sequence number of the recorded client's most
+   recent request processed by the server at that time.	 For
+   4mFromClient24m, this will be one less than the sequence number of
+   the following request.  For 4mClientDied24m, the sequence number
+   will be the only data, because no protocol is recorded.
+
+
+
+				1m70m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+Note that a reply containing device events is treated the same as
+other replies with category 4mFromServer24m for purposes of these
+flags.	Protocol with category 4mFromServer24m is never preceded by a
+sequence number because almost all such protocol has a sequence
+number in it anyway.
+
+If both a server time and a sequence number have been requested
+for a reply, each protocol request is preceded first by the time
+and second by the sequence number.
+
+
+XIDBASE:   CARD32
+
+
+The XIDBASE type is used to identify a particular client.  Valid
+values are any existing resource identifier of any connected
+client, in which case the client that created the resource is
+specified, or the resource identifier base sent to the target
+client from the server in the connection setup reply.  A value of
+0 (zero) is valid when the XIDBASE is associated with device
+events that may not have been delivered to a client.
+
+
+CLIENTSPEC:   XIDBASE or {1mCurrentClients22m, 1mFutureClients22m, 1mAllClients22m}
+
+
+The CLIENTSPEC type defines the set of clients the RC attributes
+are associated with.  This type is used by recording clients when
+creating an RC or when changing RC attributes.	XIDBASE specifies
+that the RC attributes apply to a single client only.  4mCurrent-0m
+4mClients24m specifies that the RC attributes apply to current client
+connections; 4mFutureClients24m specifies future client connections;
+4mAllClients24m specifies all client connections, which includes cur-
+rent and future.
+
+The numeric values for 4mCurrentClients24m, 4mFutureClients24m and 4mAll-0m
+4mClients24m are defined such that there will be no intersection with
+valid XIDBASEs.
+
+When the context is enabled, the data connection is unregistered
+if it was registered.  If the context is enabled, 4mCurrentClients0m
+and 4mAllClients24m silently exclude the recording data connection.
+It is an error to explicitly register the data connection.
+
+
+CLIENT_INFO:   [4mclient-resource24m:	    CLIENTSPEC
+	       4mintercepted-protocol24m:   LISTofRECORDRANGE]
+
+
+This structure specifies an intercepted client and the protocol
+to be intercepted for the client.  The 4mclient-resource24m field is a
+resource base that identifies the intercepted client.  The 4minter-0m
+4mcepted-protocol24m field specifies the protocol to intercept for the
+4mclient-resource24m.
+
+
+
+				1m80m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+1m2.3.	Errors0m
+
+
+1mRecordContext0m
+     This error is returned if the value for an RC argument in a
+     request does not name a defined record context.
+
+
+1m3.  Protocol Requests0m
+
+
+4mRecordQueryVersion0m
+
+     4mmajor-version24m, 4mminor-version24m: CARD16
+
+->
+
+     4mmajor-version24m, 4mminor-version24m: CARD16
+
+This request specifies the RECORD extension protocol version the
+client would like to use.  When the specified protocol version is
+supported by the extension, the protocol version the server
+expects from the client is returned.  Clients must use this
+request before other RECORD extension requests.
+
+This request also determines whether or not the RECORD extension
+protocol version specified by the client is supported by the
+extension.  If the extension supports the version specified by
+the client, this version number should be returned.  If the
+client has requested a higher version than is supported by the
+server, the server's highest version should be returned.  Other-
+wise, if the client has requested a lower version than is sup-
+ported by the server, the server's lowest version should be
+returned.  This document defines major version one (1), minor
+version thirteen (13).
+
+4mRecordCreateContext0m
+
+     4mcontext24m: RC
+
+     4melement-header24m: ELEMENT_HEADER
+
+     4mclient-specifiers24m: LISTofCLIENTSPEC
+
+     4mranges24m: LISTofRECORDRANGE
+
+     Errors: 4mMatch24m, 4mValue24m, 4mIDChoice24m, 4mAlloc0m
+
+This request creates a new record context within the server and
+assigns the identifier 4mcontext24m to it.  After the 4mcontext24m is cre-
+ated, this request registers the set of clients in 4mclient-speci-0m
+4mfiers24m with the 4mcontext24m and specifies the protocol to intercept
+for those clients.  The recorded protocol elements will be pre-
+ceded by data as specified by 4melement-header24m.  Typically, this
+
+
+
+				1m90m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+request is used by a recording client over the control connec-
+tion.  Multiple RC objects can exist simultaneously, containing
+overlapping sets of protocol and clients to intercept.
+
+If any of the values in 4melement-header24m or 4mranges24m is invalid, a
+4mValue24m error results.  Duplicate items in the list of 4mclient-spec-0m
+4mifiers24m are ignored.  If any item in the 4mclient-specifiers24m list is
+not a valid CLIENTSPEC, a 4mMatch24m error results.  Otherwise, each
+item in the 4mclient-specifiers24m list is processed as follows:
+
+·  If the item is an XIDBASE identifying a particular client, the
+   specified client is registered with the 4mcontext24m and the proto-
+   col to intercept for the client is then set to 4mranges24m.
+
+·  If the item is 4mCurrentClients24m, all existing clients are regis-
+   tered with the 4mcontext24m at this time.  The protocol to inter-
+   cept for all clients registered with the 4mcontext24m is then set
+   to 4mranges24m.
+
+·  If the item is 4mFutureClients24m, all clients that connect to the
+   server after this request executes will be automatically reg-
+   istered with the 4mcontext24m.  The protocol to intercept for such
+   clients will be set to 4mranges24m in the 4mcontext24m.
+
+·  If the item is 4mAllClients24m, the effect is as if the actions
+   described for 4mFutureClients24m are performed, followed by the
+   actions for 4mCurrentClients24m.
+
+The 4mAlloc24m error results when the server is unable to allocate the
+necessary resources.
+
+
+4mRecordRegisterClients0m
+
+     4mcontext24m: RC
+
+     4melement-header24m: ELEMENT_HEADER
+
+     4mclient-specifiers24m: LISTofCLIENTSPEC
+
+     4mranges24m: LISTofRECORDRANGE
+
+     Errors: 4mMatch24m, 4mValue24m, 4mRecordContext24m, 4mAlloc0m
+
+This request registers the set of clients in 4mclient-specifiers0m
+with the given 4mcontext24m and specifies the protocol to intercept
+for those clients.  The header preceding each recorded protocol
+element is set as specified by 4melement-header24m.  These flags
+affect the entire context; their effect is not limited to the
+clients registered by this request.  Typically, this request is
+used by a recording client over the control connection.
+
+If 4mcontext24m does not name a valid RC, a 4mRecordContext24m error
+results.  If any of the values in 4melement-header24m or 4mranges24m is
+
+
+
+				1m100m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+invalid, a 4mValue24m error results.  Duplicate items in the list of
+4mclient-specifiers24m are ignored.  If any item in the list of
+4mclient-specifiers24m is not a valid CLIENTSPEC, a 4mMatch24m error
+results.  If the 4mcontext24m is enabled and the XID of the enabling
+connection is specified, a 4mMatch24m error results.  Otherwise, each
+item in the 4mclient-specifiers24m list is processed as follows:
+
+·  If the item is an XIDBASE identifying a particular client, the
+   specified client is registered with the 4mcontext24m if it is not
+   already registered.	The protocol to intercept for the client
+   is then set to 4mranges24m.
+
+·  If the item is 4mCurrentClients24m, all existing clients that are
+   not already registered with the specified 4mcontext24m, except the
+   enabling connection if the 4mcontext24m is enabled, are registered
+   at this time.  The protocol to intercept for all clients reg-
+   istered with the 4mcontext24m is then set to 4mranges24m.
+
+·  If the item is 4mFutureClients24m, all clients that connect to the
+   server after this request executes will be automatically reg-
+   istered with the 4mcontext24m.  The protocol to intercept for such
+   clients will be set to 4mranges24m in the 4mcontext24m.  The set of
+   clients that are registered with the 4mcontext24m and their corre-
+   sponding sets of protocol to intercept are left intact.
+
+·  If the item is 4mAllClients24m, the effect is as if the actions
+   described for 4mFutureClients24m are performed, followed by the
+   actions for 4mCurrentClients24m.
+
+The 4mAlloc24m error results when the server is unable to allocate the
+necessary resources.
+
+
+4mRecordUnregisterClients0m
+
+     4mcontext24m: RC
+
+     4mclient-specifiers24m: LISTofCLIENTSPEC
+
+     Errors: 4mMatch24m, 4mRecordContext0m
+
+This request removes the set of clients in 4mclient-specifiers24m from
+the given 4mcontext24m's set of registered clients.  Typically, this
+request is used by a recording client over the control connec-
+tion.
+
+If 4mcontext24m does not name a valid RC, a 4mRecordContext24m error
+results.  Duplicate items in the list of 4mclient-specifiers24m are
+ignored.  If any item in the list is not a valid CLIENTSPEC, a
+4mMatch24m error results.  Otherwise, each item in the 4mclient-speci-0m
+4mfiers24m list is processed as follows:
+
+·  If the item is an XIDBASE identifying a particular client, and
+   the specified client is currently registered with the 4mcontext24m,
+
+
+
+				1m110m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+   it is unregistered, and the set of protocol to intercept for
+   the client is deleted from the 4mcontext24m.	 If the specified
+   client is not registered with the 4mcontext24m, the item has no
+   effect.
+
+·  If the item is 4mCurrentClients24m, all clients currently regis-
+   tered with the 4mcontext24m are unregistered from it, and their
+   corresponding sets of protocol to intercept are deleted from
+   the 4mcontext24m.
+
+·  If the item is 4mFutureClients24m, clients that connect to the
+   server after this request executes will not automatically be
+   registered with the 4mcontext24m.  The set of clients that are reg-
+   istered with this context and their corresponding sets of pro-
+   tocol that will be intercepted are left intact.
+
+·  If the item is 4mAllClients24m, the effect is as if the actions
+   described for 4mFutureClients24m are performed, followed by the
+   actions for 4mCurrentClients24m.
+
+A client is unregistered automatically when it disconnects.
+
+
+4mRecordGetContext0m
+
+     4mcontext24m: RC
+
+->
+
+     4menabled24m: BOOL
+
+     4melement-header24m: ELEMENT_HEADER
+
+     4mintercepted-clients24m: LISTofCLIENT_INFO
+
+     Errors: 4mRecordContext0m
+
+This request queries the current state of the specified 4mcontext0m
+and is typically used by a recording client over the control con-
+nection.  The 4menabled24m field specifies the state of data transfer
+between the extension and the recording client, and is either
+enabled (4mTrue24m) or disabled (4mFalse24m).  The initial state is dis-
+abled.	When enabled, all core X protocol and extension protocol
+received from (requests) or sent to (replies, errors, events) a
+particular client, and requested to be intercepted by the record-
+ing client, is reported to the recording client over the data
+connection.  The 4melement-header24m specifies the header that pre-
+cedes each recorded protocol element.  The 4mintercepted-clients0m
+field specifies the list of clients currently being recorded and
+the protocol associated with each client.  If future clients will
+be automatically registered with the context, one of the returned
+CLIENT_INFO structures has a 4mclient-resource24m value of Future-
+Clients and an 4mintercepted-protocol24m giving the protocol to inter-
+cept for future clients.  Protocol ranges may be decomposed,
+
+
+
+				1m120m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+coalesced, or otherwise modified by the server from how they were
+specified by the client.  All CLIENTSPECs registered with the
+server are returned, even if the RECORDRANGE(s) associated with
+them specify no protocol to record.
+
+When the 4mcontext24m argument is not valid, a 4mRecordContext24m error
+results.
+
+
+4mRecordEnableContext0m
+
+     4mcontext24m: RC
+
+->+
+
+     4mcategory24m: {1mFromServer22m, 1mFromClient22m, 1mClientStarted22m, 1mClient-0m
+     1mDied22m, 1mStartOfData22m, 1mEndOfData22m}
+
+     4melement-header24m: ELEMENT_HEADER
+
+     4mclient-swapped24m: BOOL
+
+     4mid-base24m: XIDBASE
+
+     4mserver-time24m: TIMESTAMP
+
+     4mrecorded-sequence-number24m: CARD32
+
+     4mdata24m: LISTofBYTE
+
+     Errors: 4mMatch24m, 4mRecordContext0m
+
+This request enables data transfer between the recording client
+and the extension and returns the protocol data the recording
+client has previously expressed interest in.  Typically, this
+request is executed by the recording client over the data connec-
+tion.
+
+If the client is registered on the 4mcontext24m, it is unregistered
+before any recording begins.
+
+Once the server receives this request, it begins intercepting and
+reporting to the recording client all core and extension protocol
+received from or sent to clients registered with the RC that the
+recording client has expressed interest in.  All intercepted pro-
+tocol data is returned in the byte-order of the recorded client.
+Therefore, recording clients are responsible for all byte swap-
+ping, if required.  More than one recording client cannot enable
+data transfer on the same RC at the same time.	Multiple inter-
+cepted requests, replies, events and errors might be packaged
+into a single reply before being returned to the recording
+clients.
+
+
+
+
+
+				1m130m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+The 4mcategory24m field determines the possible types of the data.
+When a context is enabled, the server will immediately send a
+reply of category 4mStartOfData24m to notify the client that recording
+is enabled.  A category of 4mFromClient24m means the data are from the
+client (requests); 4mFromServer24m means data are from the server
+(replies, errors, events, or device events).  For a new client,
+the category is 4mClientStarted24m and the data are the connection
+setup reply.  When the recorded client connection is closed, 4mcat-0m
+4megory24m is set to the value 4mClientDied24m and no protocol is included
+in this reply.	When the disable request is made over the control
+connection, a final reply is sent over the data connection with
+category 4mEndOfData24m and no protocol.
+
+The 4melement-header24m field returns the value currently set for the
+context, which tells what header information precedes each
+recorded protocol element in this reply.
+
+The 4mclient-swapped24m field is 4mTrue24m if the byte order of the proto-
+col being recorded is swapped relative to the recording client;
+otherwise, 4mclient-swapped24m is 4mFalse24m.  The recorded protocol is in
+the byte order of the client being recorded; device events are in
+the byte order of the recording client.	 For replies of category
+4mStartOfData24m and 4mEndOfData24m the 4mclient-swapped24m bit is set according
+to the byte order of the server relative to the recording client.
+The 4mid-base24m field is the resource identifier base sent to the
+client from the server in the connection setup reply, and hence,
+identifies the client being recorded.  The 4mid-base24m field is 0
+(zero) when the protocol data being returned are device events.
+The 4mserver-time24m field is set to the time of the server when the
+first protocol element in this reply was intercepted.  The
+4mserver-time24m of reply N+1 is greater than or equal to the 4mserver-0m
+4mtime24m of reply N, and is greater than or equal to the time of the
+last protocol element in reply N.
+
+The 4mrecorded-sequence-number24m field is set to the sequence number
+of the recorded client's most recent request processed by the
+server.
+
+The 4mdata24m field contains the raw protocol data being returned to
+the recording client.  If requested by the 4melement-header24m of this
+record context, each protocol element may be preceded by a 32-bit
+timestamp and/or a 32-bit sequence number.  If present, both the
+timestamp and sequence number are always in the byte order of the
+recording client.
+
+For the core X events 4mKeyPress24m, 4mKeyRelease24m, 4mButtonPress24m, and
+4mButtonRelease24m, the fields of a device event that contain valid
+information are 4mtime24m and 4mdetail24m.  For the core X event 4mMotion-0m
+4mNotify24m, the fields of a device event that contain valid informa-
+tion are 4mtime24m, 4mroot24m, 4mroot-x24m and 4mroot-y24m.  The 4mtime24m field refers to
+the time the event was generated by the device.
+
+For the extension input device events 4mDeviceKeyPress24m,
+4mDeviceKeyRelease24m, 4mDeviceButtonPress24m, and 4mDeviceButtonRelease24m, the
+
+
+
+				1m140m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+fields of a device event that contain valid information are
+4mdevice24m, 4mtime24m and 4mdetail24m.	 For 4mDeviceMotionNotify24m, the valid
+device event fields are 4mdevice24m and 4mtime24m.  For the extension input
+device events 4mProximityIn24m and 4mProximityOut24m, the fields of a
+device event that contain valid information are 4mdevice24m and 4mtime24m.
+For the extension input device event 4mDeviceValuator24m, the fields
+of a device event that contain valid information are 4mdevice24m,
+4mnum_valuators24m, 4mfirst_valuator24m, and 4mvaluators24m.  The 4mtime24m field
+refers to the time the event was generated by the device.
+
+The error 4mMatch24m is returned when data transfer is already
+enabled.  When the 4mcontext24m argument is not valid, a 4mRecordContext0m
+error results.
+
+
+4mRecordDisableContext0m
+
+     4mcontext24m: RC
+
+     Errors: 4mRecordContext0m
+
+This request is typically executed by the recording client over
+the control connection.	 This request directs the extension to
+immediately send any complete protocol elements currently
+buffered, to send a final reply with category 4mEndOfData24m, and to
+discontinue data transfer between the extension and the recording
+client.	 Protocol reporting is disabled on the data connection
+that is currently enabled for the given 4mcontext24m.  Once the exten-
+sion completes processing this request, no additional recorded
+protocol will be reported to the recording client.  If a data
+connection is not currently enabled when this request is exe-
+cuted, then this request has no affect on the state of data
+transfer.  An RC is disabled automatically when the connection to
+the enabling client is closed down.
+
+When the 4mcontext24m argument is not valid, a 4mRecordContext24m error
+results.
+
+
+4mRecordFreeContext0m
+
+     4mcontext24m : RC
+
+     Errors: 4mRecordContext0m
+
+This request deletes the association between the resource ID and
+the RC and destroys the RC.  If a client has enabled data trans-
+fer on this 4mcontext24m, the actions described in 4mRecordDisable-0m
+4mContext24m are performed before the 4mcontext24m is freed.
+
+An RC is destroyed automatically when the connection to the cre-
+ating client is closed down and the close-down mode is 1mDestroy-0m
+1mAll22m.  When the 4mcontext24m argument is not valid, a 4mRecordContext0m
+error results.
+
+
+
+				1m150m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+1m4.  Encoding0m
+
+Please refer to the X11 Protocol Encoding document as this docu-
+ment uses conventions established there.
+
+The name of this extension is "RECORD".
+
+
+1m4.1.	Types0m
+
+RC: CARD32
+
+
+RANGE8
+  1	  CARD8		      first
+  1	  CARD8		      last
+
+
+
+RANGE16
+  2	  CARD16	      first
+  2	  CARD16	      last
+
+
+
+EXTRANGE
+  2	  RANGE8	      major
+  4	  RANGE16	      minor
+
+
+
+RECORDRANGE
+  2	  RANGE8	      core-requests
+  2	  RANGE8	      core-replies
+  6	  EXTRANGE	      ext-requests
+  6	  EXTRANGE	      ext-replies
+  2	  RANGE8	      delivered-events
+  2	  RANGE8	      device-events
+  2	  RANGE8	      errors
+  1	  BOOL		      client-started
+  1	  BOOL		      client-died
+
+
+
+ELEMENT_HEADER
+  1	  CARD8
+	  0x01	    from-server-time
+	  0x02	    from-client-time
+	  0x04	    from-client-sequence
+
+
+XIDBASE: CARD32
+
+
+
+
+
+				1m160m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+CLIENTSPEC
+  4	  XIDBASE	      client-id-base
+	  1	    CurrentClients
+	  2	    FutureClients
+	  3	    AllClients
+
+
+
+CLIENT_INFO
+  4	  CLIENTSPEC	      client-resource
+  4	  CARD32	      n, number of record ranges in intercepted-protocol
+  24n	  LISTofRECORDRANGE   intercepted-protocol
+
+
+1m4.2.	Errors0m
+
+
+4mRecordContext0m
+  1	  0		      Error
+  1	  CARD8		      extension's base error code + 0
+  2	  CARD16	      sequence number
+  4	  CARD32	      invalid record context
+  24			      unused
+
+
+1m4.3.	Requests0m
+
+
+4mRecordQueryVersion0m
+  1	  CARD8		      major opcode
+  1	  0		      minor opcode
+  2	  2		      request length
+  2	  CARD16	      major version
+  2	  CARD16	      minor version
+ =>
+  1	  1		      Reply
+  1			      unused
+  2	  CARD16	      sequence number
+  4	  0		      reply length
+  2	  CARD16	      major version
+  2	  CARD16	      minor version
+  20			      unused
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				1m170m
+
+
+
+
+
+1mRecord Extension Protocol, Version 1.13	   X11, Release 6.40m
+
+
+4mRecordCreateContext0m
+  1	  CARD8		      major opcode
+  1	  1		      minor opcode
+  2	  5+m+6n	      request length
+  4	  RC		      context
+  1	  ELEMENT_HEADER      element-header
+  3			      unused
+  4	  CARD32	      m, number of client-specifiers
+  4	  CARD32	      n, number of ranges
+  4m	  LISTofCLIENTSPEC    client-specifiers
+  24n	  LISTofRECORDRANGE   ranges
+
+
+
+4mRecordRegisterClients0m
+  1	  CARD8		      major opcode
+  1	  2		      minor opcode
+  2	  5+m+6n	      request length
+  4	  RC		      context
+  1	  ELEMENT_HEADER      element-header
+  3			      unused
+  4	  CARD32	      m, number of client-specifiers
+  4	  CARD32	      n, number of ranges
+  4m	  LISTofCLIENTSPEC    client-specifiers
+  24n	  LISTofRECORDRANGE   ranges
+
+
+
+4mRecordUnregisterClients0m
+  1	  CARD8		      major opcode
+  1	  3		      minor opcode
+  2	  3+m		      request length
+  4	  RC		      context
+  4	  CARD32	      m, number of client-specifiers
+  4m	  LISTofCLIENTSPEC    client-specifiers
+
+
+
+4mRecordGetContext0m
+  1	  CARD8		      major opcode
+  1	  4		      minor opcode
+  2	  2		      request length
+  4	  RC		      context
+ =>
+  1	  1		      Reply
+  1	  BOOL		      enabled
+  2	  CARD16	      sequence number
+  4	  j		      reply length
+  1	  ELEMENT_HEADER      element-header
+  3			      unused
+  4	  CARD32	      n, number of intercepted-clients
+  16			      unused
+  4j	  LISTofCLIENT_INFO   intercepted-clients
+
+
+
+
+				1m180m
+
+
+
+
+
+1mX11, Release 6.4	    Record Extension Protocol, Version 1.130m
+
+
+4mRecordEnableContext0m
+  1	  CARD8		      major opcode
+  1	  5		      minor opcode
+  2	  2		      request length
+  4	  RC		      context
+ =>+
+  1	  1		      Reply
+  1			      category
+	  0	    FromServer
+	  1	    FromClient
+	  2	    ClientStarted
+	  3	    ClientDied
+	  4	    StartOfData
+	  5	    EndOfData
+  2	  CARD16	      sequence number
+  4	  n		      reply length
+  1	  ELEMENT_HEADER      element-header
+  1	  BOOL		      client-swapped
+  2			      unused
+  4	  XIDBASE	      id-base
+  4	  TIMESTAMP	      server-time
+  4	  CARD32	      recorded-sequence-number
+  8			      unused
+  4n	  BYTE		      data
+
+
+
+4mRecordDisableContext0m
+  1	  CARD8		      major opcode
+  1	  6		      minor opcode
+  2	  2		      request length
+  4	  RC		      context
+
+
+
+4mRecordFreeContext0m
+  1	  CARD8		      major opcode
+  1	  7		      minor opcode
+  2	  2		      request length
+  4	  RC		      context
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				1m190m
+
+

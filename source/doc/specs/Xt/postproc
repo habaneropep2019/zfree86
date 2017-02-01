@@ -1,0 +1,19 @@
+.\" $XFree86: xc/doc/specs/Xt/postproc,v 1.2 2006/01/09 14:56:36 dawes Exp $
+.EH ''''
+.OH ''''
+.if o .bp \" blank page to make index and ToC start on odd page
+\&
+.nr PN +1
+.XS
+Index
+.XE
+.EQ
+delim $$
+.EN
+.tm .pn \n(PN
+.nr PN -1
+.\" print Table of Contents
+.bp 3
+.af PN i
+.PX
+

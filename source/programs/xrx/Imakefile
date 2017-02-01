@@ -1,0 +1,13 @@
+XCOMM $XFree86: xc/programs/xrx/Imakefile,v 1.7 2006/01/09 15:01:43 dawes Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags CDEBUGFLAGS="$(CDEBUGFLAGS)"
+
+#if BuildPlugin && !defined(VendorHasX11R6_3libXext)
+LIBXPLUGINDIR = libxplugin
+#endif
+
+      SUBDIRS = $(LIBXPLUGINDIR) plugin
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

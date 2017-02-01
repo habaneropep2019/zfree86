@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Supported Chips </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Supported Chips </EM><BR>
+<b>Previous:</b> <A HREF="chips1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="chips3.html"><EM>XF86Config Options </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="2"></A>2. Supported Chips </H2>
+
+<p>The Chips and Technologies chipsets supported by this driver have one
+of three basic architectures. A basic architecture, the WinGine architecture
+which is a modification on this basic architecture and a completely new
+HiQV architecture.</p>
+
+<H3><A NAME="3"></A>2.1. Basic architecture</H3>
+<p>
+<dl>
+<dt><b>ct65520</b><dd><p>(Max Ram: 1Mb, Max Dclk: 68MHz@5V)</p>
+<dt><b>ct65525</b><dd><p>This chip is basically identical to the 65530. It has the same
+ID and is identified as a 65530 when probed. See ct65530 for
+details.</p>
+<dt><b>ct65530</b><dd><p>This is a very similar chip to the 65520. However it additionally
+has the ability for mixed 5V and 3.3V operation and linear addressing
+of the video memory.
+(Max Ram: 1Mb, Max Dclk: 56MHz@3.3V, 68MHz@5V)</p>
+<dt><b>ct65535</b><dd><p>This is the first chip of the ct655xx series to support fully
+programmable clocks. Otherwise it has the the same properties
+as the 65530.</p>
+<dt><b>ct65540</b><dd><p>This is the first version of the of the ct655xx that was capable
+of supporting Hi-Color and True-Color. It also includes a fully
+programmable dot clock and supports all types of flat panels.
+(Max Ram: 1Mb, Max Dclk: 56MHz@3.3V, 68MHz@5V)</p>
+<dt><b>ct65545</b><dd><p>The chip is very similar to the 65540, with the addition of H/W
+cursor, pop-menu acceleration, BitBLT and support of PCI Buses.
+PCI version also allow all the BitBLT and H/W cursor registers
+to be memory mapped 2Mb above the Base Address.
+(Max Ram: 1Mb, Max Dclk: 56MHz@3.3V,68MHz@5V)</p>
+<dt><b>ct65546</b><dd><p>This chip is specially manufactured for Toshiba, and so documentation
+is not widely available. It is believed that this is really just a
+65545 with a higher maximum dot-clock of 80MHz.
+(Max Ram: 1Mb?, Max Dclk: 80MHz?)</p>
+<dt><b>ct65548</b><dd><p>This chip is similar to the 65545, but it also includes XRAM support
+and supports the higher dot clocks of the 65546. 
+(Max Ram: 1Mb, Max Dclk: 80MHz)</p>
+</dl>
+</p>
+
+<H3><A NAME="4"></A>2.2. WinGine architecture</H3>
+<p>
+<dl>
+<dt><b>ct64200</b><dd><p>This chip, also known as the WinGine, is used in video cards
+for desktop systems. It often uses external DAC's and programmable
+clock chips to supply additional functionally. None of these are
+currently supported within the driver itself, so many cards will only
+have limited support. Linear addressing is not supported for this
+card in the driver.
+(Max Ram: 2Mb, Max Dclk: 80MHz)</p>
+<dt><b>ct64300</b><dd><p>This is a more advanced version of the WinGine chip, with specification
+very similar to the 6554x series of chips. However there are many
+differences at a register level. A similar level of acceleration to
+the 65545 is included for this driver.
+(Max Ram: 2Mb, Max Dclk: 80MHz)</p>
+</dl>
+</p>
+
+<H3><A NAME="5"></A>2.3. HiQV Architecture</H3>
+<p>
+<dl>
+<dt><b>ct65550</b><dd><p>This chip includes many new features, including improved BitBLT
+support (24bpp colour expansion, wider maximum pitch, etc), Multimedia
+unit (video capture, zoom video port, etc) and 24bpp uncompressed true
+colour (i.e 32bpp mode). Also memory mapped I/O is possible on all bus
+configurations. 
+(Max Ram: 2Mb, Max Dclk: 80MHz@3.3V,100MHz@5V)</p>
+<dt><b>ct65554</b><dd><p>This chip is similar to the 65550 but has a 64bit memory bus as 
+opposed to a 32bit bus. It also has higher limits on the maximum
+memory and pixel clocks
+(Max Ram: 4Mb, Max Dclk: 100MHz@3.3V)</p>
+<dt><b>ct65555</b><dd><p>Similar to the 65554 but has yet higher maximum memory and pixel
+clocks. It also includes a new DSTN dithering scheme that improves
+the performance of DSTN screens.
+(Max Ram: 4Mb, Max Dclk: 110MHz@3.3V)</p>
+<dt><b>ct68554</b><dd><p>Similar to the 65555 but also incorporates "PanelLink" drivers. This
+serial link allows an LCD screens to be located up to 100m from the 
+video processor. Expect to see this chip soon in LCD desktop machines
+(Max Ram: 4Mb, Max Dclk: 110MHz@3.3V)</p>
+<dt><b>ct69000</b><dd><p>Similar to the 65555 but incorporates 2Mbytes of SGRAM on chip. It is
+the first Chips and Technologies chipset where all of the registers
+are accessible through MMIO, rather than just the BitBlt registers.
+(Max Ram: 2Mb Only, Max Dclk: 130MHz@3.3V)</p>
+<dt><b>ct69030</b><dd><p>Similar to the 69000 but incorporates 4Mbytes of SGRAM on chip and has
+faster memory and pixel clock limits. Also includes a second display
+channel so that the CRT can display independently of the LCD.
+(Max Ram: 4Mb Only, Max Dclk: 170MHz@3.3V)</p>
+</dl>
+</p>
+
+
+ <HR NOSHADE>
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Supported Chips </EM><BR>
+<b>Previous:</b> <A HREF="chips1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="chips3.html"><EM>XF86Config Options </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728822" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

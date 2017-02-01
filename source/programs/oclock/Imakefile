@@ -1,0 +1,12 @@
+XCOMM $XFree86: xc/programs/oclock/Imakefile,v 1.2 2006/01/09 15:00:48 dawes Exp $
+
+SYS_LIBRARIES = MathLibrary
+DEPLIBS = $(DEPXMULIB) $(DEPXTOOLLIB) $(DEPXLIB) XkbClientDepLibs
+LOCAL_LIBRARIES = $(XMULIB) $(XTOOLLIB) $(XLIB) XkbClientLibs
+DEFINES = XkbClientDefines
+
+SRCS = oclock.c Clock.c transform.c
+OBJS = oclock.o Clock.o transform.o
+
+ComplexProgramTarget(oclock)
+InstallAppDefaultsLong(Clock-col,Clock-color)

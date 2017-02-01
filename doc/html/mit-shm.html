@@ -1,0 +1,446 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:16:52 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title>MIT-SHM&mdash;The MIT Shared Memory Extension How the shared memory extension works</title>
+
+</head>
+<body>
+
+<h1 align=center>MIT-SHM&mdash;The MIT Shared Memory Extension How the shared memory extension works</h1>
+
+<a href="#1. REQUIREMENTS">1. REQUIREMENTS</a><br>
+<a href="#2. WHAT IS PROVIDED">2. WHAT IS PROVIDED</a><br>
+<a href="#3. HOW TO USE THE SHARED MEMORY EXTENSION">3. HOW TO USE THE SHARED MEMORY EXTENSION</a><br>
+<a href="#4. USE OF SHARED MEMORY XIMAGES">4. USE OF SHARED MEMORY XIMAGES</a><br>
+<a href="#5. USE OF SHARED MEMORY PIXMAPS">5. USE OF SHARED MEMORY PIXMAPS</a><br>
+
+<hr>
+
+
+<p align=center valign="top"><i>Jonathan Corbet</i> <br>
+Atmospheric Technology Division <br>
+National Center for Atmospheric Research <br>
+corbet@ncar.ucar.edu</p>
+
+
+<p align=center style="margin-top: 1em" valign="top">Formatted
+and edited for release 5 by <i><br>
+Keith Packard</i> <br>
+MIT X Consortium</p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><i><small>ABSTRACT</small></i></p>
+
+<p style="margin-top: 1em" valign="top"><small>This
+document briefly describes how to use the MIT-SHM shared
+memory extension. I have tried to make it accurate, but it
+would not surprise me if some errors remained. If you find
+anything wrong, do let me know and I will incorporate the
+corrections. Meanwhile, please take this document
+&lsquo;&lsquo;as is&rsquo;&rsquo;&mdash;an improvement over
+what was there before, but certainly not the definitive
+word.</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Copyright
+&copy; 1991 X Consortium</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>The above
+copyright notice and this permission notice shall be
+included in all copies or substantial portions of the
+Software.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>THE SOFTWARE
+IS PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Except as
+contained in this notice, the name of the X Consortium shall
+not be used in advertising or otherwise to promote the sale,
+use or other dealings in this Software without prior written
+authorization from the X Consortium.</small></p>
+
+<a name="1. REQUIREMENTS"></a>
+<h2>1. REQUIREMENTS</h2>
+
+
+<p style="margin-top: 1em" valign="top">The shared memory
+extension is provided only by some X servers. To find out if
+your server supports the extension, use xdpyinfo(1). In
+particular, to be able to use this extension, your system
+must provide the SYSV shared memory primitives. There is not
+an mmap-based version of this extension. To use shared
+memory on Sun systems, you must have built your kernel with
+SYSV shared memory enabled -- which is not the default
+configuration. Additionally, the shared memeory maximum size
+will need to be increased on both Sun and Digital systems;
+the defaults are far too small for any useful work.</p>
+
+<a name="2. WHAT IS PROVIDED"></a>
+<h2>2. WHAT IS PROVIDED</h2>
+
+
+<p style="margin-top: 1em" valign="top">The basic
+capability provided is that of shared memory XImages. This
+is essentially a version of the ximage interface where the
+actual image data is stored in a shared memory segment, and
+thus need not be moved through the Xlib interprocess
+communication channel. For large images, use of this
+facility can result in some real performance increases.</p>
+
+<p style="margin-top: 1em" valign="top">Additionally, some
+implementations provided shared memory pixmaps. These are 2
+dimensional arrays of pixels in a format specified by the X
+server, where the image data is stored in the shared memory
+segment. Through use of shared memory pixmaps, it is
+possible to change the contents of these pixmaps without
+using any Xlib routines at all. Shared memory pixmaps can
+only be supported when the X server can use regular virtual
+memory for pixmap data; if the pixmaps are stored in some
+magic graphics hardware, your application will not be able
+to share them with the server. Xdpyinfo(1) doesn&rsquo;t
+print this particular nugget of information.</p>
+
+<a name="3. HOW TO USE THE SHARED MEMORY EXTENSION"></a>
+<h2>3. HOW TO USE THE SHARED MEMORY EXTENSION</h2>
+
+
+<p style="margin-top: 1em" valign="top">Code which uses the
+shared memory extension must include a number of header
+files:</p>
+
+<pre style="margin-left:30%; margin-top: 1em"># include &lt;X11/Xlib.h&gt;        /* of course */
+# include &lt;sys/ipc.h&gt;
+# include &lt;sys/shm.h&gt;
+# include &lt;X11/extensions/XShm.h&gt;</pre>
+
+
+<p style="margin-top: 1em" valign="top">Of course, if the
+system you are building on does not support shared memory,
+the file XShm.h may not be present. You may want to make
+liberal use of #ifdefs.</p>
+
+<p style="margin-top: 1em" valign="top">Any code which uses
+the shared memory extension should first check to see that
+the server provides the extension. You could always be
+running over the net, or in some other environment where the
+extension will not work. To perform this check, call
+either</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Status XShmQueryExtension (display)
+        Display *display</pre>
+
+
+<p style="margin-top: 1em" valign="top">or</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Status XShmQueryVersion (display, major, minor, pixmaps)
+        Display *display;
+        int *major, *minor;
+        Bool *pixmaps</pre>
+
+
+<p style="margin-top: 1em" valign="top">Where
+&lsquo;&lsquo;display&rsquo;&rsquo; is, of course, the
+display on which you are running. If the shared memory
+extension may be used, the return value from either function
+will be True; otherwise your program should operate using
+conventional Xlib calls. When the extension is available,
+<tt>XShmQueryVersion</tt> also returns
+&lsquo;&lsquo;major&rsquo;&rsquo; and
+&lsquo;&lsquo;minor&rsquo;&rsquo; which are the version
+numbers of the extension implementation, and
+&lsquo;&lsquo;pixmaps&rsquo;&rsquo; which is True iff shared
+memory pixmaps are supported.</p>
+
+<a name="4. USE OF SHARED MEMORY XIMAGES"></a>
+<h2>4. USE OF SHARED MEMORY XIMAGES</h2>
+
+
+<p style="margin-top: 1em" valign="top">The basic sequence
+of operations for shared memory XImages is as follows:</p>
+
+<p style="margin-top: 1em" valign="top">1 &minus; Create
+the shared memory XImage structure <br>
+2 &minus; Create a shared memory segment to store the image
+data <br>
+3 &minus; Inform the server about the shared memory segment
+<br>
+4 &minus; Use the shared memory XImage, much like a normal
+one.</p>
+
+<p style="margin-top: 1em" valign="top">To create a shared
+memory XImage, use:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">XImage *XShmCreateImage (display, visual, depth, format, data,
+                         shminfo, width, height)
+        Display *display;
+        Visual *visual;
+        unsigned int depth, width, height;
+        int format;
+        char *data;
+        XShmSegmentInfo *shminfo;</pre>
+
+
+<p style="margin-top: 1em" valign="top">Most of the
+arguments are the same as for XCreateImage; I will not go
+through them here. Note, however, that there are no
+&lsquo;&lsquo;offset&rsquo;&rsquo;,
+&lsquo;&lsquo;bitmap_pad&rsquo;&rsquo;, or
+&lsquo;&lsquo;bytes_per_line&rsquo;&rsquo; arguments. These
+quantities will be defined by the server itself, and your
+code needs to abide by them. Unless you have already
+allocated the shared memory segment (see below), you should
+pass in NULL for the &lsquo;&lsquo;data&rsquo;&rsquo;
+pointer.</p>
+
+<p style="margin-top: 1em" valign="top">There is one
+additional argument: &lsquo;&lsquo;shminfo&rsquo;&rsquo;,
+which is a pointer to a structure of type XShmSegmentInfo.
+You must allocate one of these structures such that it will
+have a lifetime at least as long as that of the shared
+memory XImage. There is no need to initialize this structure
+before the call to XShmCreateImage.</p>
+
+<p style="margin-top: 1em" valign="top">The return value,
+if all goes well, will be an XImage structure, which you can
+use for the subsequent steps.</p>
+
+<p style="margin-top: 1em" valign="top">The next step is to
+create the shared memory segment. This is best done after
+the creation of the XImage, since you need to make use of
+the information in that XImage to know how much memory to
+allocate. To create the segment, you need a call like:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">shminfo.shmid = shmget (IPC_PRIVATE,
+          image-&gt;bytes_per_line * image-&gt;height, IPC_CREAT|0777);</pre>
+
+
+<p style="margin-top: 1em" valign="top">(assuming that you
+have called your shared memory XImage
+&lsquo;&lsquo;image&rsquo;&rsquo;). You should, of course,
+follow the Rules and do error checking on all of these
+system calls. Also, be sure to use the bytes_per_line field,
+not the width you used to create the XImage as they may well
+be different.</p>
+
+<p style="margin-top: 1em" valign="top">Note that the
+shared memory ID returned by the system is stored in the
+shminfo structure. The server will need that ID to attach
+itself to the segment.</p>
+
+<p style="margin-top: 1em" valign="top">Also note that, on
+many systems for security reasons, the X server will only
+accept to attach to the shared memory segment if it&rsquo;s
+readable and writeable by &lsquo;&lsquo;other&rsquo;&rsquo;.
+On systems where the X server is able to determine the uid
+of the X client over a local transport, the shared memory
+segment can be readable and writeable only by the uid of the
+client.</p>
+
+<p style="margin-top: 1em" valign="top">Next, attach this
+shared memory segment to your process:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">shminfo.shmaddr = image-&gt;data = shmat (shminfo.shmid, 0, 0);</pre>
+
+
+<p style="margin-top: 1em" valign="top">The address
+returned by shmat should be stored in *both* the XImage
+structure and the shminfo structure.</p>
+
+<p style="margin-top: 1em" valign="top">To finish filling
+in the shminfo structure, you need to decide how you want
+the server to attach to the shared memory segment, and set
+the &lsquo;&lsquo;readOnly&rsquo;&rsquo; field as follows.
+Normally, you would code:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">shminfo.readOnly = False;</pre>
+
+
+<p style="margin-top: 1em" valign="top">If you set it to
+True, the server will not be able to write to this segment,
+and thus XShmGetImage calls will fail.</p>
+
+<p style="margin-top: 1em" valign="top">Finally, tell the
+server to attach to your shared memory segment with:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Status XShmAttach (display, shminfo);</pre>
+
+
+<p style="margin-top: 1em" valign="top">If all goes well,
+you will get a non-zero status back, and your XImage is
+ready for use.</p>
+
+<p style="margin-top: 1em" valign="top">To write a shared
+memory XImage into an X drawable, use XShmPutImage:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Status XShmPutImage (display, d, gc, image, src_x, src_y,
+                     dest_x, dest_y, width, height, send_event)
+        Display *display;
+        Drawable d;
+        GC gc;
+        XImage *image;
+        int src_x, src_y, dest_x, dest_y;
+        unsigned int width, height;
+        bool send_event;</pre>
+
+
+<p style="margin-top: 1em" valign="top">The interface is
+identical to that of XPutImage, so I will spare my fingers
+and not repeat that documentation here. There is one
+additional parameter, however, called
+&lsquo;&lsquo;send_event&rsquo;&rsquo;. If this parameter is
+passed as True, the server will generate a
+&lsquo;&lsquo;completion&rsquo;&rsquo; event when the image
+write is complete; thus your program can know when it is
+safe to begin manipulating the shared memory segment
+again.</p>
+
+<p style="margin-top: 1em" valign="top">The completion
+event has type XShmCompletionEvent, which is defined as the
+following:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">typedef struct {
+    int   type;              /* of event */
+    unsigned long serial;   /* # of last request processed */
+    Bool send_event;         /* true if came from a SendEvent request */
+    Display *display;        /* Display the event was read from */
+    Drawable drawable;       /* drawable of request */
+    int major_code;     /* ShmReqCode */
+    int minor_code;     /* X_ShmPutImage */
+    ShmSeg shmseg;      /* the ShmSeg used in the request */
+    unsigned long offset;   /* the offset into ShmSeg used */
+} XShmCompletionEvent;</pre>
+
+
+<p style="margin-top: 1em" valign="top">The event type
+value that will be used can be determined at run time with a
+line of the form:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">int CompletionType = XShmGetEventBase (display) + ShmCompletion;</pre>
+
+
+<p style="margin-top: 1em" valign="top">If you modify the
+shared memory segment before the arrival of the completion
+event, the results you see on the screen may be
+inconsistent.</p>
+
+<p style="margin-top: 1em" valign="top">To read image data
+into a shared memory XImage, use the following:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Status XShmGetImage (display, d, image, x, y, plane_mask)
+     Display *display;
+     Drawable d;
+     XImage *image;
+     int x, y;
+     unsigned long plane_mask;</pre>
+
+
+<p style="margin-top: 1em" valign="top">Where
+&lsquo;&lsquo;display&rsquo;&rsquo; is the display of
+interest, &lsquo;&lsquo;d&rsquo;&rsquo; is the source
+drawable, &lsquo;&lsquo;image&rsquo;&rsquo; is the
+destination XImage, &lsquo;&lsquo;x&rsquo;&rsquo; and
+&lsquo;&lsquo;y&rsquo;&rsquo; are the offsets within
+&lsquo;&lsquo;d&rsquo;&rsquo;, and
+&lsquo;&lsquo;plane_mask&rsquo;&rsquo; defines which planes
+are to be read.</p>
+
+<p style="margin-top: 1em" valign="top">To destroy a shared
+memory XImage, you should first instruct the server to
+detach from it, then destroy the segment itself, as
+follows:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">XShmDetach (display, shminfo);
+XDestroyImage (image);
+shmdt (shminfo.shmaddr);
+shmctl (shminfo.shmid, IPC_RMID, 0);</pre>
+
+
+<a name="5. USE OF SHARED MEMORY PIXMAPS"></a>
+<h2>5. USE OF SHARED MEMORY PIXMAPS</h2>
+
+
+<p style="margin-top: 1em" valign="top">Unlike X images,
+for which any image format is usable, the shared memory
+extension supports only a single format (i.e. XYPixmap or
+ZPixmap) for the data stored in a shared memory pixmap. This
+format is independent of the depth of the image (for 1-bit
+pixmaps it doesn&rsquo;t really matter what this format is)
+and independent of the screen. Use XShmPixmapFormat to get
+the format for the server:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">int XShmPixmapFormat (display)
+        Display *display;</pre>
+
+
+<p style="margin-top: 1em" valign="top">If your application
+can deal with the server pixmap data format (including
+bits-per-pixel et al.), create a shared memory segment and
+&lsquo;&lsquo;shminfo&rsquo;&rsquo; structure in exactly the
+same way as is listed above for shared memory XImages. While
+it is, not strictly necessary to create an XImage first,
+doing so incurs little overhead and will give you an
+appropriate bytes_per_line value to use.</p>
+
+<p style="margin-top: 1em" valign="top">Once you have your
+shminfo structure filled in, simply call:</p>
+
+<pre style="margin-left:30%; margin-top: 1em">Pixmap XShmCreatePixmap (display, d, data, shminfo, width,
+                         height, depth);
+        Display *display;
+        Drawable d;
+        char *data;
+        XShmSegmentInfo *shminfo;
+        unsigned int width, height, depth;</pre>
+
+
+<p style="margin-top: 1em" valign="top">The arguments are
+all the same as for XCreatePixmap, with two additions:
+&lsquo;&lsquo;data&rsquo;&rsquo; and
+&lsquo;&lsquo;shminfo&rsquo;&rsquo;. The second of the two
+is the same old shminfo structure that has been used before.
+The first is the pointer to the shared memory segment, and
+should be the same as the shminfo.shmaddr field. I am not
+sure why this is a separate parameter.</p>
+
+<p style="margin-top: 1em" valign="top">If everything
+works, you will get back a pixmap, which you can manipulate
+in all of the usual ways, with the added bonus of being able
+to tweak its contents directly through the shared memory
+segment. Shared memory pixmaps are destroyed in the usual
+manner with XFreePixmap, though you should detach and
+destroy the shared memory segment itself as shown above.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729468" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

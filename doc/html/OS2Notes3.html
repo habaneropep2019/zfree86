@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Compiling and Installing </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="OS2Notes.html"><EM>Notes on Rebuilding XFree86&reg;/OS2 from Scratch </EM></A>
+ <b>:</b> <EM>Compiling and Installing </EM><BR>
+<b>Previous:</b> <A HREF="OS2Notes2.html"><EM>Tools required </EM></A><BR>
+<b>Next:</b> <A HREF="OS2Notes.html"><EM>Notes on Rebuilding XFree86&reg;/OS2 from Scratch </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>3. Compiling and Installing </H2>
+
+<p>You need about 300MB of free HPFS space for the whole system. This does not
+include space for the postscript and troff documentation files. I have never
+installed them. Nor did I install the test subtree.</p>
+<p>
+<ol>
+<li>Install all the above utilities. Refer to the corresponding documentation.
+Verify that everything works well, particularly EMX.</li>
+<li>It is a good idea to use the same or a similar structure I have.
+I have made a directory <code>\x11</code> on the partition for compiling and have
+put everything below this tree. I found that a clean tree occupies
+less than the half space of the disk, this gives me the opportunity to
+rename this tree to <code>\x11old</code> and copy a new version to the
+same disk to produce diffs. Last time the complete tree was
+arranged under the root directory <code>xc</code>, this would become 
+<code>\x11\xc</code> then.</li>
+<li>To unpack the files you would usually execute the command
+<pre>
+gzip -dc file.tar.gz | tar xvf -
+</pre>
+ 
+in the <code>\x11</code> directory. At the end you will usually see the
+irritating, but non-fatal message "gzip: stdout Broken pipe". Ignore it.</li>
+<li>After that, is is likely necessary to apply some patches, either from
+the XConsortium or from the XFree86 project. Before you do this, enter
+<pre>
+      chmod -R a+rw \x11\xc
+      
+</pre>
+ 
+to make certain files in the tree writable.</li>
+<li>There should be a file <code>added-XXX</code> accompanying the patch file
+which lists the files that are newly created. The patch program has
+a problem with creating new directories, so we need to create them
+on advance. For each <code>added-XXX</code> file you find, execute from
+<code>\x11</code> 
+<pre>
+xc\config\util\added added-XXX
+</pre>
+
+If there is no <code>added-XXX</code> file available, you can make one with
+the following instructions:
+<pre>
+      grep "\*\*\* xc/" patchfile &gt;added-file
+      
+</pre>
+
+Edit <code>added-file</code> with a text editor and remove the <code>*** </code> at
+the beginning and the time stamp at the end (search for a TAB and
+erase to the end of the line). You get a list of file paths, one in a
+line, which is the input to the added utility.</li>
+<li>After that you can apply the patches in the right order. Usually this
+is done by a command
+<pre>
+      patch -p -E &lt;patchfile 2&gt;&amp;1 | tee patchlog
+      
+</pre>
+
+from the <code>\x11</code> directory. Be aware to use the right
+patch - OS/2 has a utility with the same name and different functionality.
+Don't use the recommended <code>-s</code> option, this makes <code>patch</code> quiet,
+and you won't see problems in the patchlog file. Use
+<pre>
+      find \x11 -name *.rej -print 
+      find \x11 -name *# -print
+      
+</pre>
+
+to find any rejects and unapplied patches (attention: yet another OS/2
+program with wrong functionality). Normally there shouldn't
+be any problems of this kind, else you have made a mistake. Finally
+remove the original files with
+<pre>
+      find \x11 -name *.orig -print -exec rm {} ;
+      
+</pre>
+</li>
+<li>Go to the <code>xc/config/cf</code> directory and edit the <code>xf86site.def</code>
+file to match your requirements (you probably don't want to compile
+all X servers). Certain changes must be set to the following values:
+<ul>
+<li>Disable if not already done any PC98 server; PC98 (Japanese XFree86)
+does not work yet. Porters from Japan are welcome!</li>
+<li><code>#define WacomSupport            NO
+#define ElographicsSupport      NO</code>
+Both options are not yet supported.</li>
+<li>Tcl* and Tk* don't need to be set explicitly. Reasonable defaults
+are in the other config files, provided you have a complete 
+XFree86/OS2 binary tree with the tcl/tk runtime support installed.</li>
+<li><code>#define BuildDynamicLoading   NO</code>
+This does not work.</li>
+</ul>
+</li>
+<li>Go to the directory <code>xc\util\compress</code> and 
+<code>make compress.exe</code> there. Install the program produced 
+there in your path. I stumbled more than once on half-ported
+compress programs on OS/2 ftp servers that are defective w.r.t.
+reading and writing stdin/stdout. In some stage (font compression)
+otherwise you will get a core dump of mkfontdir, because all
+compressed fonts are corrupt.</li>
+<li>Set the environment variable <code>X11ROOT</code> to something different than
+it is; otherwise the installation process will overwrite your
+original XFree86/OS2 installation. If you have not set this variable,
+go back to the prefix section of this document: you have forgotten
+something.</li>
+<li>Copy the file <code>xc/programs/Xserver/hw/xfree86/etc/bindist/OS2/host.def.os2</code>
+to the location <code>xc/config/cf/host.def</code>. Use this file to do
+any specific modifications to imake variables, rather than editing
+the file xfree86.cf, imake.tmpl, or os2.cf directly.</li>
+<li>Copy the file <code>xc/config/util/buildos2.cmd</code> into the <code>xc</code>
+directory. If this is a second or later attempt, you might need to
+copy the saved toplevel Makefile.os2 back to Makefile.</li>
+<li>Execute this <code>buildos2.cmd</code> command in the <code>xc</code> directory;
+it will produce a logfile <code>buildxc.log</code> in this directory.</li>
+<li>Go have a bucket of coffee, or better, buy new coffee - in Colombia!
+The compile will need between 2 and 20 hours, depending on your
+selections, and the horse power of your hardware.</li>
+<li>When finished, view the logfile for errors, and fix the problems if
+there are some. I have managed to compile the whole system
+flawlessly, so there is at least one configuration that works.</li>
+<li>Finally, from the <code>xc</code> dir, execute
+<pre>
+      xmake install
+      xmake install.man
+      
+</pre>
+</li>
+<li>There are a few minor glitches in the installation:
+<ol>
+<li>The xdm and linkkit directories will fail in compile and installation.
+This is no problem and has no effect on the rest of the system.</li>
+<li>The imake.exe which is installed in <code>\XFree86\bin</code> is usually defective.
+The one which was built initially and installed in the root directory
+of the drive where you have the source tree is okay. So simply copy
+this <code>\imake.exe</code> to the <code>\XFree86\bin</code> directory 
+manually. Some day this might be fixed.</li>
+<li><code>XF86Setup</code> is not ported yet and won't work with the tcl/tk port
+available for XFree86/OS2. My idea was to replace this by some native
+installation tool, which I didn't find the time to do yet. Feel free
+to spend a bit of time to play with XF86Setup if you like.</li>
+</ol>
+</li>
+</ol>
+</p>
+<p>Well, you see, this was quite easy :-)</p>
+
+
+
+
+
+ <HR NOSHADE>
+<A HREF="OS2Notes.html"><EM>Notes on Rebuilding XFree86&reg;/OS2 from Scratch </EM></A>
+ <b>:</b> <EM>Compiling and Installing </EM><BR>
+<b>Previous:</b> <A HREF="OS2Notes2.html"><EM>Tools required </EM></A><BR>
+<b>Next:</b> <A HREF="OS2Notes.html"><EM>Notes on Rebuilding XFree86&reg;/OS2 from Scratch </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728809" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

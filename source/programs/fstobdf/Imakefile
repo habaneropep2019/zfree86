@@ -1,0 +1,9 @@
+XCOMM $XFree86: xc/programs/fstobdf/Imakefile,v 1.5 2006/01/09 15:00:42 dawes Exp $
+
+LOCAL_LIBRARIES = $(FSLIB) $(XONLYLIB)
+        DEPLIBS = $(DEPFSLIB) $(DEPXONLYLIB)
+
+           SRCS = chars.c fstobdf.c header.c props.c
+           OBJS = chars.o fstobdf.o header.o props.o
+
+ComplexProgramTarget (fstobdf)

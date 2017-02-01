@@ -1,0 +1,1964 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:57:30 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1.&nbsp;&nbsp;Purposes and Goals">1.&nbsp;&nbsp;Purposes and Goals</a><br>
+<a href="#2.&nbsp;&nbsp;Overview of the interface">2.&nbsp;&nbsp;Overview of the interface</a><br>
+<a href="#3.&nbsp;&nbsp;Definition of Address Specification Format">3.&nbsp;&nbsp;Definition of Address Specification Format</a><br>
+<a href="#4.&nbsp;&nbsp;Internal Data Structures">4.&nbsp;&nbsp;Internal Data Structures</a><br>
+<a href="#5.&nbsp;&nbsp;Exposed Transport Independent API">5.&nbsp;&nbsp;Exposed Transport Independent API</a><br>
+<a href="#6.&nbsp;&nbsp;Transport Option Definition">6.&nbsp;&nbsp;Transport Option Definition</a><br>
+<a href="#7.&nbsp;&nbsp;Hidden Transport Dependent API">7.&nbsp;&nbsp;Hidden Transport Dependent API</a><br>
+<a href="#8.&nbsp;&nbsp;Configuration">8.&nbsp;&nbsp;Configuration</a><br>
+<a href="#9.&nbsp;&nbsp;Transport Specific Definitions">9.&nbsp;&nbsp;Transport Specific Definitions</a><br>
+<a href="#10.&nbsp;&nbsp;Implementation Notes">10.&nbsp;&nbsp;Implementation Notes</a><br>
+
+<hr>
+
+
+<p align=center valign="top"><b>X Transport
+Interface</b></p>
+
+<p style="margin-top: 1em" valign="top">Copyright (c) 1993,
+1994 NCR Corporation - Dayton, Ohio, USA</p>
+
+<p style="margin-top: 1em" valign="top">All Rights
+Reserved</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in
+all copies and that both that copyright notice and this
+permission notice appear in supporting documentation, and
+that the name NCR not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission. NCR makes no representations about
+the suitability of this software for any purpose. It is
+provided &quot;as is&quot; without express or implied
+warranty.</p>
+
+<p style="margin-top: 1em" valign="top">NCR DISCLAIM ALL
+WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+EVENT SHALL NCR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright 1993,
+1994, 2002 The Open Group</p>
+
+<p style="margin-top: 1em" valign="top">Permission is
+hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</p>
+
+<p style="margin-top: 1em" valign="top">The above copyright
+notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p style="margin-top: 1em" valign="top">THE SOFTWARE IS
+PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT WARRANTY
+OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Except as contained
+in this notice, the name of The Open Group shall not be used
+in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written
+authorization from The Open Group.</p>
+
+<p style="margin-top: 1em" valign="top">X Window System is
+a trademark of The Open Group, Inc.</p>
+
+<p style="margin-top: 1em" valign="top">Designed by Stuart
+Anderson (NCR) with help from Ralph Mor (X Consortium)</p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><i>Draft
+Version 0.6</i></p>
+
+<p style="margin-top: 1em" valign="top">NOTE: This
+documentation does not completely match the implementation
+in R6 (as a result of some late changes made in the code).
+Specifically, support was added for font server cloning, and
+conditional compliation was introduced for client vs. server
+code.</p>
+
+<a name="1.&nbsp;&nbsp;Purposes and Goals"></a>
+<h2>1.&nbsp;&nbsp;Purposes and Goals</h2>
+
+
+<p style="margin-top: 1em" valign="top">The X Transport
+Interface is intended to combine all system and transport
+specific code into a single place in the source tree. This
+API should be used by all libraries, clients and servers of
+the X Window System. Use of this API should allow the
+addition of new types of transports and support for new
+platforms without making any changes to the source except in
+the X Transport Interface code.</p>
+
+<p style="margin-top: 1em" valign="top">This interface
+should solve the problem of multiple #ifdef TRANSPORT and
+#ifdef PLATFORM statements scattered throughout the source
+tree.</p>
+
+<p style="margin-top: 1em" valign="top">This interface
+should provide enough functionality to support all types of
+protocols, including connection oriented protocols such as
+X11 and FS, and connection-less oriented protocols such as
+XDMCP.</p>
+
+<a name="2.&nbsp;&nbsp;Overview of the interface"></a>
+<h2>2.&nbsp;&nbsp;Overview of the interface</h2>
+
+
+<p style="margin-top: 1em" valign="top">The interface
+provides an API for use by applications. The functions in
+this API perform work that is common to all transports and
+systems, such as parsing an address into a host and port
+number. The functions in this API call transport specific
+functions that are contained in a table whose contents are
+defined at compile time. This table contains an entry for
+each type of transport. Each entry is a record containing
+mostly pointers to function that implements the interface
+for the given transport.</p>
+
+<p style="margin-top: 1em" valign="top">This API does not
+provide an abstraction for select() or poll(). These
+function are themselves transport independent, so an
+additional interface is not needed for these functions. It
+is also unclear how such an interface would affect
+performance.</p>
+
+<a name="3.&nbsp;&nbsp;Definition of Address Specification Format"></a>
+<h2>3.&nbsp;&nbsp;Definition of Address Specification Format</h2>
+
+
+<p style="margin-top: 1em" valign="top">Addresses are
+specified in the following syntax,</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>protocol/host:port</i></p>
+
+<p style="margin-top: 1em" valign="top">where
+<i>protocol</i> specifies a protocol family or an alias for
+a protocol family. A definition of common protocol families
+is given in a later section.</p>
+
+<p style="margin-top: 1em" valign="top">The <i>host</i>
+part specifies the name of a host or other transport
+dependent entity that could be interpreted as a Network
+Service Access Point (NSAP).</p>
+
+<p style="margin-top: 1em" valign="top">The <i>port</i>
+part specifies the name of a Transport Service Access Point
+(TSAP). The format of the TSAP is defined by the underlying
+transport implementation, but it is represented using a
+string format when it is part of an address.</p>
+
+<a name="4.&nbsp;&nbsp;Internal Data Structures"></a>
+<h2>4.&nbsp;&nbsp;Internal Data Structures</h2>
+
+
+<p style="margin-top: 1em" valign="top">There are two major
+data structures associated with the transport independent
+portion of this interface. Additional data structures may be
+used internally by each transport.</p><h3>4.1&nbsp;&nbsp;Xtransport</h3>
+
+
+<p style="margin-top: 1em" valign="top">Each transport
+supported has an entry in the transport table. The transport
+table is an array of <i>Xtransport</i> records. Each record
+contains all the entry points for a single transport. This
+record is defined as: <br>
+typedef struct _Xtransport {</p>
+
+<p style="margin-top: 1em" valign="top">char *TransName;
+<br>
+int flags;</p>
+
+<p style="margin-top: 1em" valign="top">XtransConnInfo
+(*OpenCOTSClient)(</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">struct _Xtransport *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* transport */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* protocol */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* host */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* port */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<p style="margin-top: 1em" valign="top">XtransConnInfo
+(*OpenCOTSServer)(</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">struct _Xtransport *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* transport */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* protocol */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* host */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* port */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<p style="margin-top: 1em" valign="top">XtransConnInfo
+(*OpenCLTSClient)(</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">struct _Xtransport *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* transport */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* protocol */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* host */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* port */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<p style="margin-top: 1em" valign="top">XtransConnInfo
+(*OpenCLTSServer)(</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">struct _Xtransport *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* transport */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* protocol */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* host */</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">char *</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* port */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*SetOption)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* option */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* arg */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*CreateListener)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* port */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* flags */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*ResetListener)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<p style="margin-top: 1em" valign="top">XtransConnInfo
+(*Accept)(</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">XtransConnInfo</p></td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+<p valign="top">/* connection */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Connect)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* host */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">char *</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* port */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*BytesReadable)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">BytesReadable_t *</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* pend */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Read)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* buf */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* size */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Write)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">char *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* buf */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* size */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Readv)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">struct iovec *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* buf */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* size */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Writev)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">struct iovec *,</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* buf */</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* size */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Disconnect)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">int</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">(*Close)(</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">XtransConnInfo</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">/* connection */</p></td>
+</table>
+
+<p valign="top">);</p>
+
+<p style="margin-top: 1em" valign="top">} Xtransport;</p>
+
+<p style="margin-top: 1em" valign="top">The <i>flags</i>
+field can contain an OR of the following masks:</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>TRANS_ALIAS</i>:
+indicates that this record is providing an alias, and should
+not be used to create a listner.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>TRANS_LOCAL</i>:
+indicates that this is a LOCALCONN transport.</p><h3>4.2&nbsp;&nbsp;XtransConnInfo</h3>
+
+
+<p style="margin-top: 1em" valign="top">Each connection
+will have an opaque <i>XtransConnInfo</i> transport
+connection object allocated for it. This record contains
+information specific to the connection. The record is
+defined as: <br>
+typedef struct _XtransConnInfo *XtransConnInfo;</p>
+
+<p style="margin-top: 1em" valign="top">struct
+_XtransConnInfo { <br>
+struct _Xtransport *transptr;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+
+
+<p valign="top">char</p><td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">*priv; <br>
+int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">flags; <br>
+int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">fd; <br>
+int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">family; <br>
+char</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">*addr; <br>
+int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">addrlen; <br>
+char</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">*peeraddr; <br>
+int</p></td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+</td>
+<tr valign="top" align="left">
+<td width="7%"></td>
+<td width="93%">
+
+
+<p valign="top">peeraddrlen;</p></td>
+</table>
+
+<p valign="top">};</p>
+
+<a name="5.&nbsp;&nbsp;Exposed Transport Independent API"></a>
+<h2>5.&nbsp;&nbsp;Exposed Transport Independent API</h2>
+
+
+<p style="margin-top: 1em" valign="top">This API is
+included in each library and server that uses it. The API
+may be used by the library, but it is not added to the
+public API for that library. This interface is simply an
+implementation facilitator. This API contains a low level
+set of core primitives, and a few utility functions that are
+built on top of the primitives. The utility functions exist
+to provide a more familiar interface that can be used to
+port existing code.</p>
+
+<p style="margin-top: 1em" valign="top">A macro is defined
+in Xtrans.h for TRANS(func) that creates a unique function
+name depending on where the code is compiled. For example,
+when built for Xlib, TRANS(OpenCOTSClient) becomes
+_X11TransOpenCOTSClient.</p>
+
+<p style="margin-top: 1em" valign="top">All failures are
+considered fatal, and the connection should be closed and
+re-established if desired. In most cases, however, the value
+of errno will be available for debugging purposes.</p><h3>5.1&nbsp;&nbsp;Core Interface API</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+TRANS(OpenCOTSClient)(char *address)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Oriented Transport that is suitable for
+use by a client. The parameter <i>address</i> contains the
+full address of the server to which this endpoint will be
+connected. This functions returns an opaque transport
+connection object on success, or NULL on failure.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+TRANS(OpenCOTSServer)(char *address)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Oriented Transport that is suitable for
+use by a server. The parameter <i>address</i> contains the
+full address to which this server will be bound. This
+functions returns an opaque transport connection object on
+success, or NULL on failure. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+TRANS(OpenCLTSClient)(char *address)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Less Transport that is suitable for use
+by a client. The parameter <i>address</i> contains the full
+address of the server to which this endpoint will be
+connected. This functions returns an opaque transport
+connection object on success, or NULL on failure.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+TRANS(OpenCLTSServer)(char *address)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Less Transport that is suitable for use
+by a server. The parameter <i>address</i> contains the full
+address to which this server will be bound. This functions
+returns an opaque transport connection object on success, or
+NULL on failure. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(SetOption)(XtransConnInfo connection, int option, int
+arg)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+sets transport options, similar to the way setsockopt() and
+ioctl() work. The parameter <i>connection</i> is an endpoint
+that was obtained from _XTransOpen*() functions. The
+parameter <i>option</i> contains the option that will be
+set. The actual values for <i>option</i> are defined in a
+later section. The parameter <i>arg</i> can be used to pass
+in an additional value that may be required by some options.
+This function return 0 on success and -1 on failure.</p>
+
+<p style="margin-left:8%; margin-top: 1em">Note: Based on
+current usage, the complimentary function TRANS(GetOption)()
+is not necessary. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(CreateListener)(XtransConnInfo connection, char *port,
+int flags)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+sets up the server endpoint for listening. The parameter
+<i>connection</i> is an endpoint that was obtained from
+TRANS(OpenCOTSServer)() or TRANS(OpenCLTSServer)(). The
+parameter <i>port</i> specifies the port to which this
+endpoint should be bound for listening. If <i>port</i> is
+NULL, then the transport may attempt to allocate any
+available TSAP for this connection. If the transport cannot
+support this, then this function will return a failure. The
+<i>flags</i> parameter can be set to ADDR_IN_USE_ALLOWED to
+allow the call to the underlying binding function to fail
+with a EADDRINUSE error without causing the
+TRANS(CreateListener) function itself to fail. This function
+return 0 on success and -1 on failure.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(ResetListener)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">When a server is
+restarted, certain listen ports may need to be reset. For
+example, unix domain needs to check that the file used for
+communication has not been deleted. If it has, it must be
+recreated. The parameter <i>connection</i> is an opened and
+bound endpoint that was obtained from
+TRANS(OpenCOTSServer)() and passed to
+TRANS(CreateListener)(). This function will return one of
+the following values: TRANS_RESET_NOOP, TRANS_RESET_NEW_FD,
+or TRANS_RESET_FAILURE. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+TRANS(Accept)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">Once a
+connection indication is received, this function can be
+called to accept the connection. The parameter
+<i>connection</i> is an opened and bound endpoint that was
+obtained from TRANS(OpenCOTSServer)() and passed to
+TRANS(CreateListener)(). This function will return a new
+opaque transport connection object upon success, NULL
+otherwise. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Connect)(XtransConnInfo connection, char *address)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a connection to a server. The parameter
+<i>connection</i> is an endpoint that was obtained from
+TRANS(OpenCOTSClient)(). The parameters <i>address</i>
+specify the TSAP to which this endpoint should connect. If
+the protocol is included in the address, it will be ignored.
+This function return 0 on success and -1 on failure.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(BytesReadable)(XtransConnInfo connection,
+BytesReadable_t *pend);</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+provides the same functionality as the BytesReadable macro.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Read)(XtransConnInfo connection, char *buf, int
+size)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+will return the number of bytes requested on a COTS
+connection, and will return the minimum of the number bytes
+requested or the size of the incoming packet on a CLTS
+connection. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Write)(XtransConnInfo connection, char *buf, int
+size)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+will write the requested number of bytes on a COTS
+connection, and will send a packet of the requested size on
+a CLTS connection. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Readv)(XtransConnInfo connection, struct iovec *buf,
+int size)</p>
+
+<p style="margin-left:8%; margin-top: 1em">Similar to
+TRANS(Read)(). <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Writev)(XtransConnInfo connection, struct iovec *buf,
+int size)</p>
+
+<p style="margin-left:8%; margin-top: 1em">Similar to
+TRANS(Write)(). <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Disconnect)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function is
+used when an orderly disconnect is desired. This function
+breaks the connection on the transport. It is similar to the
+socket function shutdown(). <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(Close)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+closes the transport, unbinds it, and frees all resources
+that was associated with the transport. If a
+TRANS(Disconnect) call was not made on the connection, a
+disorderly disconnect may occur. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(IsLocal)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">Returns TRUE if
+it is a local transport. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(GetMyAddr)(XtransConnInfo connection, <br>
+int *familyp, int *addrlenp, Xtransaddr **addrp)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function is
+similar to getsockname(). This function will allocate space
+for the address, so it must be freed by the caller. Not all
+transports will have a valid address until a connection is
+established. This function should not be used until the
+connection is established with Connect() or Accept().
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(GetPeerAddr)(XtransConnInfo connection, <br>
+int *familyp, int *addrlenp, Xtransaddr **addrp)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function is
+similar to getpeername(). This function will allocate space
+for the address, so it must be freed by the caller. Not all
+transports will have a valid address until a connection is
+established. This function should not be used until the
+connection is established with Connect() or Accept().
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(GetConnectionNumber)(XtransConnInfo connection)</p>
+
+<p style="margin-left:8%; margin-top: 1em">Returns the file
+descriptor associated with this transport.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(MakeAllCOTSServerListeners)( <br>
+char *port, int *partial_ret, int *count_ret, XtransConnInfo
+**connections_ret)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+should be used by most servers. It will try to establish a
+COTS server endpoint for each transport listed in the
+transport table. <i>partial_ret</i> will be set to True if
+only a partial network could be created. <i>count_ret</i> is
+the number of transports returns, and <i>connections_ret</i>
+is the list of transports. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(MakeAllCLTSServerListeners)( <br>
+char *port, int *partial_ret, int *count_ret, XtransConnInfo
+**connections_ret)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+should be used by most servers. It will try to establish a
+CLTS server endpoint for each transport listed in the
+transport table. <i>partial_ret</i> will be set to True if
+only a partial network could be created. <i>count_ret</i> is
+the number of transports returns, and <i>connections_ret</i>
+is the list of transports.</p><h3>5.2&nbsp;&nbsp;Utility API</h3>
+
+
+<p style="margin-top: 1em" valign="top">This section
+describes a few useful functions that have been implemented
+on top of the Core Interface API. These functions are being
+provided as a convenience. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+TRANS(ConvertAddress)(int *familyp, int *addrlenp,
+Xtransaddr *addrp)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+converts a sockaddr based address to an X authorization
+based address (ie AF_INET, AF_UNIX to the X protocol
+definition (ie FamilyInternet, FamilyLocal)).</p>
+
+<a name="6.&nbsp;&nbsp;Transport Option Definition"></a>
+<h2>6.&nbsp;&nbsp;Transport Option Definition</h2>
+
+
+<p style="margin-top: 1em" valign="top">The following
+options are defined for the TRANS(SetOption)() function. If
+an OS or transport does not support any of these options,
+then it will silently ignore the option.
+<small>&bull;</small></p>
+
+
+<p style="margin-left:8%; margin-top: 1em">TRANS_NONBLOCKING</p>
+
+<p style="margin-left:8%; margin-top: 1em">This option
+controls the blocking mode of the connection. If the
+argument is set to 1, then the connection will be set to
+blocking. If the argument is set to 0, then the connection
+will be set to non-blocking. <small>&bull;</small></p>
+
+
+<p style="margin-left:8%; margin-top: 1em">TRANS_CLOSEONEXEC</p>
+
+<p style="margin-left:8%; margin-top: 1em">This option
+determines what will happen to the connection when an exec
+is encountered. If the argument is set to 1, then the
+connection will be closed when an exec occurs. If the
+argument is set to 0, then the connection will not be closed
+when an exec occurs.</p>
+
+<a name="7.&nbsp;&nbsp;Hidden Transport Dependent API"></a>
+<h2>7.&nbsp;&nbsp;Hidden Transport Dependent API</h2>
+
+
+<p style="margin-top: 1em" valign="top">The hidden
+transport dependent functions are placed in the Xtransport
+record. These function are similar to the Exposed Transport
+Independent API, but some of the parameters and return
+values are slightly different. Stuff like the #ifdef SUNSYSV
+should be handled inside these functions.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+*OpenCOTSClient ( <br>
+struct _Xtransport *thistrans, char *protocol, char *host,
+char *port)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Oriented Transport. The parameter
+<i>thistrans</i> points to an Xtransport entry in the
+transport table. The parameters <i>protocol</i>,
+<i>host</i>, and <i>port</i> point to strings containing the
+corresponding parts of the address that was passed into
+TRANS(OpenCOTSClient)().</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This function will open the transport, and bind it into the
+transport namespace if applicable. The local address portion
+of the XtransConnInfo structure will also be filled in by
+this function. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+*OpenCOTSServer ( <br>
+struct _Xtransport *thistrans, char *protocol, char *host,
+char *port)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Oriented Transport. The parameter
+<i>thistrans</i> points to an Xtransport entry in the
+transport table. The parameters <i>protocol</i>,
+<i>host</i>, and <i>port</i> point to strings containing the
+corresponding parts of the address that was passed into
+TRANS(OpenCOTSClient)().</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This function will open the transport.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+*OpenCLTSClient ( <br>
+struct _Xtransport *thistrans, char *protocol, char *host,
+char *port)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Less Transport. The parameter
+<i>thistrans</i> points to an Xtransport entry in the
+transport table. The parameters <i>protocol</i>,
+<i>host</i>, and <i>port</i> point to strings containing the
+corresponding parts of the address that was passed into
+TRANS(OpenCOTSClient)().</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This function will open the transport, and bind it into the
+transport namespace if applicable. The local address portion
+of the XtransConnInfo structure will also be filled in by
+this function. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+*OpenCLTSServer ( <br>
+struct _Xtransport *thistrans, char *protocol, char *host,
+char *port)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a Connection-Less Transport. The parameter
+<i>thistrans</i> points to an Xtransport entry in the
+transport table. The parameters <i>protocol</i>,
+<i>host</i>, and <i>port</i> point to strings containing the
+corresponding parts of the address that was passed into
+TRANS(OpenCOTSClient)().</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This function will open the transport.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int SetOption
+(struct _Xtransport *thistrans, int option, int arg)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+provides a transport dependent way of implementing the
+options defined by the X Transport Interface. In the current
+prototype, this function is not being used, because all of
+the option defined so far, are transport independent. This
+function will have to be used if a radically different
+transport type is added, or a transport dependent option is
+defined. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+CreateListener (struct _Xtransport *thistrans, char *port,
+int flags )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+takes a transport endpoint opened for a server, and sets it
+up to listen for incoming connection requests. The parameter
+<i>port</i> should contain the port portion of the address
+that was passed to the Open function.</p>
+
+<p style="margin-left:8%; margin-top: 1em">The parameter
+<i>flags</i> should be set to ADDR_IN_USE_ALLOWED if the
+underlying transport endpoint may be already bound and this
+should not be considered as an error. Otherwise <i>flags</i>
+sould be set to 0. This is used by IPv6 code, where the same
+socket can be bound to both an IPv6 address and then to a
+IPv4 address.</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+will bind the transport into the transport name space if
+applicable, and fill in the local address portion of the
+XtransConnInfo structure. The transport endpoint will then
+be set to listen for incoming connection requests.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+ResetListener (struct _Xtransport *thistrans)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+resets the transport for listening.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">XtransConnInfo
+Accept(struct _Xtransport *thistrans)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+creates a new transport endpoint as a result of an incoming
+connection request. The parameter <i>thistrans</i> is the
+endpoint that was opened for listening by the server. The
+new endpoint is opened and bound into the transport&rsquo;s
+namespace. A XtransConnInfo structure describing the new
+endpoint is returned from this function
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+Connect(struct _Xtransport *thistrans, char *host, char
+*port )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+establishes a connection to a server. The parameters
+<i>host</i> and <i>port</i> describe the server to which the
+connection should be established. The connection will be
+established so that Read() and Write() call can be made.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+BytesReadable(struct _Xtransport *thistrans, BytesReadable_t
+*pend )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+replaces the BytesReadable() macro. This allows each
+transport to have it&rsquo;s own mechanism for determining
+how much data is ready to be read. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int Read(struct
+_Xtransport *thistrans, char *buf, int size )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+reads <i>size</i> bytes into <i>buf</i> from the connection.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int Write(struct
+_Xtransport *thistrans, char *buf, int size )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+writes <i>size</i> bytes from <i>buf</i> to the connection.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int Readv(struct
+_Xtransport *thistrans, struct iovec *buf, int size )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+performs a readv() on the connection.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+Writev(struct _Xtransport *thistrans, struct iovec *buf, int
+size )</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+performs a writev() on the connection.
+<small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int
+Disconnect(struct _Xtransport *thistrans)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+initiates an orderly shutdown of a connection. If a
+transport does not distinguish between orderly and
+disorderly disconnects, then a call to this function will
+have no affect. <small>&bull;</small></p>
+
+<p style="margin-left:8%; margin-top: 1em">int Close(struct
+_Xtransport *thistrans)</p>
+
+<p style="margin-left:8%; margin-top: 1em">This function
+will break the connection, and close the endpoint.</p>
+
+<a name="8.&nbsp;&nbsp;Configuration"></a>
+<h2>8.&nbsp;&nbsp;Configuration</h2>
+
+
+<p style="margin-top: 1em" valign="top">The implementation
+of each transport can be platform specific. It is expected
+that existing connection types such as TCPCONN, UNIXCONN,
+LOCALCONN and STREAMSCONN will be replaced with flags for
+each possible transport type.</p>
+
+<p style="margin-top: 1em" valign="top">Below are the flags
+that can be set in <i>ConnectionFlags</i> in the vendor.cf
+or site.def config files. <br>
+TCPCONN Enables the INET (IPv4) Domain Socket based
+transport <br>
+IPv6 Extends TCPCONN to enable IPv6 Socket based transport
+<br>
+UNIXCONN Enables the UNIX Domain Sokcet based transport <br>
+STREAMSCONN Enables the TLI based transports <br>
+LOCALCONN Enables the SYSV Local connection transports <br>
+DNETCONN Enables the DECnet transports</p>
+
+<a name="9.&nbsp;&nbsp;Transport Specific Definitions"></a>
+<h2>9.&nbsp;&nbsp;Transport Specific Definitions</h2>
+
+
+<p style="margin-top: 1em" valign="top"><b>Protocol Address
+Component <br>
+Family protocol host port</b> <br>
+Internet name of an internet addressable host <br>
+inet <br>
+inet6 <br>
+tcp <br>
+udp <br>
+string <br>
+containing <br>
+the name of <br>
+a service or <br>
+a valid port <br>
+number. <br>
+Example: <br>
+&quot;xserver0&quot;, <br>
+&quot;7100&quot; <br>
+DECnet decnet name of a DECnet addressable host <br>
+string <br>
+containing <br>
+the complete <br>
+name of the <br>
+object. <br>
+Example: <br>
+&quot;X$X0&quot; <br>
+NETware ipx name of a NETware addressable host <br>
+Not sure of <br>
+the <br>
+specifics <br>
+yet. <br>
+OSI osi name of an OSI addressable host <br>
+Not sure of <br>
+the <br>
+specifics <br>
+yet. <br>
+Local (ignored) <br>
+local <br>
+pts <br>
+named <br>
+sco <br>
+isc <br>
+String <br>
+containing <br>
+the port <br>
+name, ie <br>
+&quot;xserver0&quot;, <br>
+&quot;fontserver0&quot;.</p>
+
+<a name="10.&nbsp;&nbsp;Implementation Notes"></a>
+<h2>10.&nbsp;&nbsp;Implementation Notes</h2>
+
+
+<p style="margin-top: 1em" valign="top">This section refers
+to the prototype implementation that is being developed
+concurrently with this document. This prototype has been
+able to flush out many details and problems as the
+specification was being developed.</p>
+
+<p style="margin-top: 1em" valign="top">All of the source
+code for this interface is located in xc/lib/xtrans.</p>
+
+<p style="margin-top: 1em" valign="top">All functions names
+in the source are of the format TRANS(func)(). The TRANS()
+macro is defined as</p>
+
+<p style="margin-top: 1em" valign="top">#if (__STDC__
+&amp;&amp; !defined(UNIXCPP)) || defined(ANSICPP) <br>
+#define TRANS(func) _PROTOCOLTrans##func <br>
+#else <br>
+#define TRANS(func) _PROTOCOLTrans/**/func <br>
+#endif</p>
+
+<p style="margin-top: 1em" valign="top">PROTOCOL will be
+uniquely defined in each directory where this code is
+compiled. PROTOCOL will be defined to be the name of the
+protocol that is implemented by the library or server, such
+as X11, FS, and ICE.</p>
+
+<p style="margin-top: 1em" valign="top">All libraries and
+servers that use the X Transport Interface should have a new
+file called transport.c. This file will include the
+transports based on the configuration flags
+<i>ConnectionFlags</i>. Below is an example transport.c.
+<br>
+#include &quot;Xtransint.h&quot;</p>
+
+<p style="margin-top: 1em" valign="top">#ifdef DNETCONN
+<br>
+#include &quot;Xtransdnet.c&quot; <br>
+#endif <br>
+#ifdef LOCALCONN <br>
+#include &quot;Xtranslocal.c&quot; <br>
+#endif <br>
+#ifdef TCPCONN <br>
+#include &quot;Xtranssock.c&quot; <br>
+#endif <br>
+#ifdef STREAMSCONN <br>
+#include &quot;Xtranstli.c&quot; <br>
+#endif <br>
+#include &quot;Xtrans.c&quot; <br>
+#include &quot;Xtransutil.c&quot;</p>
+
+<p style="margin-top: 1em" valign="top">The source files
+for this interface are listed below. <br>
+Xtrans.h <br>
+Function prototypes and defines for <br>
+the Transport Independent API. <br>
+Xtransint.h <br>
+Used by the interface implementation only. <br>
+Contains the internal data structures. <br>
+Xtranssock.c <br>
+Socket implementation of the Transport Dependent API. <br>
+Xtranstli.c <br>
+TLI implementation of the Transport Dependent API. <br>
+Xtransdnet.c <br>
+DECnet implementation of the Transport Dependent API. <br>
+Xtranslocal.c <br>
+Implementation of the Transport Dependent API for <br>
+SYSV Local connections. <br>
+Xtrans.c <br>
+Exposed Transport Independent API Functions. <br>
+Xtransutil.c <br>
+Collection of Utility functions that use the <br>
+X Transport Interface.</p>
+
+<p style="margin-top: 1em" valign="top">The file
+<i>Xtransint.h</i> contains much of the transport related
+code that previously in Xlibint.h and Xlibnet.h. This will
+make the definitions available for all transport users. This
+should also obsolete the equivalent code in other
+libraries.</p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729550" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

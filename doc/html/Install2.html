@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Downloading the XFree86 4.8.0 binaries </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Downloading the XFree86 4.8.0 binaries </EM><BR>
+<b>Previous:</b> <A HREF="Install1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="Install3.html"><EM>Installing XFree86 4.8.0 using the <code>Xinstall.sh</code> script </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="2"></A>2. Downloading the XFree86 4.8.0 binaries </H2>
+
+
+<p>We provide XFree86 4.8.0 binaries for a range
+of operating systems at our
+<A href="ftp://ftp.xfree86.org/pub/XFree86/4.8.0/binaries/">ftp site</A>
+and our
+<A href="http://ftp.xfree86.org/pub/XFree86/4.8.0/binaries/">web site</A>.
+Often during releases our site is heavily loaded.  Instead of downloading
+directly from us we recommend that instead you use one of our mirror
+sites.</p>
+
+<p>Our binaries are organized by sub-directories which correspond to each
+of the OS/platforms for which we provide binaries.  First go to the
+sub-directory  that represents your OS platform. In some cases (e.g.,
+Linux) there may be a number of choices depending on the architecture
+or libc version your platform uses.  In all case we recommend that you
+first download the <code>Xinstall.sh</code> script, and run it as in the
+following example to find out which binary distribution you should
+download.</p>
+<p>
+<blockquote><code>
+<pre>
+sh Xinstall.sh -check
+</pre>
+</code></blockquote>
+</p>
+<p>The output of this utility tells you which is the correct set of binaries
+for you to download.  If you are careful with this step you will save
+yourself a lot time and trouble from NOT downloading an incompatible
+distribution.</p>
+<p><b>NOTES</b>:</p>
+<p>
+<ul>
+<li>The Xinstall.sh script must be downloaded in binary mode,
+otherwise it will not  run correctly.  If you get lots of "command
+not found" messages when you try to run it, then it is most
+likely because the script was not  downloaded in binary mode.
+Some web browsers will not  do this for files of that name, so we
+also have a copy of it called "<code>Xinstall.bin</code>", and most
+browsers should download that correctly.  When downloading it
+under this name, select "save as" on your browser, and save the
+file under the name "<code>Xinstall.sh</code>".
+</li>
+<li>The Xinstall.sh script requires some system commands and
+utilities to function correctly.  While most systems will have
+these, some Linux installations may not.  If the
+script fails because of some missing system command, you
+need to install it before you can continue. 
+</li>
+<li>Always use the version of the Xinstall.sh script that is provided
+with the release.   Older versions of the script may not install
+newer releases correctly.
+</li>
+<li>If the binary distribution reported by the Xinstall.sh script
+is not present on the XFree86 site, then there are two
+possibilities: The first is that it has not uploaded yet.  This
+is likeliest possibility if you are looking shortly after the
+release date.  The second possibility is that your target will
+not be be available for this release.  This is likeliest
+possibility if you are looking more than about two weeks after
+the release date.  Check <A href="http://www.xfree86.org/4.8.0/UPDATES.html">here</A> for
+information about updates to our binary distributions, and <A href="http://www.xfree86.org/4.8.0/ERRATA.html">here</A>
+for errata related to this release.
+</li>
+</ul>
+</p>
+<p>Assuming that you have run the <code>Xinstall.sh</code> script and found the binary
+distribution suitable for your system,
+download the necessary files.  The thirteen (13) mandatory files for all installations are listed
+below.  The installer script will complain if you do not have all of the
+required files in the same directory.</p>
+<p>
+<blockquote>
+<pre>
+1.   Xinstall.sh    The installer script
+2.   extract        The utility for extracting tarballs
+3.   Xbin.tgz       X clients/utilities and run-time libraries
+4.   Xlib.tgz       Some data files required at run-time
+5.   Xman.tgz       Manual pages
+6.   Xdoc.tgz       XFree86 documentation
+7.   Xfnts.tgz      Base set of fonts
+8.   Xfenc.tgz      Base set of font encoding data
+9.   Xetc.tgz       Run-time configuration files, part 1
+10.  Xrc.tgz        Run-time configuration files, part 2
+11.  Xvar.tgz       Run-time data
+12.  Xxserv.tgz     XFree86 X server
+13.  Xmod.tgz       XFree86 X server modules
+</pre>
+</blockquote>
+</p>
+
+<p>NOTES:
+<ul>
+<li>Some web browsers have a problem downloading the <code>extract</code>
+utility correctly.  If you encounter this problem, download the
+version called <code>extract.exe</code>.  (NOTE: This is not a
+MS-DOS/Windows       executable.)
+</li>
+<li>Some distributions do not require the <code>Xvar.tgz</code>
+tarball.  If it is present in the <code>binaries</code> sub-directory
+for your platform, then it is required.
+</li>
+<li>The Darwin/Mac OS X distribution do not have or require the
+<code>Xmod.tgz</code> tarball.
+</li>
+<li>Some distributions may have additional mandatory tarballs.
+While rare, the installer script will tell you if any are missing.
+</li>
+</ul>
+</p>
+<p>The following thirteen (13) tarballs are optional.  You should download
+the ones you want to install.</p>
+<p>
+<blockquote>
+<pre>
+1.   Xdrm.tgz       Source for DRM kernel modules
+2.   Xfsrv.tgz      Font server
+3.   Xnest.tgz      Nested X server
+4.   Xprog.tgz      X header files, config files and compile-time libs
+5.   Xprt.tgz       X Print server
+6.   Xvfb.tgz       Virtual framebuffer X server
+7.   Xtinyx.tgz     TinyX servers
+8.   Xf100.tgz      100dpi fonts
+9.   Xfcyr.tgz      Cyrillic fonts
+10.  Xfscl.tgz      Scalable fonts (Speedo, Type1 and TrueType)
+11.  Xhtml.tgz      HTML version of the documentation
+12.  Xps.tgz        PostScript version of the documentation
+13.  Xpdf.tgz       PDF version of the documentation
+</pre>
+</blockquote>
+</p>
+<p>NOTES:
+<ul>
+<li>Not all distributions will have all of the above optional tarballs.
+</li>
+<li>Some distributions may have some additional optional tarballs.
+</li>
+</ul>
+</p>
+<p>If you miss some and want to install them later, go to the
+<A HREF="Install4.html#manual-install">Manual Installation</A> section.</p>
+
+ <HR NOSHADE>
+<A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Downloading the XFree86 4.8.0 binaries </EM><BR>
+<b>Previous:</b> <A HREF="Install1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="Install3.html"><EM>Installing XFree86 4.8.0 using the <code>Xinstall.sh</code> script </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728748" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

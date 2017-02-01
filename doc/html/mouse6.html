@@ -1,0 +1,448 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Mouse Gallery </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Mouse Gallery </EM><BR>
+<b>Previous:</b> <A HREF="mouse5.html"><EM>XF86Config Options </EM></A><BR>
+<b>Next:</b> <A HREF="mouse7.html"><EM>Configuration Examples </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="26"></A>6. Mouse Gallery </H2>
+
+<p>In all of the examples below, it is assumed that <code>/dev/mouse</code> is
+a link to the appropriate serial port or PS/2 mouse device.</p>
+
+<H3><A NAME="27"></A>6.1. MS IntelliMouse  (serial, PS/2) </H3>
+<p>This mouse has a wheel which also acts as the button 2 (middle button).
+The wheel movement is recognized as the Z axis motion.  
+This behavior is not compatible with XFree86 versions prior to 3.3.2,
+but is more consistent with the support for other mice with
+wheels or rollers. 
+If you want to make the wheel behave like before,
+you can use the <code>"ZAxisMapping"</code> option as described above. </p>
+<p>IntelliMouse supports the PnP COM device specification.</p>
+<p>To use this mouse as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"IMPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the wheel won't work in this case):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="28"></A>6.2. MS IntelliMouse Explorer (PS/2, USB) </H3>
+<p>This mouse has a wheel which also acts as the button 2 (middle button).
+There are two side buttons; they are recognized as the buttons 4 and 5.
+The wheel movement is recognized as the Z axis motion.  </p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"ExplorerPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the wheel and the side buttons won't work in this case):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports the generic
+HID protocol:
+<pre>
+	Option	"Protocol"	"usb"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports automatic
+mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="29"></A>6.3. Kensington Thinking Mouse and Kensington Expert Mouse (serial, PS/2) </H3>
+<p>These mice have four buttons.
+The Kensington Expert Mouse is really a trackball.
+Both Thinking mice  support the PnP COM device specification.</p>
+<p>To use this mouse as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"ThinkingMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"ThinkingMousePS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the third and the fourth buttons act as though they
+were the first and the second buttons):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="30"></A>6.4. Genius NetScroll (PS/2) </H3>
+<p>This mouse has four buttons and a roller.  The roller movement is
+recognized as the Z axis motion.  </p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"NetScrollPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the roller and the fourth button won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="31"></A>6.5. Genius NetMouse and NetMouse Pro (serial, PS/2) </H3>
+<p>These mice have a "magic button" which is used like a wheel or a
+roller.  The "magic button" action is recognized as the Z axis motion.
+NetMouse Pro is identical to NetMouse except that it has the third
+button on the left hand side.</p>
+<p>NetMouse and NetMouse Pro support the PnP COM device specification.
+When used as a serial mouse, they are compatible with MS IntelliMouse.</p>
+<p>To use these mice as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"NetMousePS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the "magic button" and the third button won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="32"></A>6.6. Genius NetScroll Optical (PS/2, USB) </H3>
+<p>This mouse has a wheel which also acts as the button 2 (middle button),
+and two side buttons which are recognized as the buttons 4 and 5.
+It is compatible with NetMouse and NetMouse Pro.</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"NetMousePS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the wheel and the side buttons won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports the generic
+HID protocol:
+<pre>
+	Option	"Protocol"	"usb"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports automatic
+mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="33"></A>6.7. ALPS GlidePoint (serial, PS/2) </H3>
+<p>The serial version of this pad device has been supported since XFree86
+3.2.  `Tapping' action is interpreted as the fourth button press.
+(IMHO, the fourth button of GlidePoint should always be mapped to the first
+button in order to make this pad behave like the other pad products.)</p>
+<p>To use this pad as a serial device:
+<pre>
+	Option	"Protocol"	"GlidePoint"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"GlidePointPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="34"></A>6.8. ASCII MieMouse (serial, PS/2) </H3>
+<p>This mouse appears to be an OEM from Genius.  Although its shape is
+quite different, it works exactly like Genius NetMouse Pro.  This mouse has a
+"knob" which is used like a wheel or a roller.  The "knob" action is
+recognized as the Z axis motion.</p>
+<p>MieMouse supports the PnP COM device specification.  When used as a
+serial mouse, it is compatible with MS IntelliMouse.</p>
+<p>To use this mouse as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"NetMousePS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the knob and the third button will not work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="35"></A>6.9. Logitech MouseMan+ and FirstMouse+ (serial, PS/2) </H3>
+<p>MouseMan+ has two buttons on top, one side button and a roller.
+FirstMouse+ has two buttons and a roller.  The roller movement is
+recognized as the Z axis motion.  The roller also acts as the third
+button.  The side button is recognized as the fourth button.  </p>
+<p>MouseMan+ and FirstMouse+ support the PnP COM device specification.
+They have MS IntelliMouse compatible mode when used as a serial mouse.</p>
+<p>To use these mice as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"MouseManPlusPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the wheel and the fourth button won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="36"></A>6.10. IBM ScrollPoint (PS/2) </H3>
+<p>ScrollPoint has a "stick" in between the two buttons.
+This "stick" is the same as the stick-shaped pointing device often
+found on notebook computers, on which you move the mouse cursor by
+pushing the stick.
+The stick movement is recognized as the Z axis motion.  
+You can push the stick to right and left, as well as forward and
+backward.  Give four numbers to <code>ZAxisMapping</code> option
+to map movement along all these four directions to button actions.</p>
+<p>This mouse is compatible with Logitech MouseMan+.
+To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"MouseManPlusPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the stick won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="37"></A>6.11. 8D ScrollMouse (serial, PS/2) </H3>
+<p>ScrollMouse, also known as GyroMouse, has a "stick" similar to
+IBM ScrollPoint.
+The stick movement is recognized as the Z axis motion.  
+You can push the stick to right and left, as well as forward and
+backward.  Give four numbers to <code>ZAxisMapping</code> option
+to map movement along all these four directions to button actions.</p>
+<p>ScrollMouse supports the PnP COM device specification.  When used as a
+serial mouse, it is compatible with MS IntelliMouse.</p>
+<p>To use this mouse as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"IMPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the stick won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+<H3><A NAME="38"></A>6.12. A4 Tech 4D mice (serial, PS/2, USB) </H3>
+<p>A4 Tech produces quit a number of mice with one or two wheels.
+Their mice may have 2, 3, or 4 buttons.
+The wheels movement is recognized as the Z axis motion.  
+Give four numbers to <code>ZAxisMapping</code> option
+to map movement of both wheels to button actions.</p>
+<p>4D mice support the PnP COM device specification.  When used as a
+serial mouse, it is compatible with MS IntelliMouse.</p>
+<p>To use this mouse as a serial device:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+
+or:
+<pre>
+	Option	"Protocol"	"IntelliMouse"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports PS/2 mouse 
+initialization:
+<pre>
+	Option	"Protocol"	"IMPS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device but the OS does not support PS/2 mouse 
+initialization (the wheels won't work):
+<pre>
+	Option	"Protocol"	"PS/2"
+</pre>
+</p>
+<p>To use this mouse as the PS/2 device and the OS supports automatic
+PS/2 mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports the generic
+HID protocol:
+<pre>
+	Option	"Protocol"	"usb"
+</pre>
+</p>
+<p>To use this mouse as the USB device and the OS supports automatic
+mouse detection:
+<pre>
+	Option	"Protocol"	"Auto"
+</pre>
+</p>
+
+ <HR NOSHADE>
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Mouse Gallery </EM><BR>
+<b>Previous:</b> <A HREF="mouse5.html"><EM>XF86Config Options </EM></A><BR>
+<b>Next:</b> <A HREF="mouse7.html"><EM>Configuration Examples </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728777" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

@@ -1,0 +1,29 @@
+XCOMM $XFree86: xc/fonts/scaled/Imakefile,v 3.6 2006/01/09 14:58:13 dawes Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags /* as nothing */
+
+#if BuildSpeedoFonts
+SPEEDODIR = Speedo
+#endif
+#if BuildType1Fonts
+TYPE1DIR = Type1
+#endif
+#if BuildCIDFonts
+CIDDIR = CID
+#endif
+#if BuildTrueTypeFonts
+TTFDIR = TTF
+#endif
+#if BuildEthiopicFonts
+ETHIOPICDIR = Ethiopic
+#endif
+#if BuildBethMarduthoFonts
+MELTHODIR = Meltho
+#endif
+
+        SUBDIRS = $(SPEEDODIR) $(TYPE1DIR) $(CIDDIR) $(TTFDIR) \
+		  $(ETHIOPICDIR) $(MELTHODIR)
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

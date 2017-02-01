@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Enhancing XKB Configuration </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+ <b>:</b> <EM>Enhancing XKB Configuration </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Enhancing2.html"><EM>The Basics </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Enhancing4.html"><EM>Defining New Layouts </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>3. Enhancing XKB Configuration </H2>
+<p>Most of xkb enhancements concerns a need to define new output symbols
+for the some input key events. In other words, a need to define a new
+symbol map (for a new language, standard or just to feel more comfortable
+when typing text).</p>
+<p>What do you need to do? Generally, you have to define following things:
+<ul>
+<li> the map of symbols itself</li>
+<li> the rules to allow users to select the new mapping</li>
+<li> the description of the new layout</li>
+</ul>
+</p>
+<p>First of all, it is good to go through existing layouts and to examine
+them if there is something you could easily adjust to fit your needs.
+Even if there is nothing similar you may get some ideas about basic
+concepts and used tricks.</p>
+
+<H3><A NAME="4"></A>3.1. Levels And Groups </H3>
+<p>Since XFree86 4.3.0 you can use <b>multi-layout</b> concept of xkb 
+configuration.
+Though it is still in boundaries of xkb protocol and general ideas, the
+keymap designer must obey new rules when creating new maps. In exchange
+we get a more powerful and cleaner configuration system.</p>
+<p>Remember that it is the application which must decide which symbol
+matches which keycode according to effective modifier state. The X server
+itself sends only an input event message to. Of course, usually
+the general interpretation is processed by Xlib, Xaw, Motif, Qt, Gtk
+and similar libraries. The X server only supplies its mapping table
+(usually upon an application startup).</p>
+<p>You can think of the X server's symbol table as of a irregular table where each
+keycode has its row and where each combination of modifiers determines exactly
+one column. The resulting cell then gives the proper symbolic value. Not all
+keycodes need to bind different values for different combination of modifiers.
+<code>&lt;ENTER&gt;</code> key, for instance, usually doesn't depend on any
+modifiers so it its row has only one column defined.</p>
+<p>Note that in XKB there is no prior assumption that certain modifiers are bound
+to certain columns. By editing proper files (see 
+<A HREF="XKB-Enhancing4.html#keytypes">keytypes</A>) this 
+mapping can be changed as well.</p>
+<p>Unlike the original X protocol the XKB approach is far more
+flexible. It is comfortable to add one additional XKB term - group. You can
+think of a group as of a vector of columns per each keycode (naturally the
+dimension of this vector may differ for different keycodes). What is it good
+for? The group is not very useful unless you intend to use more than one
+logically different set of symbols (like more than one alphabet) defined in a
+single mapping table. But then, the group has a natural meaning - each symbol
+set has its own group and changing it means selecting a different one.
+XKB approach allows up to four different groups. The columns inside each group 
+are called (shift) levels. The X server knows the current group and reports it 
+together with modifier set and with a keycode in key events.</p>
+<p>To sum it up:</p>
+<p>
+<ul>
+<li> for each keycode XKB keyboard map contains up to four one-dimensional
+tables - groups (logically different symbol sets)</li>
+<li> for each group of a keycode XKB keyboard map contains some columns 
+- shift levels (values reached by combinations of Shift, Ctrl, Alt, ... 
+modifiers)</li>
+<li> different keycodes can have different number of groups</li>
+<li> different groups of one keycode can have different number of shift levels</li>
+<li> the current group number is tracked by X server </li>
+</ul>
+</p>
+<p>It is clear that if you sanely define levels, groups and sanely bind
+modifiers and associated actions you can have simultaneously loaded up to
+four different symbol sets where each of them would reside in its own group.</p>
+<p>The multi-layout concept provides a facility to manipulate xkb groups
+and symbol definitions in a way that allows almost arbitrary composition of 
+predefined symbol tables. To keep it fully functional you have to:
+<ul>
+<li> define all symbols only in the first group</li>
+<li> (re)define any modifiers with extra care to avoid strange (anisometric)
+behaviour</li>
+</ul>
+</p>
+
+ <HR NOSHADE>
+<A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+ <b>:</b> <EM>Enhancing XKB Configuration </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Enhancing2.html"><EM>The Basics </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Enhancing4.html"><EM>Defining New Layouts </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728791" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

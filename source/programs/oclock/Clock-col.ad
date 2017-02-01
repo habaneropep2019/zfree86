@@ -1,0 +1,6 @@
+! $XFree86: xc/programs/oclock/Clock-col.ad,v 1.2 2006/01/09 15:00:48 dawes Exp $
+Clock*Background:	grey
+Clock*BorderColor:	light blue
+Clock*hour:		yellow
+Clock*jewel:		yellow
+Clock*minute:	yellow

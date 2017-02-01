@@ -1,0 +1,1361 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:16:32 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Description">2. Description</a><br>
+<a href="#3. Types">3. Types</a><br>
+<a href="#4. Client Operations">4. Client Operations</a><br>
+<a href="#5. Server Requests">5. Server Requests</a><br>
+<a href="#6. Encoding">6. Encoding</a><br>
+<a href="#6.1. New Types">6.1. New Types</a><br>
+<a href="#6.2. Requests">6.2. Requests</a><br>
+<a href="#7. References">7. References</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>XTEST
+Extension Protocol</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+2.2 X Consortium Standard</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Kieron
+Drake <br>
+UniSoft Ltd.</small></small></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1992 by UniSoft Group Ltd.</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, and distribute this documentation for any
+purpose and without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in
+all copies. UniSoft makes no representations about the
+suitability for any purpose of the information in this
+document. This documentation is provided &lsquo;&lsquo;as
+is&rsquo;&rsquo; without express or implied warranty.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1992, 1994 X Consortium</p>
+
+<p style="margin-top: 1em" valign="top">Permission is
+hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</p>
+
+<p style="margin-top: 1em" valign="top">The above copyright
+notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p style="margin-top: 1em" valign="top">THE SOFTWARE IS
+PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT WARRANTY
+OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Except as contained
+in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written
+authorization from the X Consortium.</p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension is a
+minimal set of client and server extensions required to
+completely test the X11 server with no user
+intervention.</p>
+
+<p style="margin-top: 1em" valign="top">This extension is
+not intended to support general journaling and playback of
+user actions. This is a difficult area [XTrap, 89] as it
+attempts to synchronize synthetic user interactions with
+their effects; it is at the higher level of dialogue
+recording/playback rather than at the strictly lexical
+level. We are interested only in the latter, simpler, case.
+A more detailed discussion and justification of the
+extension functionality is given in [Drake, 91].</p>
+
+<p style="margin-top: 1em" valign="top">We are aiming only
+to provide a minimum set of facilities that solve immediate
+testing and validation problems. The testing extension
+itself needs testing, where possible, and so should be as
+simple as possible.</p>
+
+<p style="margin-top: 1em" valign="top">We have also tried
+to:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Confine the
+extension to an appropriate high level within the server to
+minimize portability problems. In practice this means that
+the extension should be at the DIX level or use the DIX/DDX
+interface, or both. This has effects, in particular, on the
+level at which &quot;input synthesis&quot; can occur.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Minimize the
+changes required in the rest of the server.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Minimize
+performance penalties on normal server operation.</p></td>
+</table>
+
+<a name="2. Description"></a>
+<h2>2. Description</h2>
+
+
+<p style="margin-top: 1em" valign="top">The functions
+provided by this extension fall into two groups:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="34%">
+
+
+<p style="margin-top: 1em" valign="top"><b>Client
+Operations</b></p> </td>
+<td width="66%">
+</td>
+</table>
+
+<p style="margin-left:25%;">These routines manipulate
+otherwise hidden client-side behavior. The actual
+implementation will depend on the details of the actual
+language binding and what degree of request buffering,
+GContext caching, and so on, is provided. In the C binding,
+defined in &lsquo;&lsquo;XTEST Extension
+Library&rsquo;&rsquo;, routines are provided to access the
+internals of two opaque data structures --<i>GC</i>s and
+<i>Visual</i>s-- and to discard any requests pending within
+the output buffer of a connection. The exact details can be
+expected to differ for other language bindings.</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="30%">
+
+
+<p style="margin-top: 1em" valign="top"><b>Server
+Requests</b></p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-left:25%;">The first of these requests is
+similar to that provided in most extensions: it allows a
+client to specify a major and minor version number to the
+server and for the server to respond with major and minor
+versions of its own. The remaining two requests allow the
+following:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Access to an
+otherwise &quot;write-only&quot; server resource: the cursor
+associated with a given window</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Perhaps most
+importantly, limited synthesis of input device events,
+almost as if a cooperative user had moved the pointing
+device or pressed a key or button.</p></td>
+</table>
+
+<a name="3. Types"></a>
+<h2>3. Types</h2>
+
+
+<p style="margin-top: 1em" valign="top">The following types
+are used in the request and event definitions in subsequent
+sections:</p>
+
+<p style="margin-top: 1em" valign="top">FAKE_EVENT_TYPE
+{<i>KeyPress</i>, <i>KeyRelease</i>, <i>MotionNotify</i>,
+<i>ButtonPress</i>, <i>ButtonRelease</i>}</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="24%">
+
+
+<p valign="top">FAKE_EVENT</p></td>
+<td width="10%">
+
+
+<p valign="top">[type: FAKE_EVENT_TYPE,</p></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%"></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%">
+
+
+<p valign="top">detail: BYTE,</p></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%"></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%">
+
+
+<p valign="top">time: TIMESTAMP,</p></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%"></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%">
+
+
+<p valign="top">root: WINDOW,</p></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%"></td>
+<td width="66%">
+</td>
+<tr valign="top" align="left">
+<td width="24%">
+</td>
+<td width="10%">
+
+
+<p valign="top">rootX, rootY: INT16]</p></td>
+<td width="66%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">CURSOR
+{<i>CurrentCursor</i>, <i>None</i>} or a cursor as defined
+by the X11 Protocol.</p>
+
+<a name="4. Client Operations"></a>
+<h2>4. Client Operations</h2>
+
+
+<p style="margin-top: 1em" valign="top">These are abstract
+definitions of functionality. They refer to client-side
+objects such as &quot;GC&quot; and &quot;VISUAL&quot; that
+are quoted to denote their abstract nature. Concrete
+versions of these functions are defined only for particular
+language bindings. In some circumstances a particular
+language binding may not implement the relevant abstract
+type or may provide it as a transparent, rather than opaque,
+type, with the result that the corresponding function does
+not make sense or is not required, respectively. __
+&#9474;<i><br>
+XTestSetGContextOfGC</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>gc</i>:
+&quot;GC&quot; <i><br>
+gid</i>: GCONTEXT &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">Sets the GCONTEXT
+within the &quot;GC&quot; gc to have the value specified by
+gid. __ &#9474;<i><br>
+XTestSetVisualIDOfVisual</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>visual</i>:
+&quot;VISUAL&quot; <i><br>
+visualid</i>: VISUALID &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">Sets the VISUALID
+within the &quot;VISUAL&quot; visual to have the value
+specified by visualid. __ &#9474;<i><br>
+XTestDiscard</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>dpy</i>:
+&quot;CONNECTION&quot;</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<p style="margin-left:25%; margin-top: 1em">status: BOOL
+&#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">Discards any
+requests that are present in the request buffer associated
+with the &quot;CONNECTION&quot; dpy. The status returned is
+<i>True</i> if there were one or more requests in the buffer
+and <i>False</i> otherwise.</p>
+
+<a name="5. Server Requests"></a>
+<h2>5. Server Requests</h2>
+
+
+<p style="margin-top: 1em" valign="top">__ &#9474;<i><br>
+XTestGetVersion</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>clientMajorVersion</i>:
+CARD16 <i><br>
+clientMinorVersion</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">serverMajorVersion:
+CARD16 <br>
+serverMinorVersion: CARD16</p>
+
+<p style="margin-left:25%; margin-top: 1em">Errors:
+<i>Length</i> &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">This request can be
+used to ensure that the server version of the XTEST
+extension is usable by the client. This document defines
+major version two (2), minor version one (1). __
+&#9474;<i><br>
+XTestCompareCursor</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>window</i>:
+WINDOW <i><br>
+cursor-id</i>: CURSOR or <i>CurrentCursor</i> or
+<i>None</i></p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<p style="margin-left:25%; margin-top: 1em">same: BOOL</p>
+
+<p style="margin-left:25%; margin-top: 1em">Errors:
+<i>Window</i>, <i>Length</i>, <i>Cursor</i> &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">This request looks
+up the cursor associated with the window and compares it
+with either the null cursor if cursor-id is <i>None</i>, or
+the current cursor (that is, the one being displayed), or
+the cursor whose ID is cursor-id, and returns the result of
+the comparison in same. __ &#9474;<i><br>
+XTestFakeInput</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>events</i>:
+LISTofFAKE_EVENT</p>
+
+<p style="margin-left:25%; margin-top: 1em">Errors:
+<i>Window</i>, <i>Length</i>, <i>Alloc</i>, <i>Value</i>
+&#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">This request
+simulates the limited set of core protocol events within the
+set FAKE_EVENT_TYPE. Only the following event fields,
+defined in FAKE_EVENT, are interpreted:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>type</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">This must be one of
+<i>KeyPress</i>, <i>KeyRelease</i>, <i>MotionNotify</i>,
+<i>ButtonPress</i>, or <i>ButtonRelease</i>, or else a
+<i>Value</i> error occurs.</p></td>
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>detail</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">For key events,
+this field is interpreted as the physical keycode. If the
+keycode is less than min-keycode or greater than
+max-keycode, as returned in the connection setup, then a
+<i>Value</i> error occurs. For button events, this field is
+interpreted as the physical (or core) button, meaning it
+will be mapped to the corresponding logical button according
+to the most recent <i>SetPointerMapping</i> request. If the
+button number is less than one or greater than the number of
+physical buttons, then a <i>Value</i> error occurs. For
+motion events, if this field is <i>True</i>, then rootX and
+rootY are relative distances from the current pointer
+location; if this field is <i>False,</i> then they are
+absolute positions.</p></td>
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>time</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">This is either
+<i>CurrentTime</i> (meaning no delay) or the delay in
+milliseconds that the server should wait before simulating
+this event. No other requests from this client will be
+processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been
+completed.</p> </td>
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>root</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">In the case of
+motion events this field is the ID of the root window on
+which the new motion is to take place. If <i>None</i> is
+specified, the root window of the screen the pointer is
+currently on is used instead. If this field is not a valid
+window, then a <i>Window</i> error occurs.</p></td>
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>rootX</i>
+&amp;</p> </td>
+<td width="6%"></td>
+<td width="80%">
+</td>
+</table>
+
+<p valign="top"><i>rootY</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">In the case of motion events these fields
+indicate relative distance or absolute pointer coordinates,
+according to the setting of detail. If the specified
+coordinates are off-screen, the closest on-screen
+coordinates will be substituted.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">When the simulated
+event(s) are processed, they cause event propagation,
+passive grab activation, and so on, just as if the
+corresponding input device action had occurred. However,
+motion events might not be recorded in the motion history
+buffer.</p>
+
+<p style="margin-top: 1em" valign="top">For the currently
+supported event types, the event list must have length one,
+otherwise a <i>BadLength</i> error occurs. __ &#9474;<i><br>
+XTestGrabControl</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>impervious</i>:
+BOOL &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If impervious is
+<i>True</i>, then the executing client becomes impervious to
+server grabs; that is, it can continue executing requests
+even if another client grabs the server. If impervious is
+<i>False</i>, then the executing client returns to the
+normal state of being susceptible to server grabs.</p>
+
+<a name="6. Encoding"></a>
+<h2>6. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">Please refer to the
+X11 Protocol Encoding document as this document uses
+conventions established there.</p>
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &lsquo;&lsquo;XTEST&rsquo;&rsquo;.</p>
+
+<a name="6.1. New Types"></a>
+<h3>6.1. New Types</h3>
+
+
+
+<p style="margin-top: 1em" valign="top">FAKE_EVENT_TYPE</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="66%">
+
+
+<p valign="top">KeyPress</p></td>
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="66%">
+
+
+<p valign="top">KeyRelease</p></td>
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="20%">
+
+
+<p valign="top">4</p></td>
+<td width="66%">
+
+
+<p valign="top">ButtonPress</p></td>
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="20%">
+
+
+<p valign="top">5</p></td>
+<td width="66%">
+
+
+<p valign="top">ButtonRelease</p></td>
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="20%">
+
+
+<p valign="top">6</p></td>
+<td width="66%">
+
+
+<p valign="top">MotionNotify</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">NOTE that the above
+values are defined to be the same as those for the
+corresponding core protocol event types.</p>
+
+<a name="6.2. Requests"></a>
+<h3>6.2. Requests</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestGetVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">xtest opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client major version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client minor version</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server major version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server minor version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">22</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestCompareCursor</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">xtest opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">WINDOW</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">window</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CURSOR</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">cursor-id</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">None</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CurrentCursor</p></td>
+<td width="50%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">cursors are the same</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">24</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestFakeInput</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">xtest opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1+(1*8)</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">FAKE_EVENT_TYPE</p></td>
+<td width="20%"></td>
+<td width="50%">
+
+
+<p valign="top">fake device event type</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BYTE</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">detail: button or keycode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">TIMESTAMP</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">delay (milliseconds)</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">CurrentTime</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">WINDOW</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">root window for MotionNotify</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">None</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">8</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">INT16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">x position for MotionNotify</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">INT16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">y position for MotionNotify</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">8</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestGrabControl</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">xtest opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">impervious</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<a name="7. References"></a>
+<h2>7. References</h2>
+
+
+<p style="margin-left:25%; margin-top: 1em">Annicchiarico,
+D., et al., <i>XTrap: The XTrap Architecture</i>. Digital
+Equipment Corporation, July 1991.</p>
+
+<p style="margin-left:25%; margin-top: 1em">Drake, K. J.,
+<i>Some Proposals for a Minimum X11 Testing Extension</i>.
+UniSoft Ltd., June 1991.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729546" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

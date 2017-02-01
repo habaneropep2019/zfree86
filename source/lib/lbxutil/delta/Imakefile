@@ -1,0 +1,17 @@
+XCOMM $XFree86: xc/lib/lbxutil/delta/Imakefile,v 1.2 2005/10/14 15:16:07 tsi Exp $
+
+#define IncSubdir X11
+#include <Library.tmpl>
+
+SRCS = lbxdelta.c
+
+OBJS = lbxdelta.o
+
+INCLUDES = -I$(SERVERSRC)/include
+
+SubdirLibraryRule($(OBJS))
+NormalLibraryObjectRule()
+NormalLintTarget($(SRCS))
+
+DependTarget()
+

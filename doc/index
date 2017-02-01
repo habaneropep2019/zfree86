@@ -1,0 +1,98 @@
+                  Documentation for XFree86® version 4.8.0
+
+                          The XFree86 Project, Inc
+
+                                 August 2007
+
+   o README for XFree86® 4.8.0  [PDF]
+
+   o Release Notes for XFree86® 4.8.0  [PDF]
+
+   o Licenses [PDF]
+
+   o Installation Details for XFree86® 4.8.0  [PDF]
+
+   o Building XFree86® from a Source Distribution  [PDF]
+
+   o XFree86® server 4.x Design (DRAFT)  [PDF]
+
+   o XFree86® Version Numbering Schemes  [PDF]
+
+   o Mouse Support in XFree86®  [PDF]
+
+   o Fonts in XFree86  [PDF]
+
+   o DRI User Guide  [PDF]
+
+   o DRI Compilation Guide  [PDF]
+
+   o XFree86® and DPS  [PDF]
+
+   o The XKB Configuration Guide  [PDF]
+
+   o How to further enhance XKB configuration  [PDF]
+
+   o XFree86® on Darwin and Mac OS X  [PDF]
+
+   o Information for ISC Users  [PDF]
+
+   o README for XFree86® 4.8.0 on LynxOS  [PDF]
+
+   o README for XFree86® 4.8.0 on NetBSD  [PDF]
+
+   o README for XFree86® 4.8.0 on OpenBSD  [PDF]
+
+   o Notes on Rebuilding XFree86®/OS2 from Scratch  [PDF]
+
+   o Information for SCO OpenServer Users  [PDF]
+
+   o Information for Solaris  [PDF]
+
+   o Distributed Multihead X design  [PDF]
+
+   o Scaled Window Support in DMX [PDF]
+
+   o Information for Alliance Promotion chipset users  [PDF]
+
+   o ATI Adapters README file  [PDF]
+
+   o Information for Chips and Technologies Users  [PDF]
+
+   o Information for Cyrix Chipset Users  [PDF]
+
+   o Information for DEC 21030 Users (aka TGA)  [PDF]
+
+   o Information for Number Nine I128 Users  [PDF]
+
+   o Information for i740 Users  [PDF]
+
+   o Information for i810 Users  [PDF]
+
+   o Information for newport Users  [PDF]
+
+   o Information for ATI Rage 128 Users  [PDF]
+
+   o Information for Rendition (Micron) Verité Users  [PDF]
+
+   o Information for S3 ViRGE Users  [PDF]
+
+   o Information for SiS Users  [PDF]
+
+Manual pages:
+
+   o Section 1: Commands
+
+   o Section 3: Library Functions
+
+   o Section 4: Drivers
+
+   o Section 5: Files and file formats
+
+   o Section 7: Miscellaneous
+
+Other:
+
+   o Specification and Related Documents
+
+XFree86 is a registered trademark of The XFree86 Project, Inc.
+

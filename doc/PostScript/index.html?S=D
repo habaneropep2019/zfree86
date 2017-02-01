@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+ <HEAD>
+  <TITLE>Index of /pub/XFree86/4.8.0/doc/PostScript</TITLE>
+ </HEAD>
+ <BODY>
+<H1>Index of /pub/XFree86/4.8.0/doc/PostScript</H1>
+<PRE><IMG SRC="http://geocities.com/icons/blank.gif" ALT="     "> <A HREF="?N=A">Name</A>                    <A HREF="?M=A">Last modified</A>       <A HREF="?S=A">Size</A>  <A HREF="?D=A">Description</A>
+<HR>
+<IMG SRC="http://geocities.com/icons/back.gif" ALT="[DIR]"> <A HREF="/pub/XFree86/4.8.0/doc/">Parent Directory</A>        23-Mar-2016 12:23      -  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="man.ps">man.ps</A>                  29-Dec-2008 09:58   2.4M  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xlib.ps">xlib.ps</A>                 29-Dec-2008 09:57   2.2M  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XKBlib.ps">XKBlib.ps</A>               29-Dec-2008 09:58   1.6M  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="intrinsics.ps">intrinsics.ps</A>           29-Dec-2008 09:58   1.4M  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XKBproto.ps">XKBproto.ps</A>             29-Dec-2008 09:58   979k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="proto.ps">proto.ps</A>                29-Dec-2008 09:57   789k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="widgets.ps">widgets.ps</A>              29-Dec-2008 09:57   716k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ctlseqs.ps">ctlseqs.ps</A>              29-Dec-2008 09:58   706k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DESIGN.ps">DESIGN.ps</A>               29-Dec-2008 09:49   389k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="icccm.ps">icccm.ps</A>                29-Dec-2008 09:57   367k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XiLib.ps">XiLib.ps</A>                29-Dec-2008 09:58   335k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ddx.ps">ddx.ps</A>                  29-Dec-2008 09:58   309k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xp_library.ps">xp_library.ps</A>           29-Dec-2008 09:58   296k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XiProtocol.ps">XiProtocol.ps</A>           29-Dec-2008 09:58   249k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xp_proto.ps">xp_proto.ps</A>             29-Dec-2008 09:58   231k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xpm.ps">xpm.ps</A>                  29-Dec-2008 09:58   222k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="sync.ps">sync.ps</A>                 29-Dec-2008 09:58   217k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="analysis.ps">analysis.ps</A>             29-Dec-2008 09:58   216k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xim.ps">xim.ps</A>                  29-Dec-2008 09:57   211k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="dmx.ps">dmx.ps</A>                  29-Dec-2008 09:49   209k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="security.ps">security.ps</A>             29-Dec-2008 09:57   205k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="dbe.ps">dbe.ps</A>                  29-Dec-2008 09:57   198k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ICElib.ps">ICElib.ps</A>               29-Dec-2008 09:57   178k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="synclib.ps">synclib.ps</A>              29-Dec-2008 09:58   174k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="dbelib.ps">dbelib.ps</A>               29-Dec-2008 09:57   173k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="fsproto.ps">fsproto.ps</A>              29-Dec-2008 09:57   168k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="SMlib.ps">SMlib.ps</A>                29-Dec-2008 09:57   154k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xlfd.ps">xlfd.ps</A>                 29-Dec-2008 09:57   151k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="LICENSE.ps">LICENSE.ps</A>              29-Dec-2008 09:49   142k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="RX.ps">RX.ps</A>                   29-Dec-2008 09:58   117k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xmu.ps">xmu.ps</A>                  29-Dec-2008 09:58   116k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="secint.ps">secint.ps</A>               29-Dec-2008 09:58   111k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ice.ps">ice.ps</A>                  29-Dec-2008 09:57    97k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xdmcp.ps">xdmcp.ps</A>                29-Dec-2008 09:57    97k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="fonts.ps">fonts.ps</A>                29-Dec-2008 09:49    93k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DRI.ps">DRI.ps</A>                  29-Dec-2008 09:49    88k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xsmp.ps">xsmp.ps</A>                 29-Dec-2008 09:57    85k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="chips.ps">chips.ps</A>                29-Dec-2008 09:48    83k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="record.ps">record.ps</A>               29-Dec-2008 09:57    79k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="buffer.ps">buffer.ps</A>               29-Dec-2008 09:57    77k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="recordlib.ps">recordlib.ps</A>            29-Dec-2008 09:57    72k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="i18nFramework.ps">i18nFramework.ps</A>        29-Dec-2008 09:58    71k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="mouse.ps">mouse.ps</A>                29-Dec-2008 09:49    70k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xfs-design.ps">xfs-design.ps</A>           29-Dec-2008 09:58    69k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XiPorting.ps">XiPorting.ps</A>            29-Dec-2008 09:58    68k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ati.ps">ati.ps</A>                  29-Dec-2008 09:48    65k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="RELNOTES.ps">RELNOTES.ps</A>             29-Dec-2008 09:49    63k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="rstart.ps">rstart.ps</A>               29-Dec-2008 09:58    58k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XIMTransport.ps">XIMTransport.ps</A>         29-Dec-2008 09:58    53k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="shape.ps">shape.ps</A>                29-Dec-2008 09:57    52k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="Xtrans.ps">Xtrans.ps</A>               29-Dec-2008 09:58    50k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="scaled.ps">scaled.ps</A>               29-Dec-2008 09:49    48k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XKB-Enhancing.ps">XKB-Enhancing.ps</A>        29-Dec-2008 09:49    44k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DRIcomp.ps">DRIcomp.ps</A>              29-Dec-2008 09:49    44k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="shapelib.ps">shapelib.ps</A>             29-Dec-2008 09:57    39k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="Install.ps">Install.ps</A>              29-Dec-2008 09:49    39k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="ctext.ps">ctext.ps</A>                29-Dec-2008 09:57    37k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="NetBSD.ps">NetBSD.ps</A>               29-Dec-2008 09:48    34k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="isc.ps">isc.ps</A>                  29-Dec-2008 09:48    33k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="OpenBSD.ps">OpenBSD.ps</A>              29-Dec-2008 09:48    30k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xtestlib.ps">xtestlib.ps</A>             29-Dec-2008 09:58    29k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="fontlib.ps">fontlib.ps</A>              29-Dec-2008 09:58    28k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xtest.ps">xtest.ps</A>                29-Dec-2008 09:58    28k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DPMS.ps">DPMS.ps</A>                 29-Dec-2008 09:57    27k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="LocaleDB.ps">LocaleDB.ps</A>             29-Dec-2008 09:58    27k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="Versions.ps">Versions.ps</A>             29-Dec-2008 09:49    26k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="mit-shm.ps">mit-shm.ps</A>              29-Dec-2008 09:57    25k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="BUILD.ps">BUILD.ps</A>                29-Dec-2008 09:49    25k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="Darwin.ps">Darwin.ps</A>               29-Dec-2008 09:48    25k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="tog-cup.ps">tog-cup.ps</A>              29-Dec-2008 09:58    25k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="LynxOS.ps">LynxOS.ps</A>               29-Dec-2008 09:48    24k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DPMSLib.ps">DPMSLib.ps</A>              29-Dec-2008 09:57    23k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="Solaris.ps">Solaris.ps</A>              29-Dec-2008 09:48    23k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="OS2Notes.ps">OS2Notes.ps</A>             29-Dec-2008 09:48    23k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="evi.ps">evi.ps</A>                  29-Dec-2008 09:57    21k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="SiS.ps">SiS.ps</A>                  29-Dec-2008 09:49    21k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="XKB-Config.ps">XKB-Config.ps</A>           29-Dec-2008 09:49    20k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="dps.ps">dps.ps</A>                  29-Dec-2008 09:49    20k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="SCO.ps">SCO.ps</A>                  29-Dec-2008 09:48    20k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="bdf.ps">bdf.ps</A>                  29-Dec-2008 09:57    19k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="appgroup.ps">appgroup.ps</A>             29-Dec-2008 09:58    19k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="rendition.ps">rendition.ps</A>            29-Dec-2008 09:49    17k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="xc-misc.ps">xc-misc.ps</A>              29-Dec-2008 09:58    15k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="bigreq.ps">bigreq.ps</A>               29-Dec-2008 09:57    15k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="i740.ps">i740.ps</A>                 29-Dec-2008 09:48    14k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="i810.ps">i810.ps</A>                 29-Dec-2008 09:48    13k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="apm.ps">apm.ps</A>                  29-Dec-2008 09:48    13k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="r128.ps">r128.ps</A>                 29-Dec-2008 09:49    12k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="I128.ps">I128.ps</A>                 29-Dec-2008 09:48    12k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="s3virge.ps">s3virge.ps</A>              29-Dec-2008 09:49    11k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="newport.ps">newport.ps</A>              29-Dec-2008 09:49    10k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="DECtga.ps">DECtga.ps</A>               29-Dec-2008 09:48    10k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="index.ps">index.ps</A>                29-Dec-2008 09:49    10k  
+<IMG SRC="http://geocities.com/icons/a.gif" ALT="[   ]"> <A HREF="cyrix.ps">cyrix.ps</A>                29-Dec-2008 09:48     9k  
+</PRE><HR>
+</BODY></HTML>

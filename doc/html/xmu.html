@@ -1,0 +1,5862 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:23:51 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Introduction">1. Introduction</a><br>
+<a href="#2. Atom Functions">2. Atom Functions</a><br>
+<a href="#3. Error Handler Functions">3. Error Handler Functions</a><br>
+<a href="#4. System Utility Functions">4. System Utility Functions</a><br>
+<a href="#5. Window Utility Functions">5. Window Utility Functions</a><br>
+<a href="#6. Cursor Utility Functions">6. Cursor Utility Functions</a><br>
+<a href="#7. Graphics Functions">7. Graphics Functions</a><br>
+<a href="#8. Selection Functions">8. Selection Functions</a><br>
+<a href="#9. Type Converter Functions">9. Type Converter Functions</a><br>
+<a href="#10. Character Set Functions">10. Character Set Functions</a><br>
+<a href="#11. Compound Text Functions">11. Compound Text Functions</a><br>
+<a href="#12. CloseDisplay Hook Functions">12. CloseDisplay Hook Functions</a><br>
+<a href="#13. Display Queue Functions">13. Display Queue Functions</a><br>
+<a href="#14. Toolkit Convenience Functions">14. Toolkit Convenience Functions</a><br>
+<a href="#15. Standard Colormap Functions">15. Standard Colormap Functions</a><br>
+<a href="#16. Widget Description Functions">16. Widget Description Functions</a><br>
+<a href="#17. Participation in the Editres Protocol">17. Participation in the Editres Protocol</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Xmu
+Library</b> <small><br>
+X Version 11, Release 6.4</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>&lsquo;&lsquo;<i>Don&rsquo;t
+ask.</i>&rsquo;&rsquo;</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Copyright
+&copy; 1989 X Consortium</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>The above
+copyright notice and this permission notice shall be
+included in all copies or substantial portions of the
+Software.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>THE SOFTWARE
+IS PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Except as
+contained in this notice, the name of the X Consortium shall
+not be used in advertising or otherwise to promote the sale,
+use or other dealings in this Software without prior written
+authorization from the X Consortium.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><i>X Window
+System</i> is a trademark of X Consortium, Inc.</small></p>
+
+<a name="1. Introduction"></a>
+<h2>1. Introduction</h2>
+
+
+<p style="margin-top: 1em" valign="top">The Xmu Library is
+a collection of miscellaneous (some might say random)
+utility functions that have been useful in building various
+applications and widgets. This library is required by the
+Athena Widgets.</p>
+
+<a name="2. Atom Functions"></a>
+<h2>2. Atom Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">The use the
+functions and macros defined in this section, you should
+include the header file &lt;<i>X11/Xmu/Atoms.h</i>&gt;. <br>
+XA_ATOM_PAIR(<i>d</i>) <br>
+XA_CHARACTER_POSITION(<i>d</i>) <br>
+XA_CLASS(<i>d</i>) <br>
+XA_CLIENT_WINDOW(<i>d</i>) <br>
+XA_CLIPBOARD(<i>d</i>) <br>
+XA_COMPOUND_TEXT(<i>d</i>) <br>
+XA_DECNET_ADDRESS(<i>d</i>) <br>
+XA_DELETE(<i>d</i>) <br>
+XA_FILENAME(<i>d</i>) <br>
+XA_HOSTNAME(<i>d</i>) <br>
+XA_IP_ADDRESS(<i>d</i>) <br>
+XA_LENGTH(<i>d</i>) <br>
+XA_LIST_LENGTH(<i>d</i>) <br>
+XA_NAME(<i>d</i>) <br>
+XA_NET_ADDRESS(<i>d</i>) <br>
+XA_NULL(<i>d</i>) <br>
+XA_OWNER_OS(<i>d</i>) <br>
+XA_SPAN(<i>d</i>) <br>
+XA_TARGETS(<i>d</i>) <br>
+XA_TEXT(<i>d</i>) <br>
+XA_TIMESTAMP(<i>d</i>) <br>
+XA_USER(<i>d</i>) <br>
+XA_UTF8_STRING(<i>d</i>)</p>
+
+<p style="margin-top: 1em" valign="top">These macros take a
+display as argument and return an <i>Atom</i>. The name of
+the atom is obtained from the macro name by removing the
+leading characters &lsquo;&lsquo;XA_&rsquo;&rsquo;. The
+<i>Atom</i> value is cached, such that subsequent requests
+do not cause another round-trip to the server. <br>
+AtomPtr XmuMakeAtom(<i>name</i>) <br>
+char* <i>name</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>name</i></p></td>
+<td width="12%"></td>
+<td width="46%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the atom
+name</p> </td>
+<td width="34%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates and initializes an opaque object, an <i>AtomPtr</i>,
+for an <i>Atom</i> with the given name. <i>XmuInternAtom</i>
+can be used to cache the Atom value for one or more
+displays. <br>
+char *XmuNameOfAtom(<i>atom_ptr</i>) <br>
+AtomPtr <i>atom_ptr</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>atom_ptr</i></p> </td>
+<td width="4%"></td>
+<td width="42%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+AtomPtr</p> </td>
+<td width="38%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The function
+returns the name of an AtomPtr. <br>
+Atom XmuInternAtom(<i>d</i>, <i>atom_ptr</i>) <br>
+Display *<i>d</i>; <br>
+AtomPtr <i>atom_ptr</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>d</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>atom_ptr</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+AtomPtr</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+returns the <i>Atom</i> for an <i>AtomPtr</i>. The
+<i>Atom</i> is cached, such that subsequent requests do not
+cause another round-trip to the server. <br>
+char *XmuGetAtomName(<i>d</i>, <i>atom</i>) <br>
+Display *<i>d</i>; <br>
+Atom <i>atom</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>d</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>atom</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the atom
+whose name is desired</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+returns the name of an <i>Atom</i>. The result is cached,
+such that subsequent requests do not cause another
+round-trip to the server. <br>
+void XmuInternStrings(<i>d</i>, <i>names</i>, <i>count</i>,
+<i>atoms</i>) <br>
+Display *<i>d</i>; <br>
+String *<i>names</i>; <br>
+Cardinal <i>count</i>; <br>
+Atom *<i>atoms</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>d</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>names</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+strings to intern</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>count</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+number of strings</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>atoms</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the list of
+Atom values</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a list of atom names into <i>Atom</i> values. The
+results are cached, such that subsequent requests do not
+cause further round-trips to the server. The caller is
+responsible for preallocating the array pointed at by
+atoms.</p>
+
+<a name="3. Error Handler Functions"></a>
+<h2>3. Error Handler Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/Error.h</i>&gt;. <br>
+int XmuPrintDefaultErrorMessage(<i>dpy</i>, <i>event</i>,
+<i>fp</i>) <br>
+Display *<i>dpy</i>; <br>
+XErrorEvent *<i>event</i>; <br>
+FILE *<i>fp</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+error</p> </td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fp</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies where to
+print the error message</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+prints an error message, equivalent to Xlib&rsquo;s default
+error message for protocol errors. It returns a non-zero
+value if the caller should consider exiting, otherwise it
+returns 0. This function can be used when you need to write
+your own error handler, but need to print out an error from
+within that handler. <br>
+int XmuSimpleErrorHandler(<i>dpy</i>, <i>errorp</i>) <br>
+Display *<i>dpy</i>; <br>
+XErrorEvent *<i>errorp</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>errorp</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+error</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+ignores errors for <i>BadWindow</i> errors for
+<i>XQueryTree</i> and <i>XGetWindowAttributes</i>, and
+ignores <i>BadDrawable</i> errors for <i>XGetGeometry</i>;
+it returns 0 in those cases. Otherwise, it prints the
+default error message, and returns a non-zero value if the
+caller should consider exiting, and 0 if the caller should
+not exit.</p>
+
+<a name="4. System Utility Functions"></a>
+<h2>4. System Utility Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/SysUtil.h</i>&gt;. <br>
+int XmuGetHostname(<i>buf</i>, <i>maxlen</i>) <br>
+char *<i>buf</i>; <br>
+int <i>maxlen</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buf</i></p></td>
+<td width="8%"></td>
+<td width="54%">
+
+
+<p style="margin-top: 1em" valign="top">returns the host
+name</p> </td>
+<td width="26%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>maxlen</i></p></td>
+<td width="8%"></td>
+<td width="54%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of buf</p></td>
+<td width="26%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+stores the null terminated name of the local host in buf,
+and returns length of the name. This function hides
+operating system differences, such as whether to call
+gethostname or uname.</p>
+
+<a name="5. Window Utility Functions"></a>
+<h2>5. Window Utility Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/WinUtil.h</i>&gt;. <br>
+Screen *XmuScreenOfWindow(<i>dpy</i>, <i>w</i>) <br>
+Display *<i>dpy</i>; <br>
+Window <i>w</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="14%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>w</i></p></td>
+<td width="14%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+window</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+returns the <i>Screen</i> on which the specified window was
+created. <br>
+Window XmuClientWindow(<i>dpy</i>, <i>win</i>) <br>
+Display *<i>dpy</i>; <br>
+Window <i>win</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="14%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>win</i></p></td>
+<td width="14%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+window</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function finds
+a window, at or below the specified window, which has a
+WM_STATE property. If such a window is found, it is
+returned, otherwise the argument window is returned. <br>
+Bool XmuUpdateMapHints(<i>dpy</i>, <i>w</i>, <i>hints</i>)
+<br>
+Display *<i>dpy</i>; <br>
+Window <i>w</i>; <br>
+XSizeHints *<i>hints</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>win</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+window</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p style="margin-top: 1em" valign="top"><i>hints</i></p></td>
+<td width="10%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the new
+hints, or NULL</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+clears the <i>PPosition</i> and <i>PSize</i> flags and sets
+the <i>USPosition</i> and <i>USSize</i> flags in the hints
+structure, and then stores the hints for the window using
+<i>XSetWMNormalHints</i> and returns <i>True</i>. If NULL is
+passed for the hints structure, then the current hints are
+read back from the window using <i>XGetWMNormalHints</i> and
+are used instead, and <i>True</i> is returned; otherwise
+<i>False</i> is returned.</p>
+
+<a name="6. Cursor Utility Functions"></a>
+<h2>6. Cursor Utility Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/CurUtil.h</i>&gt;. <br>
+int XmuCursorNameToIndex(<i>name</i>) <br>
+char *<i>name</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>name</i></p></td>
+<td width="12%"></td>
+<td width="64%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the name
+of the cursor</p></td>
+<td width="16%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function takes
+the name of a standard cursor and returns its index in the
+standard cursor font. The cursor names are formed by
+removing the &lsquo;&lsquo;XC_&rsquo;&rsquo; prefix from the
+cursor defines listed in Appendix B of the Xlib manual.</p>
+
+<a name="7. Graphics Functions"></a>
+<h2>7. Graphics Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/Drawing.h</i>&gt;. <br>
+void XmuDrawRoundedRectangle(<i>dpy</i>, <i>draw</i>,
+<i>gc</i>, <i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>,
+<i>ew</i>, <i>eh</i>) <br>
+Display *<i>dpy</i>; <br>
+Drawable <i>draw</i>; <br>
+GC <i>gc</i>; <br>
+int <i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ew</i>,
+<i>eh</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>draw</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+drawable</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>gc</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+GC</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>x</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left x coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>y</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left y coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>w</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+rectangle width</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>h</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+rectangle height</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>ew</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+corner width</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>eh</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+corner height</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function draws
+a rounded rectangle, where x, y, w, h are the dimensions of
+the overall rectangle, and ew and eh are the sizes of a
+bounding box that the corners are drawn inside of; ew should
+be no more than half of w, and eh should be no more than
+half of h. The current GC line attributes control all
+attributes of the line. <br>
+void XmuFillRoundedRectangle(<i>dpy</i>, <i>draw</i>,
+<i>gc</i>, <i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>,
+<i>ew</i>, <i>eh</i>) <br>
+Display *<i>dpy</i>; <br>
+Drawable <i>draw</i>; <br>
+GC <i>gc</i>; <br>
+int <i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>, <i>ew</i>,
+<i>eh</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>draw</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+drawable</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>gc</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+GC</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>x</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left x coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>y</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left y coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>w</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+rectangle width</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>h</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+rectangle height</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>ew</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+corner width</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>eh</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+corner height</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function draws
+a filled rounded rectangle, where x, y, w, h are the
+dimensions of the overall rectangle, and ew and eh are the
+sizes of a bounding box that the corners are drawn inside
+of; ew should be no more than half of w, and eh should be no
+more than half of h. The current GC fill settings control
+all attributes of the fill contents. <br>
+XmuDrawLogo(<i>dpy</i>, <i>drawable</i>, <i>gcFore</i>,
+<i>gcBack</i>, <i>x</i>, <i>y</i>, <i>width</i>,
+<i>height</i>) <br>
+Display *<i>dpy</i>; <br>
+Drawable <i>drawable</i>; <br>
+GC <i>gcFore</i>, <i>gcBack</i>; <br>
+int <i>x</i>, <i>y</i>; <br>
+unsigned int <i>width</i>, <i>height</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>drawable</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+drawable</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>gcFore</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+foreground GC</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>gcBack</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+background GC</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>x</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left x coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>y</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the upper
+left y coordinate</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>width</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the logo
+width</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>height</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the logo
+height</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function draws
+the &lsquo;&lsquo;official&rsquo;&rsquo; X Window System
+logo. The bounding box of the logo in the drawable is given
+by x, y, width, and height. The logo itself is filled using
+gcFore, and the rest of the rectangle is filled using
+gcBack. <br>
+Pixmap XmuCreateStippledPixmap(<i>screen</i>, <i>fore</i>,
+<i>back</i>, <i>depth</i>) <br>
+Screen *<i>screen</i>; <br>
+Pixel <i>fore</i>, <i>back</i>; <br>
+unsigned int <i>depth</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen the pixmap is created on</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fore</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+foreground pixel value</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>back</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+background pixel value</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>depth</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the depth
+of the pixmap</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates a two pixel by one pixel stippled pixmap of
+specified depth on the specified screen. The pixmap is
+cached so that multiple requests share the same pixmap. The
+pixmap should be freed with <i>XmuReleaseStippledPixmap</i>
+to maintain correct reference counts. <br>
+void XmuReleaseStippledPixmap(<i>screen</i>, <i>pixmap</i>)
+<br>
+Screen *<i>screen</i>; <br>
+Pixmap <i>pixmap</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen the pixmap was created on</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>pixmap</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+pixmap to free</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function frees
+a pixmap created with <i>XmuCreateStippledPixmap</i>. <br>
+int XmuReadBitmapData(<i>fstream</i>, <i>width</i>,
+<i>height</i>, <i>datap</i>, <i>x_hot</i>, <i>y_hot</i>)
+<br>
+FILE *<i>fstream</i>; <br>
+unsigned int *<i>width</i>, *<i>height</i>; <br>
+unsigned char **<i>datap</i>; <br>
+int *<i>x_hot</i>, *<i>y_hot</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>stream</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+stream to read from</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>width</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the width
+of the bitmap</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>height</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the height
+of the bitmap</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>datap</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the parsed
+bitmap data</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>x_hot</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the x
+coordinate of the hotspot</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>y_hot</i></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the y
+coordinate of the hotspot</p></td>
+<td width="2%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function reads
+a standard bitmap file description from the specified
+stream, and returns the parsed data in a format suitable for
+passing to <i>XCreateBitmapFromData</i>. The return value of
+the function has the same interpretation as the return value
+for <i>XReadBitmapFile</i>. <br>
+int XmuReadBitmapDataFromFile(<i>filename</i>, <i>width</i>,
+<i>height</i>, <i>datap</i>, <i>x_hot</i>, <i>y_hot</i>)
+<br>
+char *<i>filename</i>; <br>
+unsigned int *<i>width</i>, *<i>height</i>; <br>
+unsigned char **<i>datap</i>; <br>
+int *<i>x_hot</i>, *<i>y_hot</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>filename</i></p> </td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the file
+to read from</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>width</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the width
+of the bitmap</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>height</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the height
+of the bitmap</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>datap</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the parsed
+bitmap data</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>x_hot</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the x
+coordinate of the hotspot</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>y_hot</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the y
+coordinate of the hotspot</p></td>
+<td width="2%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function reads
+a standard bitmap file description from the specified file,
+and returns the parsed data in a format suitable for passing
+to <i>XCreateBitmapFromData</i>. The return value of the
+function has the same interpretation as the return value for
+<i>XReadBitmapFile</i>. <br>
+Pixmap XmuLocateBitmapFile(<i>screen</i>, <i>name</i>,
+<i>srcname</i>, <i>srcnamelen</i>, <i>widthp</i>,
+<i>heightp</i>, <i>xhotp</i>, <i>yhotp</i>) <br>
+Screen *<i>screen</i>; <br>
+char *<i>name</i>; <br>
+char *<i>srcname</i>; <br>
+int <i>srcnamelen</i>; <br>
+int *<i>widthp</i>, *<i>heightp</i>, *<i>xhotp</i>,
+*<i>yhotp</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen the pixmap is created on</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>name</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the file
+to read from</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>srcname</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the full
+filename of the bitmap</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>srcnamelen</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the srcname buffer</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>width</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the width
+of the bitmap</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>height</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the height
+of the bitmap</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>xhotp</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the x
+coordinate of the hotspot</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>yhotp</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the y
+coordinate of the hotspot</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function reads
+a file in standard bitmap file format, using
+<i>XReadBitmapFile</i>, and returns the created bitmap. The
+filename may be absolute, or relative to the global resource
+named bitmapFilePath with class BitmapFilePath. If the
+resource is not defined, the default value is the build
+symbol BITMAPDIR, which is typically
+&quot;/usr/include/X11/bitmaps&quot;. If srcnamelen is
+greater than zero and srcname is not NULL, the null
+terminated filename will be copied into srcname. The size
+and hotspot of the bitmap are also returned. <br>
+Pixmap XmuCreatePixmapFromBitmap(<i>dpy</i>, <i>d</i>,
+<i>bitmap</i>, <i>width</i>, <i>height</i>, <i>depth</i>,
+<i>fore</i>, <i>back</i>) <br>
+Display *<i>dpy</i>; <br>
+Drawable <i>d</i>; <br>
+Pixmap <i>bitmap</i>; <br>
+unsigned int <i>width</i>, <i>height</i>; <br>
+unsigned int <i>depth</i>; <br>
+unsigned long <i>fore</i>, <i>back</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>d</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen the pixmap is created on</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>bitmap</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+bitmap source</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>width</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the width
+of the pixmap</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>height</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+height of the pixmap</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>depth</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the depth
+of the pixmap</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fore</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+foreground pixel value</p></td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>back</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+background pixel value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates a pixmap of the specified width, height, and depth,
+on the same screen as the specified drawable, and then
+performs an <i>XCopyPlane</i> from the specified bitmap to
+the pixmap, using the specified foreground and background
+pixel values. The created pixmap is returned.</p>
+
+<a name="8. Selection Functions"></a>
+<h2>8. Selection Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/StdSel.h</i>&gt;. <br>
+Boolean XmuConvertStandardSelection(<i>w</i>, <i>time</i>,
+<i>selection</i>, <i>target</i>, <i>type</i>, <i>value</i>,
+<i>length</i>, <i>format</i>) <br>
+Widget <i>w</i>; <br>
+Time <i>time</i>; <br>
+Atom *<i>selection</i>, *<i>target</i>, *<i>type</i>; <br>
+caddr_t *<i>value</i>; <br>
+unsigned long *<i>length</i>; <br>
+int *<i>format</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>w</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget which currently owns the selection</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>time</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the time
+at which the selection was established</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>selection</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>target</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+target type of the selection</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>type</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+property type of the converted value</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>value</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>length</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the number
+of elements in the converted value</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>format</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the size in
+bits of the elements</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts the following standard selections: CLASS,
+CLIENT_WINDOW, DECNET_ADDRESS, HOSTNAME, IP_ADDRESS, NAME,
+OWNER_OS, TARGETS, TIMESTAMP, and USER. It returns
+<i>True</i> if the conversion was successful, else it
+returns <i>False.</i></p>
+
+<a name="9. Type Converter Functions"></a>
+<h2>9. Type Converter Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/Converters.h</i>&gt;. <br>
+void XmuCvtFunctionToCallback(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValue *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">the function to
+convert</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">the place to store
+the converted value</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a callback procedure to a callback list containing
+that procedure, with NULL closure data. To use this
+converter, include the following in your widget&rsquo;s
+ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRCallProc,
+XtRCallback, XmuCvtFunctionToCallback, NULL, 0); <br>
+void XmuCvtStringToBackingStore(<i>args</i>,
+<i>num_args</i>, <i>fromVal</i>, <i>toVal</i>) <br>
+XrmValue *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument must
+be a pointer to a Cardinal containing the value 0</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to a backing-store integer as defined in
+&lt;<i>X11/X.h</i>&gt;. The string &quot;notUseful&quot;
+converts to <i>NotUseful</i>, &quot;whenMapped&quot;
+converts to <i>WhenMapped</i>, and &quot;always&quot;
+converts to <i>Always</i>. The string &quot;default&quot;
+converts to the value <i>Always</i>+ <i>WhenMapped</i>+
+<i>NotUseful</i>. The case of the string does not matter. To
+use this converter, include the following in your
+widget&rsquo;s ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRBackingStore, XmuCvtStringToBackingStore, NULL, 0); <br>
+void XmuCvtStringToBitmap(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">the sole argument
+specifies the Screen on which to create the bitmap</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">must be the value
+1</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates a bitmap (a Pixmap of depth one) suitable for window
+manager icons. The string argument is the name of a file in
+standard bitmap file format. For the possible filename
+specifications, see <i>XmuLocateBitmapFile</i>. To use this
+converter, include the following in your widget&rsquo;s
+ClassInitialize procedure:</p>
+
+<p style="margin-top: 1em" valign="top">static
+XtConvertArgRec screenConvertArg[] = { <br>
+{XtBaseOffset, (XtPointer)XtOffset(Widget, core.screen),
+sizeof(Screen *)} <br>
+};</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRBitmap, XmuCvtStringToBitmap,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">screenConvertArg,
+XtNumber(screenConvertArg));</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p valign="top">Boolean
+XmuCvtStringToColorCursor(<i>dpy</i>, <i>args</i>,
+<i>num_args</i>, <i>fromVal</i>, <i>toVal</i>, <i>data</i>)
+<br>
+Display * <i>dpy</i>; <br>
+XrmValuePtr <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>; <br>
+XtPointer * <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+display to use for conversion warnings</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+required conversion arguments</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+number of required conversion arguments, which is 4</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to a <i>Cursor</i> with the foreground and
+background pixels specified by the conversion arguments. The
+string can either be a standard cursor name formed by
+removing the &lsquo;&lsquo;XC_&rsquo;&rsquo; prefix from any
+of the cursor defines listed in Appendix B of the Xlib
+Manual, a font name and glyph index in decimal of the form
+&quot;FONT fontname index [[font] index]&quot;, or a bitmap
+filename acceptable to <i>XmuLocateBitmapFile</i>. To use
+this converter, include the following in the widget
+ClassInitialize procedure:</p>
+
+<p style="margin-top: 1em" valign="top">static
+XtConvertArgRec colorCursorConvertArgs[] = { <br>
+{XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec,
+core.screen), <br>
+sizeof(Screen *)}, <br>
+{XtResourceString, (XtPointer) XtNpointerColor,
+sizeof(Pixel)}, <br>
+{XtResourceString, (XtPointer) XtNpointerColorBackground,
+sizeof(Pixel)}, <br>
+{XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec,
+core.colormap), <br>
+sizeof(Colormap)} <br>
+};</p>
+
+
+<p style="margin-top: 1em" valign="top">XtSetTypeConverter(XtRString,
+XtRColorCursor, XmuCvtStringToColorCursor,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">colorCursorConvertArgs,
+XtNumber(colorCursorConvertArgs),</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p valign="top">XtCacheByDisplay, NULL); The widget must
+recognize XtNpointerColor and XtNpointerColorBackground as
+resources, or specify other appropriate foreground and
+background resources. The widget&rsquo;s Realize and
+SetValues methods must cause the converter to be invoked
+with the appropriate arguments when one of the foreground,
+background, or cursor resources has changed, or when the
+window is created, and must assign the cursor to the window
+of the widget. <br>
+void XmuCvtStringToCursor(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+required conversion argument, the screen</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+number of required conversion arguments, which is 1</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to a <i>Cursor</i>. The string can either
+be a standard cursor name formed by removing the
+&lsquo;&lsquo;XC_&rsquo;&rsquo; prefix from any of the
+cursor defines listed in Appendix B of the Xlib Manual, a
+font name and glyph index in decimal of the form &quot;FONT
+fontname index [[font] index]&quot;, or a bitmap filename
+acceptable to <i>XmuLocateBitmapFile</i>. To use this
+converter, include the following in your widget&rsquo;s
+ClassInitialize procedure:</p>
+
+<p style="margin-top: 1em" valign="top">static
+XtConvertArgRec screenConvertArg[] = { <br>
+{XtBaseOffset, (XtPointer)XtOffsetOf(WidgetRec,
+core.screen), sizeof(Screen *)} <br>
+};</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRCursor, XmuCvtStringToCursor,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">screenConvertArg,
+XtNumber(screenConvertArg));</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p valign="top">void XmuCvtStringToGravity(<i>args</i>,
+<i>num_args</i>, <i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument must
+be a pointer to a Cardinal containing the value 0</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an <i>XtGravity</i> enumeration value.
+The string &quot;forget&quot; and a NULL value convert to
+<i>ForgetGravity</i>, &quot;NorthWestGravity&quot; converts
+to <i>NorthWestGravity</i>, the strings
+&quot;NorthGravity&quot; and &quot;top&quot; convert to
+<i>NorthGravity</i>, &quot;NorthEastGravity&quot; converts
+to <i>NorthEastGravity</i>, the strings &quot;West&quot; and
+&quot;left&quot; convert to <i>WestGravity</i>,
+&quot;CenterGravity&quot; converts to <i>CenterGravity</i>,
+&quot;EastGravity&quot; and &quot;right&quot; convert to
+<i>EastGravity</i>, &quot;SouthWestGravity&quot; converts to
+<i>SouthWestGravity</i>, &quot;SouthGravity&quot; and
+&quot;bottom&quot; convert to <i>SouthGravity</i>,
+&quot;SouthEastGravity&quot; converts to
+<i>SouthEastGravity</i>, &quot;StaticGravity&quot; converts
+to <i>StaticGravity</i>, and &quot;UnmapGravity&quot;
+converts to <i>UnmapGravity</i>. The case of the string does
+not matter. To use this converter, include the following in
+your widget&rsquo;s class initialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRGravity, XmuCvtStringToGravity, NULL, 0); <br>
+void XmuCvtStringToJustify(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<td width="18%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an <i>XtJustify</i> enumeration value.
+The string &quot;left&quot; converts to
+<i>XtJustifyLeft</i>, &quot;center&quot; converts to
+<i>XtJustifyCenter</i>, and &quot;right&quot; converts to
+<i>XtJustifyRight</i>. The case of the string does not
+matter. To use this converter, include the following in your
+widget&rsquo;s ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRJustify, XmuCvtStringToJustify, NULL, 0); <br>
+void XmuCvtStringToLong(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument must
+be a pointer to a Cardinal containing 0</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an integer of type long. It parses the
+string using <i>sscanf</i> with a format of &quot;%ld&quot;.
+To use this converter, include the following in your
+widget&rsquo;s ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRLong, XmuCvtStringToLong, NULL, 0); <br>
+void XmuCvtStringToOrientation(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<td width="18%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an <i>XtOrientation</i> enumeration
+value. The string &quot;horizontal&quot; converts to
+<i>XtorientHorizontal</i> and &quot;vertical&quot; converts
+to <i>XtorientVertical</i>. The case of the string does not
+matter. To use this converter, include the following in your
+widget&rsquo;s ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtROrientation, XmuCvtStringToOrientation, NULL, 0); <br>
+Boolean XmuCvtStringToShapeStyle(<i>dpy</i>, <i>args</i>,
+<i>num_args</i>, <i>from</i>, <i>toVal</i>, data) <br>
+Display *<i>dpy</i>; <br>
+XrmValue *<i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValue *<i>from</i>; <br>
+XrmValue *<i>toVal</i>; <br>
+XtPointer *<i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">the display to use
+for conversion warnings</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">the value to
+convert from</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">the place to store
+the converted value</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an integer shape style. The string
+&quot;rectangle&quot; converts to <i>XmuShapeRectangle</i>,
+&quot;oval&quot; converts to <i>XmuShapeOval</i>,
+&quot;ellipse&quot; converts to <i>XmuShapeEllipse</i>, and
+&quot;roundedRectangle&quot; converts to
+<i>XmuShapeRoundedRectangle</i>. The case of the string does
+not matter. To use this converter, include the following in
+your widget&rsquo;s ClassInitialize procedure:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtSetTypeConverter(XtRString,
+XtRShapeStyle, XmuCvtStringToShapeStyle,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">NULL, 0, XtCacheNone, NULL);</p></td>
+<td width="70%">
+</td>
+</table>
+
+<p valign="top">Boolean XmuReshapeWidget(w,
+<i>shape_style</i>, <i>corner_width</i>,
+<i>corner_height</i>) <br>
+Widget <i>w</i>; <br>
+int <i>shape_style</i>; <br>
+int <i>corner_width</i>, <i>corner_height</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top"><i>w</i></p></td>
+<td width="18%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget to reshape</p></td>
+<td width="18%">
+</td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>shape_style</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="46%">
+
+
+<p valign="top">specifies the new shape</p></td>
+<td width="34%">
+</td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>corner_width</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">specifies the width of the rounded
+rectangle corner</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>corner_height</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">specified the height of the rounded
+rectangle corner</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+reshapes the specified widget, using the Shape extension, to
+a rectangle, oval, ellipse, or rounded rectangle, as
+specified by shape_style ( <i>XmuShapeRectangle</i>,
+<i>XmuShapeOval</i>, <i>XmuShapeEllipse</i>, and
+<i>XmuShapeRoundedRectangle</i>, respectively). The shape is
+bounded by the outside edges of the rectangular extents of
+the widget. If the shape is a rounded rectangle,
+corner_width and corner_height specify the size of the
+bounding box that the corners are drawn inside of (see
+<i>XmuFillRoundedRectangle</i>); otherwise, corner_width and
+corner_height are ignored. The origin of the widget within
+its parent remains unchanged. <br>
+void XmuCvtStringToWidget(<i>args</i>, <i>num_args</i>,
+<i>fromVal</i>, <i>toVal</i>) <br>
+XrmValuePtr <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValuePtr <i>fromVal</i>; <br>
+XrmValuePtr <i>toVal</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">this sole argument
+is the parent Widget</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">this argument must
+be 1</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<td width="2%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<td width="2%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+converts a string to an immediate child widget of the parent
+widget passed as an argument. Note that this converter only
+works for child widgets that have already been created;
+there is no lazy evaluation. The string is first compared
+against the names of the normal and popup children, and if a
+match is found the corresponding child is returned. If no
+match is found, the string is compared against the classes
+of the normal and popup children, and if a match is found
+the corresponding child is returned. The case of the string
+is significant. To use this converter, include the following
+in your widget&rsquo;s ClassInitialize procedure:</p>
+
+<p style="margin-top: 1em" valign="top">static
+XtConvertArgRec parentCvtArg[] = { <br>
+{XtBaseOffset, (XtPointer)XtOffset(Widget, core.parent),
+sizeof(Widget)}, <br>
+};</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddConverter(XtRString,
+XtRWidget, XmuCvtStringToWidget,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">parentCvtArg, XtNumber(parentCvtArg));</p></td>
+<td width="70%">
+</td>
+</table>
+
+<p valign="top">Boolean XmuNewCvtStringToWidget(<i>dpy</i>,
+<i>args</i>, <i>num_args</i>, <i>fromVal</i>, <i>toVal</i>,
+<i>data</i>) <br>
+Display *<i>dpy</i>; <br>
+XrmValue * <i>args</i>; <br>
+Cardinal *<i>num_args</i>; <br>
+XrmValue * <i>fromVal</i>; <br>
+XrmValue * <i>toVal</i>; <br>
+XtPointer *<i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">the display to use
+for conversion warnings</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>args</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this sole argument
+is the parent Widget</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_args</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument must
+be a pointer to a Cardinal containing the value 1</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>fromVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to convert</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>toVal</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+converted value</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">this argument is
+ignored</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This converter is
+identical in functionality to XmuCvtStringToWidget, except
+that it is a new-style converter, allowing the specification
+of a cache type at the time of registration. Most widgets
+will not cache the conversion results, as the application
+may dynamically create and destroy widgets, which would
+cause cached values to become illegal. To use this
+converter, include the following in the widget&rsquo;s class
+initialize procedure:</p>
+
+<p style="margin-top: 1em" valign="top">static
+XtConvertArgRec parentCvtArg[] = { <br>
+{XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec,
+core.parent), <br>
+sizeof(Widget)} <br>
+};</p>
+
+
+<p style="margin-top: 1em" valign="top">XtSetTypeConverter(XtRString,
+XtRWidget, XmuNewCvtStringToWidget,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">parentCvtArg, XtNumber(parentCvtArg),
+XtCacheNone, NULL);</p></td>
+<td width="70%">
+</td>
+</table>
+
+<a name="10. Character Set Functions"></a>
+<h2>10. Character Set Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/CharSet.h</i>&gt;.</p>
+
+<p style="margin-top: 1em" valign="top">The functions in
+this section are <b>deprecated</b> because they don&rsquo;t
+work in most locales now supported by X11; the function
+<i>XmbLookupString</i> provides a better alternative. <br>
+void XmuCopyISOLatin1Lowered(<i>dst</i>, <i>src</i>) <br>
+char *<i>dst</i>, *<i>src</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dst</i></p></td>
+<td width="14%"></td>
+<td width="56%">
+
+
+<p style="margin-top: 1em" valign="top">returns the string
+copy</p> </td>
+<td width="24%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>src</i></p></td>
+<td width="14%"></td>
+<td width="56%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to copy</p></td>
+<td width="24%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+copies a null terminated string from src to dst (including
+the null), changing all Latin-1 uppercase letters to
+lowercase. The string is assumed to be encoded using ISO
+8859-1. <br>
+void XmuCopyISOLatin1Uppered(<i>dst</i>, <i>src</i>) <br>
+char *<i>dst</i>, *<i>src</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dst</i></p></td>
+<td width="14%"></td>
+<td width="56%">
+
+
+<p style="margin-top: 1em" valign="top">returns the string
+copy</p> </td>
+<td width="24%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>src</i></p></td>
+<td width="14%"></td>
+<td width="56%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+string to copy</p></td>
+<td width="24%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+copies a null terminated string from src to dst (including
+the null), changing all Latin-1 lowercase letters to
+uppercase. The string is assumed to be encoded using ISO
+8859-1. <br>
+int XmuCompareISOLatin1(<i>first</i>, <i>second</i>) <br>
+char *<i>first</i>, *<i>second</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dst</i></p></td>
+<td width="14%"></td>
+<td width="58%">
+
+
+<p style="margin-top: 1em" valign="top">specifies a string
+to compare</p></td>
+<td width="22%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>src</i></p></td>
+<td width="14%"></td>
+<td width="58%">
+
+
+<p style="margin-top: 1em" valign="top">specifies a string
+to compare</p></td>
+<td width="22%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+compares two null terminated Latin-1 strings, ignoring case
+differences, and returns an integer greater than, equal to,
+or less than 0, according to whether first is
+lexicographically greater than, equal to, or less than
+second. The two strings are assumed to be encoded using ISO
+8859-1. <br>
+int XmuLookupLatin1(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+identical to <i>XLookupString</i>, and exists only for
+naming symmetry with other functions. <br>
+int XmuLookupLatin2(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to an Latin-2 (ISO 8859-2) string, or to an ASCII
+control string. <br>
+int XmuLookupLatin3(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to an Latin-3 (ISO 8859-3) string, or to an ASCII
+control string. <br>
+int XmuLookupLatin4(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to an Latin-4 (ISO 8859-4) string, or to an ASCII
+control string. <br>
+int XmuLookupKana(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a string in an encoding consisting of Latin-1 (ISO
+8859-1) and ASCII control in the Graphics Left half (values
+0 to 127), and Katakana in the Graphics Right half (values
+128 to 255), using the values from JIS X201-1976. <br>
+int XmuLookupJISX0201(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a string in the JIS X0201-1976 encoding, including
+ASCII control. <br>
+int XmuLookupArabic(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a Latin/Arabic (ISO 8859-6) string, or to an ASCII
+control string. <br>
+int XmuLookupCyrillic(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a Latin/Cyrillic (ISO 8859-5) string, or to an
+ASCII control string. <br>
+int XmuLookupGreek(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a Latin/Greek (ISO 8859-7) string, or to an ASCII
+control string. <br>
+int XmuLookupHebrew(<i>event</i>, <i>buffer</i>,
+<i>nbytes</i>, <i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to a Latin/Hebrew (ISO 8859-8) string, or to an ASCII
+control string. <br>
+int XmuLookupAPL(<i>event</i>, <i>buffer</i>, <i>nbytes</i>,
+<i>keysym</i>, <i>status</i>) <br>
+XKeyEvent *<i>event</i>; <br>
+char *<i>buffer</i>; <br>
+int <i>nbytes</i>; <br>
+KeySym *<i>keysym</i>; <br>
+XComposeStatus *<i>status</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>event</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the key
+event</p> </td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>buffer</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+translated characters</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>nbytes</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+length of the buffer</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>keysym</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">returns the
+computed KeySym, or None</p></td>
+<td width="4%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>status</i></p></td>
+<td width="8%"></td>
+<td width="76%">
+
+
+<p style="margin-top: 1em" valign="top">specifies or
+returns the compose state</p></td>
+<td width="4%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function is
+similar to <i>XLookupString</i>, except that it maps a key
+event to an APL string.</p>
+
+<a name="11. Compound Text Functions"></a>
+<h2>11. Compound Text Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">The functions
+defined in this section are for parsing Compound Text
+strings, decomposing them into individual segments.
+Definitions needed to use these routines are in the include
+file &lt;<i>X11/Xmu/Xct.h</i>&gt;.</p>
+
+<p style="margin-top: 1em" valign="top">The functions in
+this section are <b>deprecated</b> because they shift the
+burden for recently introduced locale encodings to the
+application. The use of the <i>UTF8_STRING</i> text encoding
+provides a better alternative.</p>
+
+<p style="margin-top: 1em" valign="top">A Compound Text
+string is represented as the following type:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">typedef unsigned char *XctString;</p></td>
+</table>
+
+<p valign="top">XctData XctCreate(<i>string</i>,
+<i>length</i>, <i>flags</i>) <br>
+XctString <i>string</i>; <br>
+int <i>length</i>; <br>
+XctFlags <i>flags</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>string</i></p></td>
+<td width="8%"></td>
+<td width="58%">
+
+
+<p style="margin-top: 1em" valign="top">the Compound Text
+string</p> </td>
+<td width="22%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>length</i></p></td>
+<td width="8%"></td>
+<td width="58%">
+
+
+<p style="margin-top: 1em" valign="top">the number of bytes
+in string</p></td>
+<td width="22%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>flags</i></p></td>
+<td width="8%"></td>
+<td width="58%">
+
+
+<p style="margin-top: 1em" valign="top">parsing control
+flags</p> </td>
+<td width="22%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates an <i>XctData</i> structure for parsing a Compound
+Text string. The string need not be null terminated. The
+following flags are defined to control parsing of the
+string:</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctSingleSetSegments</i>
+-- This means that returned segments should contain
+characters from only one set (C0, C1, GL, GR). When this is
+requested, <i>XctSegment</i> is never returned by
+<i>XctNextItem</i>, instead <i>XctC0Segment</i>,
+<i>XctC1Segment</i>, <i>XctGlSegment</i>, and
+<i>XctGRSegment</i> are returned. C0 and C1 segments are
+always returned as singleton characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctProvideExtensions</i>
+-- This means that if the Compound Text string is from a
+higher version than this code is implemented to, then
+syntactically correct but unknown control sequences should
+be returned as <i>XctExtension</i> items by
+<i>XctNextItem</i>. If this flag is not set, and the
+Compound Text string version indicates that extensions
+cannot be ignored, then each unknown control sequence will
+be reported as an <i>XctError</i>.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctAcceptC0Extensions</i>
+-- This means that if the Compound Text string is from a
+higher version than this code is implemented to, then
+unknown C0 characters should be treated as if they were
+legal, and returned as C0 characters (regardless of how
+<i>XctProvideExtensions</i> is set) by <i>XctNextItem</i>.
+If this flag is not set, then all unknown C0 characters are
+treated according to <i>XctProvideExtensions</i>.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctAcceptC1Extensions</i>
+-- This means that if the Compound Text string is from a
+higher version than this code is implemented to, then
+unknown C1 characters should be treated as if they were
+legal, and returned as C1 characters (regardless of how
+<i>XctProvideExtensions</i> is set) by <i>XctNextItem</i>.
+If this flag is not set, then all unknown C1 characters are
+treated according to <i>XctProvideExtensions</i>.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctHideDirection</i>
+-- This means that horizontal direction changes should be
+reported as <i>XctHorizontal</i> items by
+<i>XctNextItem</i>. then direction changes are not returned
+as items, but the current direction is still maintained and
+reported for other items. The current direction is given as
+an enumeration, with the values <i>XctUnspecified</i>,
+<i>XctLeftToRight</i>, and <i>XctRightToLeft</i>.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctFreeString</i>
+-- This means that <i>XctFree</i> should free the Compound
+Text string that is passed to <i>XctCreate</i>. If this flag
+is not set, the string is not freed.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctShiftMultiGRToGL</i>
+-- This means that <i>XctNextItem</i> should translate GR
+segments on-the-fly into GL segments for the GR sets:
+GB2312.1980-1, JISX0208.1983-1, and KSC5601.1987-1. <br>
+void XctReset(<i>data</i>) <br>
+XctData <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="12%"></td>
+<td width="74%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+Compound Text structure</p></td>
+<td width="6%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+resets the <i>XctData</i> structure to reparse the Compound
+Text string from the beginning. <br>
+XctResult XctNextItem(<i>data</i>) <br>
+XctData <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="12%"></td>
+<td width="74%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+Compound Text structure</p></td>
+<td width="6%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+parses the next &lsquo;&lsquo;item&rsquo;&rsquo; from the
+Compound Text string. The return value indicates what kind
+of item is returned. The item itself, it&rsquo;s length, and
+the current contextual state, are reported as components of
+the <i>XctData</i> structure. <i>XctResult</i> is an
+enumeration, with the following values:</p>
+
+<p style="margin-top: 1em" valign="top"><i>XctSegment</i>
+-- the item contains some mixture of C0, GL, GR, and C1
+characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctC0Segment</i>
+-- the item contains only C0 characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctGLSegment</i>
+-- the item contains only GL characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctC1Segment</i>
+-- the item contains only C1 characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctGRSegment</i>
+-- the item contains only GR characters.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctExtendedSegment</i>
+-- the item contains an extended segment.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctExtension</i>
+-- the item is an unknown extension control sequence.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctHorizontal</i>
+-- the item indicates a change in horizontal direction or
+depth. The new direction and depth are recorded in the
+<i>XctData</i> structure.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XctEndOfText</i>
+-- The end of the Compound Text string has been reached.</p>
+
+<p style="margin-top: 1em" valign="top"><i>XctError</i> --
+the string contains a syntactic or semantic error; no
+further parsing should be performed.</p>
+
+<p style="margin-top: 1em" valign="top">The following state
+values are stored in the <i>XctData</i> structure:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">XctString item;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the action item */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int item_length;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the length of item in bytes */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int char_size;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the number of bytes per character in</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+</td>
+<td width="40%">
+
+
+<p valign="top">* item, with zero meaning variable */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *encoding;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the XLFD encoding name for item */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">XctHDirection horizontal;/* the direction
+of item */</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int horz_depth;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the current direction nesting depth
+*/</p> </td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *GL;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the &quot;{I} F&quot; string for the
+current GL */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *GL_encoding;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the XLFD encoding name for the current
+GL */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int GL_set_size;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* 94 or 96 */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int GL_char_size;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the number of bytes per GL character
+*/</p> </td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *GR;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the &quot;{I} F&quot; string for the
+current GR */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *GR_encoding;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the XLFD encoding name the for current
+GR */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int GR_set_size;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* 94 or 96 */</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">int GR_char_size;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the number of bytes per GR character
+*/</p> </td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">char *GLGR_encoding;</p></td>
+<td width="40%">
+
+
+<p valign="top">/* the XLFD encoding name for the
+current</p> </td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+</td>
+<td width="40%">
+
+
+<p valign="top">* GL+GR, if known */</p></td>
+</table>
+
+<p valign="top">void XctFree(<i>data</i>) <br>
+XctData <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="12%"></td>
+<td width="74%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+Compound Text structure</p></td>
+<td width="6%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function frees
+all data associated with the <i>XctData</i> structure.</p>
+
+<a name="12. CloseDisplay Hook Functions"></a>
+<h2>12. CloseDisplay Hook Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/CloseHook.h</i>&gt;. <br>
+CloseHook XmuAddCloseDisplayHook(<i>dpy</i>, <i>func</i>,
+<i>arg</i>) <br>
+Display *<i>dpy</i>; <br>
+int (*<i>func</i>)(); <br>
+caddr_t <i>arg</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>func</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+function to call at display close</p></td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>arg</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies arbitrary
+data to pass to func</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function adds
+a callback for the given display. When the display is
+closed, the given function will be called with the given
+display and argument as:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">(*func)(dpy, arg)</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The function is
+declared to return an int even though the value is ignored,
+because some compilers have problems with functions
+returning void.</p>
+
+<p style="margin-top: 1em" valign="top">This routine
+returns NULL if it was unable to add the callback, otherwise
+it returns an opaque handle that can be used to remove or
+lookup the callback. <br>
+Bool XmuRemoveCloseDisplayHook(<i>dpy</i>, <i>handle</i>,
+<i>func</i>, <i>arg</i>) <br>
+Display *<i>dpy</i>; <br>
+CloseHook <i>handle</i>; <br>
+int (*<i>func</i>)(); <br>
+caddr_t <i>arg</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>handle</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+callback by id, or NULL</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>func</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+callback by function</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>arg</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+function data to match</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+deletes a callback that has been added with
+<i>XmuAddCloseDisplayHook</i>. If handle is not NULL, it
+specifies the callback to remove, and the func and arg
+parameters are ignored. If handle is NULL, the first
+callback found to match the specified func and arg will be
+removed. Returns <i>True</i> if a callback was removed, else
+returns <i>False</i>. <br>
+Bool XmuLookupCloseDisplayHook(<i>dpy</i>, <i>handle</i>,
+<i>func</i>, <i>arg</i>) <br>
+Display *<i>dpy</i>; <br>
+CloseHook <i>handle</i>; <br>
+int (*<i>func</i>)(); <br>
+caddr_t <i>arg</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>handle</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+callback by id, or NULL</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>func</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+callback by function</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p style="margin-top: 1em" valign="top"><i>arg</i></p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+function data to match</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+determines if a callback is installed. If handle is not
+NULL, it specifies the callback to look for, and the func
+and arg parameters are ignored. If handle is NULL, the
+function will look for any callback for the specified func
+and arg. Returns <i>True</i> if a matching callback exists,
+else returns <i>False</i>.</p>
+
+<a name="13. Display Queue Functions"></a>
+<h2>13. Display Queue Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions and types defined in this section, you should
+include the header file &lt;<i>X11/Xmu/DisplayQue.h</i>&gt;.
+It defines the following types:</p>
+
+<p style="margin-top: 1em" valign="top">typedef struct
+_XmuDisplayQueueEntry {</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">struct _XmuDisplayQueueEntry *prev,
+*next;</p> </td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">Display *display;</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">CloseHook closehook;</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="50%">
+
+
+<p valign="top">caddr_t data;</p></td>
+<td width="40%">
+</td>
+</table>
+
+<p valign="top">} XmuDisplayQueueEntry;</p>
+
+<p style="margin-top: 1em" valign="top">typedef struct
+_XmuDisplayQueue {</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">int nentries;</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">XmuDisplayQueueEntry *head, *tail;</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">int (*closefunc)();</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">int (*freefunc)();</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">caddr_t data;</p></td>
+</table>
+
+<p valign="top">} XmuDisplayQueue; <br>
+XmuDisplayQueue *XmuDQCreate(<i>closefunc</i>,
+<i>freefunc</i>, <i>data</i>) <br>
+int (*<i>closefunc</i>)(); <br>
+int (*<i>freefunc</i>)(); <br>
+caddr_t <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>closefunc</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the close
+function</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>freefunc</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the free
+function</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies private
+data for the functions</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+creates and returns an empty <i>XmuDisplayQueue</i> (which
+is really just a set of displays, but is called a queue for
+historical reasons). The queue is initially empty, but
+displays can be added using <i>XmuAddDisplay</i>. The data
+value is simply stored in the queue for use by the closefunc
+and freefunc callbacks. Whenever a display in the queue is
+closed using <i>XCloseDisplay</i>, the closefunc (if
+non-NULL) is called with the queue and the display&rsquo;s
+<i>XmuDisplayQueueEntry</i> as follows:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">(*closefunc)(queue, entry)</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The freeproc (if
+non-NULL) is called whenever the last display in the queue
+is closed, as follows:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">(*freefunc)(queue)</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The application is
+responsible for actually freeing the queue, by calling
+<i>XmuDQDestroy</i>. <br>
+XmuDisplayQueueEntry *XmuDQAddDisplay(<i>q</i>, <i>dpy</i>,
+<i>data</i>) <br>
+XmuDisplayQueue *<i>q</i>; <br>
+Display *<i>dpy</i>; <br>
+caddr_t <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>q</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+queue</p> </td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+display to add</p></td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies private
+data for the free function</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function adds
+the specified display to the queue. If successful, the queue
+entry is returned, otherwise NULL is returned. The data
+value is simply stored in the queue entry for use by the
+queue&rsquo;s freefunc callback. This function does not
+attempt to prevent duplicate entries in the queue; the
+caller should use <i>XmuDQLookupDisplay</i> to determine if
+a display has already been added to a queue. <br>
+XmuDisplayQueueEntry *XmuDQLookupDisplay(<i>q</i>,
+<i>dpy</i>) <br>
+XmuDisplayQueue *<i>q</i>; <br>
+Display *<i>dpy</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>q</i></p></td>
+<td width="14%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+queue</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="14%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+display to lookup</p></td>
+<td width="18%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+returns the queue entry for the specified display, or NULL
+if the display is not in the queue. <br>
+XmuDQNDisplays(<i>q</i>)</p>
+
+<p style="margin-top: 1em" valign="top">This macro returns
+the number of displays in the specified queue. <br>
+Bool XmuDQRemoveDisplay(<i>q</i>, <i>dpy</i>) <br>
+XmuDisplayQueue *<i>q</i>; <br>
+Display *<i>dpy</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>q</i></p></td>
+<td width="14%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+queue</p> </td>
+<td width="18%">
+</td>
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="14%"></td>
+<td width="62%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+display to remove</p></td>
+<td width="18%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+removes the specified display from the specified queue. No
+callbacks are performed. If the display is not found in the
+queue, <i>False</i> is returned, otherwise <i>True</i> is
+returned. <br>
+Bool XmuDQDestroy(<i>q</i>, <i>docallbacks</i>) <br>
+XmuDisplayQueue *<i>q</i>; <br>
+Bool <i>docallbacks</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top"><i>q</i></p></td>
+<td width="18%"></td>
+<td width="60%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the queue
+to destroy</p></td>
+<td width="20%">
+</td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>docallbacks</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">specifies whether close functions should be
+called</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+releases all memory associated with the specified queue. If
+docallbacks is <i>True</i>, then the queue&rsquo;s closefunc
+callback (if non-NULL) is first called for each display in
+the queue, even though <i>XCloseDisplay</i> is not called on
+the display.</p>
+
+<a name="14. Toolkit Convenience Functions"></a>
+<h2>14. Toolkit Convenience Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/Initer.h</i>&gt;. <br>
+void XmuAddInitializer(<i>func</i>, <i>data</i>) <br>
+void (*<i>func</i>)(); <br>
+caddr_t <i>data</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>func</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+procedure to register</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%">
+
+
+<p style="margin-top: 1em" valign="top"><i>data</i></p></td>
+<td width="12%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies private
+data for the procedure</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+registers a procedure, to be invoked the first time
+<i>XmuCallInitializers</i> is called on a given application
+context. The procedure is called with the application
+context and the specified data:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="90%">
+
+
+<p valign="top">(*func)(app_con, data)</p></td>
+</table>
+
+<p valign="top">void XmuCallInitializers(<i>app_con</i>)
+<br>
+XtAppContext <i>app_con</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>app_con</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+application context to initialize</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function calls
+each of the procedures that have been registered with
+<i>XmuAddInitializer</i>, if this is the first time the
+application context has been passed to
+<i>XmuCallInitializers</i>. Otherwise, this function does
+nothing.</p>
+
+<a name="15. Standard Colormap Functions"></a>
+<h2>15. Standard Colormap Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">To use the
+functions defined in this section, you should include the
+header file &lt;<i>X11/Xmu/StdCmap.h</i>&gt;. <br>
+Status XmuAllStandardColormaps(<i>dpy</i>) <br>
+Display *<i>dpy</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="6%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="14%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To create all of
+the appropriate standard colormaps for every visual of every
+screen on a given display, use
+<i>XmuAllStandardColormaps</i>.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+defines and retains as permanent resources all standard
+colormaps which are meaningful for the visuals of each
+screen of the display. It returns 0 on failure, non-zero on
+success. If the property of any standard colormap is already
+defined, this function will redefine it.</p>
+
+<p style="margin-top: 1em" valign="top">This function is
+intended to be used by window managers or a special client
+at the start of a session.</p>
+
+<p style="margin-top: 1em" valign="top">The standard
+colormaps of a screen are defined by properties associated
+with the screen&rsquo;s root window. The property names of
+standard colormaps are predefined, and each property name
+except RGB_DEFAULT_MAP may describe at most one
+colormap.</p>
+
+<p style="margin-top: 1em" valign="top">The standard
+colormaps are: RGB_BEST_MAP, RGB_RED_MAP, RGB_GREEN_MAP,
+RGB_BLUE_MAP, RGB_DEFAULT_MAP, and RGB_GRAY_MAP. Therefore a
+screen may have at most 6 standard colormap properties
+defined.</p>
+
+<p style="margin-top: 1em" valign="top">A standard colormap
+is associated with a particular visual of the screen. A
+screen may have multiple visuals defined, including visuals
+of the same class at different depths. Note that a visual id
+might be repeated for more than one depth, so the visual id
+and the depth of a visual identify the visual. The
+characteristics of the visual will determine which standard
+colormaps are meaningful under that visual, and will
+determine how the standard colormap is defined. Because a
+standard colormap is associated with a specific visual,
+there must be a method of determining which visuals take
+precedence in defining standard colormaps.</p>
+
+<p style="margin-top: 1em" valign="top">The method used
+here is: for the visual of greatest depth, define all
+standard colormaps meaningful to that visual class,
+according to this order of (descending) precedence:
+<i>DirectColor</i>; <i>PseudoColor</i>; <i>TrueColor</i> and
+<i>GrayScale</i>; and finally <i>StaticColor</i> and
+<i>StaticGray</i>.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+allows success, on a per screen basis. For example, if a map
+on screen 1 fails, the maps on screen 0, created earlier,
+will remain. However, none on screen 1 will remain. If a map
+on screen 0 fails, none will remain.</p>
+
+<p style="margin-top: 1em" valign="top">See
+<i>XmuVisualStandardColormaps</i> for which standard
+colormaps are meaningful under these classes of visuals.
+<br>
+Status XmuVisualStandardColormaps(<i>dpy</i>, <i>screen</i>,
+<i>visualid</i>, <i>depth</i>, <i>replace</i>,
+<i>retain</i>) <br>
+Display *<i>dpy</i>; <br>
+int <i>screen</i>; <br>
+VisualID <i>visualid</i>; <br>
+unsigned int <i>depth</i>; <br>
+Bool <i>replace</i>; <br>
+Bool <i>retain</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen of the display</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>visualid</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual type</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>depth</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual depth</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>replace</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies whether
+or not to replace</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>retain</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies whether
+or not to retain</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To create all of
+the appropriate standard colormaps for a given visual on a
+given screen, use <i>XmuVisualStandardColormaps</i>.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+defines all appropriate standard colormap properties for the
+given visual. If replace is <i>True</i>, any previous
+definition will be removed. If retain is <i>True</i>, new
+properties will be retained for the duration of the server
+session. This function returns 0 on failure, non-zero on
+success. On failure, no new properties will be defined, but
+old ones may have been removed if replace was True.</p>
+
+<p style="margin-top: 1em" valign="top">Not all standard
+colormaps are meaningful to all visual classes. This routine
+will check and define the following properties for the
+following classes, provided that the size of the colormap is
+not too small. For <i>DirectColor</i> and
+<i>PseudoColor</i>: RGB_DEFAULT_MAP, RGB_BEST_MAP,
+RGB_RED_MAP, RGB_GREEN_MAP, RGB_BLUE_MAP, and RGB_GRAY_MAP.
+For <i>TrueColor</i> and <i>StaticColor</i>: RGB_BEST_MAP.
+For <i>GrayScale</i> and <i>StaticGray</i>: RGB_GRAY_MAP.
+<br>
+Status XmuLookupStandardColormap(<i>dpy</i>, <i>screen</i>,
+<i>visualid</i>, <i>depth</i>, <i>property</i>,
+<i>replace</i>, <i>retain</i>) <br>
+Display *<i>dpy</i>; <br>
+int <i>screen</i>; <br>
+VisualID <i>visualid</i>; <br>
+unsigned int <i>depth</i>; <br>
+Atom <i>property</i>; <br>
+Bool <i>replace</i>; <br>
+Bool <i>retain</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen of the display</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>visualid</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual type</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>depth</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual depth</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>property</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+standard colormap property</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>replace</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies whether
+or not to replace</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>retain</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies whether
+or not to retain</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To create a
+standard colormap if one does not currently exist, or
+replace the currently existing standard colormap, use
+<i>XmuLookupStandardColormap</i>.</p>
+
+<p style="margin-top: 1em" valign="top">Given a screen, a
+visual, and a property, this function will determine the
+best allocation for the property under the specified visual,
+and determine the whether to create a new colormap or to use
+the default colormap of the screen.</p>
+
+<p style="margin-top: 1em" valign="top">If replace is True,
+any previous definition of the property will be replaced. If
+retain is True, the property and the colormap will be made
+permanent for the duration of the server session. However,
+pre-existing property definitions which are not replaced
+cannot be made permanent by a call to this function; a
+request to retain resources pertains to newly created
+resources.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+returns 0 on failure, non-zero on success. A request to
+create a standard colormap upon a visual which cannot
+support such a map is considered a failure. An example of
+this would be requesting any standard colormap property on a
+monochrome visual, or, requesting an RGB_BEST_MAP on a
+display whose colormap size is 16. <br>
+Status XmuGetColormapAllocation(<i>vinfo</i>,
+<i>property</i>, <i>red_max</i>, <i>green_max</i>,
+<i>blue_max</i>) <br>
+XVisualInfo *<i>vinfo</i>; <br>
+Atom <i>property</i>; <br>
+unsigned long *<i>red_max</i>, *<i>green_max</i>,
+*<i>blue_max</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>vinfo</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies visual
+information for a chosen visual</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>property</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies one of
+the standard colormap property names</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>red_max</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns maximum red
+value</p> </td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>green_max</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns maximum
+green value</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>blue_max</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">returns maximum
+blue value</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To determine the
+best allocation of reds, greens, and blues in a standard
+colormap, use <i>XmuGetColormapAllocation</i>.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XmuGetColormapAllocation</i>
+returns 0 on failure, non-zero on success. It is assumed
+that the visual is appropriate for the colormap property.
+<br>
+XStandardColormap *XmuStandardColormap(<i>dpy</i>,
+<i>screen</i>, <i>visualid</i>, <i>depth</i>,
+<i>property</i>, <i><br>
+cmap</i>, <i>red_max</i>, <i>green_max</i>, <i>blue_max</i>)
+<br>
+Display <i>dpy</i>; <br>
+int <i>screen</i>; <br>
+VisualID <i>visualid</i>; <br>
+unsigned int <i>depth</i>; <br>
+Atom <i>property</i>; <br>
+Colormap <i>cmap</i>; <br>
+unsigned long <i>red_max</i>, <i>green_max</i>,
+<i>blue_max</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen of the display</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>visualid</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual type</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>depth</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+visual depth</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>property</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+standard colormap property</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>cmap</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+colormap ID, or None</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>red_max</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the red
+allocation</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>green_max</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the green
+allocation</p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>blue_max</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the blue
+allocation</p> </td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To create any one
+standard colormap, use <i>XmuStandardColormap</i>.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+creates a standard colormap for the given screen, visualid,
+and visual depth, with the given red, green, and blue
+maximum values, with the given standard property name. Upon
+success, it returns a pointer to an <i>XStandardColormap</i>
+structure which describes the newly created colormap. Upon
+failure, it returns NULL. If cmap is the default colormap of
+the screen, the standard colormap will be defined on the
+default colormap; otherwise a new colormap is created.</p>
+
+<p style="margin-top: 1em" valign="top">Resources created
+by this function are not made permanent; that is the
+caller&rsquo;s responsibility. <br>
+Status XmuCreateColormap(<i>dpy</i>, <i>colormap</i>) <br>
+Display *<i>dpy</i>; <br>
+XStandardColormap *<i>colormap</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection under which the map is created</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>colormap</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the map
+to be created</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To create any one
+colormap which is described by an <i>XStandardColormap</i>
+structure, use <i>XmuCreateColormap</i>.</p>
+
+<p style="margin-top: 1em" valign="top">This function
+returns 0 on failure, and non-zero on success. The
+base_pixel of the colormap is set on success. Resources
+created by this function are not made permanent. No argument
+error checking is provided; use at your own risk.</p>
+
+<p style="margin-top: 1em" valign="top">All colormaps are
+created with read-only allocations, with the exception of
+read-only allocations of colors which fail to return the
+expected pixel value, and these are individually defined as
+read/write allocations. This is done so that all the cells
+defined in the colormap are contiguous, for use in image
+processing. This typically happens with White and Black in
+the default map.</p>
+
+<p style="margin-top: 1em" valign="top">Colormaps of static
+visuals are considered to be successfully created if the map
+of the static visual matches the definition given in the
+standard colormap structure. <br>
+void XmuDeleteStandardColormap(<i>dpy</i>, <i>screen</i>,
+<i>property</i>) <br>
+Display *<i>dpy</i>; <br>
+int <i>screen</i>; <br>
+Atom <i>property</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>dpy</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+connection to the X server</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>screen</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+screen of the display</p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>property</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+standard colormap property</p></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To remove any
+standard colormap property, use
+<i>XmuDeleteStandardColormap</i>. This function will remove
+the specified property from the specified screen, releasing
+any resources used by the colormap(s) of the property, if
+possible.</p>
+
+<a name="16. Widget Description Functions"></a>
+<h2>16. Widget Description Functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">The functions
+defined in this section are for building a description of
+the structure of and resources associated with a hierarchy
+of widget classes. This package is typically used by
+applications that wish to manipulate the widget set
+itself.</p>
+
+<p style="margin-top: 1em" valign="top">The definitions
+needed to use these interfaces are in the header file
+&lt;<i>X11/Xmu/WidgetNode.h</i>&gt;. The following function
+must be called before any of the others described below:
+<br>
+void XmuWnInitializeNodes(<i>node_array</i>,
+<i>num_nodes</i>) <br>
+XmuWidgetNode *<i>node_array</i>; <br>
+int <i>num_nodes</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>node_array</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies a list of
+widget classes, in alphabetical order</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_nodes</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specfies the number
+of widget classes in the node array</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">To determine the
+resources provided by a widget class or classes, use <br>
+void XmuWnFetchResources(<i>node</i>, <i>toplevel</i>,
+<i>top_node</i>) <br>
+XmuWidgetNode *<i>node</i>; <br>
+Widget <i>toplevel</i>; <br>
+XmuWidgetNode *<i>top_node</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>node</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget class for which resources should be obtained.</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>toplevel</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget that should be used for creating an instance of
+<i>node</i> from which resources are extracted. This is
+typically the value returned by <b>XtAppInitialize</b>.</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>top_node</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+ancestor of <i>node</i> that should be treated as the root
+of the widget inheritance tree (used in determining which
+ancestor contributed which resources).</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Each widget class
+inherits the resources of its parent. To count the number of
+resources contributed by a particular widget class, use:
+<br>
+int XmuWnCountOwnedResources(<i>node</i>, <i>owner_node</i>,
+<i>constraints</i>) <br>
+XmuWidgetNode *<i>node</i>; <br>
+XmuWidgetNode *<i>owner_node</i>; <br>
+Bool <i>constraints</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>node</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget class whose resources are being examined.</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>owner_node</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+widget class of the ancestor of <i>node</i> whose
+contributions are being counted.</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>constraints</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">specifies whether or not to count
+constraint resources or normal resources.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This routine
+returns the number of resources contributed (or
+&lsquo;&lsquo;owned&rsquo;&rsquo;) by the specified widget
+class. <br>
+XmuWidgetNode *XmuWnNameToNode(<i>node_list</i>,
+<i>num_nodes</i>, <i>name</i>) <br>
+XmuWidgetNode *<i>node_list</i>; <br>
+int <i>num_nodes</i>; <br>
+char *<i>name</i>;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>node_list</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies a list of
+widget nodes</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>num_nodes</i></p> </td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the
+number of nodes in the list</p></td>
+<tr valign="top" align="left">
+<td width="18%">
+
+
+<p style="margin-top: 1em" valign="top"><i>name</i></p></td>
+<td width="2%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">specifies the name
+of the widget class in the node list to search for</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">This function
+returns the WidgetNode in the list that matches the given
+widget name or widget class name. If no match is found, it
+returns NULL.</p>
+
+<a name="17. Participation in the Editres Protocol"></a>
+<h2>17. Participation in the Editres Protocol</h2>
+
+
+<p style="margin-top: 1em" valign="top">To participate in
+the editres protocol, applications which are not based on
+the Athena widget set should include the header file
+&lt;<i>X11/Xmu/Editres.h</i>&gt;.</p>
+
+<p style="margin-top: 1em" valign="top">To participate in
+the editres protocol, Xt applications which do not rely on
+the Athena widget set should register the editres protocol
+handler on each shell widget in the application, specifying
+an event mask of 0, nonmaskable events, and client data as
+NULL:</p>
+
+
+<p style="margin-top: 1em" valign="top">XtAddEventHandler(shell,
+(EventMask) 0, True, _XEditResCheckMessages, NULL);</p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729659" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

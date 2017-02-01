@@ -1,0 +1,6 @@
+XCOMM $XFree86: xc/doc/hardcopy/Xv/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(xv-protocol-v2,xv-protocol-v2.PS)
+
+InstallDoc(video,video.txt)
+LinkFile(video.txt,video)

@@ -1,0 +1,19 @@
+XCOMM $XFree86: xc/programs/rgb/Imakefile,v 3.11 2005/06/22 03:28:51 dawes Exp $
+
+        RGB_DB = DefaultRGBDatabase
+   SITE_RGB_DB = -DRGB_DB=\"$(RGB_DB)\"
+      DEPLIBS = 
+      DEFINES = $(SITE_RGB_DB) $(RGB_DEFINES)
+     INCLUDES = -I$(SERVERSRC)/include
+        SRCS = showrgb.c
+        OBJS = showrgb.o
+     PROGRAMS = ProgramTargetName(showrgb)
+
+all:: $(PROGRAMS) $(DATADEP)
+
+SingleProgramTarget(showrgb,$(OBJS),NullParameter,NullParameter)
+InstallNonExecFile(rgb.txt,$(LIBDIR))
+InstallProgramWithFlags(showrgb,$(BINDIR),NullParameter)
+InstallManPage(showrgb,$(MANDIR))
+
+DependTarget()

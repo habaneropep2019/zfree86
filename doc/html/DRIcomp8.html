@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Compiling the XFree86/DRI tree </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DRIcomp.html"><EM>DRI Compilation Guide </EM></A>
+ <b>:</b> <EM>Compiling the XFree86/DRI tree </EM><BR>
+<b>Previous:</b> <A HREF="DRIcomp7.html"><EM>Mesa </EM></A><BR>
+<b>Next:</b> <A HREF="DRIcomp9.html"><EM>Normal Installation and Configuration </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="16"></A>8. Compiling the XFree86/DRI tree </H2>
+
+<H3><A NAME="17"></A>8.1. Make a build tree </H3>
+
+<p>Rather than placing object files and library files right in the
+source tree, they're instead put into a parallel <em>build</em> tree.
+The build tree is made with the <code>lndir</code> command:
+<pre>
+            cd ~/DRI-CVS
+            ln -s xc XFree40
+            mkdir build
+            cd build
+            lndir -silent -ignorelinks ../XFree40
+          
+</pre>
+</p>
+<p>The build tree will be populated with symbolic links which point
+back into the CVS source tree.</p>
+<p>Advanced users may have several build trees for compiling and
+testing with different options.</p>
+
+<H3><A NAME="18"></A>8.2. Edit the host.def file </H3>
+
+<p>The <code>~/DRI-CVS/build/xc/config/cf/host.def</code> file is used
+to configure the XFree86 build process.
+You can change it to customize your build options or make adjustments
+for your particular system configuration</p>
+<p>The default <code>host.def</code> file will look something like this:
+<pre>
+            #define DefaultCCOptions -Wall
+(i386)      #define DefaultGcc2i386Opt -O2
+(Alpha)     #define DefaultGcc2AxpOpt -O2 -mcpu=ev6 (or similar)
+            #define LibraryCDebugFlags -O2
+            #define BuildServersOnly YES
+            #define XF86CardDrivers vga tdfx mga ati i810
+            #define LinuxDistribution LinuxRedHat
+            #define DefaultCCOptions -ansi GccWarningOptions -pipe
+            #define BuildXF86DRI YES
+            /* Optionally turn these on for debugging */
+            /* #define GlxBuiltInTdfx YES */
+            /* #define GlxBuiltInMga YES */
+            /* #define GlxBuiltInR128 YES */
+            /* #define GlxBuiltInRadeon YES */
+            /* #define DoLoadableServer NO */
+            #define SharedLibFont NO
+          
+</pre>
+
+The <code>ProjectRoot</code> variable specifies where the XFree86 files
+will be installed.
+We recommend installing the DRI files over your existing XFree86
+installation - it's generally safe to do and less error-prone.
+This policy is different than what we used to recommend.</p>
+<p>If XFree86 4.x is not installed in /usr/X11R6/ you'll have to
+add the following to the <code>host.def</code> file:
+<pre>
+            #define ProjectRoot pathToYourXFree86installation
+          
+</pre>
+</p>
+<p>Note the <em>XF86CardDrivers</em> line to be sure your card's
+driver is listed.</p>
+<p>If you want to enable 3DNow! optimizations in Mesa and the DRI
+drivers, you should add the following: 
+<pre>
+            #define MesaUse3DNow YES
+          
+</pre>
+
+You don't have to be using an AMD processor in order to enable
+this option.  The DRI will look for 3DNow! support and runtime
+and only enable it if applicable.</p>
+<p>If you want to enable SSE optimizations in Mesa and the DRI
+drivers, you <b>must</b> upgrade to a Linux 2.4.x kernel.
+Mesa will verify that SSE is supported by both your processor
+<em>and</em> your operating system, but to build Mesa inside
+the DRI you need to have the Linux 2.4.x kernel headers in
+/usr/src/linux.  If you enable SSE optimizations with an
+earlier version of the Linux kernel in /usr/src/linux, Mesa
+<b>will not compile</b>.  You have been warned.  If you do
+have a 2.4.x kernel, you should add the following: 
+<pre>
+            #define MesaUseSSE YES
+          
+</pre>
+</p>
+
+<p>If you want to build the DRM kernel modules as part of the
+full build process, add the following:
+<pre>
+            #define BuildXF86DRM YES
+          
+</pre>
+
+Otherwise, you'll need to build them separately as described below.</p>
+
+
+<H3><A NAME="19"></A>8.3. Compilation </H3>
+
+<p>To compile the complete DRI tree:
+<pre>
+            cd ~/DRI-CVS/build/xc/
+            make World &gt;&amp; world.log
+          
+</pre>
+
+Or if you want to watch the compilation progress:
+<pre>
+            cd ~/DRI-CVS/build/xc/
+            make World &gt;&amp; world.log &amp;
+            tail -f world.log
+          
+</pre>
+
+With the default compilation flags it's normal to get a lot of
+warnings during compilation.</p>
+<p>Building will take some time so you may want to go check your
+email or visit slashdot.</p>
+<p><em>WARNING:</em> do not use the -j option with make.
+It's reported that it does not work with XFree86/DRI.</p>
+
+
+<H3><A NAME="20"></A>8.4. Check for compilation errors </H3>
+
+<p>Using your text editor, examine <code>world.log</code> for errors
+by searching for the pattern <code>***</code>.</p>
+
+<p>After fixing the errors, run <code>make World</code> again.
+Later, you might just compile parts of the source tree but it's
+important that the whole tree will build first.</p>
+
+<p>If you edited your host.def file to enable automatic building of the
+DRI kernel module(s), verify that they were built:
+<pre>
+          cd ~/DRI-CVS/build/xc/programs/Xserver/hw/xfree86/os-support/linux/drm/kernel
+          ls
+          
+</pre>
+
+Otherwise, build them now by running
+<pre>
+          cd ~/DRI-CVS/build/xc/programs/Xserver/hw/xfree86/os-support/linux/drm/kernel
+          make -f Makefile.linux
+          
+</pre>
+</p>
+
+<p>For the 3dfx Voodoo, you should see <em>tdfx.o</em>.
+For the Matrox G200/G400, you should see <em>mga.o</em>.
+For the ATI Rage 128, you should see <em>r128.o</em>.
+For the ATI Radeon, you should see <em>radeon.o</em>.
+For the Intel i810, you should see <em>i810.o</em>.</p>
+<p>If the DRI kernel module(s) failed to build you should verify
+that you're using the right version of the Linux kernel.
+The most recent kernels are not always supported.</p>
+<p>If your build machine is running a different version of the kernel
+than your target machine (i.e. 2.2.x vs. 2.4.x), make will
+select the wrong kernel source tree. This can be fixed by explicitly
+setting the value of <code>LINUXDIR</code>.
+If the path to your kernel source is 
+<code>/usr/src/linux-2.4.x</code>,
+<pre>
+          cd ~/DRI-CVS/build/xc/programs/Xserver/hw/xfree86/os-support/linux/drm/kernel
+          make -f Makefile.linux LINUXDIR=/usr/src/linux-2.4.x
+          
+</pre>
+
+or alternatively, edit Makefile.linux to set <code>LINUXDIR</code>
+before the <code>ifndef LINUXDIR</code> line.</p>
+
+<H3><A NAME="21"></A>8.5. DRI kernel module installation </H3>
+
+<p>The DRI kernel modules will be in
+<code>~/DRI-CVS/build/xc/programs/Xserver/hw/xfree86/os-support/linux/drm/kernel/</code>.</p>
+<p>To load the appropriate DRM module in your running kernel you can
+either use ismod and restart your X server or copy the kernel module
+to <code>/lib/modules/2.4.x/kernel/drivers/char/drm/</code> then run
+depmod and restart your X server.</p>
+<p>Make sure you first unload any older DRI kernel modules that might
+be already loaded.</p>
+<p>Note that some DRM modules require that the <code>agpgart</code> module
+be loaded first.</p>
+
+
+ <HR NOSHADE>
+<A HREF="DRIcomp.html"><EM>DRI Compilation Guide </EM></A>
+ <b>:</b> <EM>Compiling the XFree86/DRI tree </EM><BR>
+<b>Previous:</b> <A HREF="DRIcomp7.html"><EM>Mesa </EM></A><BR>
+<b>Next:</b> <A HREF="DRIcomp9.html"><EM>Normal Installation and Configuration </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728788" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

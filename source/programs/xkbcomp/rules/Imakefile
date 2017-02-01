@@ -1,0 +1,9 @@
+XCOMM $XFree86: xc/programs/xkbcomp/rules/Imakefile,v 3.7 2006/12/29 19:19:57 tsi Exp $
+
+    DATAFILES = README sgi xfree86 sun
+    LISTFILES = sgi.lst xfree86.lst xfree86-it.lst sun.lst xfree86.xml
+
+all::
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/rules)
+InstallMultiple($(LISTFILES),$(LIBDIR)/xkb/rules)

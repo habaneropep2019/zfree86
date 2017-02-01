@@ -1,0 +1,36 @@
+XCOMM $XFree86: xc/lib/Xrandr/Imakefile,v 1.3 2005/10/14 15:16:00 tsi Exp $
+
+
+#define DoNormalLib NormalLibXrandr
+#define DoSharedLib SharedLibXrandr
+#define DoDebugLib DebugLibXrandr
+#define DoProfileLib ProfileLibXrandr
+#define LibName Xrandr
+#define SoRev SOXRANDRREV
+#define IncSubdir X11
+#define IncSubSubdir extensions
+
+#include <Threads.tmpl>
+
+#ifdef SharedXrandrReqs
+REQUIREDLIBS = SharedXrandrReqs
+#endif
+
+#if Malloc0ReturnsNull
+ALLOC_DEFINES = -DMALLOC_0_RETURNS_NULL
+#endif
+
+      DEFINES = $(ALLOC_DEFINES)
+         SRCS = Xrandr.c
+         OBJS = Xrandr.o
+     LINTLIBS = $(LINTXLIB)
+
+HEADERS = Xrandr.h
+
+#include <Library.tmpl>
+
+MANSUFFIX = $(LIBMANSUFFIX)
+
+InstallManPage(Xrandr,$(LIBMANDIR))
+
+DependTarget()

@@ -1,0 +1,7 @@
+// $XFree86: xc/programs/xkbcomp/semantics/complete,v 1.2 2006/01/09 15:01:24 dawes Exp $
+default xkb_semantics "complete" {
+
+xkb_types		{ include "complete" 	};
+xkb_compatibility	{ include "complete"	};
+
+};

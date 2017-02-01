@@ -1,0 +1,397 @@
+XCOMM platform:  $XFree86: xc/config/cf/DragonFly.cf,v 1.1 2006/06/27 00:52:48 dawes Exp $
+
+/*
+ * Copyright (c) 1994-2006 by The XFree86 Project, Inc.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject
+ * to the following conditions:
+ *
+ *   1.  Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions, and the following disclaimer.
+ *
+ *   2.  Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer
+ *       in the documentation and/or other materials provided with the
+ *       distribution, and in the same place and form as other copyright,
+ *       license and disclaimer information.
+ *
+ *   3.  The end-user documentation included with the redistribution,
+ *       if any, must include the following acknowledgment: "This product
+ *       includes software developed by The XFree86 Project, Inc
+ *       (http://www.xfree86.org/) and its contributors", in the same
+ *       place and form as other third-party acknowledgments.  Alternately,
+ *       this acknowledgment may appear in the software itself, in the
+ *       same form and location as other such third-party acknowledgments.
+ *
+ *   4.  Except as contained in this notice, the name of The XFree86
+ *       Project, Inc shall not be used in advertising or otherwise to
+ *       promote the sale, use or other dealings in this Software without
+ *       prior written authorization from The XFree86 Project, Inc.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE XFREE86 PROJECT, INC OR ITS CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+ * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+#ifndef OSName
+#define OSName			DefaultOSName
+#endif
+#ifndef OSVendor
+#define OSVendor		/**/
+#endif
+#ifndef OSMajorVersion
+#define OSMajorVersion		DefaultOSMajorVersion
+#endif
+#ifndef OSMinorVersion
+#define OSMinorVersion		DefaultOSMinorVersion
+#endif
+#ifndef OSTeenyVersion
+#define OSTeenyVersion		DefaultOSTeenyVersion
+#endif
+
+XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVersion)
+
+
+#define UseElfFormat		YES
+
+#define HasCplusplus		YES
+#define GccUsesGas		YES
+#define UseGas			YES
+#define GnuCpp			YES
+#define HasNdbm			YES
+#define HasPutenv		YES
+#define HasSnprintf		YES
+#define HasAsprintf		YES
+#define HasStrlcat		YES
+#define HasBasename		YES
+#define HasBSD44Sockets 	YES
+#define HasDlopen		YES
+#define HasSetProcTitle		YES
+#ifndef HasLibCrypt
+# define HasLibCrypt		YES
+#endif
+#ifndef HasShm
+# define HasShm			YES
+#endif
+#define HasWChar32		YES
+#define HasUsableFileMmap	YES
+#define HasNCurses		YES
+#define HasVarRun		YES
+#define HasVarDb		YES
+
+#define HasIssetugid		YES
+#define HasPoll			YES
+
+#define HasGetIfAddrs		YES
+
+#define IPv6SocketsAlsoIPv4	NO
+
+#define InstallXloadSetGID	NO
+
+#define HasWeakSymbols		YES
+
+#ifndef HasLibPthread
+# define HasLibPthread		NO
+#endif
+#define HasPosixThreads	YES
+#define ThreadedX		YES
+#define SystemMTDefines	-D_REENTRANT -D_THREAD_SAFE
+/*
+ * FreeBSD has tread-safe api but no getpwnam_r yet.
+ */
+#define HasThreadSafeAPI	YES
+#define MTSafeAPIDefines	-DXUSE_MTSAFE_API -DXNO_MTSAFE_PWDAPI
+#if HasLibPthread
+# define ThreadsLibraries	-lpthread
+#else
+# define NeedThreadStubLibrary  YES
+# define NeedUIThrStubs	NO
+# define ThreadsLibraries	-lc_r
+# define SharedGLReqs		$(LDPRELIBS) $(XLIB) -lc
+# if NeedUIThrStubs
+#  define SharedX11Reqs	$(LDPRELIB) $(XTHRSTUBLIB)
+#  define SharedXtReqs		$(LDPRELIB) $(XONLYLIB) $(SMLIB) $(ICELIB) $(XTHRSTUBLIB)
+# endif
+#endif
+
+#define AvoidNullMakeCommand	YES
+#define StripInstalledPrograms	YES
+#define CompressAllFonts	YES
+#define Malloc0ReturnsNull	YES
+#define NeedConstPrototypes	YES
+#define NeedFunctionPrototypes	YES
+#define NeedNestedPrototypes	YES
+#define NeedVarargsPrototypes	YES
+#define NeedWidePrototypes	NO
+
+#define HasPlugin		YES
+#define VendorHasX11R6_3libXext	YES	/* XC or XFree86 >= 3.3.1 */
+
+#define MkdirHierCmd		mkdir -p
+
+#ifndef LexCmd
+#define LexCmd			flex -l
+#endif
+#ifndef HasFlex
+#define HasFlex			YES
+#endif
+
+#ifndef HasMktemp
+#define HasMktemp		YES
+#endif
+
+/* Don't have perl by default.  */
+#ifndef HasPerl5
+#define HasPerl5		NO
+#endif
+
+/*
+ * Add an LD_LIBRARY_PATH environment variable, defined by $(CLIENTENVSETUP),
+ * when building X to avoid that for each client ld give the message
+ *
+ *    ld: warning: libXThrStub.so.6, needed by libX11.so, not found
+ */
+#if NeedThreadStubLibrary && (!defined(UseInstalledX11) || !UseInstalledX11)
+# define CcCmd			$(CLIENTENVSETUP) cc
+# define CplusplusCmd		$(CLIENTENVSETUP) c++
+#else
+# define CcCmd			cc
+# define CplusplusCmd		c++
+#endif
+
+#define CppCmd			/usr/bin/cpp
+#define PreProcessCmd		CppCmd
+#define StandardCppOptions	-traditional
+#define StandardCppDefines	/**/
+#ifndef DefaultCCOptions
+#if defined(UseInstalled)
+#define DefaultCCOptions	/**/
+#else
+#if (defined(HasGcc3) && HasGcc3) || (defined(HasGcc4) && HasGcc4)
+#define NoSystemWarn		-Wno-system-headers
+#else
+#define NoSystemWarn
+#endif
+#define DefaultCCOptions	-ansi NoSystemWarn -Dasm=__asm \
+	GccWarningOptions
+#endif
+#endif
+#ifndef ExtraLibraries
+#define ExtraLibraries		/**/
+#endif
+#ifndef UseGnuMalloc
+#define UseGnuMalloc		NO
+#endif
+#define HasSetUserContext	YES
+
+#define HasGetpeereid		YES
+
+#ifndef HasMTRRSupport
+#define HasMTRRSupport		YES
+#endif
+
+#ifndef BuildXF86DRI
+#define BuildXF86DRI		NO
+#endif
+
+#ifndef HasAgpGart
+#define HasAgpGart		YES
+#endif
+
+/*
+ * SSE and 3DNow will be autodetected, so binutils is the only 
+ * requirement for enabling this.  By 4.2 they were all supported.
+ */
+#if defined(AMD64Architecture) || defined(i386Architecture)
+# define HasX86Support          YES
+# define HasMMXSupport		YES
+# define Has3DNowSupport	YES
+# define HasSSESupport		YES
+#else
+# define HasX86Support	        NO
+# define HasMMXSupport		NO
+# define Has3DNowSupport	NO
+# define HasSSESupport		NO
+#endif
+
+#ifndef UseRpath
+# define UseRpath		YES
+#endif
+
+#ifndef RpathLoadFlags
+# if UseRpath
+#  define RpathLoadFlags	-Wl,-rpath,$(USRLIBDIRPATH)
+# else
+#  define RpathLoadFlags	/**/
+# endif
+#endif
+
+#ifndef ExtraLoadFlags
+# if !defined(UseInstalled)
+#  define ExtraLoadFlags	RpathLoadFlags -Wl,-rpath-link,$(BUILDLIBDIR)
+# else
+#  define ExtraLoadFlags	RpathLoadFlags
+# endif
+#endif
+
+#ifndef ExtraSharedLibraryLoadFlags
+# define ExtraSharedLibraryLoadFlags /**/
+#endif
+
+#ifndef LibraryRpathLoadFlags
+# if UseRpath
+#  define LibraryRpathLoadFlags	-rpath $(USRLIBDIRPATH)
+# else
+#  define LibraryRpathLoadFlags		/**/
+# endif
+#endif
+
+#ifndef SharedLibraryLoadFlags
+# define SharedLibraryLoadFlags	-shared LibraryRpathLoadFlags
+#endif
+
+#ifndef GnuMallocLibrary
+#define GnuMallocLibrary	-lgnumalloc
+#endif
+
+#ifndef HasZlib
+#define HasZlib		YES
+#endif
+
+#ifndef HasPam
+#define HasPam		YES
+#endif
+
+#undef  InstallCmd
+#define InstallCmd		/usr/bin/install
+
+#define AsmElfDefines		-D__ELF__
+
+#if GccUsesGas
+# define GccGasOption		-DGCCUSESGAS
+# define AsmDefines		-DUSE_GAS AsmElfDefines
+#else
+# define GccGasOption /**/
+# define AsmDefines		AsmElfDefines
+#endif
+
+#ifdef i386Architecture
+#define ServerExtraDefines GccGasOption XFree86ServerDefines
+#endif
+
+/* Define __FreeBSD__ for now... */
+#define StandardDefines	-DCSRG_BASED -D__FreeBSD__
+#define FreeBSDArchitecture
+
+#define ServerOSDefines		XFree86ServerOSDefines
+#define XawI18nDefines		-DUSE_XWCHAR_STRING
+#define HasMakefileSafeInclude	YES
+#define IncludeMakefile(file) @@# dependencies are in .depend
+#define DependFileName		.depend
+#ifndef DoLoadableServer
+#define DoLoadableServer	YES
+#endif
+#ifndef ForceNormalLib
+#define ForceNormalLib		YES
+#endif
+#define HasMkstemp		YES
+
+#ifndef DefaultGcc2i386Opt
+#define DefaultGcc2i386Opt -O2 GccAliasingArgs
+#endif
+
+#ifdef i386Architecture
+# define OptimizedCDebugFlags DefaultGcc2i386Opt
+#else
+# define OptimizedCDebugFlags -O
+#endif
+
+#ifndef PreIncDir
+# define PreIncDir	/usr/include
+#endif
+
+#define HasGroff	YES
+#define NroffCmd	env GROFF_NO_SGR=y groff -Tascii
+#define SetTtyGroup	YES
+
+#ifndef ExtraFilesToClean
+# define ExtraFilesToClean *.core
+#endif
+
+#define DefaultUserPath		/bin:/usr/bin:/usr/pkg/bin:/usr/local/bin:$(BINDIR)
+#define DefaultSystemPath	/bin:/usr/bin:/sbin:/usr/sbin:$(BINDIR)
+#ifndef SystemManDirectory
+#define SystemManDirectory	/usr/share/man
+#endif
+
+#ifndef PkgConfigDirectory
+#define PkgConfigDirectory	$(LIBDATADIR)/pkgconfig
+#endif
+
+#define InstKmemFlags	-g kmem -m 2755
+
+/*
+ * Compress manual pages
+ */
+#ifndef CompressManPages
+# define CompressManPages	YES
+#endif
+
+#define HasBsdMake	YES
+
+#ifndef StaticLibrary
+#define StaticLibrary(libpath,libname) -Wl,-Bstatic Concat(-L,libpath) Concat(-l,libname) -Wl,-Bdynamic
+#endif
+
+#define DlLibrary		-rdynamic
+
+#ifdef AlphaArchitecture
+#define IoLibrary		-lio
+#else
+#define IoLibrary		/**/
+#endif
+
+#define ServerExtraSysLibs	IoLibrary
+ 
+#ifndef PamLibraries
+#define PamLibraries		-lpam DlLibrary
+#endif
+
+#ifndef SharedLibXdmGreet
+# define SharedLibXdmGreet		NO
+#endif
+
+#ifndef PreloadFontSetup
+#define PreloadFontSetup	LD_PRELOAD="`(cd $(XENVLIBDIR); echo $(XFONTPRELOADPATTERN))`"
+#endif
+#ifndef PreloadFreetypeSetup
+#define PreloadFreetypeSetup	LD_PRELOAD="`(cd $(XENVLIBDIR); echo $(FT2PRELOADPATTERN))`"
+#endif
+#ifndef PreloadXFTSetup
+#define PreloadXFTSetup		LD_PRELOAD="`(cd $(XENVLIBDIR); echo $(FT2PRELOADPATTERN) $(XFTPRELOADPATTERN) $(XRENDERPRELOADPATTERN) $(FCPRELOADPATTERN))`"
+#endif
+
+#ifndef HasCookieMaker
+#define HasCookieMaker		YES
+#define MkCookieCmd \
+	'dd if=/dev/urandom bs=16 count=1 2>/dev/null | hexdump -e \\"%08x\\"'
+#endif
+
+#include <bsdLib.rules>
+
+#include <xfree86.cf>

@@ -1,0 +1,9 @@
+XCOMM $XFree86: xc/programs/xfsinfo/Imakefile,v 1.4 2006/01/09 15:01:12 dawes Exp $
+
+LOCAL_LIBRARIES = $(FSLIB)
+DEPLIBS = $(DEPFSLIB)
+SRCS = xfsinfo.c
+OBJS = xfsinfo.o
+
+ComplexProgramTarget(xfsinfo)
+

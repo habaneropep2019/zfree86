@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/lib/Xbsd/Imakefile,v 3.4 2006/01/09 14:59:08 dawes Exp $
+
+SRCS = Berklib.c
+OBJS = Berklib.o
+
+#undef _LinkBuildLibrary
+#define _LinkBuildLibrary(lib) LinkBuildLibrary(lib)
+NormalLibraryTarget(Xbsd,$(OBJS))
+InstallLibrary(Xbsd,$(USRLIBDIR))
+
+DependTarget()

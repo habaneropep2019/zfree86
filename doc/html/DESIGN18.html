@@ -1,0 +1,1041 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Helper Functions </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Helper Functions </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN17.html"><EM>The Loader </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN19.html"><EM>The vgahw module </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="71"></A>18. Helper Functions </H2>
+
+<p>This section describe ``helper'' functions that video driver
+might find useful.  While video drivers are not required to use any of
+these to be considered ``compliant'', the use of appropriate helpers is
+strongly encouraged to improve the consistency of driver behaviour.</p>
+
+<H3><A NAME="72"></A>18.1. Functions for printing messages </H3>
+
+<p>
+<blockquote>
+<p><code>ErrorF(const char *format, ...)</code>
+<blockquote>
+<p>This is the basic function for writing to the error log (typically
+stderr and/or a log file).  Video drivers should usually avoid
+using this directly in favour of the more specialised functions
+described below.  This function is useful for printing messages
+while debugging a driver.</p>
+
+</blockquote>
+</p>
+<p><code>FatalError(const char *format, ...)</code>
+<blockquote>
+<p>This prints a message and causes the Xserver to abort.  It should
+rarely be used within a video driver, as most error conditions
+should be flagged by the return values of the driver functions.
+This allows the higher layers to decide how to proceed.  In rare
+cases, this can be used within a driver if a fatal unexpected
+condition is found.</p>
+
+</blockquote>
+</p>
+<p><code>xf86ErrorF(const char *format, ...)</code>
+<blockquote>
+<p>This is like <code>ErrorF()</code>, except that the message is
+only printed when the Xserver's verbosity level is set to the
+default (<code>1</code>) or higher.  It means that the messages
+are not printed when the server is started with the
+<code>-quiet</code> flag.  Typically this function would only be
+used for continuing messages started with one of the more specialised
+functions described below.</p>
+
+</blockquote>
+</p>
+<p><code>xf86ErrorFVerb(int verb, const char *format, ...)</code>
+<blockquote>
+<p>Like <code>xf86ErrorF()</code>, except the minimum verbosity
+level for which the message is to be printed is given explicitly.
+Passing a <code>verb</code> value of zero means the message
+is always printed.  A value higher than <code>1</code> can be
+used for information would normally not be needed, but which might
+be useful when diagnosing problems.</p>
+
+</blockquote>
+</p>
+<p><code>xf86Msg(MessageType type, const char *format, ...)</code>
+<blockquote>
+<p>This is like <code>xf86ErrorF()</code>, except that the message
+is prefixed with a marker determined by the value of
+<code>type</code>.  The marker is used to indicate the type of
+message (warning, error, probed value, config value, etc).  Note
+the <code>xf86Verbose</code> value is ignored for messages of
+type <code>X_ERROR</code>.</p>
+<p>The marker values are:</p>
+<p>
+<blockquote>
+<code>X_PROBED</code>
+<blockquote>
+Value was probed.
+</blockquote>
+
+<code>X_CONFIG</code>
+<blockquote>
+Value was given in the config file.
+</blockquote>
+
+<code>X_DEFAULT</code>
+<blockquote>
+Value is a default.
+</blockquote>
+
+<code>X_CMDLINE</code>
+<blockquote>
+Value was given on the command line.
+</blockquote>
+
+<code>X_NOTICE</code>
+<blockquote>
+Notice.
+</blockquote>
+
+<code>X_ERROR</code>
+<blockquote>
+Error message.
+</blockquote>
+
+<code>X_WARNING</code>
+<blockquote>
+Warning message.
+</blockquote>
+
+<code>X_INFO</code>
+<blockquote>
+Informational message.
+</blockquote>
+
+<code>X_NONE</code>
+<blockquote>
+No prefix.
+</blockquote>
+
+<code>X_NOT_IMPLEMENTED</code>
+<blockquote>
+The message relates to functionality that is not yet
+implemented.
+</blockquote>
+</blockquote>
+</p>
+
+
+</blockquote>
+</p>
+<p><code>xf86MsgVerb(MessageType type, int verb, const char *format, ...)</code>
+<blockquote>
+<p>Like <code>xf86Msg()</code>, but with the verbosity level given
+explicitly.</p>
+
+</blockquote>
+</p>
+<p><code>xf86DrvMsg(int scrnIndex, MessageType type, const char *format, ...)</code>
+<blockquote>
+<p>This is like <code>xf86Msg()</code> except that the driver's
+name (the <code>name</code> field of the
+<code>ScrnInfoRec</code>) followed by the
+<code>scrnIndex</code> in parentheses is printed following the
+prefix.  This should be used by video drivers in most cases as it
+clearly indicates which driver/screen the message is for.  If
+<code>scrnIndex</code> is negative, this function behaves
+exactly like <code>xf86Msg()</code>.</p>
+<p>NOTE: This function can only be used after the
+<code>ScrnInfoRec</code> and its <code>name</code> field
+have been allocated.  Normally, this means that it can not be
+used before the END of the <code>ChipProbe()</code> function.
+Prior to that, use <code>xf86Msg()</code>, providing the
+driver's name explicitly.  No screen number can be supplied at
+that point.</p>
+
+</blockquote>
+</p>
+<p><code>xf86DrvMsgVerb(int scrnIndex, MessageType type, int verb,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const char *format, ...)</code>
+<blockquote>
+<p>Like <code>xf86DrvMsg()</code>, but with the verbosity level
+given explicitly.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+
+<H3><A NAME="73"></A>18.2. Functions for setting values based on command line and config file </H3>
+
+<p>
+<blockquote>
+<p><code>Bool xf86SetDepthBpp(ScrnInfoPtr scrp, int depth, int bpp,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int fbbpp, int depth24flags)</code>
+<blockquote>
+<p>This function sets the <code>depth</code>, <code>pixmapBPP</code> and <code>bitsPerPixel</code> fields
+of the <code>ScrnInfoRec</code>.  It also determines the defaults for display-wide
+attributes and pixmap formats the screen will support, and finds
+the Display subsection that matches the depth/bpp.  This function
+should normally be called very early from the
+<code>ChipPreInit()</code> function.</p>
+<p>It requires that the <code>confScreen</code> field of the <code>ScrnInfoRec</code> be
+initialised prior to calling it.  This is done by the XFree86
+common layer prior to calling <code>ChipPreInit()</code>.</p>
+<p>The parameters passed are:</p>
+<p><code>depth</code>
+<blockquote>
+<p>driver's preferred default depth if no other is given.
+If zero, use the overall server default.</p>
+
+</blockquote>
+
+<code>bpp</code>
+<blockquote>
+<p>Same, but for the pixmap bpp.</p>
+
+</blockquote>
+
+<code>fbbpp</code>
+<blockquote>
+<p>Same, but for the framebuffer bpp.</p>
+
+</blockquote>
+
+<code>depth24flags</code>
+<blockquote>
+<p>Flags that indicate the level of 24/32bpp support
+and whether conversion between different framebuffer
+and pixmap formats is supported.  The flags for this
+argument are defined as follows, and multiple flags
+may be ORed together:</p>
+<p><code>NoDepth24Support</code>
+<blockquote>
+No depth 24 formats supported
+</blockquote>
+
+<code>Support24bppFb</code>
+<blockquote>
+24bpp framebuffer supported
+</blockquote>
+
+<code>Support32bppFb</code>
+<blockquote>
+32bpp framebuffer supported
+</blockquote>
+
+<code>SupportConvert24to32</code>
+<blockquote>
+Can convert 24bpp pixmap to 32bpp fb
+</blockquote>
+
+<code>SupportConvert32to24</code>
+<blockquote>
+Can convert 32bpp pixmap to 24bpp fb
+</blockquote>
+
+<code>ForceConvert24to32</code>
+<blockquote>
+Force 24bpp pixmap to 32bpp fb conversion
+</blockquote>
+
+<code>ForceConvert32to24</code>
+<blockquote>
+Force 32bpp pixmap to 24bpp fb conversion
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p>It uses the command line, config file, and default values in the
+correct order of precedence to determine the depth and bpp values.
+It is up to the driver to check the results to see that it supports
+them.  If not the <code>ChipPreInit()</code> function should
+return <code>FALSE</code>.</p>
+<p>If only one of depth/bpp is given, the other is set to a reasonable
+(and consistent) default.</p>
+<p>If a driver finds that the initial <code>depth24flags</code>
+it uses later results in a fb format that requires more video
+memory than is available it may call this function a second time
+with a different <code>depth24flags</code> setting.</p>
+<p>On success, the return value is <code>TRUE</code>.  On failure
+it prints an error message and returns <code>FALSE</code>.</p>
+<p>The following fields of the <code>ScrnInfoRec</code> are
+initialised by this function:</p>
+<p>
+<blockquote>
+<code>depth</code>, <code>bitsPerPixel</code>,
+<code>display</code>, <code>imageByteOrder</code>,
+<code>bitmapScanlinePad</code>,
+<code>bitmapScanlineUnit</code>, <code>bitmapBitOrder</code>,
+<code>numFormats</code>, <code>formats</code>,
+<code>fbFormat</code>.
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>void xf86PrintDepthBpp(scrnInfoPtr scrp)</code>
+<blockquote>
+<p>This function can be used to print out the depth and bpp settings.
+It should be called after the final call to
+<code>xf86SetDepthBpp()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86SetWeight(ScrnInfoPtr scrp, rgb weight, rgb mask)</code>
+<blockquote>
+<p>This function sets the <code>weight</code>, <code>mask</code>,
+<code>offset</code> and <code>rgbBits</code> fields of the
+<code>ScrnInfoRec</code>.  It would normally be called fairly
+early in the <code>ChipPreInit()</code> function for
+depths&nbsp;&gt;&nbsp;8bpp.</p>
+<p>It requires that the <code>depth</code> and
+<code>display</code> fields of the <code>ScrnInfoRec</code>
+be initialised prior to calling it.</p>
+<p>The parameters passed are:</p>
+<p><code>weight</code>
+<blockquote>
+<p>driver's preferred default weight if no other is given.
+If zero, use the overall server default.</p>
+
+</blockquote>
+</p>
+<p><code>mask</code>
+<blockquote>
+<p>Same, but for mask.</p>
+
+</blockquote>
+</p>
+<p>It uses the command line, config file, and default values in the
+correct order of precedence to determine the weight value.  It
+derives the mask and offset values from the weight and the defaults.
+It is up to the driver to check the results to see that it supports
+them.  If not the <code>ChipPreInit()</code> function should
+return <code>FALSE</code>.</p>
+<p>On success, this function prints a message showing the weight
+values selected, and returns <code>TRUE</code>.</p>
+<p>On failure it prints an error message and returns <code>FALSE</code>.</p>
+<p>The following fields of the <code>ScrnInfoRec</code> are
+initialised by this function:</p>
+<p>
+<blockquote>
+<code>weight</code>, <code>mask</code>, <code>offset</code>.
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86SetDefaultVisual(ScrnInfoPtr scrp, int visual)</code>
+<blockquote>
+<p>This function sets the <code>defaultVisual</code> field of the
+<code>ScrnInfoRec</code>.  It would normally be called fairly
+early from the <code>ChipPreInit()</code> function.</p>
+<p>It requires that the <code>depth</code> and
+<code>display</code> fields of the <code>ScrnInfoRec</code>
+be initialised prior to calling it.</p>
+<p>The parameters passed are:</p>
+<p><code>visual</code>
+<blockquote>
+<p>driver's preferred default visual if no other is given.
+If <code>-1</code>, use the overall server default.</p>
+
+</blockquote>
+</p>
+<p>It uses the command line, config file, and default values in the
+correct order of precedence to determine the default visual value.
+It is up to the driver to check the result to see that it supports
+it.  If not the <code>ChipPreInit()</code> function should
+return <code>FALSE</code>.</p>
+<p>On success, this function prints a message showing the default visual
+selected, and returns <code>TRUE</code>.</p>
+<p>On failure it prints an error message and returns <code>FALSE</code>.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86SetGamma(ScrnInfoPtr scrp, Gamma gamma)</code>
+<blockquote>
+<p>This function sets the <code>gamma</code> field of the
+<code>ScrnInfoRec</code>.  It would normally be called fairly
+early from the <code>ChipPreInit()</code> function in cases
+where the driver supports gamma correction.</p>
+<p>It requires that the <code>monitor</code> field of the
+<code>ScrnInfoRec</code> be initialised prior to calling it.</p>
+<p>The parameters passed are:</p>
+<p><code>gamma</code>
+<blockquote>
+<p>driver's preferred default gamma if no other is given.
+If zero (<code>&lt; 0.01</code>), use the overall server
+default.</p>
+
+</blockquote>
+</p>
+<p>It uses the command line, config file, and default values in the
+correct order of precedence to determine the gamma value.  It is
+up to the driver to check the results to see that it supports
+them.  If not the <code>ChipPreInit()</code> function should
+return <code>FALSE</code>.</p>
+<p>On success, this function prints a message showing the gamma
+value selected, and returns <code>TRUE</code>.</p>
+<p>On failure it prints an error message and returns <code>FALSE</code>.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86SetDpi(ScrnInfoPtr pScrn, int x, int y)</code>
+<blockquote>
+<p>This function sets the <code>xDpi</code> and <code>yDpi</code>
+fields of the <code>ScrnInfoRec</code>.  The driver can specify
+preferred defaults by setting <code>x</code> and <code>y</code>
+to non-zero values.  The <code>-dpi</code> command line option
+overrides all other settings.  Otherwise, if the
+<b>DisplaySize</b> entry is present in the screen's <b>Monitor</b>
+config file section, it is used together with the virtual size to
+calculate the dpi values.  This function should be called after
+all the mode resolution has been done.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86SetBlackWhitePixels(ScrnInfoPtr pScrn)</code>
+<blockquote>
+<p>This functions sets the <code>blackPixel</code> and
+<code>whitePixel</code> fields of the <code>ScrnInfoRec</code>
+according to whether or not the <code>-flipPixels</code> command
+line options is present.</p>
+
+</blockquote>
+</p>
+<p><code>const char *xf86GetVisualName(int visual)</code>
+<blockquote>
+<p>Returns a printable string with the visual name matching the
+numerical visual class provided.  If the value is outside the
+range of valid visual classes, <code>NULL</code> is returned.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+
+<H3><A NAME="74"></A>18.3. Primary Mode functions </H3>
+
+<p>The primary mode helper functions are those which would normally be
+used by a driver, unless it has unusual requirements which cannot
+be catered for the by the helpers.</p>
+<p>
+<blockquote>
+<p><code>int xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;char **modeNames, ClockRangePtr clockRanges,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *linePitches, int minPitch, int maxPitch,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int pitchInc, int minHeight, int maxHeight,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int virtualX, int virtualY,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unsigned long apertureSize,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LookupModeFlags strategy)</code>
+<blockquote>
+<p>This function basically selects the set of modes to use based on
+those available and the various constraints.  It also sets some
+other related parameters.  It is normally called near the end of
+the <code>ChipPreInit()</code> function.</p>
+<p>The parameters passed to the function are:</p>
+<p><code>availModes</code>
+<blockquote>
+<p>List of modes available for the monitor.</p>
+
+</blockquote>
+
+<code>modeNames</code>
+<blockquote>
+<p>List of mode names that the screen is requesting.</p>
+
+</blockquote>
+
+<code>clockRanges</code>
+<blockquote>
+<p>A list of clock ranges allowed by the driver.  Each
+range includes whether interlaced or multiscan modes
+are supported for that range.  See below for more on
+<code>clockRanges</code>.</p>
+
+</blockquote>
+
+<code>linePitches</code>
+<blockquote>
+<p>List of line pitches supported by the driver.
+This is optional and should be <code>NULL</code> when
+not used.</p>
+
+</blockquote>
+
+<code>minPitch</code>
+<blockquote>
+<p>Minimum line pitch supported by the driver.  This must
+be supplied when <code>linePitches</code> is
+<code>NULL</code>, and is ignored otherwise.</p>
+
+</blockquote>
+
+<code>maxPitch</code>
+<blockquote>
+<p>Maximum line pitch supported by the driver.  This is
+required when <code>minPitch</code> is required.</p>
+
+</blockquote>
+
+<code>pitchInc</code>
+<blockquote>
+<p>Granularity of horizontal pitch values as supported by
+the chipset.  This is expressed in bits.  This must be
+supplied.</p>
+
+</blockquote>
+
+<code>minHeight</code>
+<blockquote>
+<p>minimum virtual height allowed.  If zero, no limit is
+imposed.</p>
+
+</blockquote>
+
+<code>maxHeight</code>
+<blockquote>
+<p>maximum virtual height allowed.  If zero, no limit is
+imposed.</p>
+
+</blockquote>
+
+<code>virtualX</code>
+<blockquote>
+<p>If greater than zero, this is the virtual width value
+that will be used.  Otherwise, the virtual width is
+chosen to be the smallest that can accommodate the modes
+selected.</p>
+
+</blockquote>
+
+<code>virtualY</code>
+<blockquote>
+<p>If greater than zero, this is the virtual height value
+that will be used.  Otherwise, the virtual height is
+chosen to be the smallest that can accommodate the modes
+selected.</p>
+
+</blockquote>
+
+<code>apertureSize</code>
+<blockquote>
+<p>The size (in bytes) of the aperture used to access video
+memory.</p>
+
+</blockquote>
+
+<code>strategy</code>
+<blockquote>
+<p>The strategy to use when choosing from multiple modes
+with the same name.  The options are:</p>
+<p><code>LOOKUP_DEFAULT</code>
+<blockquote>
+???
+</blockquote>
+
+<code>LOOKUP_BEST_REFRESH</code>
+<blockquote>
+mode with best refresh rate
+</blockquote>
+
+<code>LOOKUP_CLOSEST_CLOCK</code>
+<blockquote>
+mode with closest matching clock
+</blockquote>
+
+<code>LOOKUP_LIST_ORDER</code>
+<blockquote>
+first usable mode in list
+</blockquote>
+</p>
+<p>The following options can also be combined (OR'ed) with
+one of the above:</p>
+<p><code>LOOKUP_CLKDIV2</code>
+<blockquote>
+Allow halved clocks
+</blockquote>
+
+<code>LOOKUP_OPTIONAL_TOLERANCES</code>
+<blockquote>
+Allow missing horizontal sync and/or vertical refresh
+ranges in the XF86Config Monitor section
+</blockquote>
+</p>
+<p><code>LOOKUP_OPTIONAL_TOLERANCES</code> should only be
+specified when the driver can ensure all modes it generates
+can sync on, or at least not damage, the monitor or digital
+flat panel.  Horizontal sync and/or vertical refresh ranges
+specified by the user will still be honoured (and acted upon).</p>
+
+</blockquote>
+</p>
+<p>This function requires that the following fields of the
+<code>ScrnInfoRec</code> are initialised prior to calling it:</p>
+<p><code>clock[]</code>
+<blockquote>
+List of discrete clocks (when non-programmable)
+</blockquote>
+
+<code>numClocks</code>
+<blockquote>
+Number of discrete clocks (when non-programmable)
+</blockquote>
+
+<code>progClock</code>
+<blockquote>
+Whether the clock is programmable or not
+</blockquote>
+
+<code>monitor</code>
+<blockquote>
+Pointer to the applicable XF86Config monitor section
+</blockquote>
+
+<code>fdFormat</code>
+<blockquote>
+Format of the screen buffer
+</blockquote>
+
+<code>videoRam</code>
+<blockquote>
+total video memory size (in bytes)
+</blockquote>
+
+<code>maxHValue</code>
+<blockquote>
+Maximum horizontal timing value allowed
+</blockquote>
+
+<code>maxVValue</code>
+<blockquote>
+Maximum vertical timing value allowed
+</blockquote>
+
+<code>xInc</code>
+<blockquote>
+Horizontal timing increment in pixels (defaults to 8)
+</blockquote>
+</p>
+<p>This function fills in the following <code>ScrnInfoRec</code>
+fields:</p>
+<p><code>modePool</code>
+<blockquote>
+<p>A subset of the modes available to the monitor which
+are compatible with the driver.</p>
+
+</blockquote>
+
+<code>modes</code>
+<blockquote>
+<p>One mode entry for each of the requested modes, with
+the status field of each filled in to indicate if
+the mode has been accepted or not.  This list of
+modes is a circular list.</p>
+
+</blockquote>
+
+<code>virtualX</code>
+<blockquote>
+<p>The resulting virtual width.</p>
+
+</blockquote>
+
+<code>virtualY</code>
+<blockquote>
+<p>The resulting virtual height.</p>
+
+</blockquote>
+
+<code>displayWidth</code>
+<blockquote>
+<p>The resulting line pitch.</p>
+
+</blockquote>
+
+<code>virtualFrom</code>
+<blockquote>
+<p>Where the virtual size was determined from.</p>
+
+</blockquote>
+</p>
+<p>The first stage of this function checks that the
+<code>virtualX</code> and <code>virtualY</code> values
+supplied (if greater than zero) are consistent with the line pitch
+and <code>maxHeight</code> limitations.  If not, an error
+message is printed, and the return value is <code>-1</code>.</p>
+<p>The second stage sets up the mode pool, eliminating immediately
+any modes that exceed the driver's line pitch limits, and also
+the virtual width and height limits (if greater than zero).  For
+each mode removed an informational message is printed at verbosity
+level <code>2</code>.  If the mode pool ends up being empty,
+a warning message is printed, and the return value is
+<code>0</code>.</p>
+<p>The final stage is to lookup each mode name, and fill in the remaining
+parameters.  If an error condition is encountered, a message is
+printed, and the return value is <code>-1</code>.  Otherwise,
+the return value is the number of valid modes found
+(<code>0</code> if none are found).</p>
+<p>Even if the supplied mode names include duplicates, no two names will
+ever match the same mode.  Furthermore, if the supplied mode names do not
+yield a valid mode (including the case where no names are passed at all),
+the function will continue looking through the mode pool until it finds
+a mode that survives all checks, or until the mode pool is exhausted.</p>
+<p>A message is only printed by this function when a fundamental
+problem is found.  It is intended that this function may be called
+more than once if there is more than one set of constraints that
+the driver can work within.</p>
+<p>If this function returns <code>-1</code>, the
+<code>ChipPreInit()</code> function should return
+<code>FALSE</code>.</p>
+<p><code>clockRanges</code> is a linked list of clock ranges
+allowed by the driver.  If a mode doesn't fit in any of the defined
+<code>clockRanges</code>, it is rejected.  The first
+<code>clockRange</code> that matches all requirements is used.
+This structure needs to be initialized to NULL when allocated.</p>
+<p><code>clockRanges</code> contains the following fields:</p>
+<p><code>minClock<br>
+maxClock</code>
+<blockquote>
+<p>The lower and upper mode clock bounds for which the rest
+of the <code>clockRange</code> parameters apply.
+Since these are the mode clocks, they are not scaled
+with the <code>ClockMulFactor</code> and
+<code>ClockDivFactor</code>.  It is up to the driver
+to adjust these values if they depend on the clock
+scaling factors.</p>
+
+</blockquote>
+
+<code>clockIndex</code>
+<blockquote>
+<p>(not used yet) <code>-1</code> for programmable clocks</p>
+
+</blockquote>
+
+<code>interlaceAllowed</code>
+<blockquote>
+<p><code>TRUE</code> if interlacing is allowed for this
+range</p>
+
+</blockquote>
+
+<code>doubleScanAllowed</code>
+<blockquote>
+<p><code>TRUE</code> if doublescan or multiscan is allowed
+for this range</p>
+
+</blockquote>
+
+<code>ClockMulFactor<br>
+ClockDivFactor</code>
+<blockquote>
+<p>Scaling factors that are applied to the mode clocks ONLY
+before selecting a clock index (when there is no
+programmable clock) or a <code>SynthClock</code>
+value.  This is useful for drivers that support pixel
+multiplexing or that need to scale the clocks because
+of hardware restrictions (like sending 24bpp data to an
+8 bit RAMDAC using a tripled clock).</p>
+<p>Note that these parameters describe what must be done
+to the mode clock to achieve the data transport clock
+between graphics controller and RAMDAC.  For example
+for <code>2:1</code> pixel multiplexing, two pixels
+are sent to the RAMDAC on each clock.  This allows the
+RAMDAC clock to be half of the actual pixel clock.
+Hence, <code>ClockMulFactor=1</code> and
+<code>ClockDivFactor=2</code>.  This means that the
+clock used for clock selection (ie, determining the
+correct clock index from the list of discrete clocks)
+or for the <code>SynthClock</code> field in case of
+a programmable clock is:  (<code>mode-&gt;Clock *
+ClockMulFactor) / ClockDivFactor</code>.</p>
+
+</blockquote>
+
+<code>PrivFlags</code>
+<blockquote>
+<p>This field is copied into the
+<code>mode-&gt;PrivFlags</code> field when this
+<code>clockRange</code> is selected by
+<code>xf86ValidateModes()</code>.  It allows the
+driver to find out what clock range was selected, so it
+knows it needs to set up pixel multiplexing or any other
+range-dependent feature.  This field is purely
+driver-defined: it may contain flag bits, an index or
+anything else (as long as it is an <code>INT</code>).</p>
+</blockquote>
+</p>
+<p>Note that the <code>mode-&gt;SynthClock</code> field is always
+filled in by <code>xf86ValidateModes()</code>: it will contain
+the ``data transport clock'', which is the clock that will have
+to be programmed in the chip when it has a programmable clock, or
+the clock that will be picked from the clocks list when it is not
+a programmable one.  Thus:</p>
+<p><code>mode-&gt;SynthClock =<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(mode-&gt;Clock * ClockMulFactor) / ClockDivFactor</code></p>
+
+</blockquote>
+</p>
+<p><code>void xf86PruneDriverModes(ScrnInfoPtr scrp)</code>
+<blockquote>
+<p>This function deletes modes in the modes field of the
+<code>ScrnInfoRec</code> that have been marked as invalid.
+This is normally run after having run
+<code>xf86ValidateModes()</code> for the last time.  For each
+mode that is deleted, a warning message is printed out indicating
+the reason for it being deleted.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86SetCrtcForModes(ScrnInfoPtr scrp, int adjustFlags)</code>
+<blockquote>
+<p>This function fills in the <code>Crtc*</code> fields for all
+the modes in the <code>modes</code> field of the
+<code>ScrnInfoRec</code>.  The <code>adjustFlags</code>
+parameter determines how the vertical CRTC values are scaled for
+interlaced modes.  They are halved if it is
+<code>INTERLACE_HALVE_V</code>.  The vertical CRTC values are
+doubled for doublescan modes, and are further multiplied by the
+<code>VScan</code> value.</p>
+<p>This function is normally called after calling
+<code>xf86PruneDriverModes()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86PrintModes(ScrnInfoPtr scrp)</code>
+<blockquote>
+<p>This function prints out the virtual size setting, and the line
+pitch being used.  It also prints out two lines for each mode being
+used.  The first line includes the mode's pixel clock, horizontal sync
+rate, refresh rate, and whether it is interlaced, doublescanned and/or
+multi-scanned.  The second line is the mode's Modeline.</p>
+<p>This function is normally called after calling
+<code>xf86SetCrtcForModes()</code>.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+
+<H3><A NAME="75"></A>18.4. Secondary Mode functions </H3>
+
+<p>The secondary mode helper functions are functions which are normally
+used by the primary mode helper functions, and which are not normally
+called directly by a driver.  If a driver has unusual requirements
+and needs to do its own mode validation, it might be able to make
+use of some of these secondary mode helper functions.</p>
+<p>
+<blockquote>
+<p><code>int xf86GetNearestClock(ScrnInfoPtr scrp, int freq, Bool allowDiv2,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *divider)</code>
+<blockquote>
+<p>This function returns the index of the closest clock to the
+frequency <code>freq</code> given (in kHz).  It assumes that
+the number of clocks is greater than zero.  It requires that the
+<code>numClocks</code> and <code>clock</code> fields of the
+<code>ScrnInfoRec</code> are initialised.  The
+<code>allowDiv2</code> field determines if the clocks can be
+halved.  The <code>*divider</code> return value indicates
+whether clock division is used when determining the clock returned.</p>
+<p>This function is only for non-programmable clocks.</p>
+
+</blockquote>
+</p>
+<p><code>const char *xf86ModeStatusToString(ModeStatus status)</code>
+<blockquote>
+<p>This function converts the <code>status</code> value to a
+descriptive printable string.</p>
+
+</blockquote>
+</p>
+<p><code>ModeStatus xf86LookupMode(ScrnInfoPtr scrp, DisplayModePtr modep,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClockRangePtr clockRanges, LookupModeFlags strategy)</code>
+<blockquote>
+<p>This function takes a pointer to a mode with the name filled in,
+and looks for a mode in the <code>modePool</code> list which
+matches.  The parameters of the matching mode are filled in to
+<code>*modep</code>.  The <code>clockRanges</code> and
+<code>strategy</code> parameters are as for the
+<code>xf86ValidateModes()</code> function above.</p>
+<p>This function requires the <code>modePool</code>,
+<code>clock[]</code>, <code>numClocks</code> and
+<code>progClock</code> fields of the <code>ScrnInfoRec</code>
+to be initialised before being called.</p>
+<p>The return value is <code>MODE_OK</code> if a mode was found.
+Otherwise it indicates why a matching mode could not be found.</p>
+
+</blockquote>
+</p>
+<p><code>ModeStatus xf86InitialCheckModeForDriver(ScrnInfoPtr scrp,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DisplayModePtr mode, ClockRangePtr clockRanges,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LookupModeFlags strategy, int maxPitch,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int virtualX, int virtualY)</code>
+<blockquote>
+<p>This function checks the passed mode against some basic driver
+constraints.  Apart from the ones passed explicitly, the
+<code>maxHValue</code> and <code>maxVValue</code> fields of
+the <code>ScrnInfoRec</code> are also used.  If the
+<code>ValidMode</code> field of the <code>ScrnInfoRec</code>
+is set, that function is also called to check the mode.  Next, the
+mode is checked against the monitor's constraints.</p>
+<p>If the mode is consistent with all constraints, the return value
+is <code>MODE_OK</code>.  Otherwise the return value indicates
+which constraint wasn't met.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86DeleteMode(DisplayModePtr *modeList, DisplayModePtr mode)</code>
+<blockquote>
+<p>This function deletes the <code>mode</code> given from the
+<code>modeList</code>.  It never prints any messages, so it is
+up to the caller to print a message if required.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="76"></A>18.5. Functions for handling strings and tokens </H3>
+
+<p>Tables associating strings and numerical tokens combined with the
+following functions provide a compact way of handling strings from
+the config file, and for converting tokens into printable strings.
+The table data structure is:</p>
+<p>
+<blockquote>
+<pre>
+typedef struct {
+    int                 token;
+    const char *        name;
+} SymTabRec, *SymTabPtr;
+</pre>
+</blockquote>
+</p>
+<p>A table is an initialised array of <code>SymTabRec</code>.  The
+tokens must be non-negative integers.  Multiple names may be mapped
+to a single token.  The table is terminated with an element with a
+<code>token</code> value of <code>-1</code> and
+<code>NULL</code> for the <code>name</code>.</p>
+
+<p>
+<blockquote>
+<p><code>const char *xf86TokenToString(SymTabPtr table, int token)</code>
+<blockquote>
+<p>This function returns the first string in <code>table</code>
+that matches <code>token</code>.  If no match is found,
+<code>NULL</code> is returned (NOTE, older versions of this
+function would return the string "unknown" when no match is found).</p>
+
+</blockquote>
+</p>
+<p><code>int xf86StringToToken(SymTabPtr table, const char *string)</code>
+<blockquote>
+<p>This function returns the first token in <code>table</code>
+that matches <code>string</code>.  The
+<code>xf86NameCmp()</code> function is used to determine the
+match.  If no match is found, <code>-1</code> is returned.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+
+<H3><A NAME="77"></A>18.6. Functions for finding which config file entries to use </H3>
+
+<p>These functions can be used to select the appropriate config file
+entries that match the detected hardware.  They are described above
+in the 
+<A HREF="DESIGN5.html#probe">Probe</A> and
+<A HREF="DESIGN9.html#avail">Available Functions</A> sections.</p>
+
+
+<H3><A NAME="78"></A>18.7. Probing discrete clocks on older hardware </H3>
+
+<p>The <code>xf86GetClocks()</code> function may be used to assist
+in finding the discrete pixel clock values on older hardware.</p>
+
+<p>
+<blockquote>
+<p><code>void xf86GetClocks(ScrnInfoPtr pScrn, int num,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bool (*ClockFunc)(ScrnInfoPtr, int),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;void (*ProtectRegs)(ScrnInfoPtr, Bool),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;void (*BlankScreen)(ScrnInfoPtr, Bool),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int vertsyncreg, int maskval, int knownclkindex,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int knownclkvalue)</code>
+<blockquote>
+<p>This function uses a comparative sampling method to measure the
+discrete pixel clock values.  The number of discrete clocks to
+measure is given by <code>num</code>.  <code>clockFunc</code>
+is a function that selects the <code>n</code>'th clock.  It
+should also save or restore any state affected by programming the
+clocks when the index passed is <code>CLK_REG_SAVE</code> or
+<code>CLK_REG_RESTORE</code>.  <code>ProtectRegs</code> is
+a function that does whatever is required to protect the hardware
+state while selecting a new clock.  <code>BlankScreen</code>
+is a function that blanks the screen.  <code>vertsyncreg</code>
+and <code>maskval</code> are the I/O register and bitmask to
+check for the presence of vertical sync pulses.
+<code>knownclkindex</code> and <code>knownclkvalue</code>
+are the index and value of a known clock.  These are the known
+references on which the comparative measurements are based.  The
+number of clocks probed is set in <code>pScrn-&gt;numClocks</code>,
+and the probed clocks are set in the <code>pScrn-&gt;clock[]</code>
+array.  All of the clock values are in units of kHz.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86ShowClocks(ScrnInfoPtr scrp, MessageType from)</code>
+<blockquote>
+<p>Print out the pixel clocks <code>scrp-&gt;clock[]</code>.
+<code>from</code> indicates whether the clocks were probed
+or from the config file.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="79"></A>18.8. Other helper functions </H3>
+<p>
+<blockquote>
+<p><code>Bool xf86IsUnblank(int mode)</code>
+<blockquote>
+<p>Returns <code>TRUE</code> when the screen saver mode specified
+by <code>mode</code> requires the screen be unblanked,
+and <code>FALSE</code> otherwise.  The screen saver modes that
+require blanking are <code>SCREEN_SAVER_ON</code> and
+<code>SCREEN_SAVER_CYCLE</code>, and the screen saver modes that
+require unblanking are <code>SCREEN_SAVER_OFF</code> and
+<code>SCREEN_SAVER_FORCER</code>.  Drivers may call this helper
+from their <code>SaveScreen()</code> function to interpret the
+screen saver modes.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Helper Functions </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN17.html"><EM>The Loader </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN19.html"><EM>The vgahw module </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728767" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

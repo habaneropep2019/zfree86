@@ -1,0 +1,13 @@
+XCOMM $XFree86: xc/programs/xkbcomp/keycodes/Imakefile,v 3.20 2006/12/29 19:27:16 tsi Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags /**/
+
+    DATAFILES = README aliases amiga ataritt fujitsu hp ibm macintosh \
+		powerpcps2 sony sun x68k xfree86 xfree98
+      SUBDIRS = digital sgi
+
+all::
+
+MakeXkbDir($(LIBDIR)/xkb,keycodes)
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/keycodes)

@@ -1,0 +1,14 @@
+XCOMM $XFree86: xc/fonts/scaled/Speedo/Imakefile,v 1.9 2006/01/09 14:58:13 dawes Exp $
+
+OBJS = font0648.spd font0649.spd font0709.spd font0710.spd \
+	font0419.spd font0582.spd font0583.spd font0611.spd
+
+FONTINSTDIR = $(FONTDIR)/Speedo
+
+STATIC_FONTS_SCALE = y
+
+MakeFontsDir(fonts.scale)
+
+InstallFonts($(FONTINSTDIR))
+InstallEncodingsDir($(ENCODINGSSRC),$(FONTINSTDIR))
+

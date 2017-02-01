@@ -1,0 +1,20 @@
+XCOMM $XFree86: xc/programs/glxinfo/Imakefile,v 1.9 2006/07/23 20:21:12 tsi Exp $
+
+#include <Threads.tmpl>
+
+#if BuildGLULibrary
+
+        DEPLIBS = $(DEPGLULIB) $(DEPGLXLIB) $(DEPXXF86VMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(GLULIB) $(GLXLIB) $(XXF86VMLIB) $(XLIB) 
+        DEFINES = -DDO_GLU
+
+#else
+
+        DEPLIBS = $(DEPGLXLIB) $(DEPXXF86VMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(GLXLIB) $(XXF86VMLIB) $(XLIB) 
+
+#endif
+
+  SYS_LIBRARIES = MathLibrary
+
+SimpleProgramTarget(glxinfo)

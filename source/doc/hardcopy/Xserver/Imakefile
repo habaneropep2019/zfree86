@@ -1,0 +1,9 @@
+XCOMM $XFree86: xc/doc/hardcopy/Xserver/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(Xprt,Xprt.PS.gz)
+InstallHardcopyDoc(analysis,analysis.PS.gz)
+InstallHardcopyDoc(appgroup,appgroup.PS.gz)
+InstallHardcopyDoc(ddx,ddx.PS.gz)
+InstallHardcopyDoc(fontlib,fontlib.PS.gz)
+InstallHardcopyDoc(secint,secint.PS.gz)
+

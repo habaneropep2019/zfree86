@@ -1,0 +1,1448 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Development Results </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Development Results </EM><BR>
+<b>Previous:</b> <A HREF="dmx4.html"><EM>Background </EM></A><BR>
+<b>Next:</b> <A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="40"></A>5. Development Results </H2>
+<p>In this section the results of each phase of development are
+discussed.  This development took place between approximately June 2001
+and July 2003.</p>
+
+<H3><A NAME="41"></A>5.1. Phase I </H3>
+<p>The initial development phase dealt with the basic implementation
+including the bootstrap code, which used the shadow framebuffer, and the
+unoptimized implementation, based on an Xnest-style implementation.</p>
+
+<H4><A NAME="42"></A>5.1.1. Scope </H4>
+<p>The goal of Phase I is to provide fundamental functionality that can
+act as a foundation for ongoing work:
+<ol>
+<li>Develop the proxy X server
+<ul>
+<li>The proxy X server will operate on the X11 protocol and
+relay requests as necessary to correctly perform the request.</li>
+<li>Work will be based on the existing work for Xinerama and
+Xnest.</li>
+<li>Input events and windowing operations are handled in the
+proxy server and rendering requests are repackaged and sent to
+each of the back-end servers for display.</li>
+<li>The multiple screen layout (including support for
+overlapping screens) will be user configurable via a
+configuration file or through the configuration tool.</li>
+</ul>
+</li>
+<li>Develop graphical configuration tool
+<ul>
+<li>There will be potentially a large number of X servers to
+configure into a single display.  The tool will allow the user
+to specify which servers are involved in the configuration and
+how they should be laid out.</li>
+</ul>
+</li>
+<li>Pass the X Test Suite
+<ul>
+<li>The X Test Suite covers the basic X11 operations.  All
+tests known to succeed must correctly operate in the distributed
+X environment.</li>
+</ul>
+</li>
+</ol>
+</p>
+
+<p>For this phase, the back-end X servers are assumed to be unmodified X
+servers that do not support any DMX-related protocol extensions; future
+optimization pathways are considered, but are not implemented; and the
+configuration tool is assumed to rely only on libraries in the X source
+tree (e.g., Xt).</p>
+
+<H4><A NAME="43"></A>5.1.2. Results </H4>
+<p>The proxy X server, Xdmx, was developed to distribute X11 protocol
+requests to the set of back-end X servers.  It opens a window on each
+back-end server, which represents the part of the front-end's root
+window that is visible on that screen.  It mirrors window, pixmap and
+other state in each back-end server.  Drawing requests are sent to
+either windows or pixmaps on each back-end server.  This code is based
+on Xnest and uses the existing Xinerama extension.</p>
+
+<p>Input events can be taken from (1) devices attached to the back-end
+server, (2) core devices attached directly to the Xdmx server, or (3)
+from a ``console'' window on another X server.  Events for these devices
+are gathered, processed and delivered to clients attached to the Xdmx
+server.</p>
+
+<p>An intuitive configuration format was developed to help the user
+easily configure the multiple back-end X servers.  It was defined (see
+grammar in Xdmx man page) and a parser was implemented that is used by
+the Xdmx server and by a standalone xdmxconfig utility.  The parsing
+support was implemented such that it can be easily factored out of the X
+source tree for use with other tools (e.g., vdl).  Support for
+converting legacy vdl-format configuration files to the DMX format is
+provided by the vdltodmx utility.</p>
+
+<p>Originally, the configuration file was going to be a subsection of
+XFree86's XF86Config file, but that was not possible since Xdmx is a
+completely separate X server.  Thus, a separate config file format was
+developed.  In addition, a graphical configuration
+tool, xdmxconfig, was developed to allow the user to create and arrange
+the screens in the configuration file.  The <b>-configfile</b> and <b>-config</b>
+command-line options can be used to start Xdmx using a configuration
+file.</p>
+
+<p>An extension that enables remote input testing is required for the X
+Test Suite to function.  During this phase, this extension (XTEST) was
+implemented in the Xdmx server.  The results from running the X Test
+Suite are described in detail below.</p>
+
+<H4><A NAME="44"></A>5.1.3. X Test Suite </H4>
+<H5><A NAME="45"></A>5.1.3.1. Introduction </H5>
+<p>The X Test Suite contains tests that verify Xlib functions
+operate correctly.  The test suite is designed to run on a
+single X server; however, since X applications will not be
+able to tell the difference between the DMX server and a
+standard X server, the X Test Suite should also run on the
+DMX server.</p>
+<p>The Xdmx server was tested with the X Test Suite, and the
+existing failures are noted in this section.  To put these
+results in perspective, we first discuss expected X Test
+failures and how errors in underlying systems can impact
+Xdmx test results.</p>
+
+<H5><A NAME="46"></A>5.1.3.2. Expected Failures for a Single Head </H5>
+<p>A correctly implemented X server with a single screen is
+expected to fail certain X Test tests.  The following
+well-known errors occur because of rounding error in the X
+server code:
+<pre>
+XDrawArc: Tests 42, 63, 66, 73
+XDrawArcs: Tests 45, 66, 69, 76
+              
+</pre>
+</p>
+<p>The following failures occur because of the high-level X
+server implementation:
+<pre>
+XLoadQueryFont: Test 1
+XListFontsWithInfo: Tests 3, 4
+XQueryFont: Tests 1, 2
+              
+</pre>
+</p>
+<p>The following test fails when running the X server as root
+under Linux because of the way directory modes are
+interpreted:
+<pre>
+XWriteBitmapFile: Test 3
+              
+</pre>
+</p>
+<p>Depending on the video card used for the back-end, other
+failures may also occur because of bugs in the low-level
+driver implementation.  Over time, failures of this kind
+are usually fixed by XFree86, but will show up in Xdmx
+testing until then.</p>
+
+<H5><A NAME="47"></A>5.1.3.3. Expected Failures for Xinerama </H5>
+<p>Xinerama fails several X Test Suite tests because of
+design decisions made for the current implementation of
+Xinerama.  Over time, many of these errors will be
+corrected by XFree86 and the group working on a new
+Xinerama implementation.  Therefore, Xdmx will also share
+X Suite Test failures with Xinerama.</p>
+<p>We may be able to fix or work-around some of these
+failures at the Xdmx level, but this will require
+additional exploration that was not part of Phase I.</p>
+<p>Xinerama is constantly improving, and the list of
+Xinerama-related failures depends on XFree86 version and
+the underlying graphics hardware.  We tested with a
+variety of hardware, including nVidia, S3, ATI Radeon,
+and Matrox G400 (in dual-head mode).  The list below
+includes only those failures that appear to be from the
+Xinerama layer, and does not include failures listed in
+the previous section, or failures that appear to be from
+the low-level graphics driver itself:</p>
+<p>These failures were noted with multiple Xinerama
+configurations:
+<pre>
+XCopyPlane: Tests 13, 22, 31 (well-known Xinerama implementation issue)
+XSetFontPath: Test 4
+XGetDefault: Test 5
+XMatchVisualInfo: Test 1
+              
+</pre>
+</p>
+<p>These failures were noted only when using one dual-head
+video card with a 4.2.99.x XFree86 server:
+<pre>
+XListPixmapFormats: Test 1
+XDrawRectangles: Test 45
+              
+</pre>
+</p>
+<p>These failures were noted only when using two video cards
+from different vendors with a 4.1.99.x XFree86 server:
+<pre>
+XChangeWindowAttributes: Test 32
+XCreateWindow: Test 30
+XDrawLine: Test 22
+XFillArc: Test 22
+XChangeKeyboardControl: Tests 9, 10
+XRebindKeysym: Test 1
+              
+</pre>
+</p>
+
+<H5><A NAME="48"></A>5.1.3.4. Additional Failures from Xdmx </H5>
+<p>When running Xdmx, no unexpected failures were noted.
+Since the Xdmx server is based on Xinerama, we expect to
+have most of the Xinerama failures present in the Xdmx
+server.  Similarly, since the Xdmx server must rely on the
+low-level device drivers on each back-end server, we also
+expect that Xdmx will exhibit most of the back-end
+failures.  Here is a summary:
+<pre>
+XListPixmapFormats: Test 1 (configuration dependent)
+XChangeWindowAttributes: Test 32
+XCreateWindow: Test 30
+XCopyPlane: Test 13, 22, 31
+XSetFontPath: Test 4
+XGetDefault: Test 5 (configuration dependent)
+XMatchVisualInfo: Test 1
+XRebindKeysym: Test 1 (configuration dependent)
+              
+</pre>
+</p>
+<p>Note that this list is shorter than the combined list for
+Xinerama because Xdmx uses different code paths to perform
+some Xinerama operations.  Further, some Xinerama failures
+have been fixed in the XFree86 4.2.99.x CVS repository.</p>
+
+<H5><A NAME="49"></A>5.1.3.5. Summary and Future Work </H5>
+<p>Running the X Test Suite on Xdmx does not produce any
+failures that cannot be accounted for by the underlying
+Xinerama subsystem used by the front-end or by the
+low-level device-driver code running on the back-end X
+servers.  The Xdmx server therefore is as ``correct'' as
+possible with respect to the standard set of X Test Suite
+tests.</p>
+<p>During the following phases, we will continue to verify
+Xdmx correctness using the X Test Suite.  We may also use
+other tests suites or write additional tests that run
+under the X Test Suite that specifically verify the
+expected behavior of DMX.</p>
+
+<H4><A NAME="50"></A>5.1.4. Fonts </H4>
+<p>In Phase I, fonts are handled directly by both the front-end and the
+back-end servers, which is required since we must treat each back-end
+server during this phase as a ``black box''.  What this requires is that
+<b>the front- and back-end servers must share the exact same font
+path</b>.  There are two ways to help make sure that all servers share the
+same font path:</p>
+<p>
+<ol>
+<li>First, each server can be configured to use the same font
+server.  The font server, xfs, can be configured to serve fonts to
+multiple X servers via TCP.
+</li>
+<li>Second, each server can be configured to use the same font
+path and either those font paths can be copied to each back-end
+machine or they can be mounted (e.g., via NFS) on each back-end
+machine.</li>
+</ol>
+</p>
+
+<p>One additional concern is that a client program can set its own font
+path, and if it does so, then that font path must be available on each
+back-end machine.</p>
+
+<p>The -fontpath command line option was added to allow users to
+initialize the font path of the front end server.  This font path is
+propagated to each back-end server when the default font is loaded.  If
+there are any problems, an error message is printed, which will describe
+the problem and list the current font path.  For more information about
+setting the font path, see the -fontpath option description in the man
+page.</p>
+
+<H4><A NAME="51"></A>5.1.5. Performance </H4>
+<p>Phase I of development was not intended to optimize performance.  Its
+focus was on completely and correctly handling the base X11 protocol in
+the Xdmx server.  However, several insights were gained during Phase I,
+which are listed here for reference during the next phase of
+development.</p>
+<p>
+<ol>
+<li>Calls to XSync() can slow down rendering since it requires a
+complete round trip to and from a back-end server.  This is
+especially problematic when communicating over long haul networks.</li>
+<li>Sending drawing requests to only the screens that they overlap
+should improve performance.</li>
+</ol>
+</p>
+
+<H4><A NAME="52"></A>5.1.6. Pixmaps </H4>
+<p>Pixmaps were originally expected to be handled entirely in the
+front-end X server; however, it was found that this overly complicated
+the rendering code and would have required sending potentially large
+images to each back server that required them when copying from pixmap
+to screen.  Thus, pixmap state is mirrored in the back-end server just
+as it is with regular window state.  With this implementation, the same
+rendering code that draws to windows can be used to draw to pixmaps on
+the back-end server, and no large image transfers are required to copy
+from pixmap to window.</p>
+
+<H3><A NAME="53"></A>5.2. Phase II </H3>
+<p>The second phase of development concentrates on performance
+optimizations.  These optimizations are documented here, with
+<code>x11perf</code> data to show how the optimizations improve performance.</p>
+
+<p>All benchmarks were performed by running Xdmx on a dual processor
+1.4GHz AMD Athlon machine with 1GB of RAM connecting over 100baseT to
+two single-processor 1GHz Pentium III machines with 256MB of RAM and ATI
+Rage 128 (RF) video cards.  The front end was running Linux
+2.4.20-pre1-ac1 and the back ends were running Linux 2.4.7-10 and
+version 4.2.99.1 of XFree86 pulled from the XFree86 CVS repository on
+August 7, 2002.  All systems were running Red Hat Linux 7.2.</p>
+
+<H4><A NAME="54"></A>5.2.1. Moving from XFree86 4.1.99.1 to 4.2.0.0 </H4>
+<p>For phase II, the working source tree was moved to the branch tagged
+with dmx-1-0-branch and was updated from version 4.1.99.1 (20 August
+2001) of the XFree86 sources to version 4.2.0.0 (18 January 2002).
+After this update, the following tests were noted to be more than 10%
+faster:
+<pre>
+1.13   Fill 300x300 opaque stippled trapezoid (161x145 stipple) 
+1.16   Fill 1x1 tiled trapezoid (161x145 tile) 
+1.13   Fill 10x10 tiled trapezoid (161x145 tile) 
+1.17   Fill 100x100 tiled trapezoid (161x145 tile) 
+1.16   Fill 1x1 tiled trapezoid (216x208 tile) 
+1.20   Fill 10x10 tiled trapezoid (216x208 tile) 
+1.15   Fill 100x100 tiled trapezoid (216x208 tile) 
+1.37   Circulate Unmapped window (200 kids) 
+            
+</pre>
+
+And the following tests were noted to be more than 10% slower:
+<pre>
+0.88   Unmap window via parent (25 kids) 
+0.75   Circulate Unmapped window (4 kids) 
+0.79   Circulate Unmapped window (16 kids) 
+0.80   Circulate Unmapped window (25 kids) 
+0.82   Circulate Unmapped window (50 kids) 
+0.85   Circulate Unmapped window (75 kids) 
+            
+</pre>
+</p>
+<p>These changes were not caused by any changes in the DMX system, and
+may point to changes in the XFree86 tree or to tests that have more
+"jitter" than most other <code>x11perf</code> tests.</p>
+
+<H4><A NAME="55"></A>5.2.2. Global changes </H4>
+<p>During the development of the Phase II DMX server, several global
+changes were made.  These changes were also compared with the Phase I
+server.  The following tests were noted to be more than 10% faster:
+<pre>
+1.13   Fill 300x300 opaque stippled trapezoid (161x145 stipple) 
+1.15   Fill 1x1 tiled trapezoid (161x145 tile) 
+1.13   Fill 10x10 tiled trapezoid (161x145 tile) 
+1.17   Fill 100x100 tiled trapezoid (161x145 tile) 
+1.16   Fill 1x1 tiled trapezoid (216x208 tile) 
+1.19   Fill 10x10 tiled trapezoid (216x208 tile) 
+1.15   Fill 100x100 tiled trapezoid (216x208 tile) 
+1.15   Circulate Unmapped window (4 kids) 
+            
+</pre>
+</p>
+
+<p>The following tests were noted to be more than 10% slower:
+<pre>
+0.69   Scroll 10x10 pixels 
+0.68   Scroll 100x100 pixels 
+0.68   Copy 10x10 from window to window 
+0.68   Copy 100x100 from window to window 
+0.76   Circulate Unmapped window (75 kids) 
+0.83   Circulate Unmapped window (100 kids) 
+            
+</pre>
+</p>
+
+<p>For the remainder of this analysis, the baseline of comparison will
+be the Phase II deliverable with all optimizations disabled (unless
+otherwise noted).  This will highlight how the optimizations in
+isolation impact performance.</p>
+
+<H4><A NAME="56"></A>5.2.3. XSync() Batching </H4>
+<p>During the Phase I implementation, XSync() was called after every
+protocol request made by the DMX server.  This provided the DMX server
+with an interactive feel, but defeated X11's protocol buffering system
+and introduced round-trip wire latency into every operation.  During
+Phase II, DMX was changed so that protocol requests are no longer
+followed by calls to XSync().  Instead, the need for an XSync() is
+noted, and XSync() calls are only made every 100mS or when the DMX
+server specifically needs to make a call to guarantee interactivity.
+With this new system, X11 buffers protocol as much as possible during a
+100mS interval, and many unnecessary XSync() calls are avoided.</p>
+
+<p>Out of more than 300 <code>x11perf</code> tests, 8 tests became more than 100
+times faster, with 68 more than 50X faster, 114 more than 10X faster,
+and 181 more than 2X faster.  See table below for summary.</p>
+
+<p>The following tests were noted to be more than 10% slower with
+XSync() batching on:
+<pre>
+0.88   500x500 tiled rectangle (161x145 tile) 
+0.89   Copy 500x500 from window to window 
+            
+</pre>
+</p>
+
+<H4><A NAME="57"></A>5.2.4. Offscreen Optimization </H4>
+<p>Windows span one or more of the back-end servers' screens; however,
+during Phase I development, windows were created on every back-end
+server and every rendering request was sent to every window regardless
+of whether or not that window was visible.  With the offscreen
+optimization, the DMX server tracks when a window is completely off of a
+back-end server's screen and, in that case, it does not send rendering
+requests to those back-end windows.  This optimization saves bandwidth
+between the front and back-end servers, and it reduces the number of
+XSync() calls.  The performance tests were run on a DMX system with only
+two back-end servers.  Greater performance gains will be had as the
+number of back-end servers increases.</p>
+
+<p>Out of more than 300 <code>x11perf</code> tests, 3 tests were at least twice as
+fast, and 146 tests were at least 10% faster.  Two tests were more than
+10% slower with the offscreen optimization:
+<pre>
+0.88   Hide/expose window via popup (4 kids) 
+0.89   Resize unmapped window (75 kids) 
+            
+</pre>
+</p>
+
+<H4><A NAME="58"></A>5.2.5. Lazy Window Creation Optimization </H4>
+<p>As mentioned above, during Phase I, windows were created on every
+back-end server even if they were not visible on that back-end.  With
+the lazy window creation optimization, the DMX server does not create
+windows on a back-end server until they are either visible or they
+become the parents of a visible window.  This optimization builds on the
+offscreen optimization (described above) and requires it to be enabled.</p>
+
+<p>The lazy window creation optimization works by creating the window
+data structures in the front-end server when a client creates a window,
+but delays creation of the window on the back-end server(s).  A private
+window structure in the DMX server saves the relevant window data and
+tracks changes to the window's attributes and stacking order for later
+use.  The only times a window is created on a back-end server are (1)
+when it is mapped and is at least partially overlapping the back-end
+server's screen (tracked by the offscreen optimization), or (2) when the
+window becomes the parent of a previously visible window.  The first
+case occurs when a window is mapped or when a visible window is copied,
+moved or resized and now overlaps the back-end server's screen.  The
+second case occurs when starting a window manager after having created
+windows to which the window manager needs to add decorations.</p>
+
+<p>When either case occurs, a window on the back-end server is created
+using the data saved in the DMX server's window private data structure.
+The stacking order is then adjusted to correctly place the window on the
+back-end and lastly the window is mapped.  From this time forward, the
+window is handled exactly as if the window had been created at the time
+of the client's request.</p>
+
+<p>Note that when a window is no longer visible on a back-end server's
+screen (e.g., it is moved offscreen), the window is not destroyed;
+rather, it is kept and reused later if the window once again becomes
+visible on the back-end server's screen.  Originally with this
+optimization, destroying windows was implemented but was later rejected
+because it increased bandwidth when windows were opaquely moved or
+resized, which is common in many window managers.</p>
+
+<p>The performance tests were run on a DMX system with only two back-end
+servers.  Greater performance gains will be had as the number of
+back-end servers increases.</p>
+
+<p>This optimization improved the following <code>x11perf</code> tests by more
+than 10%:
+<pre>
+1.10   500x500 rectangle outline 
+1.12   Fill 100x100 stippled trapezoid (161x145 stipple) 
+1.20   Circulate Unmapped window (50 kids) 
+1.19   Circulate Unmapped window (75 kids) 
+            
+</pre>
+</p>
+
+<H4><A NAME="59"></A>5.2.6. Subdividing Rendering Primitives </H4>
+<p>X11 imaging requests transfer significant data between the client and
+the X server.  During Phase I, the DMX server would then transfer the
+image data to each back-end server.  Even with the offscreen
+optimization (above), these requests still required transferring
+significant data to each back-end server that contained a visible
+portion of the window.  For example, if the client uses XPutImage() to
+copy an image to a window that overlaps the entire DMX screen, then the
+entire image is copied by the DMX server to every back-end server.</p>
+
+<p>To reduce the amount of data transferred between the DMX server and
+the back-end servers when XPutImage() is called, the image data is
+subdivided and only the data that will be visible on a back-end server's
+screen is sent to that back-end server.  Xinerama already implements a
+subdivision algorithm for XGetImage() and no further optimization was
+needed.</p>
+
+<p>Other rendering primitives were analyzed, but the time required to
+subdivide these primitives was a significant proportion of the time
+required to send the entire rendering request to the back-end server, so
+this optimization was rejected for the other rendering primitives.</p>
+
+<p>Again, the performance tests were run on a DMX system with only two
+back-end servers.  Greater performance gains will be had as the number
+of back-end servers increases.</p>
+
+<p>This optimization improved the following <code>x11perf</code> tests by more
+than 10%:
+<pre>
+1.12   Fill 100x100 stippled trapezoid (161x145 stipple) 
+1.26   PutImage 10x10 square 
+1.83   PutImage 100x100 square 
+1.91   PutImage 500x500 square 
+1.40   PutImage XY 10x10 square 
+1.48   PutImage XY 100x100 square 
+1.50   PutImage XY 500x500 square 
+1.45   Circulate Unmapped window (75 kids) 
+1.74   Circulate Unmapped window (100 kids) 
+            
+</pre>
+</p>
+
+<p>The following test was noted to be more than 10% slower with this
+optimization:
+<pre>
+0.88   10-pixel fill chord partial circle 
+            
+</pre>
+</p>
+
+<H4><A NAME="60"></A>5.2.7. Summary of x11perf Data </H4>
+<p>With all of the optimizations on, 53 <code>x11perf</code> tests are more than
+100X faster than the unoptimized Phase II deliverable, with 69 more than
+50X faster, 73 more than 10X faster, and 199 more than twice as fast.
+No tests were more than 10% slower than the unoptimized Phase II
+deliverable.  (Compared with the Phase I deliverable, only Circulate
+Unmapped window (100 kids) was more than 10% slower than the Phase II
+deliverable.  As noted above, this test seems to have wider variability
+than other <code>x11perf</code> tests.)</p>
+
+<p>The following table summarizes relative <code>x11perf</code> test changes for
+all optimizations individually and collectively.  Note that some of the
+optimizations have a synergistic effect when used together.
+<pre>
+
+1: XSync() batching only
+2: Off screen optimizations only
+3: Window optimizations only
+4: Subdivprims only
+5: All optimizations
+
+    1     2    3    4      5 Operation
+------ ---- ---- ---- ------ ---------
+  2.14 1.85 1.00 1.00   4.13 Dot 
+  1.67 1.80 1.00 1.00   3.31 1x1 rectangle 
+  2.38 1.43 1.00 1.00   2.44 10x10 rectangle 
+  1.00 1.00 0.92 0.98   1.00 100x100 rectangle 
+  1.00 1.00 1.00 1.00   1.00 500x500 rectangle 
+  1.83 1.85 1.05 1.06   3.54 1x1 stippled rectangle (8x8 stipple) 
+  2.43 1.43 1.00 1.00   2.41 10x10 stippled rectangle (8x8 stipple) 
+  0.98 1.00 1.00 1.00   1.00 100x100 stippled rectangle (8x8 stipple) 
+  1.00 1.00 1.00 1.00   0.98 500x500 stippled rectangle (8x8 stipple) 
+  1.75 1.75 1.00 1.00   3.40 1x1 opaque stippled rectangle (8x8 stipple) 
+  2.38 1.42 1.00 1.00   2.34 10x10 opaque stippled rectangle (8x8 stipple) 
+  1.00 1.00 0.97 0.97   1.00 100x100 opaque stippled rectangle (8x8 stipple) 
+  1.00 1.00 1.00 1.00   0.99 500x500 opaque stippled rectangle (8x8 stipple) 
+  1.82 1.82 1.04 1.04   3.56 1x1 tiled rectangle (4x4 tile) 
+  2.33 1.42 1.00 1.00   2.37 10x10 tiled rectangle (4x4 tile) 
+  1.00 0.92 1.00 1.00   1.00 100x100 tiled rectangle (4x4 tile) 
+  1.00 1.00 1.00 1.00   1.00 500x500 tiled rectangle (4x4 tile) 
+  1.94 1.62 1.00 1.00   3.66 1x1 stippled rectangle (17x15 stipple) 
+  1.74 1.28 1.00 1.00   1.73 10x10 stippled rectangle (17x15 stipple) 
+  1.00 1.00 1.00 0.89   0.98 100x100 stippled rectangle (17x15 stipple) 
+  1.00 1.00 1.00 1.00   0.98 500x500 stippled rectangle (17x15 stipple) 
+  1.94 1.62 1.00 1.00   3.67 1x1 opaque stippled rectangle (17x15 stipple) 
+  1.69 1.26 1.00 1.00   1.66 10x10 opaque stippled rectangle (17x15 stipple) 
+  1.00 0.95 1.00 1.00   1.00 100x100 opaque stippled rectangle (17x15 stipple) 
+  1.00 1.00 1.00 1.00   0.97 500x500 opaque stippled rectangle (17x15 stipple) 
+  1.93 1.61 0.99 0.99   3.69 1x1 tiled rectangle (17x15 tile) 
+  1.73 1.27 1.00 1.00   1.72 10x10 tiled rectangle (17x15 tile) 
+  1.00 1.00 1.00 1.00   0.98 100x100 tiled rectangle (17x15 tile) 
+  1.00 1.00 0.97 0.97   1.00 500x500 tiled rectangle (17x15 tile) 
+  1.95 1.63 1.00 1.00   3.83 1x1 stippled rectangle (161x145 stipple) 
+  1.80 1.30 1.00 1.00   1.83 10x10 stippled rectangle (161x145 stipple) 
+  0.97 1.00 1.00 1.00   1.01 100x100 stippled rectangle (161x145 stipple) 
+  1.00 1.00 1.00 1.00   0.98 500x500 stippled rectangle (161x145 stipple) 
+  1.95 1.63 1.00 1.00   3.56 1x1 opaque stippled rectangle (161x145 stipple) 
+  1.65 1.25 1.00 1.00   1.68 10x10 opaque stippled rectangle (161x145 stipple) 
+  1.00 1.00 1.00 1.00   1.01 100x100 opaque stippled rectangle (161x145...
+  1.00 1.00 1.00 1.00   0.97 500x500 opaque stippled rectangle (161x145...
+  1.95 1.63 0.98 0.99   3.80 1x1 tiled rectangle (161x145 tile) 
+  1.67 1.26 1.00 1.00   1.67 10x10 tiled rectangle (161x145 tile) 
+  1.13 1.14 1.14 1.14   1.14 100x100 tiled rectangle (161x145 tile) 
+  0.88 1.00 1.00 1.00   0.99 500x500 tiled rectangle (161x145 tile) 
+  1.93 1.63 1.00 1.00   3.53 1x1 tiled rectangle (216x208 tile) 
+  1.69 1.26 1.00 1.00   1.66 10x10 tiled rectangle (216x208 tile) 
+  1.00 1.00 1.00 1.00   1.00 100x100 tiled rectangle (216x208 tile) 
+  1.00 1.00 1.00 1.00   1.00 500x500 tiled rectangle (216x208 tile) 
+  1.82 1.70 1.00 1.00   3.38 1-pixel line segment 
+  2.07 1.56 0.90 1.00   3.31 10-pixel line segment 
+  1.29 1.10 1.00 1.00   1.27 100-pixel line segment 
+  1.05 1.06 1.03 1.03   1.09 500-pixel line segment 
+  1.30 1.13 1.00 1.00   1.29 100-pixel line segment (1 kid) 
+  1.32 1.15 1.00 1.00   1.32 100-pixel line segment (2 kids) 
+  1.33 1.16 1.00 1.00   1.33 100-pixel line segment (3 kids) 
+  1.92 1.64 1.00 1.00   3.73 10-pixel dashed segment 
+  1.34 1.16 1.00 1.00   1.34 100-pixel dashed segment 
+  1.24 1.11 0.99 0.97   1.23 100-pixel double-dashed segment 
+  1.72 1.77 1.00 1.00   3.25 10-pixel horizontal line segment 
+  1.83 1.66 1.01 1.00   3.54 100-pixel horizontal line segment 
+  1.86 1.30 1.00 1.00   1.84 500-pixel horizontal line segment 
+  2.11 1.52 1.00 0.99   3.02 10-pixel vertical line segment 
+  1.21 1.10 1.00 1.00   1.20 100-pixel vertical line segment 
+  1.03 1.03 1.00 1.00   1.02 500-pixel vertical line segment 
+  4.42 1.68 1.00 1.01   4.64 10x1 wide horizontal line segment 
+  1.83 1.31 1.00 1.00   1.83 100x10 wide horizontal line segment 
+  1.07 1.00 0.96 1.00   1.07 500x50 wide horizontal line segment 
+  4.10 1.67 1.00 1.00   4.62 10x1 wide vertical line segment 
+  1.50 1.24 1.06 1.06   1.48 100x10 wide vertical line segment 
+  1.06 1.03 1.00 1.00   1.05 500x50 wide vertical line segment 
+  2.54 1.61 1.00 1.00   3.61 1-pixel line 
+  2.71 1.48 1.00 1.00   2.67 10-pixel line 
+  1.19 1.09 1.00 1.00   1.19 100-pixel line 
+  1.04 1.02 1.00 1.00   1.03 500-pixel line 
+  2.68 1.51 0.98 1.00   3.17 10-pixel dashed line 
+  1.23 1.11 0.99 0.99   1.23 100-pixel dashed line 
+  1.15 1.08 1.00 1.00   1.15 100-pixel double-dashed line 
+  2.27 1.39 1.00 1.00   2.23 10x1 wide line 
+  1.20 1.09 1.00 1.00   1.20 100x10 wide line 
+  1.04 1.02 1.00 1.00   1.04 500x50 wide line 
+  1.52 1.45 1.00 1.00   1.52 100x10 wide dashed line 
+  1.54 1.47 1.00 1.00   1.54 100x10 wide double-dashed line 
+  1.97 1.30 0.96 0.95   1.95 10x10 rectangle outline 
+  1.44 1.27 1.00 1.00   1.43 100x100 rectangle outline 
+  3.22 2.16 1.10 1.09   3.61 500x500 rectangle outline 
+  1.95 1.34 1.00 1.00   1.90 10x10 wide rectangle outline 
+  1.14 1.14 1.00 1.00   1.13 100x100 wide rectangle outline 
+  1.00 1.00 1.00 1.00   1.00 500x500 wide rectangle outline 
+  1.57 1.72 1.00 1.00   3.03 1-pixel circle 
+  1.96 1.35 1.00 1.00   1.92 10-pixel circle 
+  1.21 1.07 0.86 0.97   1.20 100-pixel circle 
+  1.08 1.04 1.00 1.00   1.08 500-pixel circle 
+  1.39 1.19 1.03 1.03   1.38 100-pixel dashed circle 
+  1.21 1.11 1.00 1.00   1.23 100-pixel double-dashed circle 
+  1.59 1.28 1.00 1.00   1.58 10-pixel wide circle 
+  1.22 1.12 0.99 1.00   1.22 100-pixel wide circle 
+  1.06 1.04 1.00 1.00   1.05 500-pixel wide circle 
+  1.87 1.84 1.00 1.00   1.85 100-pixel wide dashed circle 
+  1.90 1.93 1.01 1.01   1.90 100-pixel wide double-dashed circle 
+  2.13 1.43 1.00 1.00   2.32 10-pixel partial circle 
+  1.42 1.18 1.00 1.00   1.42 100-pixel partial circle 
+  1.92 1.85 1.01 1.01   1.89 10-pixel wide partial circle 
+  1.73 1.67 1.00 1.00   1.73 100-pixel wide partial circle 
+  1.36 1.95 1.00 1.00   2.64 1-pixel solid circle 
+  2.02 1.37 1.00 1.00   2.03 10-pixel solid circle 
+  1.19 1.09 1.00 1.00   1.19 100-pixel solid circle 
+  1.02 0.99 1.00 1.00   1.01 500-pixel solid circle 
+  1.74 1.28 1.00 0.88   1.73 10-pixel fill chord partial circle 
+  1.31 1.13 1.00 1.00   1.31 100-pixel fill chord partial circle 
+  1.67 1.31 1.03 1.03   1.72 10-pixel fill slice partial circle 
+  1.30 1.13 1.00 1.00   1.28 100-pixel fill slice partial circle 
+  2.45 1.49 1.01 1.00   2.71 10-pixel ellipse 
+  1.22 1.10 1.00 1.00   1.22 100-pixel ellipse 
+  1.09 1.04 1.00 1.00   1.09 500-pixel ellipse 
+  1.90 1.28 1.00 1.00   1.89 100-pixel dashed ellipse 
+  1.62 1.24 0.96 0.97   1.61 100-pixel double-dashed ellipse 
+  2.43 1.50 1.00 1.00   2.42 10-pixel wide ellipse 
+  1.61 1.28 1.03 1.03   1.60 100-pixel wide ellipse 
+  1.08 1.05 1.00 1.00   1.08 500-pixel wide ellipse 
+  1.93 1.88 1.00 1.00   1.88 100-pixel wide dashed ellipse 
+  1.94 1.89 1.01 1.00   1.94 100-pixel wide double-dashed ellipse 
+  2.31 1.48 1.00 1.00   2.67 10-pixel partial ellipse 
+  1.38 1.17 1.00 1.00   1.38 100-pixel partial ellipse 
+  2.00 1.85 0.98 0.97   1.98 10-pixel wide partial ellipse 
+  1.89 1.86 1.00 1.00   1.89 100-pixel wide partial ellipse 
+  3.49 1.60 1.00 1.00   3.65 10-pixel filled ellipse 
+  1.67 1.26 1.00 1.00   1.67 100-pixel filled ellipse 
+  1.06 1.04 1.00 1.00   1.06 500-pixel filled ellipse 
+  2.38 1.43 1.01 1.00   2.32 10-pixel fill chord partial ellipse 
+  2.06 1.30 1.00 1.00   2.05 100-pixel fill chord partial ellipse 
+  2.27 1.41 1.00 1.00   2.27 10-pixel fill slice partial ellipse 
+  1.98 1.33 1.00 0.97   1.97 100-pixel fill slice partial ellipse 
+ 57.46 1.99 1.01 1.00 114.92 Fill 1x1 equivalent triangle 
+ 56.94 1.98 1.01 1.00  73.89 Fill 10x10 equivalent triangle 
+  6.07 1.75 1.00 1.00   6.07 Fill 100x100 equivalent triangle 
+ 51.12 1.98 1.00 1.00 102.81 Fill 1x1 trapezoid 
+ 51.42 1.82 1.01 1.00  94.89 Fill 10x10 trapezoid 
+  6.47 1.80 1.00 1.00   6.44 Fill 100x100 trapezoid 
+  1.56 1.28 1.00 0.99   1.56 Fill 300x300 trapezoid 
+ 51.27 1.97 0.96 0.97 102.54 Fill 1x1 stippled trapezoid (8x8 stipple) 
+ 51.73 2.00 1.02 1.02  67.92 Fill 10x10 stippled trapezoid (8x8 stipple) 
+  5.36 1.72 1.00 1.00   5.36 Fill 100x100 stippled trapezoid (8x8 stipple) 
+  1.54 1.26 1.00 1.00   1.59 Fill 300x300 stippled trapezoid (8x8 stipple) 
+ 51.41 1.94 1.01 1.00 102.82 Fill 1x1 opaque stippled trapezoid (8x8 stipple) 
+ 50.71 1.95 0.99 1.00  65.44 Fill 10x10 opaque stippled trapezoid (8x8...
+  5.33 1.73 1.00 1.00   5.36 Fill 100x100 opaque stippled trapezoid (8x8...
+  1.58 1.25 1.00 1.00   1.58 Fill 300x300 opaque stippled trapezoid (8x8...
+ 51.56 1.96 0.99 0.90 103.68 Fill 1x1 tiled trapezoid (4x4 tile) 
+ 51.59 1.99 1.01 1.01  62.25 Fill 10x10 tiled trapezoid (4x4 tile) 
+  5.38 1.72 1.00 1.00   5.38 Fill 100x100 tiled trapezoid (4x4 tile) 
+  1.54 1.25 1.00 0.99   1.58 Fill 300x300 tiled trapezoid (4x4 tile) 
+ 51.70 1.98 1.01 1.01 103.98 Fill 1x1 stippled trapezoid (17x15 stipple) 
+ 44.86 1.97 1.00 1.00  44.86 Fill 10x10 stippled trapezoid (17x15 stipple) 
+  2.74 1.56 1.00 1.00   2.73 Fill 100x100 stippled trapezoid (17x15 stipple) 
+  1.29 1.14 1.00 1.00   1.27 Fill 300x300 stippled trapezoid (17x15 stipple) 
+ 51.41 1.96 0.96 0.95 103.39 Fill 1x1 opaque stippled trapezoid (17x15...
+ 45.14 1.96 1.01 1.00  45.14 Fill 10x10 opaque stippled trapezoid (17x15...
+  2.68 1.56 1.00 1.00   2.68 Fill 100x100 opaque stippled trapezoid (17x15...
+  1.26 1.10 1.00 1.00   1.28 Fill 300x300 opaque stippled trapezoid (17x15...
+ 51.13 1.97 1.00 0.99 103.39 Fill 1x1 tiled trapezoid (17x15 tile) 
+ 47.58 1.96 1.00 1.00  47.86 Fill 10x10 tiled trapezoid (17x15 tile) 
+  2.74 1.56 1.00 1.00   2.74 Fill 100x100 tiled trapezoid (17x15 tile) 
+  1.29 1.14 1.00 1.00   1.28 Fill 300x300 tiled trapezoid (17x15 tile) 
+ 51.13 1.97 0.99 0.97 103.39 Fill 1x1 stippled trapezoid (161x145 stipple) 
+ 45.14 1.97 1.00 1.00  44.29 Fill 10x10 stippled trapezoid (161x145 stipple) 
+  3.02 1.77 1.12 1.12   3.38 Fill 100x100 stippled trapezoid (161x145 stipple) 
+  1.31 1.13 1.00 1.00   1.30 Fill 300x300 stippled trapezoid (161x145 stipple) 
+ 51.27 1.97 1.00 1.00 103.10 Fill 1x1 opaque stippled trapezoid (161x145...
+ 45.01 1.97 1.00 1.00  45.01 Fill 10x10 opaque stippled trapezoid (161x145...
+  2.67 1.56 1.00 1.00   2.69 Fill 100x100 opaque stippled trapezoid (161x145..
+  1.29 1.13 1.00 1.01   1.27 Fill 300x300 opaque stippled trapezoid (161x145..
+ 51.41 1.96 1.00 0.99 103.39 Fill 1x1 tiled trapezoid (161x145 tile) 
+ 45.01 1.96 0.98 1.00  45.01 Fill 10x10 tiled trapezoid (161x145 tile) 
+  2.62 1.36 1.00 1.00   2.69 Fill 100x100 tiled trapezoid (161x145 tile) 
+  1.27 1.13 1.00 1.00   1.22 Fill 300x300 tiled trapezoid (161x145 tile) 
+ 51.13 1.98 1.00 1.00 103.39 Fill 1x1 tiled trapezoid (216x208 tile) 
+ 45.14 1.97 1.01 0.99  45.14 Fill 10x10 tiled trapezoid (216x208 tile) 
+  2.62 1.55 1.00 1.00   2.71 Fill 100x100 tiled trapezoid (216x208 tile) 
+  1.28 1.13 1.00 1.00   1.20 Fill 300x300 tiled trapezoid (216x208 tile) 
+ 50.71 1.95 1.00 1.00  54.70 Fill 10x10 equivalent complex polygon 
+  5.51 1.71 0.96 0.98   5.47 Fill 100x100 equivalent complex polygons 
+  8.39 1.97 1.00 1.00  16.75 Fill 10x10 64-gon (Convex) 
+  8.38 1.83 1.00 1.00   8.43 Fill 100x100 64-gon (Convex) 
+  8.50 1.96 1.00 1.00  16.64 Fill 10x10 64-gon (Complex) 
+  8.26 1.83 1.00 1.00   8.35 Fill 100x100 64-gon (Complex) 
+ 14.09 1.87 1.00 1.00  14.05 Char in 80-char line (6x13) 
+ 11.91 1.87 1.00 1.00  11.95 Char in 70-char line (8x13) 
+ 11.16 1.85 1.01 1.00  11.10 Char in 60-char line (9x15) 
+ 10.09 1.78 1.00 1.00  10.09 Char16 in 40-char line (k14) 
+  6.15 1.75 1.00 1.00   6.31 Char16 in 23-char line (k24) 
+ 11.92 1.90 1.03 1.03  11.88 Char in 80-char line (TR 10) 
+  8.18 1.78 1.00 0.99   8.17 Char in 30-char line (TR 24) 
+ 42.83 1.44 1.01 1.00  42.11 Char in 20/40/20 line (6x13, TR 10) 
+ 27.45 1.43 1.01 1.01  27.45 Char16 in 7/14/7 line (k14, k24) 
+ 12.13 1.85 1.00 1.00  12.05 Char in 80-char image line (6x13) 
+ 10.00 1.84 1.00 1.00  10.00 Char in 70-char image line (8x13) 
+  9.18 1.83 1.00 1.00   9.12 Char in 60-char image line (9x15) 
+  9.66 1.82 0.98 0.95   9.66 Char16 in 40-char image line (k14) 
+  5.82 1.72 1.00 1.00   5.99 Char16 in 23-char image line (k24) 
+  8.70 1.80 1.00 1.00   8.65 Char in 80-char image line (TR 10) 
+  4.67 1.66 1.00 1.00   4.67 Char in 30-char image line (TR 24) 
+ 84.43 1.47 1.00 1.00 124.18 Scroll 10x10 pixels 
+  3.73 1.50 1.00 0.98   3.73 Scroll 100x100 pixels 
+  1.00 1.00 1.00 1.00   1.00 Scroll 500x500 pixels 
+ 84.43 1.51 1.00 1.00 134.02 Copy 10x10 from window to window 
+  3.62 1.51 0.98 0.98   3.62 Copy 100x100 from window to window 
+  0.89 1.00 1.00 1.00   1.00 Copy 500x500 from window to window 
+ 57.06 1.99 1.00 1.00  88.64 Copy 10x10 from pixmap to window 
+  2.49 2.00 1.00 1.00   2.48 Copy 100x100 from pixmap to window 
+  1.00 0.91 1.00 1.00   0.98 Copy 500x500 from pixmap to window 
+  2.04 1.01 1.00 1.00   2.03 Copy 10x10 from window to pixmap 
+  1.05 1.00 1.00 1.00   1.05 Copy 100x100 from window to pixmap 
+  1.00 1.00 0.93 1.00   1.04 Copy 500x500 from window to pixmap 
+ 58.52 1.03 1.03 1.02  57.95 Copy 10x10 from pixmap to pixmap 
+  2.40 1.00 1.00 1.00   2.45 Copy 100x100 from pixmap to pixmap 
+  1.00 1.00 1.00 1.00   1.00 Copy 500x500 from pixmap to pixmap 
+ 51.57 1.92 1.00 1.00  85.75 Copy 10x10 1-bit deep plane 
+  6.37 1.75 1.01 1.01   6.37 Copy 100x100 1-bit deep plane 
+  1.26 1.11 1.00 1.00   1.24 Copy 500x500 1-bit deep plane 
+  4.23 1.63 0.98 0.97   4.38 Copy 10x10 n-bit deep plane 
+  1.04 1.02 1.00 1.00   1.04 Copy 100x100 n-bit deep plane 
+  1.00 1.00 1.00 1.00   1.00 Copy 500x500 n-bit deep plane 
+  6.45 1.98 1.00 1.26  12.80 PutImage 10x10 square 
+  1.10 1.87 1.00 1.83   2.11 PutImage 100x100 square 
+  1.02 1.93 1.00 1.91   1.91 PutImage 500x500 square 
+  4.17 1.78 1.00 1.40   7.18 PutImage XY 10x10 square 
+  1.27 1.49 0.97 1.48   2.10 PutImage XY 100x100 square 
+  1.00 1.50 1.00 1.50   1.52 PutImage XY 500x500 square 
+  1.07 1.01 1.00 1.00   1.06 GetImage 10x10 square 
+  1.01 1.00 1.00 1.00   1.01 GetImage 100x100 square 
+  1.00 1.00 1.00 1.00   1.00 GetImage 500x500 square 
+  1.56 1.00 0.99 0.97   1.56 GetImage XY 10x10 square 
+  1.02 1.00 1.00 1.00   1.02 GetImage XY 100x100 square 
+  1.00 1.00 1.00 1.00   1.00 GetImage XY 500x500 square 
+  1.00 1.00 1.01 0.98   0.95 X protocol NoOperation 
+  1.02 1.03 1.04 1.03   1.00 QueryPointer 
+  1.03 1.02 1.04 1.03   1.00 GetProperty 
+100.41 1.51 1.00 1.00 198.76 Change graphics context 
+ 45.81 1.00 0.99 0.97  57.10 Create and map subwindows (4 kids) 
+ 78.45 1.01 1.02 1.02  63.07 Create and map subwindows (16 kids) 
+ 73.91 1.01 1.00 1.00  56.37 Create and map subwindows (25 kids) 
+ 73.22 1.00 1.00 1.00  49.07 Create and map subwindows (50 kids) 
+ 72.36 1.01 0.99 1.00  32.14 Create and map subwindows (75 kids) 
+ 70.34 1.00 1.00 1.00  30.12 Create and map subwindows (100 kids) 
+ 55.00 1.00 1.00 0.99  23.75 Create and map subwindows (200 kids) 
+ 55.30 1.01 1.00 1.00 141.03 Create unmapped window (4 kids) 
+ 55.38 1.01 1.01 1.00 163.25 Create unmapped window (16 kids) 
+ 54.75 0.96 1.00 0.99 166.95 Create unmapped window (25 kids) 
+ 54.83 1.00 1.00 0.99 178.81 Create unmapped window (50 kids) 
+ 55.38 1.01 1.01 1.00 181.20 Create unmapped window (75 kids) 
+ 55.38 1.01 1.01 1.00 181.20 Create unmapped window (100 kids) 
+ 54.87 1.01 1.01 1.00 182.05 Create unmapped window (200 kids) 
+ 28.13 1.00 1.00 1.00  30.75 Map window via parent (4 kids) 
+ 36.14 1.01 1.01 1.01  32.58 Map window via parent (16 kids) 
+ 26.13 1.00 0.98 0.95  29.85 Map window via parent (25 kids) 
+ 40.07 1.00 1.01 1.00  27.57 Map window via parent (50 kids) 
+ 23.26 0.99 1.00 1.00  18.23 Map window via parent (75 kids) 
+ 22.91 0.99 1.00 0.99  16.52 Map window via parent (100 kids) 
+ 27.79 1.00 1.00 0.99  12.50 Map window via parent (200 kids) 
+ 22.35 1.00 1.00 1.00  56.19 Unmap window via parent (4 kids) 
+  9.57 1.00 0.99 1.00  89.78 Unmap window via parent (16 kids) 
+ 80.77 1.01 1.00 1.00 103.85 Unmap window via parent (25 kids) 
+ 96.34 1.00 1.00 1.00 116.06 Unmap window via parent (50 kids) 
+ 99.72 1.00 1.00 1.00 124.93 Unmap window via parent (75 kids) 
+112.36 1.00 1.00 1.00 125.27 Unmap window via parent (100 kids) 
+105.41 1.00 1.00 0.99 120.00 Unmap window via parent (200 kids) 
+ 51.29 1.03 1.02 1.02  74.19 Destroy window via parent (4 kids) 
+ 86.75 0.99 0.99 0.99 116.87 Destroy window via parent (16 kids) 
+106.43 1.01 1.01 1.01 127.49 Destroy window via parent (25 kids) 
+120.34 1.01 1.01 1.00 140.11 Destroy window via parent (50 kids) 
+126.67 1.00 0.99 0.99 145.00 Destroy window via parent (75 kids) 
+126.11 1.01 1.01 1.00 140.56 Destroy window via parent (100 kids) 
+128.57 1.01 1.00 1.00 137.91 Destroy window via parent (200 kids) 
+ 16.04 0.88 1.00 1.00  20.36 Hide/expose window via popup (4 kids) 
+ 19.04 1.01 1.00 1.00  23.48 Hide/expose window via popup (16 kids) 
+ 19.22 1.00 1.00 1.00  20.44 Hide/expose window via popup (25 kids) 
+ 17.41 1.00 0.91 0.97  17.68 Hide/expose window via popup (50 kids) 
+ 17.29 1.01 1.00 1.01  17.07 Hide/expose window via popup (75 kids) 
+ 16.74 1.00 1.00 1.00  16.17 Hide/expose window via popup (100 kids) 
+ 10.30 1.00 1.00 1.00  10.51 Hide/expose window via popup (200 kids) 
+ 16.48 1.01 1.00 1.00  26.05 Move window (4 kids) 
+ 17.01 0.95 1.00 1.00  23.97 Move window (16 kids) 
+ 16.95 1.00 1.00 1.00  22.90 Move window (25 kids) 
+ 16.05 1.01 1.00 1.00  21.32 Move window (50 kids) 
+ 15.58 1.00 0.98 0.98  19.44 Move window (75 kids) 
+ 14.98 1.02 1.03 1.03  18.17 Move window (100 kids) 
+ 10.90 1.01 1.01 1.00  12.68 Move window (200 kids) 
+ 49.42 1.00 1.00 1.00 198.27 Moved unmapped window (4 kids) 
+ 50.72 0.97 1.00 1.00 193.66 Moved unmapped window (16 kids) 
+ 50.87 1.00 0.99 1.00 195.09 Moved unmapped window (25 kids) 
+ 50.72 1.00 1.00 1.00 189.34 Moved unmapped window (50 kids) 
+ 50.87 1.00 1.00 1.00 191.33 Moved unmapped window (75 kids) 
+ 50.87 1.00 1.00 0.90 186.71 Moved unmapped window (100 kids) 
+ 50.87 1.00 1.00 1.00 179.19 Moved unmapped window (200 kids) 
+ 41.04 1.00 1.00 1.00  56.61 Move window via parent (4 kids) 
+ 69.81 1.00 1.00 1.00 130.82 Move window via parent (16 kids) 
+ 95.81 1.00 1.00 1.00 141.92 Move window via parent (25 kids) 
+ 95.98 1.00 1.00 1.00 149.43 Move window via parent (50 kids) 
+ 96.59 1.01 1.01 1.00 153.98 Move window via parent (75 kids) 
+ 97.19 1.00 1.00 1.00 157.30 Move window via parent (100 kids) 
+ 96.67 1.00 0.99 0.96 159.44 Move window via parent (200 kids) 
+ 17.75 1.01 1.00 1.00  27.61 Resize window (4 kids) 
+ 17.94 1.00 1.00 0.99  25.42 Resize window (16 kids) 
+ 17.92 1.01 1.00 1.00  24.47 Resize window (25 kids) 
+ 17.24 0.97 1.00 1.00  24.14 Resize window (50 kids) 
+ 16.81 1.00 1.00 0.99  22.75 Resize window (75 kids) 
+ 16.08 1.00 1.00 1.00  21.20 Resize window (100 kids) 
+ 12.92 1.00 0.99 1.00  16.26 Resize window (200 kids) 
+ 52.94 1.01 1.00 1.00 327.12 Resize unmapped window (4 kids) 
+ 53.60 1.01 1.01 1.01 333.71 Resize unmapped window (16 kids) 
+ 52.99 1.00 1.00 1.00 337.29 Resize unmapped window (25 kids) 
+ 51.98 1.00 1.00 1.00 329.38 Resize unmapped window (50 kids) 
+ 53.05 0.89 1.00 1.00 322.60 Resize unmapped window (75 kids) 
+ 53.05 1.00 1.00 1.00 318.08 Resize unmapped window (100 kids) 
+ 53.11 1.00 1.00 0.99 306.21 Resize unmapped window (200 kids) 
+ 16.76 1.00 0.96 1.00  19.46 Circulate window (4 kids) 
+ 17.24 1.00 1.00 0.97  16.24 Circulate window (16 kids) 
+ 16.30 1.03 1.03 1.03  15.85 Circulate window (25 kids) 
+ 13.45 1.00 1.00 1.00  14.90 Circulate window (50 kids) 
+ 12.91 1.00 1.00 1.00  13.06 Circulate window (75 kids) 
+ 11.30 0.98 1.00 1.00  11.03 Circulate window (100 kids) 
+  7.58 1.01 1.01 0.99   7.47 Circulate window (200 kids) 
+  1.01 1.01 0.98 1.00   0.95 Circulate Unmapped window (4 kids) 
+  1.07 1.07 1.01 1.07   1.02 Circulate Unmapped window (16 kids) 
+  1.04 1.09 1.06 1.05   0.97 Circulate Unmapped window (25 kids) 
+  1.04 1.23 1.20 1.18   1.05 Circulate Unmapped window (50 kids) 
+  1.18 1.53 1.19 1.45   1.24 Circulate Unmapped window (75 kids) 
+  1.08 1.02 1.01 1.74   1.01 Circulate Unmapped window (100 kids) 
+  1.01 1.12 0.98 0.91   0.97 Circulate Unmapped window (200 kids) 
+            
+</pre>
+</p>
+
+<H4><A NAME="61"></A>5.2.8. Profiling with OProfile </H4>
+<p>OProfile (available from http://oprofile.sourceforge.net/) is a
+system-wide profiler for Linux systems that uses processor-level
+counters to collect sampling data.  OProfile can provide information
+that is similar to that provided by <code>gprof</code>, but without the
+necessity of recompiling the program with special instrumentation (i.e.,
+OProfile can collect statistical profiling information about optimized
+programs).  A test harness was developed to collect OProfile data for
+each <code>x11perf</code> test individually.</p>
+
+<p>Test runs were performed using the RETIRED_INSNS counter on the AMD
+Athlon and the CPU_CLK_HALTED counter on the Intel Pentium III (with a
+test configuration different from the one described above).  We have
+examined OProfile output and have compared it with <code>gprof</code> output.
+This investigation has not produced results that yield performance
+increases in <code>x11perf</code> numbers.</p>
+
+
+
+<H4><A NAME="62"></A>5.2.9. X Test Suite </H4>
+<p>The X Test Suite was run on the fully optimized DMX server using the
+configuration described above.  The following failures were noted:
+<pre>
+XListPixmapFormats: Test 1              [1]
+XChangeWindowAttributes: Test 32        [1]
+XCreateWindow: Test 30                  [1]
+XFreeColors: Test 4                     [3]
+XCopyArea: Test 13, 17, 21, 25, 30      [2]
+XCopyPlane: Test 11, 15, 27, 31         [2]
+XSetFontPath: Test 4                    [1]
+XChangeKeyboardControl: Test 9, 10      [1]
+
+[1] Previously documented errors expected from the Xinerama
+    implementation (see Phase I discussion).
+[2] Newly noted errors that have been verified as expected
+    behavior of the Xinerama implementation.
+[3] Newly noted error that has been verified as a Xinerama
+    implementation bug.
+            
+</pre>
+</p>
+
+<H3><A NAME="63"></A>5.3. Phase III </H3>
+<p>During the third phase of development, support was provided for the
+following extensions: SHAPE, RENDER, XKEYBOARD, XInput.</p>
+
+<H4><A NAME="64"></A>5.3.1. SHAPE </H4>
+<p>The SHAPE extension is supported.  Test applications (e.g., xeyes and
+oclock) and window managers that make use of the SHAPE extension will
+work as expected.</p>
+
+<H4><A NAME="65"></A>5.3.2. RENDER </H4>
+<p>The RENDER extension is supported.  The version included in the DMX
+CVS tree is version 0.2, and this version is fully supported by Xdmx.
+Applications using only version 0.2 functions will work correctly;
+however, some apps that make use of functions from later versions do not
+properly check the extension's major/minor version numbers.  These apps
+will fail with a Bad Implementation error when using post-version 0.2
+functions.  This is expected behavior.  When the DMX CVS tree is updated
+to include newer versions of RENDER, support for these newer functions
+will be added to the DMX X server.</p>
+
+<H4><A NAME="66"></A>5.3.3. XKEYBOARD </H4>
+<p>The XKEYBOARD extension is supported.  If present on the back-end X
+servers, the XKEYBOARD extension will be used to obtain information
+about the type of the keyboard for initialization.  Otherwise, the
+keyboard will be initialized using defaults.  Note that this departs
+from older behavior: when Xdmx is compiled without XKEYBOARD support,
+the map from the back-end X server will be preserved.  With XKEYBOARD
+support, the map is not preserved because better information and control
+of the keyboard is available.</p>
+
+<H4><A NAME="67"></A>5.3.4. XInput </H4>
+<p>The XInput extension is supported.  Any device can be used as a core
+device and be used as an XInput extension device, with the exception of
+core devices on the back-end servers.  This limitation is present
+because cursor handling on the back-end requires that the back-end
+cursor sometimes track the Xdmx core cursor -- behavior that is
+incompatible with using the back-end pointer as a non-core device.</p>
+
+<p>Currently, back-end extension devices are not available as Xdmx
+extension devices, but this limitation should be removed in the future.</p>
+
+<p>To demonstrate the XInput extension, and to provide more examples for
+low-level input device driver writers, USB device drivers have been
+written for mice (usb-mou), keyboards (usb-kbd), and
+non-mouse/non-keyboard USB devices (usb-oth).  Please see the man page
+for information on Linux kernel drivers that are required for using
+these Xdmx drivers.</p>
+
+<H4><A NAME="68"></A>5.3.5. DPMS </H4>
+<p>The DPMS extension is exported but does not do anything at this time.</p>
+
+<H4><A NAME="69"></A>5.3.6. Other Extensions </H4>
+<p>The LBX,
+SECURITY,
+XC-APPGROUP, and
+XFree86-Bigfont
+extensions do not require any special Xdmx support and have been exported.</p>
+
+<p>The
+BIG-REQUESTS,
+DEC-XTRAP,
+DOUBLE-BUFFER,
+Extended-Visual-Information,
+FontCache,
+GLX,
+MIT-SCREEN-SAVER,
+MIT-SHM,
+MIT-SUNDRY-NONSTANDARD,
+RECORD,
+SECURITY,
+SGI-GLX,
+SYNC,
+TOG-CUP,
+X-Resource,
+XC-MISC,
+XFree86-DGA,
+XFree86-DRI,
+XFree86-Misc,
+XFree86-VidModeExtension, and
+XVideo
+extensions are <i>not</i> supported at this time, but will be evaluated
+for inclusion in future DMX releases.  <b>See below for additional work
+on extensions after Phase III.</b></p>
+
+<H3><A NAME="70"></A>5.4. Phase IV </H3>
+<H4><A NAME="71"></A>5.4.1. Moving to XFree86 4.3.0 </H4>
+<p>For Phase IV, the recent release of XFree86 4.3.0 (27 February 2003)
+was merged onto the dmx.sourceforge.net CVS trunk and all work is
+proceeding using this tree.</p>
+
+<H4><A NAME="72"></A>5.4.2. Extensions </H4>
+<H5><A NAME="73"></A>5.4.2.1. XC-MISC (supported) </H5>
+<p>XC-MISC is used internally by the X library to recycle XIDs from the
+X server.  This is important for long-running X server sessions.  Xdmx
+supports this extension.  The X Test Suite passed and failed the exact
+same tests before and after this extension was enabled.</p>
+
+<H5><A NAME="74"></A>5.4.2.2. Extended-Visual-Information (supported) </H5>
+<p>The Extended-Visual-Information extension provides a method for an X
+client to obtain detailed visual information.  Xdmx supports this
+extension.  It was tested using the <code>hw/dmx/examples/evi</code> example
+program.  <b>Note that this extension is not Xinerama-aware</b> -- it will
+return visual information for each screen even though Xinerama is
+causing the X server to export a single logical screen.</p>
+
+<H5><A NAME="75"></A>5.4.2.3. RES (supported) </H5>
+<p>The X-Resource extension provides a mechanism for a client to obtain
+detailed information about the resources used by other clients.  This
+extension was tested with the <code>hw/dmx/examples/res</code> program.  The
+X Test Suite passed and failed the exact same tests before and after
+this extension was enabled.</p>
+
+<H5><A NAME="76"></A>5.4.2.4. BIG-REQUESTS (supported) </H5>
+<p>This extension enables the X11 protocol to handle requests longer
+than 262140 bytes.  The X Test Suite passed and failed the exact same
+tests before and after this extension was enabled.</p>
+
+<H5><A NAME="77"></A>5.4.2.5. XSYNC (supported) </H5>
+<p>This extension provides facilities for two different X clients to
+synchronize their requests.  This extension was minimally tested with
+<code>xdpyinfo</code> and the X Test Suite passed and failed the exact same
+tests before and after this extension was enabled.</p>
+
+<H5><A NAME="78"></A>5.4.2.6. XTEST, RECORD, DEC-XTRAP (supported) and XTestExtension1 (not supported) </H5>
+<p>The XTEST and RECORD extension were developed by the X Consortium for
+use in the X Test Suite and are supported as a standard in the X11R6
+tree.  They are also supported in Xdmx.  When X Test Suite tests that
+make use of the XTEST extension are run, Xdmx passes and fails exactly
+the same tests as does a standard XFree86 X server.  When the
+<code>rcrdtest</code> test (a part of the X Test Suite that verifies the RECORD
+extension) is run, Xdmx passes and fails exactly the same tests as does
+a standard XFree86 X server. </p>
+
+<p>There are two older XTEST-like extensions: DEC-XTRAP and
+XTestExtension1.  The XTestExtension1 extension was developed for use by
+the X Testing Consortium for use with a test suite that eventually
+became (part of?) the X Test Suite.  Unlike XTEST, which only allows
+events to be sent to the server, the XTestExtension1 extension also
+allowed events to be recorded (similar to the RECORD extension).  The
+second is the DEC-XTRAP extension that was developed by the Digital
+Equipment Corporation.</p>
+
+<p>The DEC-XTRAP extension is available from Xdmx and has been tested
+with the <code>xtrap*</code> tools which are distributed as standard X11R6
+clients. </p>
+
+<p>The XTestExtension1 is <em>not</em> supported because it does not appear
+to be used by any modern X clients (the few that support it also support
+XTEST) and because there are no good methods available for testing that
+it functions correctly (unlike XTEST and DEC-XTRAP, the code for
+XTestExtension1 is not part of the standard X server source tree, so
+additional testing is important). </p>
+
+<p>Most of these extensions are documented in the X11R6 source tree.
+Further, several original papers exist that this author was unable to
+locate -- for completeness and historical interest, citations are
+provide:
+<dl>
+<dt><b>XRECORD</b><dd><p>Martha Zimet. Extending X For Recording.  8th Annual X
+Technical Conference Boston, MA January 24-26, 1994.</p>
+<dt><b>DEC-XTRAP</b><dd><p>Dick Annicchiarico, Robert Chesler, Alan Jamison. XTrap
+Architecture. Digital Equipment Corporation, July 1991.</p>
+<dt><b>XTestExtension1</b><dd><p>Larry Woestman. X11 Input Synthesis Extension
+Proposal. Hewlett Packard, November 1991.</p>
+</dl>
+</p>
+
+<H5><A NAME="79"></A>5.4.2.7. MIT-MISC (not supported) </H5>
+<p>The MIT-MISC extension is used to control a bug-compatibility flag
+that provides compatibility with xterm programs from X11R1 and X11R2.
+There does not appear to be a single client available that makes use of
+this extension and there is not way to verify that it works correctly.
+The Xdmx server does <em>not</em> support MIT-MISC.</p>
+
+<H5><A NAME="80"></A>5.4.2.8. SCREENSAVER (not supported) </H5>
+<p>This extension provides special support for the X screen saver.  It
+was tested with beforelight, which appears to be the only client that
+works with it.  When Xinerama was not active, <code>beforelight</code> behaved
+as expected.  However, when Xinerama was active, <code>beforelight</code> did
+not behave as expected.  Further, when this extension is not active,
+<code>xscreensaver</code> (a widely-used X screen saver program) did not behave
+as expected.  Since this extension is not Xinerama-aware and is not
+commonly used with expected results by clients, we have left this
+extension disabled at this time.</p>
+
+<H5><A NAME="81"></A>5.4.2.9. GLX (supported) </H5>
+<p>The GLX extension provides OpenGL and GLX windowing support.  In
+Xdmx, the extension is called glxProxy, and it is Xinerama aware.  It
+works by either feeding requests forward through Xdmx to each of the
+back-end servers or handling them locally.  All rendering requests are
+handled on the back-end X servers.  This code was donated to the DMX
+project by SGI.  For the X Test Suite results comparison, see below.</p>
+
+<H5><A NAME="82"></A>5.4.2.10. RENDER (supported) </H5>
+<p>The X Rendering Extension (RENDER) provides support for digital image
+composition.  Geometric and text rendering are supported.  RENDER is
+partially Xinerama-aware, with text and the most basic compositing
+operator; however, its higher level primitives (triangles, triangle
+strips, and triangle fans) are not yet Xinerama-aware.  The RENDER
+extension is still under development, and is currently at version 0.8.
+Additional support will be required in DMX as more primitives and/or
+requests are added to the extension.</p>
+
+<p>There is currently no test suite for the X Rendering Extension;
+however, there has been discussion of developing a test suite as the
+extension matures.  When that test suite becomes available, additional
+testing can be performed with Xdmx.  The X Test Suite passed and failed
+the exact same tests before and after this extension was enabled.</p>
+
+<H5><A NAME="83"></A>5.4.2.11. Summary  </H5>
+<p>To summarize, the following extensions are currently supported:
+BIG-REQUESTS,
+DEC-XTRAP,
+DMX,
+DPMS,
+Extended-Visual-Information,
+GLX,
+LBX,
+RECORD,
+RENDER,
+SECURITY,
+SHAPE,
+SYNC,
+X-Resource,
+XC-APPGROUP,
+XC-MISC,
+XFree86-Bigfont,
+XINERAMA,
+XInputExtension,
+XKEYBOARD, and
+XTEST.</p>
+
+<p>The following extensions are <em>not</em> supported at this time:
+DOUBLE-BUFFER,
+FontCache,
+MIT-SCREEN-SAVER,
+MIT-SHM,
+MIT-SUNDRY-NONSTANDARD,
+TOG-CUP,
+XFree86-DGA,
+XFree86-Misc,
+XFree86-VidModeExtension,
+XTestExtensionExt1, and
+XVideo.</p>
+
+<H4><A NAME="84"></A>5.4.3. Additional Testing with the X Test Suite </H4>
+<H5><A NAME="85"></A>5.4.3.1. XFree86 without XTEST </H5>
+<p>After the release of XFree86 4.3.0, we re-tested the XFree86 X server
+with and without using the XTEST extension.  When the XTEST extension
+was <em>not</em> used for testing, the XFree86 4.3.0 server running on our
+usual test system with a Radeon VE card reported unexpected failures in
+the following tests:
+<pre>
+XListPixmapFormats: Test 1
+XChangeKeyboardControl: Tests 9, 10
+XGetDefault: Test 5
+XRebindKeysym: Test 1
+</pre>
+</p>
+
+<H5><A NAME="86"></A>5.4.3.2. XFree86 with XTEST </H5>
+<p>When using the XTEST extension, the XFree86 4.3.0 server reported the
+following errors:
+<pre>
+XListPixmapFormats: Test 1
+XChangeKeyboardControl: Tests 9, 10
+XGetDefault: Test 5
+XRebindKeysym: Test 1
+
+XAllowEvents: Tests 20, 21, 24
+XGrabButton: Tests 5, 9-12, 14, 16, 19, 21-25
+XGrabKey: Test 8
+XSetPointerMapping: Test 3
+XUngrabButton: Test 4
+</pre>
+</p>
+
+<p>While these errors may be important, they will probably be fixed
+eventually in the XFree86 source tree.  We are particularly interested
+in demonstrating that the Xdmx server does not introduce additional
+failures that are not known Xinerama failures.</p>
+
+<H5><A NAME="87"></A>5.4.3.3. Xdmx with XTEST, without Xinerama, without GLX </H5>
+<p>Without Xinerama, but using the XTEST extension, the following errors
+were reported from Xdmx (note that these are the same as for the XFree86
+4.3.0, except that XGetDefault no longer fails):
+<pre>
+XListPixmapFormats: Test 1
+XChangeKeyboardControl: Tests 9, 10
+XRebindKeysym: Test 1
+
+XAllowEvents: Tests  20, 21, 24
+XGrabButton: Tests 5, 9-12, 14, 16, 19, 21-25
+XGrabKey: Test 8
+XSetPointerMapping: Test 3
+XUngrabButton: Test 4
+</pre>
+</p>
+
+<H5><A NAME="88"></A>5.4.3.4. Xdmx with XTEST, with Xinerama, without GLX </H5>
+<p>With Xinerama, using the XTEST extension, the following errors
+were reported from Xdmx:
+<pre>
+XListPixmapFormats: Test 1
+XChangeKeyboardControl: Tests 9, 10
+XRebindKeysym: Test 1
+
+XAllowEvents: Tests 20, 21, 24
+XGrabButton: Tests 5, 9-12, 14, 16, 19, 21-25
+XGrabKey: Test 8
+XSetPointerMapping: Test 3
+XUngrabButton: Test 4
+
+XCopyPlane: Tests 13, 22, 31 (well-known XTEST/Xinerama interaction issue)
+XDrawLine: Test 67
+XDrawLines: Test 91
+XDrawSegments: Test 68
+</pre>
+
+Note that the first two sets of errors are the same as for the XFree86
+4.3.0 server, and that the XCopyPlane error is a well-known error
+resulting from an XTEST/Xinerama interaction when the request crosses a
+screen boundary.  The XDraw* errors are resolved when the tests are run
+individually and they do not cross a screen boundary.  We will
+investigate these errors further to determine their cause.</p>
+
+<H5><A NAME="89"></A>5.4.3.5. Xdmx with XTEST, with Xinerama, with GLX </H5>
+<p>With GLX enabled, using the XTEST extension, the following errors
+were reported from Xdmx (these results are from early during the Phase
+IV development, but were confirmed with a late Phase IV snapshot):
+<pre>
+XListPixmapFormats: Test 1
+XChangeKeyboardControl: Tests 9, 10
+XRebindKeysym: Test 1
+
+XAllowEvents: Tests 20, 21, 24
+XGrabButton: Tests 5, 9-12, 14, 16, 19, 21-25
+XGrabKey: Test 8
+XSetPointerMapping: Test 3
+XUngrabButton: Test 4
+
+XClearArea: Test 8
+XCopyArea: Tests 4, 5, 11, 14, 17, 23, 25, 27, 30
+XCopyPlane: Tests 6, 7, 10, 19, 22, 31
+XDrawArcs: Tests 89, 100, 102
+XDrawLine: Test 67
+XDrawSegments: Test 68
+</pre>
+
+Note that the first two sets of errors are the same as for the XFree86
+4.3.0 server, and that the third set has different failures than when
+Xdmx does not include GLX support.  Since the GLX extension adds new
+visuals to support GLX's visual configs and the X Test Suite runs tests
+over the entire set of visuals, additional rendering tests were run and
+presumably more of them crossed a screen boundary.  This conclusion is
+supported by the fact that nearly all of the rendering errors reported
+are resolved when the tests are run individually and they do no cross a
+screen boundary.</p>
+
+<p>Further, when hardware rendering is disabled on the back-end displays,
+many of the errors in the third set are eliminated, leaving only:
+<pre>
+XClearArea: Test 8
+XCopyArea: Test 4, 5, 11, 14, 17, 23, 25, 27, 30
+XCopyPlane: Test 6, 7, 10, 19, 22, 31
+</pre>
+</p>
+
+<H5><A NAME="90"></A>5.4.3.6. Conclusion </H5>
+<p>We conclude that all of the X Test Suite errors reported for Xdmx are
+the result of errors in the back-end X server or the Xinerama
+implementation.  Further, all of these errors that can be reasonably
+fixed at the Xdmx layer have been.  (Where appropriate, we have
+submitted patches to the XFree86 and Xinerama upstream maintainers.)</p>
+
+<H4><A NAME="91"></A>5.4.4. Dynamic Reconfiguration </H4>
+<p>During this development phase, dynamic reconfiguration support was
+added to DMX.  This support allows an application to change the position
+and offset of a back-end server's screen.  For example, if the
+application would like to shift a screen slightly to the left, it could
+query Xdmx for the screen's &lt;x,y&gt; position and then dynamically
+reconfigure that screen to be at position &lt;x+10,y&gt;.  When a screen
+is dynamically reconfigured, input handling and a screen's root window
+dimensions are adjusted as needed.  These adjustments are transparent to
+the user.</p>
+
+<H5><A NAME="92"></A>5.4.4.1. Dynamic reconfiguration extension </H5>
+<p>The application interface to DMX's dynamic reconfiguration is through
+a function in the DMX extension library:
+<pre>
+Bool DMXReconfigureScreen(Display *dpy, int screen, int x, int y)
+</pre>
+
+where <i>dpy</i> is DMX server's display, <i>screen</i> is the number of the
+screen to be reconfigured, and <i>x</i> and <i>y</i> are the new upper,
+left-hand coordinates of the screen to be reconfigured.</p>
+
+<p>The coordinates are not limited other than as required by the X
+protocol, which limits all coordinates to a signed 16 bit number.  In
+addition, all coordinates within a screen must also be legal values.
+Therefore, setting a screen's upper, left-hand coordinates such that the
+right or bottom edges of the screen is greater than 32,767 is illegal.</p>
+
+<H5><A NAME="93"></A>5.4.4.2. Bounding box </H5>
+<p>When the Xdmx server is started, a bounding box is calculated from
+the screens' layout given either on the command line or in the
+configuration file.  This bounding box is currently fixed for the
+lifetime of the Xdmx server.</p>
+
+<p>While it is possible to move a screen outside of the bounding box, it
+is currently not possible to change the dimensions of the bounding box.
+For example, it is possible to specify coordinates of &lt;-100,-100&gt;
+for the upper, left-hand corner of the bounding box, which was
+previously at coordinates &lt;0,0&gt;.  As expected, the screen is moved
+down and to the right; however, since the bounding box is fixed, the
+left side and upper portions of the screen exposed by the
+reconfiguration are no longer accessible on that screen.  Those
+inaccessible regions are filled with black.</p>
+
+<p>This fixed bounding box limitation will be addressed in a future
+development phase.</p>
+
+<H5><A NAME="94"></A>5.4.4.3. Sample applications </H5>
+<p>An example of where this extension is useful is in setting up a video
+wall.  It is not always possible to get everything perfectly aligned,
+and sometimes the positions are changed (e.g., someone might bump into a
+projector).  Instead of physically moving projectors or monitors, it is
+now possible to adjust the positions of the back-end server's screens
+using the dynamic reconfiguration support in DMX.</p>
+
+<p>Other applications, such as automatic setup and calibration tools,
+can make use of dynamic reconfiguration to correct for projector
+alignment problems, as long as the projectors are still arranged
+rectilinearly.  Horizontal and vertical keystone correction could be
+applied to projectors to correct for non-rectilinear alignment problems;
+however, this must be done external to Xdmx.</p>
+
+<p>A sample test program is included in the DMX server's examples
+directory to demonstrate the interface and how an application might use
+dynamic reconfiguration.  See <code>dmxreconfig.c</code> for details.</p>
+
+<H5><A NAME="95"></A>5.4.4.4. Additional notes </H5>
+<p>In the original development plan, Phase IV was primarily devoted to
+adding OpenGL support to DMX; however, SGI became interested in the DMX
+project and developed code to support OpenGL/GLX.  This code was later
+donated to the DMX project and integrated into the DMX code base, which
+freed the DMX developers to concentrate on dynamic reconfiguration (as
+described above).</p>
+
+<H4><A NAME="96"></A>5.4.5. Doxygen documentation </H4>
+<p>Doxygen is an open-source (GPL) documentation system for generating
+browseable documentation from stylized comments in the source code.  We
+have placed all of the Xdmx server and DMX protocol source code files
+under Doxygen so that comprehensive documentation for the Xdmx source
+code is available in an easily browseable format.</p>
+
+<H4><A NAME="97"></A>5.4.6. Valgrind </H4>
+<p>Valgrind, an open-source (GPL) memory debugger for Linux, was used to
+search for memory management errors.  Several memory leaks were detected
+and repaired.  The following errors were not addressed:
+<ol>
+<li>When the X11 transport layer sends a reply to the client, only
+those fields that are required by the protocol are filled in --
+unused fields are left as uninitialized memory and are therefore
+noted by valgrind.  These instances are not errors and were not
+repaired.</li>
+<li>At each server generation, glxInitVisuals allocates memory that
+is never freed.  The amount of memory lost each generation
+approximately equal to 128 bytes for each back-end visual.
+Because the code involved is automatically generated, this bug
+has not been fixed and will be referred to SGI.</li>
+<li>At each server generation, dmxRealizeFont calls XLoadQueryFont,
+which allocates a font structure that is not freed.
+dmxUnrealizeFont can free the font structure for the first
+screen, but cannot free it for the other screens since they are
+already closed by the time dmxUnrealizeFont could free them.
+The amount of memory lost each generation is approximately equal
+to 80 bytes per font per back-end.  When this bug is fixed in
+the the X server's device-independent (dix) code, DMX will be
+able to properly free the memory allocated by XLoadQueryFont.</li>
+</ol>
+</p>
+
+<H4><A NAME="98"></A>5.4.7. RATS </H4>
+<p>RATS (Rough Auditing Tool for Security) is an open-source (GPL)
+security analysis tool that scans source code for common
+security-related programming errors (e.g., buffer overflows and TOCTOU
+races).  RATS was used to audit all of the code in the hw/dmx directory
+and all "High" notations were checked manually.  The code was either
+re-written to eliminate the warning, or a comment containing "RATS" was
+inserted on the line to indicate that a human had checked the code.
+Unrepaired warnings are as follows:
+<ol>
+<li>Fixed-size buffers are used in many areas, but code has been
+added to protect against buffer overflows (e.g., XmuSnprint).
+The only instances that have not yet been fixed are in
+config/xdmxconfig.c (which is not part of the Xdmx server) and
+input/usb-common.c.</li>
+<li>vprintf and vfprintf are used in the logging routines.  In
+general, all uses of these functions (e.g., dmxLog) provide a
+constant format string from a trusted source, so the use is
+relatively benign.</li>
+<li>glxProxy/glxscreens.c uses getenv and strcat.  The use of these
+functions is safe and will remain safe as long as
+ExtensionsString is longer then GLXServerExtensions (ensuring
+this may not be obvious to the casual programmer, but this is in
+automatically generated code, so we hope that the generator
+enforces this constraint).</li>
+</ol>
+</p>
+
+ <HR NOSHADE>
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Development Results </EM><BR>
+<b>Previous:</b> <A HREF="dmx4.html"><EM>Background </EM></A><BR>
+<b>Next:</b> <A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728814" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

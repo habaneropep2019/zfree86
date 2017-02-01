@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>XF86Config Options </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>XF86Config Options </EM><BR>
+<b>Previous:</b> <A HREF="mouse4.html"><EM>Configuring Your Mouse </EM></A><BR>
+<b>Next:</b> <A HREF="mouse6.html"><EM>Mouse Gallery </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="21"></A>5. XF86Config Options </H2>
+
+<p>The old <code>Pointer</code> section has been replaced by a more general
+<code>InputDevice</code> section.  The following is a minimal example
+of an <code>InputDevice</code> section for a mouse:</p>
+<p>
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier	"Mouse 1"
+	Driver		"mouse"
+	Option		"Device"	"/dev/mouse"
+	Option		"Protocol"	"Auto"
+EndSection
+</pre>
+<hr>
+</p>
+<p>The <code>mouse</code> driver supports the following config file options:</p>
+
+<H3><A NAME="22"></A>5.1. Buttons </H3>
+<p>This option tells the X server the number of buttons on the mouse.
+Currently there is no reliable way to automatically detect the correct 
+number. 
+This option is the only means for the X server to obtain it.
+The default value is three.</p>
+<p>Note that if you intend to assign Z axis movement to button events
+using the <code>ZAxisMapping</code> option below, you need to take account
+of those buttons into <code>N</code> too.</p>
+<p>
+<pre>
+	Option	"Buttons"	"N"
+</pre>
+</p>
+
+<H3><A NAME="23"></A>5.2. ZAxisMappping </H3>
+<p>This option maps the Z axis (wheel) motion to buttons or to
+another axis.</p>
+<p>
+<pre>
+	Option	"ZAxisMapping"	"X"
+	Option	"ZAxisMapping"	"Y"
+	Option	"ZAxisMapping"	"N1 N2"
+	Option	"ZAxisMapping"	"N1 N2 N3 N4"
+</pre>
+</p>
+<p>The first example will map the Z axis motion to the X axis motion.
+Whenever the user moves the wheel/roller, its movement is reported as
+the X axis motion.  When the wheel/roller stays still, the real X axis
+motion is reported as is.  The third example will map negative Z axis
+motion to the button <code>N1</code> and positive Z axis motion to 
+the button <code>N2</code>.  If this option is used and the buttons <code>N1</code> 
+or <code>N2</code> actually exists in the mouse, 
+their actions will not be detected by the X server.</p>
+<p>The last example is useful for the mouse with two wheels of which
+the second wheel is used to generate horizontal scroll action,
+and the mouse which has a knob or a stick which can detect the horizontal
+force applied by the user.
+The motion of the second wheel will be mapped to the buttons <code>N3</code>,
+for the negative direction, and <code>N4</code>, for the positive direction.
+If the buttons <code>N3</code> and <code>N4</code> actually exist in this mouse,
+their actions won't be detected by the X server.</p>
+<p>NOTE #1: horizontal movement may not always be detected
+by the current version of the XFree86 X servers,
+because there appears to be no accepted standard as to how the horizontal
+direction is encoded in mouse data.</p>
+<p>NOTE #2: Some mice think left is the negative horizontal direction, 
+others may think otherwise.  
+Moreover, there are some mice whose two wheels are both mounted vertically,
+and the direction of the second vertical wheel does not match the
+first one's.</p>
+<p>Currently this option can not be set in the <code>XF86Setup</code> program.
+You need to edit the <code>XF86Config</code> file by hand to add this option.</p>
+
+<H3><A NAME="24"></A>5.3. Resolution </H3>
+<p>The following option will set the mouse device resolution to <code>N</code>
+counts per inch, if possible:</p>
+<p>
+<pre>
+	Option	"Resolution"	"N"
+</pre>
+</p>
+<p>Not all mice and OSs can support this option.
+This option can be set in the <code>XF86Setup</code> program.</p>
+
+<H3><A NAME="25"></A>5.4. Drag Lock Buttons </H3>
+<p>Some people find it either difficult or inconvenient to hold a trackball
+button down, while at the same time moving the ball. The drag lock buttons
+simulate the holding down of another button. When a drag lock button
+is  first pressed, its target buttons is "locked" down until the
+second time the lock button is released, or until the button itself
+is pressed and released. This allows the starting of a drag, the movement
+of the trackball, and the ending of the drag to be separate operations.</p>
+<p>
+<pre>
+	Option	"DragLockButtons"	"W X Y Z"
+</pre>
+</p>
+<p>This option consists of pairs of buttons. Each lock button number
+is followed by the number of the button that it locks. In the above,
+button number "W" is a drag lock button for button "X" and button number
+"Y" is a drag lock button for button "Z".</p>
+<p>It may not be desirable to use multiple buttons as drag locks.
+Instead, a "master drag lock button" may be defined. A master drag
+lock button acts as a "META" key. After a master lock button is released,
+the next button pressed is "locked" and not released until the
+second time the real button is released.</p>
+<p>
+<pre>
+	Option	"DragLockButtons"	"M"
+</pre>
+</p>
+<p>Since button "M" is unpaired it is a master drag lock button.</p>
+
+ <HR NOSHADE>
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>XF86Config Options </EM><BR>
+<b>Previous:</b> <A HREF="mouse4.html"><EM>Configuring Your Mouse </EM></A><BR>
+<b>Next:</b> <A HREF="mouse6.html"><EM>Mouse Gallery </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728776" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

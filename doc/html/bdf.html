@@ -1,0 +1,618 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Sun Dec 28 23:58:45 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#File Format">File Format</a><br>
+<a href="#Metric Information">Metric Information</a><br>
+<a href="#An Example File">An Example File</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Bitmap
+Distribution Format</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Version
+2.1</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>X
+Consortium Standard</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>X
+Version 11, Release 6.4</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Copyright
+1984, 1987, 1988 Adobe Systems, Inc.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Permission
+to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in
+all copies and that both that copyright notice and this
+permission notice appear in supporting
+documentation.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>The Bitmap
+Distribution Format (BDF), Version 2.1, is an X Consortium
+standard for font interchange, intended to be easily
+understood by both humans and computers.</small></p>
+
+<a name="File Format"></a>
+<h2>File Format</h2>
+
+
+<p style="margin-top: 1em" valign="top"><small>Character
+bitmap information will be distributed in an
+USASCII-encoded, human-readable form. Each file is encoded
+in the printable characters (octal 40 through 176) of
+USASCII plus carriage return and linefeed. Each file
+consists of a sequence of variable-length lines. Each line
+is terminated either by a carriage return (octal 015) and
+linefeed (octal 012) or by just a linefeed.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>The
+information about a particular family and face at one size
+and orientation will be contained in one file. The file
+begins with information pertaining to the face as a whole,
+followed by the information and bitmaps for the individual
+characters.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>A font
+bitmap description file has the following general form,
+where each item is contained on a separate line of text in
+the file. Tokens on a line are separated by spaces. Keywords
+are in upper case, and must appear in upper case in the
+file.</small></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>1.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+STARTFONT followed by a version number indicating the exact
+file format used. The version described here is
+2.1.</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>2.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>Lines
+beginning with the word COMMENT may appear anywhere between
+the STARTFONT line and the ENDFONT line. These lines are
+ignored by font compilers.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>3.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+FONT followed by either the XLFD font name (as specified in
+part III) or some private font name. Creators of private
+font name syntaxes are encouraged to register unique font
+name prefixes with the X Consortium to prevent naming
+conflicts. Note that the name continues all the way to the
+end of the line and may contain spaces.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>4.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+SIZE followed by the <i>point size</i> of the characters,
+the <i>x resolution</i>, and the <i>y resolution</i> of the
+device for which these characters were intended.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>5.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+FONTBOUNDINGBOX followed by the <i>width in x</i>, <i>height
+in y</i>, and the x and y displacement of the lower left
+corner from the <i>origin</i>. (See the examples in the next
+section.)</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>6.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>Optionally,
+the word STARTPROPERTIES followed by the number of
+properties (<i>p</i>) that follow.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>7.</small></p> </td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top"><small>Then come
+<i>p</i> lines consisting of a word for the <i>property
+name</i> followed by either an integer or string surrounded
+by double-quote (octal 042). Internal double-quote
+characters are indicated by using two in a row.</small></p></td>
+<td width="0%">
+</td>
+</table>
+
+
+<p style="margin-left:8%; margin-top: 1em"><small>Properties
+named FONT_ASCENT, FONT_DESCENT, and DEFAULT_CHAR should be
+provided to define the logical font-ascent and font-descent
+and the default-char for the font. These properties will be
+removed from the actual font properties in the binary form
+produced by a compiler. If these properties are not
+provided, a compiler may reject the font or may compute
+(arbitrary) values for these properties.</small></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="5%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>8.</small></p> </td>
+<td width="3%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The property
+section, if it exists, is terminated by
+ENDPROPERTIES.</small></p> </td>
+<td width="5%">
+</td>
+<tr valign="top" align="left">
+<td width="5%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>9.</small></p> </td>
+<td width="3%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+CHARS followed by the number of character segments
+(<i>c</i>) that follow.</small></p></td>
+<td width="5%">
+</td>
+<tr valign="top" align="left">
+<td width="5%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>10.</small></p> </td>
+<td width="3%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top"><small>Then come
+<i>c</i> character segments of the form:</small></p></td>
+<td width="5%">
+</td>
+</table>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="4%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>a.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+STARTCHAR followed by up to 14 characters (no blanks) of
+descriptive <i>name</i> of the glyph.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="4%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>b.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+ENCODING followed by one of the following forms:</small></p></td>
+<td width="0%">
+</td>
+</table>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="15%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>i.</small></p> </td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p style="margin-top: 1em" valign="top"><small>&lt;n&gt;
+&minus; the glyph index, that is, a positive integer
+representing the character code used to access the glyph in
+X requests, as defined by the encoded character set given by
+the CHARSET_REGISTRY-CHARSET_ENCODING font properties for
+XLFD conforming fonts. If these XLFD font properties are not
+defined, the encoding scheme is font-dependent.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="15%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>ii.</small></p> </td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p style="margin-top: 1em" valign="top"><small>&minus;1
+&lt;n&gt; &minus; equivalent to form above. This syntax is
+provided for backward compatibility with previous versions
+of this specification and is not recommended for use with
+new fonts.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="15%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>iii.</small></p> </td>
+<td width="2%"></td>
+<td width="75%">
+
+
+<p style="margin-top: 1em" valign="top"><small>&minus;1
+&minus; an unencoded glyph. Some font compilers may discard
+unencoded glyphs, but, in general, the glyph names may be
+used by font compilers and X servers to implement dynamic
+mapping of glyph repertoires to character encodings as seen
+through the X protocol.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="15%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>c.</small></p> </td>
+<td width="2%"></td>
+<td width="75%"></td>
+<td width="0%">
+</td>
+</table>
+
+<p style="margin-left:8%;"><small>The word SWIDTH followed
+by the <i>scalable width</i> in x and y of character.
+Scalable widths are in units of 1/1000th of the size of the
+character. If the size of the character is <i>p</i> points,
+the width information must be scaled by <i>p</i>/1000 to get
+the width of the character in printer&rsquo;s points. This
+width information should be considered as a vector
+indicating the position of the next character&rsquo;s origin
+relative to the origin of this character. To convert the
+scalable width to the width in device pixels, multiply
+SWIDTH times <i>p</i>/1000 times <i>r</i>/72, where <i>r</i>
+is the device resolution in pixels per inch. The result is a
+real number giving the ideal print width in device pixels.
+The actual device width must of course be an integral number
+of device pixels and is given in the next entry. The SWIDTH
+y value should always be zero for a standard X
+font.</small></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>d.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+DWIDTH followed by the width in x and y of the character in
+device units. Like the SWIDTH, this width information is a
+vector indicating the position of the next character&rsquo;s
+origin relative to the origin of this character. Note that
+the DWIDTH of a given &lsquo;&lsquo;hand-tuned&rsquo;&rsquo;
+WYSIWYG glyph may deviate slightly from its ideal
+device-independent width given by SWIDTH in order to improve
+its typographic characteristics on a display. The DWIDTH y
+value should always be zero for a standard X
+font.</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>e.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word BBX
+followed by the width in x (<i>BBw</i>), <i>height</i> in y
+(<i>BBh</i>), and x and y displacement (<i>BBox</i>,
+<i>BBoy</i>) of the lower left corner from the <i>origin</i>
+of the character.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>f.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The optional
+word ATTRIBUTES followed by the attributes as 4
+<i>hex-encoded</i> characters. The interpretation of these
+attributes is undefined in this document.</small></p></td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>g.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+BITMAP.</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>h.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small><i>h</i>
+lines of <i>hex-encoded</i> bitmap, padded on the right with
+zeros to the nearest byte (that is, multiple of
+8).</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>i.</small></p> </td>
+<td width="5%"></td>
+<td width="83%">
+
+
+<p style="margin-top: 1em" valign="top"><small>The word
+ENDCHAR.</small></p> </td>
+<td width="0%">
+</td>
+<tr valign="top" align="left">
+<td width="12%">
+
+
+
+<p style="margin-top: 1em" valign="top"><small>11.</small></p> </td>
+<td width="5%"></td>
+<td width="83%"></td>
+<td width="0%">
+</td>
+</table>
+
+<p valign="top"><small>The file is terminated with the word
+ENDFONT.</small></p>
+
+<a name="Metric Information"></a>
+<h2>Metric Information</h2>
+
+
+<p style="margin-top: 1em" valign="top"><small>Figures 1
+and 2 best illustrate the bitmap format and character metric
+information.</small></p>
+
+<p align=center style="margin-top: 1em" valign="top">BBw =
+9, BBh = 22, BBox = -2, BBoy = -6 DWIDTH = 8 0 SWIDTH = 355
+0 &lsquo;&lsquo;+&rsquo;&rsquo; = character origin and
+width</p>
+
+
+<p align=center style="margin-top: 1em" valign="top">Figure
+1: An example of a descender</p>
+
+<p align=center style="margin-top: 1em" valign="top">BBh =
+6, BBw = 4, BBox = +2, BBoy = +12 DWIDTH = 5 0 SWIDTH = 223
+0</p>
+
+
+<p align=center style="margin-top: 1em" valign="top">Figure
+2: An example with the origin outside the bounding box</p>
+
+<a name="An Example File"></a>
+<h2>An Example File</h2>
+
+
+<p style="margin-top: 1em" valign="top">The following is an
+abbreviated example of a bitmap file containing the
+specification of two characters (the j and quoteright in
+figures 1 and 2).</p>
+
+<p style="margin-left:25%; margin-top: 1em">STARTFONT 2.1
+<br>
+COMMENT This is a sample font in 2.1 format. <br>
+FONT
+-Adobe-Helvetica-Bold-R-Normal--24-240-75-75-P-65-ISO8859-1
+<br>
+SIZE 24 75 75 <br>
+FONTBOUNDINGBOX 9 24 -2 -6 <br>
+STARTPROPERTIES 19 <br>
+FOUNDRY &quot;Adobe&quot; <br>
+FAMILY &quot;Helvetica&quot; <br>
+WEIGHT_NAME &quot;Bold&quot; <br>
+SLANT &quot;R&quot; <br>
+SETWIDTH_NAME &quot;Normal&quot; <br>
+ADD_STYLE_NAME &quot;&quot; <br>
+PIXEL_SIZE 24 <br>
+POINT_SIZE 240 <br>
+RESOLUTION_X 75 <br>
+RESOLUTION_Y 75 <br>
+SPACING &quot;P&quot; <br>
+AVERAGE_WIDTH 65 <br>
+CHARSET_REGISTRY &quot;ISO8859&quot; <br>
+CHARSET_ENCODING &quot;1&quot; <br>
+MIN_SPACE 4 <br>
+FONT_ASCENT 21 <br>
+FONT_DESCENT 7 <br>
+COPYRIGHT &quot;Copyright (c) 1987 Adobe Systems, Inc.&quot;
+<br>
+NOTICE &quot;Helvetica is a registered trademark of Linotype
+Inc.&quot; <br>
+ENDPROPERTIES <br>
+CHARS 2 <br>
+STARTCHAR j <br>
+ENCODING 106 <br>
+SWIDTH 355 0 <br>
+DWIDTH 8 0 <br>
+BBX 9 22 -2 -6 <br>
+BITMAP <br>
+0380 <br>
+0380 <br>
+0380 <br>
+0380 <br>
+0000 <br>
+0700 <br>
+0700 <br>
+0700 <br>
+0700 <br>
+0E00 <br>
+0E00 <br>
+0E00 <br>
+0E00 <br>
+0E00 <br>
+1C00 <br>
+1C00 <br>
+1C00 <br>
+1C00 <br>
+3C00 <br>
+7800 <br>
+F000 <br>
+E000 <br>
+ENDCHAR <br>
+STARTCHAR quoteright <br>
+ENCODING 39 <br>
+SWIDTH 223 0 <br>
+DWIDTH 5 0 <br>
+BBX 4 6 2 12 <br>
+ATTRIBUTES 01C0 <br>
+BITMAP <br>
+70 <br>
+70 <br>
+70 <br>
+60 <br>
+E0 <br>
+C0 <br>
+ENDCHAR <br>
+ ENDFONT</p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729775" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

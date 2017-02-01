@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Run the X Window System</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="Darwin.html"><EM>XFree86&reg; on Darwin and Mac OS X </EM></A>
+ <b>:</b> <EM>Run the X Window System</EM><BR>
+<b>Previous:</b> <A HREF="Darwin3.html"><EM>Getting Started </EM></A><BR>
+<b>Next:</b> <A HREF="Darwin.html"><EM>XFree86&reg; on Darwin and Mac OS X </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="6"></A>4. Run the X Window System<A NAME="running"></A> 
+</H2>
+<H3><A NAME="7"></A>4.1. Setting Your Path </H3>
+<p>You need to add the X Window System executables to your path. Your path
+is the list of directories to be searched for executable commands. 
+The X11 commands are located in <code>/usr/X11R6/bin</code>, which needs to be
+added to your path. In Quartz mode, the XDarwin application does this for
+you automatically. It can also be configured to add additional directories
+where you have installed command line applications. When running from the
+Darwin console, you will need to set the path correctly for your shell as
+XDarwin will not do this for you.</p>
+
+<p>More experienced users will have already set their path correctly using the
+initialization files for their shell. In this case, you can inform XDarwin
+not to modify your path in the preferences. XDarwin launches the initial
+X11 clients in the user's default login shell. (An alternate shell can also
+be specified in the preferences.) The way to set the path depends on the
+shell you are using. This is described in the man page documentation for
+the shell.</p>
+
+<p>In addition you may also want to add the man pages from XFree86 to the list
+of pages to be searched when you are looking for documentation. The X11 man
+pages are located in <code>/usr/X11R6/man</code> and the <code>MANPATH</code>
+environment variable contains the list of directories to search.</p>
+
+<H3><A NAME="8"></A>4.2. Starting the X Server </H3>
+<p>On Mac OS&nbsp;X, you can run XFree86 from the Darwin
+text console or in parallel with Aqua. To get to the text
+console in Mac OS&nbsp;X you need to logout and type ``&gt;console'' as
+the user name. This will shutdown Core Graphics and
+bring up the console login prompt. Login again as your user.
+From the text console you can start the X Window System by typing
+``exec startx''.</p>
+
+<p>When you are ready to quit XFree86 type ``exit'' in the main
+terminal window or quit with the window manager if you have one
+running. Unfortunately in IOKit mode, the X server does not shutdown
+correctly and if you did not start with ``exec startx'', you 
+will get an apparently frozen screen with only a spinning beachball
+cursor on it. Nothing you type shows up on the screen, but in fact
+your keystrokes are being received by the console. Type
+``logout'' to return to normalcy after a brief delay. With
+Darwin, this should put you back at the text console login prompt. With
+Mac OS&nbsp;X, Core Graphics will restart and you should be given a login
+window.</p>
+
+<p>To start XFree86 in Quartz mode you can launch the XDarwin application
+in the <code>/Applications</code> folder, or from the command line type
+``startx -- -quartz''. By default this will give you a mode picker to
+choose between full screen or rootless mode. You can change the default
+to always use a particular mode in the preferences, or you can specify
+the ``-fullscreen'' or ``-rootless'' options on the command line instead
+of ``-quartz''.</p>
+
+<H3><A NAME="9"></A>4.3. Double-clickable X11 Executables </H3>
+<p>Mac OS&nbsp;X 10.3 can be configured to automatically launch XDarwin when
+you double-click an X11 executable in the Finder. When an executable file
+is double-clicked Launch Services checks to see if it is linked against
+the X11 libraries. If it is, Launch Services opens the default X server.
+To set the default X server, do the following:</p>
+<p>
+<ul>
+<li>Create a simple file which ends in ''.x11app''.</li>
+<li>Open the file with Get Info in the Finder.</li>
+<li>Under ''Open with:'' select the XDarwin application.</li>
+<li>Select ''Change All...'' to set XDarwin as the default.</li>
+</ul>
+</p>
+
+<p>On Mac OS&nbsp;X 10.3 the default X server is started when an X11
+executable is double-clicked, whether or not its extension is
+''.x11app''. On previous versions of Mac OS&nbsp;X, an X11 executable must
+have a ''.x11app'' extension for this to work.</p>
+
+<H3><A NAME="10"></A>4.4. Customize the X Window System </H3>
+<p>The X Window System is very customizable and you will certainly want to
+change some things. There is a lot you can do to control how your windows
+look, how the windows are moved, resized, etc. You will likely want to
+get a fancier window manager than twm, which is included with
+XFree86. The <code>.xinitrc</code> file in your home directory controls what
+programs are run when you start the X Window System. You can find a sample
+<code>.xinitrc</code> file in <code>/etc/X11/xinit/xinitrc</code>.  </p>
+
+<p>There are many window managers that have been ported to Darwin. The
+following pages contain collections of window managers and other X
+window system clients:</p>
+<p>
+<ul>
+<li> <A href="http://darwinports.opendarwin.org/">DarwinPorts</A>: An easy way to install various open-source software
+products on Darwin and Mac OS&nbsp;X.
+</li>
+<li> <A href="http://fink.sourceforge.net/">Fink</A>: A
+package manager that will easily download, compile, and install lots
+of open source software from the Internet.
+</li>
+<li> <A href="http://gnu-darwin.sourceforge.net/">GNU-Darwin</A>:
+A source for tons of software ported to Darwin.
+</li>
+</ul>
+</p>
+
+<p>Good luck!</p>
+
+ <HR NOSHADE>
+<A HREF="Darwin.html"><EM>XFree86&reg; on Darwin and Mac OS X </EM></A>
+ <b>:</b> <EM>Run the X Window System</EM><BR>
+<b>Previous:</b> <A HREF="Darwin3.html"><EM>Getting Started </EM></A><BR>
+<b>Next:</b> <A HREF="Darwin.html"><EM>XFree86&reg; on Darwin and Mac OS X </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728798" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

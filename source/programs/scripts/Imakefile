@@ -1,0 +1,6 @@
+XCOMM $XFree86: xc/programs/scripts/Imakefile,v 3.3 2006/01/09 15:00:52 dawes Exp $
+
+all::
+
+InstallNamedProg(xon.sh,xon,$(BINDIR))
+InstallManPage(xon,$(MANDIR))

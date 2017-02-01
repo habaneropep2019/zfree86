@@ -1,0 +1,12 @@
+XCOMM $XFree86: xc/programs/smproxy/Imakefile,v 1.5 2006/01/09 15:00:53 dawes Exp $
+
+#if HasMkstemp
+        DEFINES = -DHAS_MKSTEMP
+#endif
+
+        DEPLIBS = $(DEPXMULIB) $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(XMULIB) $(XTOOLLIB) $(XLIB)
+           SRCS = smproxy.c save.c
+           OBJS = smproxy.o save.o
+
+ComplexProgramTarget(smproxy)

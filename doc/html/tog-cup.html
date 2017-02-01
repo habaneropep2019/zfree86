@@ -1,0 +1,1160 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:17:16 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Requests">2. Requests</a><br>
+<a href="#3. Events and Errors">3. Events and Errors</a><br>
+<a href="#4. Changes to existing protocol.">4. Changes to existing protocol.</a><br>
+<a href="#5. Encoding">5. Encoding</a><br>
+<a href="#6. C Language Binding">6. C Language Binding</a><br>
+<a href="#7. Using the TOG-CUP extension and Colormap UtilizationPolicy">7. Using the TOG-CUP extension and Colormap UtilizationPolicy</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Colormap
+Utilization Policy and Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+1.0 X Project Team Standard X Version 11, Release
+6.4</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Kaleb
+S. KEITHLEY <br>
+The Open Group</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Copyright
+&copy; 1986-1997 The Open Group All Rights
+Reserved</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the Software), to use the Software without restriction,
+including, without limitation, the rights to copy, modify,
+merge, publish, distribute and sublicense the Software, to
+make, have made, license and distribute derivative works
+thereof, and to permit persons to whom the Software is
+furnished to do so, subject to the following
+conditions:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>The
+above copyright notice and the following permission notice
+shall be included in all copies of the
+Software:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>THE
+SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NON- INFRINGEMENT. IN NO EVENT SHALL THE OPEN
+GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF, OR IN CONNNECTION WITH THE SOFTWARE OR THE USE
+OF OTHER DEALINGS IN THE SOFTWARE.</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Except
+as contained in this notice, the name of The Open Group
+shall not be used in advertising or otherwise to promote the
+use or other dealings in this Software without prior written
+authorization from The Open Group.</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>X
+Window System is a trademark of The Open
+Group.</small></small></p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension has
+three purposes: a) to provide mechanism for a special
+application (a colormap manager) to discover any special
+colormap requirements, e.g. the colormap entries that are
+nominally reserved for desktop colors in the MS-Windows
+environment and initialize the default colormap so that it
+can be more easily shared; and b) to encourage colormap
+sharing and reduce colormap flashing on low-end 8-bit frame
+buffers by providing a policy for sharing; and c) when
+colormaps aren&rsquo;t shared, define a behavior in the X
+server color allocation scheme to reduce colormap
+flashing.</p>
+
+<p style="margin-top: 1em" valign="top">To encourage
+colormap sharing and accomodate special colormap
+requirements two new protocols are defined: the first
+provides a way to query the server for a list of reserved
+colormap entries, and the second is a way to initialize
+read-only (shareable) colormap entries at specific locations
+in a colormap.</p>
+
+<p style="margin-top: 1em" valign="top">To minimize
+colormap flashing when the root window&rsquo;s default
+visual is one of GrayScale, PseudoColor, or DirectColor, and
+a private colormap for the default visual is being used, a
+minor (but compatible) change to the server implementation
+of the AllocColor and AllocNamedColor requests is required.
+Where the core protocol says nothing about the pixel values
+returned, when this extension is in effect, the AllocColor
+and AllocNamedColor requests will first look for a matching
+color in the default colormap, and, if a match is found and
+the same cell in the private colormap has not already been
+allocated, the color will be allocated in the private
+colormap at the same locaton as in the default colormap
+(instead of in the first available location.)</p>
+
+<a name="2. Requests"></a>
+<h2>2. Requests</h2>
+
+
+<p style="margin-top: 1em" valign="top">__ &#9474;<i><br>
+QueryVersion</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em">client_major_version:
+CARD16 <br>
+client_minor_version: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">server_major_version:
+CARD16 <br>
+server_minor_version: CARD16 &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If supplied, the
+client_major_version and client_minor_version indicate what
+version of the protocol the client wants the server to
+implement. The server version numbers returned indicate the
+protocol this extension actually supports. This might not
+equal the version sent by the client. An implementation can
+(but need not) support more than one version simultaneously.
+The server_major_version and the server_minor_version are a
+mechanism to support future revisions of the TOG-CUP
+protocol that may be necessary. In general, the major
+version would increment for incompatible changes, and the
+minor version would increment for small upward-compatible
+changes. Servers that support the protocol defined in this
+document will return a server_major_version of one (1), and
+a server_minor_version of zero (0). __ &#9474;<i><br>
+GetReservedColormapEntries</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">screen:
+CARD32</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<p style="margin-left:25%; margin-top: 1em">entries:
+LISTofCOLORITEM &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">This request
+returns a list of colormap entries (pixels) that are
+reserved by the system, e.g. MS-Windows reserved desktop
+colors. This list will, at a minimum, contain entries for
+the BlackPixel and WhitePixel of the specified screen. The
+do-red, do-green, and do-blue elements of the COLORITEMs are
+unused in this reply.</p>
+
+<p style="margin-top: 1em" valign="top">Rationale: There
+are colormap entries (pixels) that, e.g., MS-Windows desktop
+reserves as desktop colors, that should not be altered. If
+they are altered then X programs will cause colormap
+flashing between X and MS-Windows applications
+running/displaying on the same desktop. __ &#9474;<i><br>
+StoreColors</i></p>
+
+<p style="margin-left:25%; margin-top: 1em">cmap: COLORMAP
+<br>
+items: LISTofCOLORITEM</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<p style="margin-left:25%; margin-top: 1em">items:
+LISTofCOLORITEM &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">This request
+changes the colormap entries of the specified pixels. The
+colormap entries are allocated as if by an AllocColor
+request. The do-red, do-green, and do-blue elements of the
+COLORITEMs are unused in this request. A boolean alloc-ok
+element (a bit) is returned indicating whether the
+particular pixel was successfully allocated or not. If
+successfully allocated the RGB and pixel are returned.</p>
+
+<p style="margin-top: 1em" valign="top">A Value error is
+generated if a pixel is not a valid index into cmap. A
+BadMatch error is generated if if cmap does not belong to a
+GrayScale, PseudoColor, or DirectColor visual.</p>
+
+<a name="3. Events and Errors"></a>
+<h2>3. Events and Errors</h2>
+
+
+<p style="margin-top: 1em" valign="top">No new events or
+errors are defined by this extension.</p>
+
+<a name="4. Changes to existing protocol."></a>
+<h2>4. Changes to existing protocol.</h2>
+
+
+<p style="margin-top: 1em" valign="top">None.</p>
+
+<a name="5. Encoding"></a>
+<h2>5. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &quot;TOG-CUP&quot;.</p>
+
+<p style="margin-top: 1em" valign="top">The conventions
+used here are the same as those for the core X11 Protocol
+Encoding.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>QueryVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">TOG-CUP opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_minor_version</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_minor_number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>GetReservedColormapEntries</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">TOG-CUP opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">screen</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">3n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">24</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">12n</p></td>
+<td width="20%"></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCOLORITEMitems</p></td>
+<td width="50%">
+</td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>StoreColors</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">TOG-CUP opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2+3n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">COLORMAP</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">cmap</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">12n</p></td>
+<td width="20%"></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCOLORITEMitems</p></td>
+<td width="50%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">3n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">24</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">12n LISTofCOLORITEM</p></td>
+<td width="20%"></td>
+<td width="20%"></td>
+<td width="50%">
+
+
+<p valign="top">items</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">(The definition of
+COLORITEM here is only for the purpose of defining the
+additional alloc-ok member in the CUPStoreColors reply.)</p>
+
+<p style="margin-top: 1em" valign="top">COLORITEM</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">pixel</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">red</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">green</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">blue</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">alloc-ok</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">#x07</p></td>
+<td width="20%">
+
+
+<p valign="top">unused</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">#x08</p></td>
+<td width="20%">
+
+
+<p valign="top">alloc-ok (1 is True, 0 is False)</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">#xF0</p></td>
+<td width="20%">
+
+
+<p valign="top">unused</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<a name="6. C Language Binding"></a>
+<h2>6. C Language Binding</h2>
+
+
+<p style="margin-top: 1em" valign="top">The C functions
+provide direct access to the protocol and add no additional
+semantics. For complete details on the effects of these
+functions, refer to the appropriate protocol request, which
+can be derived by deleting XCup at the start of the
+function. All functions that have return type Status will
+return nonzero for success and zero for failure.</p>
+
+<p style="margin-top: 1em" valign="top">The include file
+for this extension is &lt;<i>X11/extensions/Xcup.h</i>&gt;.
+__ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>Status</i>XCupQueryVersion(
+<br>
+Display* <i>display</i>, <br>
+int* <i>major_version_return</i>, <br>
+int* <i>minor_version_return</i>) &#9474;__</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>display</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+connection to the X server.</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>major_version_return</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">Returns the major version supported by the
+server.</p> </td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>minor_version_return</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">Returns the minor version supported by the
+server.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">XCupQueryVersions
+sets major_version_return and minor_version_return to the
+major and minor TOG-CUP protocol version supported by the
+server. If the TOG-CUP library is compatible with the
+version returned by the server, it returns nonzero. If dpy
+does not support the TOG-CUP extension, or if there was an
+error during communication with the server, or if the server
+and library protocol versions are incompatible, it returns
+zero. No other XCup functions may be called before this
+function. If a client violates this rule, the effects of all
+subsequent XCup calls that it makes are undefined.</p>
+
+<p style="margin-top: 1em" valign="top">To get the list of
+reserved colormap entries, use
+XCupGetReservedColormapEntries. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>Status</i>XCupGetReservedColormapEntries(
+<br>
+Display* <i>display</i>, <br>
+int <i>screen</i>, <br>
+XColor** <i>colors_out</i>, <br>
+int* <i>ncolors</i>) &#9474;__</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>display</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+connection to the X server.</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>colors_out</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Returns the values
+reserved by the server.</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>ncolors</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Returns the number
+of items in colors_out.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The
+XCupGetReservedColormapEntries function gets system specific
+colormap entries. E.g. the MS-Windows desktop uses N
+colormap entries at the beginning (0..N) and end
+(256-N..255) of the colormap. Use XFree to free
+colors_out.</p>
+
+<p style="margin-top: 1em" valign="top">To allocate one or
+more read-only color cells with RGB values, use
+XCupStoreColors. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>Status</i>XCupStoreColors(
+<br>
+Display* <i>display</i>, <br>
+Colormap <i>colormap</i>, <br>
+XColor* <i>colors_in_out</i>, <br>
+int <i>ncolors</i>) &#9474;__</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="16%">
+
+
+<p style="margin-top: 1em" valign="top"><i>display</i></p></td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+connection to the X server.</p></td>
+<tr valign="top" align="left">
+<td width="16%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>colormap</i></p> </td>
+<td width="4%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+colormap.</p> </td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>colors_in_out</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%"></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p valign="top">Specifies and returns the values actually
+used in the colormap.</p></td>
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>ncolors</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+number of items in colors_in_out.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The XCupStoreColors
+function changes the colormap entries of the pixel values
+specified in the pixel members of the XColor structures. The
+colormap entries are allocated as if an AllocColor had been
+used instead, i.e. the colors are read-only (shareable).
+XCupStoreColors returns the number of colors that were
+successfully allocated in the colormap.</p>
+
+<a name="7. Using the TOG-CUP extension and Colormap UtilizationPolicy"></a>
+<h2>7. Using the TOG-CUP extension and Colormap UtilizationPolicy</h2>
+
+
+<p style="margin-top: 1em" valign="top">The X server
+preallocates any hardware or desktop special colors in the
+default colormap; e.g. UNIX X servers preallocate Black and
+White pixels. PC X servers should also preallocate the
+MS-Windows desktop colors. (Note to implementors: in the
+Sample Implementation special colors are allocated in the
+default colormap in cfbCreateDefColormap for dumb memory
+framebuffers.)</p>
+
+<p style="margin-top: 1em" valign="top">To minimize
+colormap flash an application which installs its own private
+colormap should query the special colors by calling
+XCupGetReservedColormapEntries, and can then store those
+entries (in the proper location) in its private colormap
+using XCupStoreColors.</p>
+
+<p style="margin-top: 1em" valign="top">Applications which
+allocate many colors in a screen&rsquo;s default colormap,
+e.g. a color-cube or a gray-ramp, should allocate them with
+XCupStoreColors. By using XCupStoreColors the colors will be
+allocated sharable (read-only) and any other application
+which allocates the same color will share that color
+cell.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729483" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

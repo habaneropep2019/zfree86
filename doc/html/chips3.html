@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>XF86Config Options </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>XF86Config Options </EM><BR>
+<b>Previous:</b> <A HREF="chips2.html"><EM>Supported Chips </EM></A><BR>
+<b>Next:</b> <A HREF="chips4.html"><EM>Modelines </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="6"></A>3. XF86Config Options </H2>
+
+<p>The following options are of particular interest to the Chips and
+Technologies driver. It should be noted that the options are case
+insensitive, and that  white space and "_" characters are ignored.
+There are therefore a wide variety of possible forms for all options.
+The forms given below are the preferred forms.</p>
+<p>Options related to drivers can be present in the Screen, Device and
+Monitor sections and the Display subsections.  The order of precedence
+is Display, Screen, Monitor, Device. </p>
+<p>
+<dl>
+<dt><b> Option "NoAccel" </b><dd><p>This option will disable the use of any accelerated functions.
+This is likely to help with some problems related to DRAM
+timing, high dot clocks, and bugs in accelerated functions, at
+the cost of performance (which will still be reasonable on VLB/PCI).</p>
+<dt><b> VideoRam 1024 (or another value) </b><dd><p>This option will override the detected amount of video memory,
+and pretend the given amount of memory is present on the card.</p>
+<dt><b> Option "NoLinear" </b><dd><p>By default linear addressing is used on all chips where it
+can be set up automatically. The exception is for depths of
+1 or 4bpp where linear addressing is turned off by default.
+It is possible to turn the linear addressing off with this
+option. Note that H/W acceleration is only supported with
+linear addressing.</p>
+<dt><b> Option "Linear" </b><dd><p>When the chipset is capable of linear addressing and it has
+been turned off by default, this option can be used to turn it
+back on. This is useful for the 65530 chipset where the base
+address of the linear framebuffer must be supplied by the user,
+or at depths 1 and 4bpp. Note that linear addressing at 1 and 4bpp
+is not guaranteed to work correctly.</p>
+<dt><b> MemBase 0x03b00000 (or a different address) </b><dd><p>This sets the physical memory base address of the linear
+framebuffer. Typically this is probed correctly, but if
+you believe it to be mis-probed, this option might help.
+Also for non PCI machines specifying this force the linear base
+address to be this value, reprogramming the video processor
+to suit. Note that for the 65530 this is required as the
+base address can't be correctly probed.</p>
+<dt><b> Option "HWcursor" </b><dd><p>For chipsets that support hardware cursors, this option enforces
+their use, even for cases that are known to cause problems on some
+machines. Note that it is overridden by the "<code>SWcursor</code>"
+option. Hardware cursors effectively speeds all graphics operations
+as the job of ensuring that the cursor remains on top is now given
+to the hardware. It also reduces the effect of cursor flashing during
+graphics operations.</p>
+<dt><b> Option "SWcursor" </b><dd><p>This disables use of the hardware cursor provided by the chip.
+Try this if the cursor seems to have problems. </p>
+<dt><b> Option "STN" </b><dd><p>The server is unable to differentiate between SS STN 
+and TFT displays. This forces it to identify the display
+as a SS STN rather than a TFT.</p>
+<dt><b> Option "UseModeline" </b><dd><p>The flat panel timings are related to the panel size and not the
+size of the mode specified in XF86Config. For this reason the
+default behaviour of the server is to use the panel timings already
+installed in the chip. The user can force the panel timings to be
+recalculated from the modeline with this option. However the panel
+size will still be probed.</p>
+<dt><b> Option "FixPanelSize" </b><dd><p>For some machines the LCD panel size is incorrectly probed from
+the registers. This option forces the LCD panel size to be
+overridden by the modeline display sizes. This will prevent the
+use of a mode that is a different size than the panel. Before
+using this check that the server reports an incorrect panel
+size. This option can be used in conjunction with the option
+"UseModeline" to program all the panel timings using
+the modeline values.</p>
+<dt><b> Option "NoStretch" </b><dd><p>When the size of the mode used is less than the panel size, the
+default behaviour of the server is to stretch the mode in an attempt
+to fill the screen. A "<code>letterbox</code>" effect with no stretching
+can be achieved using this option.</p>
+<dt><b> Option "LcdCenter" </b><dd><p>When the size of the mode used is less than the panel size, the
+default behaviour of the server is to align the left hand edge of
+the display with the left hand edge of the screen. Using this option
+the mode can be centered in the screen. This option is reported to
+have problems with some machines at 16/24/32bpp, the effect of which
+is that the right-hand edge of the mode will be pushed off the screen.</p>
+<dt><b> Option "HWclocks" </b><dd><p>For the chips either using the WinGine or basic architectures, the
+chips generates a number of fixed clocks internally. With the chips
+65535 and later or the 64300, the default is to use the programmable
+clock for all clocks. It is possible to use the fixed clocks
+supported by the chip instead by using this option. Typically
+this will give you some or all of the clocks 25.175, 28.322,
+31.000 and 36.000MHz. The current programmable clock will be
+given as the last clock in the list. On a cold-booted system this
+might be the appropriate value to use at the text console (see the 
+"<code>TextClockFreq</code>" option), as many flat panels will need a
+dot clock different than the default to synchronise. The
+programmable clock makes this option obsolete and so it's use
+isn't recommended. It is completely ignored for HiQV chipsets.</p>
+<dt><b> TextClockFreq 25.175 </b><dd><p>Except for the HiQV chipsets, it is impossible for the server to read
+the value of the currently used frequency for the text console when
+using programmable clocks. Therefore the server uses a default value of
+25.175MHz as the text console clock. For some LCDs, in particular
+DSTN screens, this clock will be wrong. This allows the user to
+select a different clock for the server to use when returning to
+the text console.</p>
+<dt><b> Option "FPClock8"   "65.0MHz" </b><dd>
+<dt><b> Option "FPClock16"  "65.0MHz" </b><dd>
+<dt><b> Option "FPClock24"  "65.0MHz" </b><dd>
+<dt><b> Option "FPClock32"  "65.0MHz" </b><dd><p>In general the LCD panel clock should be set independently of the
+modelines supplied. Normally the chips BIOS set the flat panel
+clock correctly and so the default behaviour with HiQV chipset is
+to leave the flat panel clock alone, or force it to be 90% of the
+maximum allowable clock if the current panel clock exceeds the
+dotclock limitation due to a depth change. This option allows the user
+to force the server the reprogram the flat panel clock independently
+of the modeline with HiQV chipset. The four options are for 8bpp or
+less, 16, 24 or 32bpp LCD panel clocks, where the options above set
+the clocks to 65MHz.</p>
+<dt><b> Option "CRTClkIndx" "2" </b><dd>
+<dt><b> Option "FPClkIndx" "1" </b><dd><p>The HiQV series of chips have three programmable clocks. The
+first two are usually loaded with 25.175 and 28.322MHz for
+VGA backward compatibility, and the third is used as a fully
+programmable clock. On at least one system (the Inside 686 LCD/S
+single board computer) the third clock is unusable. These options
+can be used to force a particular clock index to be used</p>
+<dt><b> Option "MMIO" </b><dd><p>This has a different effect depending on the hardware on which it
+is used. For the 6554x machines MMIO is only used to talk to the
+BitBLT engine and is only usable with  PCI buses. It is enabled
+by default for 65545 machines since the blitter	can not be used
+otherwise. The HiQV series of chipsets must use MMIO with their
+BitBLT engines, and so this is enabled by default.</p>
+<dt><b> Option "FullMMIO" </b><dd><p>The 690xx chipsets can use MMIO for all communications with the
+video processor. So using this option on a 690xx chipset forces
+them to use MMIO for all communications. This only makes sense
+when the 690xx is on a PCI bus so that normal PIO can be disabled.</p>
+<dt><b> Option "SuspendHack" </b><dd><p>This option sets the centering and stretching to the BIOS
+default values. This can fix suspend/resume problems on some
+machines. It overrides the options "LcdCenter" 
+and "NoStretch".</p>
+<dt><b> Option "18bitBus"  (Chips 65540/45/46/48) </b><dd><p>For 24bpp on TFT screens, the server assumes that a 24bit bus
+is being used. This can result in a reddish tint to 24bpp mode.
+This option, selects an 18 bit TFT bus. For other depths this
+option has no effect.</p>
+<dt><b> Chipset "ct65546" (or some other chip) </b><dd><p>It is possible that the chip could be misidentified, particular
+due to interactions with other drivers in the server. It is
+possible to force the server to identify a particular chip with
+this option.</p>
+<dt><b> Option "SyncOnGreen" </b><dd><p>Composite sync on green. Possibly useful if you wish to use an
+old workstation monitor. The HiQV internal RAMDAC's supports
+this mode of operation, but whether a particular machine does
+depends on the manufacturer. </p>
+<dt><b> DacSpeed 80.000 </b><dd><p>The server will limit the maximum dotclock to a value as specified
+by the manufacturer. This might make certain modes impossible
+to obtain with a reasonable refresh rate. Using this option the
+user can override the maximum dot-clock and specify any value they
+prefer. Use caution with this option, as driving the video processor
+beyond its specifications might cause damage.</p>
+<dt><b> Option "SetMClk" "38.000MHz" </b><dd>
+<dt><b> Option "SetMClk" "38000kHz" </b><dd><p>This option sets the internal memory clock (MCLK) registers of HiQV
+chipsets to 38MHz or some other value. Use caution as excess heat
+generated by the video processor if its specifications are exceeded
+might cause damage. However careful use of this option might boost
+performance. This option might also be used to reduce the speed of
+the memory clock to preserve power in modes that don't need the full
+speed of the memory to work correctly. This option might also be
+needed to reduce the speed of the memory clock with the
+"<code>Overlay</code>" option. </p>
+<dt><b> Option "RGBbits"  "8" </b><dd><p>By default it is assumed that there are 6 significant bits in the
+RGB representation of the colours in 4bpp and above. If the colours
+seem darker than they should be, perhaps your ramdac is has 8
+significant bits. This option forces the server to assume that there
+are 8 significant bits.</p>
+<dt><b> Option "ShowCache" </b><dd><p>This is a debugging option and general users have no need of it.
+Using this option, when the virtual desktop is scrolled away from
+the zero position, the pixmap cache becomes visible. This is useful
+to see that pixmaps, tiles, etc have been properly cached.</p>
+<dt><b> Option "ShadowFB" </b><dd><p>This option is only useful when acceleration can't be used and linear
+addressing can be used. With this option all of the graphics are
+rendered into a copy of the framebuffer that is keep in the main memory
+of the computer, and the screen is updated from this copy. In this
+way the expensive operation of reading back to contents of the screen
+is never performed and the performance is improved. Because the
+rendering is all done into a virtual framebuffer acceleration can not
+be used.</p>
+<dt><b> Option "NoTMED" </b><dd><p>The new TMED DSTN dithering scheme available on recent HiQV chipsets
+gives improved performance. However, some machines appear to have this
+feature incorrectly setup. If you have <code>snow</code> on your DSTN
+LCD, try using this option. This option is only relevant for chipsets
+more recent than the ct65555 and only when used with a DSTN LCD.</p>
+<dt><b> Option "Overlay" </b><dd><p>The HiQV chipsets contain a multimedia engine that allow a 16bpp
+window to be overlayed on the screen. This driver uses this capability
+to include a 16bpp framebuffer on top of an 8bpp framebuffer. In this
+way PseudoColor and TrueColor visuals can be used on the same screen.
+XFree86 believes that the 8bpp framebuffer is overlayed on the 16bpp
+framebuffer. Therefore to use this option the server must be started
+in either 15 or 16bpp depth. Also the maximum size of the desktop 
+with this option is 1024x1024, as this is the largest window that the
+HiQV multimedia engine can display. Note that this option using the
+multimedia engine to its limit, and some manufacturers have set a
+default memory clock that will cause pixel errors with this option.
+If you get pixel error with this option try using the
+"<code>SetMClk</code>" option to slow the memory clock. It should also
+be noted that the XVideo extension uses the same capabilities of the
+HiQV chipsets as the Overlays. So using this option disables the
+XVideo extension.</p>
+<dt><b> Option "ColorKey" "255" </b><dd><p>Normally the colour transparency key for the overlay is the 8bpp lookup
+table entry 255. This might cause troubles with some applications, and
+so this option allows the colour transparency key to be set to some
+other value. Legal values are 2 to 255 inclusive.</p>
+<dt><b> Option "VideoKey" "255" </b><dd><p>This sets the default pixel value for the YUV video overlay key. Legal
+values for this key are depth dependent. That is from 0 to 255 for
+8bit depth, 0 to 32,767 for 15bit depth, etc. This option might be used
+if the default video overlay key causes problems.</p>
+<dt><b> Option "DualRefresh" </b><dd><p>The 69030 chipset has independent display channels, that can be
+configured to support independent refresh rates on the flat panel
+and on the CRT. The default behaviour is to have both the flat panel
+and the CRT use the same display channel and thus the same refresh
+rate. This option forces the two display channels to be used, giving
+independent refresh rates. </p>
+<dt><b> Option "Crt2Memory" "2048" </b><dd><p>The ct69030 supports dual-head display. By default the two display
+share equally the available memory. This option forces the second
+display to take a particular amount of memory. Please read the
+section below about dual-head display.</p>
+<dt><b> Option "XaaNoScreenToScreenCopy", </b><dd>
+<dt><b> Option "XaaNoSolidFillRect", </b><dd>
+<dt><b> Option "XaaNoSolidHorVertLine", </b><dd>
+<dt><b> Option "XaaNoMono8x8PatternFillRect", </b><dd>
+<dt><b> Option "XaaNoColor8x8PatternFillRect", </b><dd>
+<dt><b> Option "XaaNoCPUToScreenColorExpandFill", </b><dd>
+<dt><b> Option "XaaNoScreenToScreenColorExpandFill", </b><dd>
+<dt><b> Option "XaaNoImageWriteRect", </b><dd>
+<dt><b> Option "XaaNoImageReadRect", </b><dd>
+<dt><b> Option "XaaNoPixmapCache", </b><dd>
+<dt><b> Option "XaaNoOffscreenPixmaps" </b><dd><p>These option individually disable the features of the XAA acceleration
+code that the Chips and Technologies driver uses. If you have a problem
+with the acceleration and these options will allow you to isolation 
+the problem. This information will be invaluable in debugging any
+problems.</p>
+</dl>
+</p>
+
+ <HR NOSHADE>
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>XF86Config Options </EM><BR>
+<b>Previous:</b> <A HREF="chips2.html"><EM>Supported Chips </EM></A><BR>
+<b>Next:</b> <A HREF="chips4.html"><EM>Modelines </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728822" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

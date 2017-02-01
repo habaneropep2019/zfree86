@@ -1,0 +1,10 @@
+XCOMM $XFree86: xc/programs/xeyes/Imakefile,v 1.2 2006/01/09 15:01:08 dawes Exp $
+
+SYS_LIBRARIES = MathLibrary
+        DEPLIBS = $(DEPXMULIB) $(DEPXTOOLLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(XMULIB) $(XTOOLLIB) $(XLIB)
+
+SRCS = xeyes.c Eyes.c transform.c
+OBJS = xeyes.o Eyes.o transform.o
+
+ComplexProgramTarget(xeyes)

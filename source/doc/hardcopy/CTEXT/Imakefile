@@ -1,0 +1,4 @@
+XCOMM $XFree86: xc/doc/hardcopy/CTEXT/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(ctext,ctext.PS.gz)
+

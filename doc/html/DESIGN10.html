@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Config file ``Option'' entries</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Config file ``Option'' entries</EM><BR>
+<b>Previous:</b> <A HREF="DESIGN9.html"><EM>Keeping Track of Bus Resources</EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN11.html"><EM>Modules, Drivers, Include Files and Interface Issues </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="57"></A>10. Config file ``Option'' entries<A NAME="options"></A> 
+</H2>
+
+<p>Option entries are permitted in most sections and subsections of the
+config file.  There are two forms of option entries:</p>
+<p>
+<dl>
+<dt><b>Option "option-name"</b><dd><p>A boolean option.</p>
+<dt><b>Option "option-name" "option-value"</b><dd><p>An option with an arbitrary value.</p>
+</dl>
+</p>
+<p>The option entries are handled by the parser, and a list of the parsed
+options is included with each of the appropriate data structures that
+the drivers have access to.  The data structures used to hold the option
+information are opaque to the driver, and a driver must not access the
+option data directly.  Instead, the common layer provides a set of
+functions that may be used to access, check and manipulate the option
+data.</p>
+<p>First, the low level option handling functions.  In most cases drivers
+would not need to use these directly.</p>
+<p>
+<blockquote>
+<p><code>pointer xf86FindOption(pointer options, const char *name)</code>
+<blockquote>
+<p>Takes a list of options and an option name, and returns a handle
+for the first option entry in the list matching the name.  Returns
+<code>NULL</code> if no match is found.</p>
+
+</blockquote>
+</p>
+<p><code>char *xf86FindOptionValue(pointer options, const char *name)</code>
+<blockquote>
+<p>Takes a list of options and an option name, and returns the value
+associated with the first option entry in the list matching the
+name.  If the matching option has no value, an empty string
+(<code>""</code>) is returned.  Returns <code>NULL</code>
+if no match is found.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86MarkOptionUsed(pointer option)</code>
+<blockquote>
+<p>Takes a handle for an option, and marks that option as used.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86MarkOptionUsedByName(pointer options, const char *name)</code>
+<blockquote>
+<p>Takes a list of options and an option name and marks the first
+option entry in the list matching the name as used.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<p>Next, the higher level functions that most drivers would use.
+<blockquote>
+<p><code>void xf86CollectOptions(ScrnInfoPtr pScrn, pointer extraOpts)</code>
+<blockquote>
+<p>Collect the options from each of the config file sections used by
+the screen (<code>pScrn</code>) and return the merged list as
+<code>pScrn-&gt;options</code>.  This function requires that
+<code>pScrn-&gt;confScreen</code>, <code>pScrn-&gt;display</code>,
+<code>pScrn-&gt;monitor</code>,
+<code>pScrn-&gt;numEntities</code>, and
+<code>pScrn-&gt;entityList</code> are initialised.
+<code>extraOpts</code> may optionally be set to an additional
+list of options to be combined with the others.  The order of
+precedence for options is <code>extraOpts</code>, display,
+confScreen, monitor, device.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86ProcessOptions(int scrnIndex, pointer options,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OptionInfoPtr optinfo)</code>
+<blockquote>
+<p>Processes a list of options according to the information in the
+array of <code>OptionInfoRecs</code> (<code>optinfo</code>).
+The resulting information is stored in the <code>value</code>
+fields of the appropriate <code>optinfo</code> entries.  The
+<code>found</code> fields are set to <code>TRUE</code>
+when an option with a value of the correct type if found, and
+<code>FALSE</code> otherwise.  The <code>type</code> field
+is used to determine the expected value type for each option.
+Each option in the list of options for which there is a name match
+(but not necessarily a value type match) is marked as used.
+Warning messages are printed when option values don't match the
+types specified in the optinfo data.</p>
+<p>NOTE: If this function is called before a driver's screen number
+is known (e.g., from the <code>ChipProbe()</code> function) a
+<code>scrnIndex</code> value of <code>-1</code> should be
+used.</p>
+<p>NOTE 2: Given that this function stores into the
+<code>OptionInfoRecs</code> pointed to by <code>optinfo</code>,
+the caller should ensure the <code>OptionInfoRecs</code> are
+(re-)initialised before the call, especially if the caller expects
+to use the predefined option values as defaults.</p>
+<p>The <code>OptionInfoRec</code> is defined as follows:</p>
+<p>
+<pre>
+      typedef struct {
+          double freq;
+          int units;
+      } OptFrequency;
+
+      typedef union {
+          unsigned long       num;
+          char *              str;
+          double              realnum;
+          Bool                bool;
+          OptFrequency        freq;
+      } ValueUnion;
+
+      typedef enum {
+          OPTV_NONE = 0,
+          OPTV_INTEGER,
+          OPTV_STRING,  /* a non-empty string */
+          OPTV_ANYSTR,  /* Any string, including an empty one */
+          OPTV_REAL,
+          OPTV_BOOLEAN,
+          OPTV_FREQ
+      } OptionValueType;
+
+      typedef enum {
+          OPTUNITS_HZ = 1,
+          OPTUNITS_KHZ,
+          OPTUNITS_MHZ
+      } OptFreqUnits;
+
+      typedef struct {
+          int                 token;
+          const char*         name;
+          OptionValueType     type;
+          ValueUnion          value;
+          Bool                found;
+      } OptionInfoRec, *OptionInfoPtr;
+      
+</pre>
+</p>
+<p><code>OPTV_FREQ</code> can be used for options values that are
+frequencies.  These values are a floating point number with an
+optional unit name appended.  The unit name can be one of "Hz",
+"kHz", "k", "MHz", "M".  The multiplier associated with the unit
+is stored in <code>freq.units</code>, and the scaled frequency
+is stored in <code>freq.freq</code>.  When no unit is specified,
+<code>freq.units</code> is set to <code>0</code>, and
+<code>freq.freq</code> is unscaled.</p>
+<p>Typical usage is to setup an array of
+<code>OptionInfoRecs</code> with all fields initialised.
+The <code>value</code> and <code>found</code> fields get
+set by <code>xf86ProcessOptions()</code>.  For cases where the
+value parsing is more complex, the driver should specify
+<code>OPTV_STRING</code>, and parse the string itself.  An
+example of using this option handling is included in the
+<A HREF="DESIGN20.html#sample">Sample Driver</A> section.</p>
+
+</blockquote>
+</p>
+<p><code>void xf86ShowUnusedOptions(int scrnIndex, pointer options)</code>
+<blockquote>
+<p>Prints out warning messages for each option in the list of options
+that isn't marked as used.  This is intended to show options that
+the driver hasn't recognised.  It would normally be called near
+the end of the <code>ChipScreenInit()</code> function, but only
+when <code>serverGeneration&nbsp;==&nbsp;1</code>.</p>
+
+</blockquote>
+</p>
+<p><code>OptionInfoPtr xf86TokenToOptinfo(const OptionInfoRec *table,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int token)</code></p>
+<p>
+<blockquote>
+<p>Returns a pointer to the <code>OptionInfoRec</code> in
+<code>table</code> with a token field matching
+<code>token</code>.  Returns <code>NULL</code> if no match
+is found.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86IsOptionSet(const OptionInfoRec *table, int token)</code>
+<blockquote>
+<p>Returns the <code>found</code> field of the
+<code>OptionInfoRec</code> in <code>table</code> with a
+<code>token</code> field matching <code>token</code>.  This
+can be used for options of all types.  Note that for options of
+type <code>OPTV_BOOLEAN</code>, it isn't sufficient to check
+this to determine the value of the option.  Returns
+<code>FALSE</code> if no match is found.</p>
+
+</blockquote>
+</p>
+<p><code>char *xf86GetOptValString(const OptionInfoRec *table, int token)</code>
+<blockquote>
+<p>Returns the <code>value.str</code> field of the
+<code>OptionInfoRec</code> in <code>table</code> with a
+token field matching <code>token</code>.  Returns
+<code>NULL</code> if no match is found.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetOptValInteger(const OptionInfoRec *table, int token,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *value)</code>
+<blockquote>
+<p>Returns via <code>*value</code> the <code>value.num</code>
+field of the <code>OptionInfoRec</code> in <code>table</code>
+with a <code>token</code> field matching <code>token</code>.
+<code>*value</code> is only changed when a match is found so
+it can be safely initialised with a default prior to calling this
+function.  The function return value is as for
+<code>xf86IsOptionSet()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetOptValULong(const OptionInfoRec *table, int token,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unsigned long *value)</code>
+<blockquote>
+<p>Like <code>xf86GetOptValInteger()</code>, except the value is
+treated as an <code>unsigned long</code>.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetOptValReal(const OptionInfoRec *table, int token,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;double *value)</code>
+<blockquote>
+<p>Like <code>xf86GetOptValInteger()</code>, except that
+<code>value.realnum</code> is used.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetOptValFreq(const OptionInfoRec *table, int token,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OptFreqUnits expectedUnits, double *value)</code>
+<blockquote>
+<p>Like <code>xf86GetOptValInteger()</code>, except that the
+<code>value.freq</code> data is returned.  The frequency value
+is scaled to the units indicated by <code>expectedUnits</code>.
+The scaling is exact when the units were specified explicitly in
+the option's value.  Otherwise, the <code>expectedUnits</code>
+field is used as a hint when doing the scaling.  In this case,
+values larger than <code>1000</code> are assumed to have be
+specified in the next smallest units.  For example, if the Option
+value is "10000" and expectedUnits is <code>OPTUNITS_MHZ</code>,
+the value returned is <code>10</code>.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetOptValBool(const OptionInfoRec *table, int token, Bool *value)</code>
+<blockquote>
+<p>This function is used to check boolean options
+(<code>OPTV_BOOLEAN</code>).  If the function return value is
+<code>FALSE</code>, it means the option wasn't set.  Otherwise
+<code>*value</code> is set to the boolean value indicated by
+the option's value.  No option <code>value</code> is interpreted
+as <code>TRUE</code>.  Option values meaning <code>TRUE</code>
+are "1", "yes", "on", "true", and option values meaning
+<code>FALSE</code> are "0", "no", "off", "false".  Option names
+both with the "no" prefix in their names, and with that prefix
+removed are also checked and handled in the obvious way.
+<code>*value</code> is not changed when the option isn't present.
+It should normally be set to a default value before calling this
+function.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86ReturnOptValBool(const OptionInfoRec *table, int token, Bool def)</code>
+<blockquote>
+<p>This function is used to check boolean options
+(<code>OPTV_BOOLEAN</code>).  If the option is set, its value
+is returned.  If the options is not set, the default value specified
+by <code>def</code> is returned.  The option interpretation is
+the same as for <code>xf86GetOptValBool()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>int xf86NameCmp(const char *s1, const char *s2)</code>
+<blockquote>
+<p>This function should be used when comparing strings from the config
+file with expected values.  It works like <code>strcmp()</code>,
+but is not case sensitive and space, tab, and `<code>_</code>' characters
+are ignored in the comparison.  The use of this function isn't
+restricted to parsing option values.  It may be used anywhere
+where this functionality required.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Config file ``Option'' entries</EM><BR>
+<b>Previous:</b> <A HREF="DESIGN9.html"><EM>Keeping Track of Bus Resources</EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN11.html"><EM>Modules, Drivers, Include Files and Interface Issues </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728762" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

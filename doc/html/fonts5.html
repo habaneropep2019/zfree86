@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Appendix: background and terminology </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Appendix: background and terminology </EM><BR>
+<b>Previous:</b> <A HREF="fonts4.html"><EM>More about core fonts </EM></A><BR>
+<b>Next:</b> <A HREF="fonts6.html"><EM>References </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="42"></A>5. Appendix: background and terminology <A NAME="sec:background"></A> 
+</H2>
+<H3><A NAME="43"></A>5.1. Characters and glyphs </H3>
+<p>A computer text-processing system inputs keystrokes and outputs
+<i>glyphs</i>, small pictures that are assembled on paper or on a
+computer screen.  Keystrokes and glyphs do not, in general, coincide:
+for example, if the system does generate ligatures, then to the
+sequence of two keystrokes &lt;<code>f</code>&gt;&lt;<code>i</code>&gt; will typically
+correspond a single glyph.  Similarly, if the system shapes Arabic
+glyphs in a vaguely reasonable manner, then multiple different glyphs
+may correspond to a single keystroke.</p>
+<p>The complex transformation rules from keystrokes to glyphs are usually
+factored into two simpler transformations, from keystrokes to
+<i>characters</i> and from characters to glyphs.  You may want to think
+of characters as the basic unit of text that is stored <i>e.g.</i> in
+the buffer of your text editor.  While the definition of a character
+is intrinsically application-specific, a number of standardised
+collections of characters have been defined.</p>
+<p>A <i>coded character set</i> is a set of characters together with a
+mapping from integer codes --- known as <i>codepoints</i> --- to
+characters.  Examples of coded character sets include US-ASCII,
+ISO&nbsp;8859-1, KOI8-R, and JIS&nbsp;X&nbsp;0208(1990).</p>
+<p>A coded character set need not use 8 bit integers to index characters.
+Many early systems used 6 bit character sets, while 16 bit (or more)
+character sets are necessary for ideographic writing systems.</p>
+
+<H3><A NAME="44"></A>5.2. Font files, fonts, and XLFD <A NAME="sec:xlfd"></A> 
+</H3>
+<p>Traditionally, typographers speak about <i>typefaces</i> and
+<i>founts</i>.  A typeface is a particular style or design, such as
+Times Italic, while a fount is a molten-lead incarnation of a given
+typeface at a given size.</p>
+<p>Digital fonts come in <i>font files</i>.  A font file contains the
+information necessary for generating glyphs of a given typeface, and
+applications using font files may access glyph information in an
+arbitrary order.</p>
+<p>Digital fonts may consist of bitmap data, in which case they are said
+to be <i>bitmap fonts</i>.  They may also consist of a mathematical
+description of glyph shapes, in which case they are said to be
+<i>scalable fonts</i>.  Common formats for scalable font files are
+<i>Type&nbsp;1</i> (sometimes incorrectly called <i>ATM fonts</i> or
+<i>PostScript fonts</i>), <i>TrueType</i> and <i>Speedo</i>.</p>
+<p>The glyph data in a digital font needs to be indexed somehow.  How
+this is done depends on the font file format.  In the case of
+Type&nbsp;1 fonts, glyphs are identified by <i>glyph names</i>.  In the
+case of TrueType fonts, glyphs are indexed by integers corresponding
+to one of a number of indexing schemes (usually Unicode --- see below).</p>
+<p>The X11 core fonts system uses the data in a font file to generate
+<i>font instances</i>, which are collections of glyphs at a given size
+indexed according to a given encoding.</p>
+<p>X11 core font instances are usually specified using a notation known
+as the <i>X Logical Font Description</i> (XLFD).  An XLFD starts with a
+dash `<code>-</code>', and consists of fourteen fields separated by dashes,
+for example:
+<blockquote><code>
+<pre>
+-adobe-courier-medium-r-normal--12-120-75-75-m-70-iso8859-1
+</pre>
+</code></blockquote>
+
+Or particular interest are the last two fields `<code>iso8859-1</code>', which
+specify the font instance's encoding.</p>
+<p>A scalable font is specified by an XLFD which contains zeroes instead
+of some fields:
+<blockquote><code>
+<pre>
+-adobe-courier-medium-r-normal--0-0-0-0-m-0-iso8859-1
+</pre>
+</code></blockquote>
+</p>
+<p>X11 font instances may also be specified by short name.  Unlike an
+XLFD, a short name has no structure and is simply a conventional name
+for a font instance.  Two short names are of particular interest, as
+the server will not start if font instances with these names cannot be
+opened.  These are `<code>fixed</code>', which specifies the fallback font to
+use when the requested font cannot be opened, and `<code>cursor</code>', which
+specifies the set of glyphs to be used by the mouse pointer.</p>
+<p>Short names are usually implemented as aliases to XLFDs; the
+standard `<code>fixed</code>' and `<code>cursor</code>' aliases are defined in
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/font/misc/fonts.alias
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="45"></A>5.3. Unicode </H3>
+<p>Unicode (<A href="http://www.unicode.org">http://www.unicode.org</A>) is a coded character
+set with the goal of uniquely identifying all characters for all
+scripts, current and historical.  While Unicode was explicitly not
+designed as a glyph encoding scheme, it is often possible to use it as
+such.</p>
+<p>Unicode is an <i>open</i> character set, meaning that codepoint
+assignments may be added to Unicode at any time (once specified,
+though, an assignment can never be changed).  For this reason, a
+Unicode font will be <i>sparse</i>, meaning that it only defines glyphs
+for a subset of the character registry of Unicode.</p>
+<p>The Unicode standard is defined in parallel with the international
+standard ISO&nbsp;10646.  Assignments in the two standards are always
+equivalent, and we often use the terms <i>Unicode</i> and
+<i>ISO&nbsp;10646</i> interchangeably.</p>
+<p>When used in the X11 core fonts system, Unicode-encoded fonts should
+have the last two fields of their XLFD set to `<code>iso10646-1</code>'.</p>
+
+ <HR NOSHADE>
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Appendix: background and terminology </EM><BR>
+<b>Previous:</b> <A HREF="fonts4.html"><EM>More about core fonts </EM></A><BR>
+<b>Next:</b> <A HREF="fonts6.html"><EM>References </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728780" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

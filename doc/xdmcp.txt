@@ -1,0 +1,1914 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	     1mX Display Manager Control Protocol0m
+
+		     1mVersion 1.1 DRAFT0m
+
+		       1mX.Org Standard0m
+
+		 1mX Version 11, Release 6.70m
+
+
+
+
+		       Keith Packard
+
+			X Consortium
+	      Laboratory for Computer Science
+	   Massachusetts Institute of Technology
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © 1989, 2002 The Open Group
+
+
+
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE OPEN GROUP
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open
+Group shall not be used in advertising or otherwise to pro-
+mote the sale, use or other dealings in this Software with-
+out prior written authorization from The Open Group.
+
+
+
+
+4mX24m 4mWindow24m 4mSystem24m is a trademark of The Open Group.
+
+
+
+
+
+
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+1m1.  Purpose and Goals0m
+
+The purpose of the X Display Manager Control Protocol
+(XDMCP) is to provide a uniform mechanism for an autonomous
+display to request login service from a remote host.  By
+autonomous, we mean the display consists of hardware and
+processes that are independent of any particular host where
+login service is desired.  (For example, the server cannot
+simply be started by a 4mfork/exec24m sequence on the host.)  An
+X terminal (screen, keyboard, mouse, processor, network
+interface) is a prime example of an autonomous display.
+
+From the point of view of the end user, it is very important
+to make autonomous displays as easy to use as traditional
+hardwired character terminals.	Specifically, you can typi-
+cally just power on a hardwired terminal and be greeted with
+a login prompt.	 The same should be possible with autonomous
+displays.  However, in a network environment with multiple
+hosts, the end user may want to choose which host(s) to con-
+nect to.  In an environment with many displays and many
+hosts, a site administrator may want to associate particular
+collections of hosts with particular displays.	We would
+like to support the following options:
+
+·    The display has a single, fixed host to which it should
+     connect.  It should be possible to power on the display
+     and receive a login prompt, without user intervention.
+
+·    Any one of several hosts on a network or subnetwork may
+     be acceptable for accepting login from the display.
+     (For example, the user's file systems can be mounted
+     onto any such host, providing comparable environments.)
+     It should be possible for the display to broadcast to
+     find such hosts and to have the display either automat-
+     ically choose a host or present the possible hosts to
+     the user for selection.
+
+·    The display has a fixed set of hosts that it can con-
+     nect to.  It should be possible for the display to have
+     that set stored in RAM, but it should also be possible
+     for a site administrator to be able to maintain host
+     sets for a large number of displays using a centralized
+     facility, without having to interact (physically or
+     electronically) with each individual display.  Particu-
+     lar hosts should be allowed to refuse login service,
+     based on whatever local criteria are desired.
+
+The control protocol should be designed in such a way that
+it can be used over a reasonable variety of communication
+transport layers.  In fact, it is quite desirable if every
+major network protocol family that supports the standard X
+protocol is also capable of supporting XDMCP, because the
+end result of XDMCP negotiation will be standard X protocol
+connections to the display.  However, because the number of
+
+
+
+			      1m10m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+displays per host may be large, a connection-based protocol
+appears less desirable than a connection-less protocol.	 For
+this reason the protocol is designed to use datagram ser-
+vices with the display responsible for sequencing and
+retransmission.
+
+To keep the burden on displays at a minimum (because display
+cost is not a factor that can be ignored), it is desirable
+that displays not be required to maintain permanent state
+(across power cycles) for the purposes of the control proto-
+col, and it is desirable to keep required state at a minimum
+while the display is powered on.
+
+Security is an important consideration and must be an inte-
+gral part of the design.  The important security goals in
+the context of XDMCP are:
+
+·    It should be possible for the display to verify that it
+     is communicating with a legitimate host login service.
+     Because the user will present credentials (for example,
+     password) to this service, it is important to avoid
+     spoof attacks.
+
+·    It should be possible for the display and the login
+     service to negotiate the authorization mechanism to be
+     used for the standard X protocol.
+
+·    It should be possible to provide the same level of
+     security in verifying the login service as is provided
+     by the negotiated authorization mechanism.
+
+·    Because there are no firm standards yet in the area of
+     security, XDMCP must be flexible enough to accomodate a
+     variety of security mechanisms.
+
+1m2.  Overview of the Protocol0m
+
+XDMCP is designed to provide authenticated access to display
+management services for remote displays.  A new network
+server, called a 4mDisplay24m 4mManager24m, will use XDMCP to communi-
+cate with displays to negotiate the startup of X sessions.
+The protocol allows the display to authenticate the manager.
+It also allows most of the configuration information to be
+centralized with the manager and to ease the burden of sys-
+tem administration in a large network of displays.  The
+essential goal is to provide plug-and-play services similar
+to those provided in the familiar mainframe/terminal world.
+
+Displays may be turned off by the user at any time.  Any
+existing session running on a display that has been turned
+off must be identifiable.  This is made possible by requir-
+ing a three-way handshake to start a session.  If the hand-
+shake succeeds, any existing session is terminated immedi-
+ately and a new session started.  There is the problem (at
+
+
+
+			      1m20m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+least with TCP) that connections may not be closed when the
+display is turned off.	In most environments, the manager
+should reduce this problem by periodically XSync'ing on its
+own connection, perhaps every five to ten minutes, and ter-
+minating the session if its own connection ever closes.
+
+Displays should not be required to retain permanent state
+for purposes of the control protocol.  One solution to pack-
+ets received out of sequence would be to use monotonically
+increasing message identifiers in each message to allow both
+sides to ignore messages that arrive out-of-sequence.  For
+this to work, displays would at a minimum have to increment
+a stable crash count each time they are powered on and use
+that number as part of a larger sequence number.  But if
+displays cannot retain permanent state this cannot work.
+Instead, the manager assumes the responsibility for perma-
+nent state by generating unique numbers that identify a par-
+ticular session and the protocol simply ignores packets that
+correspond to an invalid session.
+
+The Manager must not be responsible for packet reception.
+To prevent the Manager from becoming stuck because of a hos-
+tile display, no portion of the protocol requires the Man-
+ager to retransmit a packet.  Part of this means that any
+valid packet that the Manager does receive must be acknowl-
+edged in some way to prevent the display from continuously
+resending packets.  The display can keep the protocol run-
+ning as it will always know when the Manager has received
+(at least one copy of) a packet.  On the Manager side, this
+means that any packet may be received more than once (if the
+response was lost) and duplicates must be ignored.
+
+1m3.  Data Types0m
+
+XDMCP packets contain several types of data.  Integer values
+are always stored most significant byte first in the packet
+(``Big Endian'' order).	 As XDMCP will not be used to trans-
+port large quantities of data, this restriction will not
+substantially hamper the efficiency of any implementation.
+Also, no padding of any sort will occur within the packets.
+
+-----------------------------------------------------------------------------------
+1mType Name	  Length (Bytes)   Description0m
+-----------------------------------------------------------------------------------
+CARD8		1		 A single byte unsigned integer
+CARD16		2		 Two byte unsigned integer
+CARD32		4		 Four byte unsigned integer
+ARRAY8		n+2		 This is actually a CARD16 followed by
+				 a collection of CARD8.	 The value of the CARD16
+				 field (n) specifies the number of CARD8 values to
+				 follow
+ARRAY16		2*m+1		 This is a CARD8 (m) which specifies the
+				 number of CARD16 values to follow
+
+
+
+
+			      1m30m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+-----------------------------------------------------------------------------------
+1mType Name	  Length (Bytes)   Description0m
+-----------------------------------------------------------------------------------
+ARRAY32		4*l+1		 This is a CARD8 (l) which specifies the
+				 number of CARD32 values to follow
+ARRAYofARRAY8	?		 This is a CARD8 which specifies the
+				 number of ARRAY8 values to follow.
+-----------------------------------------------------------------------------------
+
+
+1m4.  Packet Format0m
+
+All XDMCP packets have the following information:
+
+--------------------------------------------------------------------
+1mLength (Bytes)   Field Type	Description0m
+--------------------------------------------------------------------
+2		 CARD16	      version number
+2		 CARD16	      opcode packet header
+2		 CARD16	      n = length of remaining data in bytes
+
+n		 ???	      packet-specific data
+--------------------------------------------------------------------
+
+
+The fields are as follows:
+
+·    Version number
+
+     This specifies the version of XDMCP that generated this
+     packet in case changes in this protocol are required.
+     Displays and managers may choose to support older ver-
+     sions for compatibility.  This field will initially be
+     one (1).
+
+·    Opcode
+
+     This specifies what step of the protocol this packet
+     represents and should contain one of the following val-
+     ues (encoding provided in section below): 4mBroadcast-0m
+     4mQuery24m, 4mQuery24m, 4mIndirectQuery24m, 4mForwardQuery24m, 4mWilling24m,
+     4mUnwilling24m, 4mRequest24m, 4mAccept24m, 4mDecline24m, 4mManage24m, 4mRefuse24m,
+     4mFailed24m, 4mKeepAlive24m, or 4mAlive24m.
+
+·    Length of data in bytes
+
+     This specifies the length of the information following
+     the first 6 bytes.	 Each packet-type has a different
+     format and will need to be separately length-checked
+     against this value.  Because every data item has either
+     an explicit or implicit length, this can be easily
+     accomplished.  Packets that have too little or too much
+     data should be ignored.
+
+
+
+
+			      1m40m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+Packets should be checked to make sure that they satisfy the
+following conditions:
+
+1.   They must contain valid opcodes.
+
+2.   The length of the remaining data should correspond to
+     the sum of the lengths of the individual remaining data
+     items.
+
+3.   The opcode should be expected (a finite state diagram
+     is given in a later section).
+
+4.   If the packet is of type 4mManage24m or 4mRefuse24m, the Session
+     ID should match the value sent in the preceding 4mAccept0m
+     packet.
+
+1m5.  Protocol0m
+
+Each of the opcodes is described below.	 Because a given
+packet type is only ever sent one way, each packet descrip-
+tion below indicates the direction.  Most of the packets
+have additional information included beyond the description
+above.	The additional information is appended to the packet
+header in the order described without padding, and the
+length field is computed accordingly.
+
+4mQuery0m
+4mBroadcastQuery0m
+4mIndirectQuery0m
+     Display -> Manager
+     Additional Fields:
+	  4mAuthentication24m 4mNames24m: ARRAYofARRAY8
+	       Specifies a list of authentication names that
+	       the display supports.  The manager will
+	       choose one of these and return it in the
+	       4mWilling24m packet.
+     Semantics:
+	  A 4mQuery24m packet is sent from the display to a spe-
+	  cific host to ask if that host is willing to pro-
+	  vide management services to this display.  The
+	  host should respond with 4mWilling24m if it is willing
+	  to service the display or 4mUnwilling24m if it is not.
+
+	  A 4mBroadcastQuery24m packet is similar to the 4mQuery0m
+	  packet except that it is intended to be received
+	  by all hosts on the network (or subnetwork).	How-
+	  ever, unlike 4mQuery24m requests, hosts that are not
+	  willing to service the display should simply
+	  ignore 4mBroadcastQuery24m requests.
+
+	  An 4mIndirectQuery24m packet is sent to a well known
+	  manager that forwards the request to a larger col-
+	  lection of secondary managers using 4mForwardQuery0m
+	  packets.  In this way, the collection of managers
+
+
+
+			      1m50m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+	  that respond can be grouped on other than network
+	  boundaries; the use of a central manager reduces
+	  system administrative overhead.  The primary man-
+	  ager may also send a 4mWilling24m packet in response to
+	  this packet.
+
+	  Each packet type has slightly different semantics:
+
+	  ·    The 4mQuery24m packet is destined only for a sin-
+	       gle host.  If the display is instructed to
+	       4mQuery24m multiple managers, it will send multi-
+	       ple 4mQuery24m packets.	The 4mQuery24m packet also
+	       demands a response from the manager, either
+	       4mWilling24m or 4mUnwilling24m.
+
+	  ·    The 4mBroadcastQuery24m packet is sent to many
+	       hosts.  Each manager that receives this
+	       packet will not respond with an 4mUnwilling0m
+	       packet.
+
+	  ·    The 4mIndirectQuery24m packet is sent to only one
+	       manager with the request that the request be
+	       forwarded to a larger list of managers using
+	       4mForwardQuery24m packets.  This list is expected
+	       to be maintained at one central site to
+	       reduce administrative overhead.	The function
+	       of this packet type is similar to 4mBroadcast-0m
+	       4mQuery24mexcept 4mBroadcastQuery24m is not forwarded.
+     Valid Responses:
+	  4mWilling24m, 4mUnwilling0m
+     Problems/Solutions:
+	  Problem:
+	       Not all managers receive the query packet.
+	       Indication:
+		    None if 4mBroadcastQuery24m or 4mIndirectQuery0m
+		    was sent, else failure to receive 4mWill-0m
+		    4ming24m.
+	       Solution:
+		    Repeatedly send the packet while waiting
+		    for user to choose a manager.
+     Timeout/Retransmission policy:
+	  An exponential backoff algorithm should be used
+	  here to reduce network load for long-standing idle
+	  displays.  Start at 2 seconds, back off by factors
+	  of 2 to 32 seconds, and discontinue retransmit
+	  after 126 seconds.  The display should reset the
+	  timeout when user-input is detected.	In this way,
+	  the display will wakeup when touched by the user.
+
+4mForwardQuery0m
+     Primary Manager -> Secondary Manager
+     Additional Fields:
+	  4mClient24m 4mAddress24m: ARRAY8
+	       Specifies the network address of the client
+
+
+
+			      1m60m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+	       display.
+	  4mClient24m 4mPort24m: ARRAY8
+	       Specifies an identification of the client
+	       task on the client display.
+	  4mAuthentication24m 4mNames24m: ARRAYofARRAY8
+	       Is a duplicate of Authentication Names array
+	       that was received in the 4mIndirectQuery0m
+	       packet.
+     Semantics:
+	  When primary manager receives a 4mIndirectQuery0m
+	  packet, it is responsible for sending 4mForwardQuery0m
+	  packets to an appropriate list of managers that
+	  can provide service to the display using the same
+	  network type as the one the original 4mIndirectQuery0m
+	  packet was received from.  The Client Address and
+	  Client Port fields must contain an address that
+	  the secondary manager can use to reach the display
+	  also using this same network.	 Each secondary man-
+	  ager sends a 4mWilling24m packet to the display if it
+	  is willing to provide service.
+
+	  4mForwardQuery24m packets are similar to 4mBroadcastQuery0m
+	  packets in that managers that are not willing to
+	  service particular displays should not send a
+	  4mUnwilling24m packet.
+     Valid Responses:
+	  4mWilling0m
+     Problems/Solutions:
+	  Identical to 4mBroadcastQuery0m
+     Timeout/Retransmission policy:
+	  Like all packets sent from a manager, this packet
+	  should never be retransmitted.
+
+4mWilling0m
+     Manager -> Display
+     Additional Fields:
+	  4mAuthentication24m 4mName24m: ARRAY8
+	       Specifies the authentication method, selected
+	       from the list offered in the 4mQuery24m, 4mBroad-0m
+	       4mcastQuery24m, or 4mIndirectQuery24m packet that the
+	       manger expects the display to use in the sub-
+	       sequent 4mRequest24m packet.  This choice should
+	       remain as constant as feasible so that dis-
+	       plays that send multiple 4mQuery24m packets can
+	       use the Authentication Name from any 4mWilling0m
+	       packet that arrives.
+
+	       The display is free to ignore managers that
+	       request an insufficient level of authentica-
+	       tion.
+	  4mHostname24m: ARRAY8
+	       Is a human readable string describing the
+	       host from which the packet was sent.  The
+	       protocol specifies no interpretation of the
+
+
+
+			      1m70m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+	       data in this field.
+	  4mStatus24m: ARRAY8
+	       Is a human readable string describing the
+	       status of the host.  This could include load
+	       average/number of users connected or other
+	       information.  The protocol specifies no
+	       interpretation of the data in this field.
+     Semantics:
+	  A 4mWilling24m packet is sent by managers that may ser-
+	  vice connections from this display.  It is sent in
+	  response to either a 4mQuery24m, 4mBroadcastQuery24m, or
+	  4mForwardQuery24m but does not imply a commitment to
+	  provide service (for example, it may later decide
+	  that it has accepted enough connections already).
+     Problems/Solutions:
+	  Problem:
+	       4mWilling24m not received by the display.
+	       Indication:
+		    None if 4mBroadcastQuery24m or 4mIndirectQuery0m
+		    was sent, else failure to receive 4mWill-0m
+		    4ming24m.
+	       Solution:
+		    The display should continue to send the
+		    query until a response is received.
+     Timeout/Retransmission policy:
+	  Like all packets sent from the manager to the dis-
+	  play, this packet should never be retransmitted.
+
+4mUnwilling0m
+     Manager -> Display
+     Additional Fields:
+	  The Hostname and Status fields as in the 4mWilling0m
+	  packet.  The Status field should indicate to the
+	  user a reason for the refusal of service.
+     Semantics:
+	  An 4mUnwilling24m packet is sent by managers in
+	  response to direct 4mQuery24m requests (as opposed to
+	  4mBroadcastQuery24m or 4mIndirectQuery24m requests) if the
+	  manager will not accept requests for management.
+	  This is typically sent by managers that wish to
+	  only service particular displays or that handle a
+	  limited number of displays at once.
+     Problems/Solutions:
+	  Problem:
+	       4mUnwilling24m not received by the display.
+	       Indication:
+		    Display fails to receive 4mUnwilling24m.
+	       Solution:
+		    The display should continue to send
+		    4mQuery24m messages until a response is
+		    received.
+     Timeout/Retransmission policy:
+	  Like all packets sent from the manager to the dis-
+	  play, this packet should never be retransmitted.
+
+
+
+			      1m80m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+4mRequest0m
+     Display -> Manager
+     Additional Fields:
+	  4mDisplay24m 4mNumber24m: CARD16
+	       Specifies the index of this particular server
+	       for the host on which the display is resi-
+	       dent.  This value will be zero for most
+	       autonomous displays.
+	  4mConnection24m 4mTypes24m: ARRAY16
+	       Specifies an array indicating the stream ser-
+	       vices accepted by the display.  If the high-
+	       order byte in a particular entry is zero, the
+	       low-order byte corresponds to an X-protocol
+	       host family type.
+	  4mConnection24m 4mAddresses24m: ARRAYofARRAY8
+	       For each connection type in the previous
+	       array, the corresponding entry in this array
+	       indicates the network address of the display
+	       device.
+	  4mAuthentication24m 4mName24m: ARRAY8
+	  4mAuthentication24m 4mData24m: ARRAY8
+	       Specifies the authentication protocol that
+	       the display expects the manager to validate
+	       itself with.  The Authentication Data is
+	       expected to contain data that the manager
+	       will interpret, modify and use to authenti-
+	       cate itself.
+	  4mAuthorization24m 4mNames24m: ARRAYofARRAY8
+	       Specifies which types of authorization the
+	       display supports.  The manager may decide to
+	       reject displays with which it cannot perform
+	       authorization.
+	  4mManufacturer24m 4mDisplay24m 4mID24m: ARRAY8
+	       Can be used by the manager to determine how
+	       to decrypt the Authentication Data field in
+	       this packet.  See the section below on Manu-
+	       facturer Display ID Format.
+     Semantics:
+	  A 4mRequest24m packet is sent by a display to a spe-
+	  cific host to request a session ID in preparation
+	  for a establishing a connection.  If the manager
+	  is willing to service a connection to this dis-
+	  play, it should return an 4mAccept24m packet with a
+	  valid session ID and should be ready for a subse-
+	  quent 4mManage24m request.  Otherwise, it should return
+	  a 4mDecline24m packet.
+     Valid Responses:
+	  4mAccept24m, 4mDecline0m
+     Problems/Solutions:
+	  Problem:
+	       Request not received by manager.
+	       Indication:
+		    Display timeout waiting for response.
+	       Solution:
+
+
+
+			      1m90m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+		    Display resends 4mRequest24m message.
+	  Problem:
+	       Message received out of order by manager.
+	       Indication:
+		    None.
+	       Solution:
+		    Each time a 4mRequest24m is sent, the manager
+		    sends the Session ID associated with the
+		    next session in the 4mAccept24m.  If that
+		    next session is not yet started, the
+		    manager will simply resend with the same
+		    Session ID.	 If the session is in
+		    progress, the manager will reply with a
+		    new Session ID; in which case, the
+		    4mAccept24m will be discarded by the display.
+     Timeout/Retransmission policy:
+	  Timeout after 2 seconds, exponential backoff to 32
+	  seconds.  After no more than 126 seconds, give up
+	  and report an error to the user.
+
+4mAccept0m
+     Manager -> Display
+     Additional Fields:
+	  4mSession24m 4mID24m: CARD32
+	       Identifies the session that can be started by
+	       the manager.
+	  4mAuthentication24m 4mName24m: ARRAY8
+	  4mAuthentication24m 4mData24m: ARRAY8
+	       Is the data sent back to the display to
+	       authenticate the manager.  If the Authentica-
+	       tion Data is not the value expected by the
+	       display, it should terminate the protocol at
+	       this point and display an error to the user.
+	  4mAuthorization24m 4mName24m: ARRAY8
+	  4mAuthorization24m 4mData24m: ARRAY8
+	       Is the data sent to the display to indicate
+	       the type of authorization the manager will be
+	       using in the first call to 4mXOpenDisplay24m after
+	       the 4mManage24m packet is received.
+     Semantics:
+	  An 4mAccept24m packet is sent by a manager in response
+	  to a 4mRequest24m packet if the manager is willing to
+	  establish a connection for the display.  The Ses-
+	  sion ID is used to identify this connection from
+	  any preceding ones and will be used by the display
+	  in its subsequent 4mManage24m packet.	 The Session ID
+	  is a 32-bit number that is incremented each time
+	  an 4mAccept24m packet is sent as it must be unique over
+	  a reasonably long period of time.
+
+	  If the authentication information is invalid, a
+	  4mDecline24m packet will be returned with an appropri-
+	  ate 4mStatus24m message.
+     Problems/Solutions:
+
+
+
+			     1m100m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+	  Problem:
+	       4mAccept24m or 4mDecline24m not received by display.
+	       Indication:
+		    Display timeout waiting for response to
+		    4mRequest24m.
+	       Solution:
+		    Display resends 4mRequest24m message.
+	  Problem:
+	       Message received out of order by display.
+	       Indication:
+		    Display receives 4mAccept24m after 4mManage24m has
+		    been sent.
+	       Solution:
+		    Display discards 4mAccept24m messages after
+		    it has sent a 4mManage24m message.
+     Timeout/Retransmission policy:
+	  Like all packets sent from the manager to the dis-
+	  play, this packet should never be retransmitted.
+
+4mDecline0m
+     Manager -> Display
+     Additional Fields:
+	  4mStatus24m: ARRAY8
+	       Is a human readable string indicating the
+	       reason for refusal of service.
+	  4mAuthentication24m 4mName24m: ARRAY8
+	  4mAuthentication24m 4mData24m: ARRAY8
+	       Is the data sent back to the display to
+	       authenticate the manager.  If the Authentica-
+	       tion Data is not the value expected by the
+	       display, it should terminate the protocol at
+	       this point and display an error to the user.
+     Semantics:
+	  A 4mDecline24m packet is sent by a manager in response
+	  to a 4mRequest24m packet if the manager is unwilling to
+	  establish a connection for the display.  This is
+	  allowed even if the manager had responded 4mWilling0m
+	  to a previous query.
+     Problems/Solutions:
+	  Same as for 4mAccept24m.
+     Timeout/Retransmission policy:
+	  Like all packets sent from a manager to a display,
+	  this packet should never be retransmitted.
+
+4mManage0m
+     Display -> Manager
+     Additional Fields:
+	  4mSession24m 4mID24m: CARD32
+	       Should contain the nonzero session ID
+	       returned in the 4mAccept24m packet.
+	  4mDisplay24m 4mNumber24m: CARD16
+	       Must match the value sent in the previous
+	       4mRequest24m packet.
+	  4mDisplay24m 4mClass24m: ARRAY8
+
+
+
+			     1m110m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+	       Specifies the class of the display.  See the
+	       Display Class Format section, which discusses
+	       the format of this field.
+     Semantics:
+	  A 4mManage24m packet is sent by a display to ask the
+	  manager to begin a session on the display.  If the
+	  Session ID is correct the manager should open a
+	  connection; otherwise, it should respond with a
+	  4mRefuse24m or 4mFailed24m packet, unless the Session ID
+	  matches a currently running session or a session
+	  that has not yet successfully opened the display
+	  but has not given up the attempt.  In this latter
+	  case, the 4mManage24m packet should be ignored.  This
+	  will work as stream connections give positive suc-
+	  cess indication to both halves of the stream, and
+	  positive failure indication to the connection ini-
+	  tiator (which will eventually generate a 4mFailed0m
+	  packet).
+     Valid Responses:
+	  X connection with correct auth info, 4mRefuse24m,
+	  4mFailed24m.
+     Problems/Solutions:
+	  Problem:
+	       4mManage24m not received by manager.
+	       Indication:
+		    Display timeout waiting for response.
+	       Solution:
+		    Display resends 4mManage24m message.
+	  Problem:
+	       4mManage24m received out of order by manager.
+	       Indication:
+		    Session already in progress with match-
+		    ing Session ID.
+	       Solution:
+		    4mManage24m packet ignored.
+	       Indication:
+		    Session ID does not match next Session
+		    ID.
+	       Solution:
+		    4mRefuse24m message is sent.
+	  Problem:
+	       Display cannot be opened on selected stream.
+	       Indication:
+		    Display connection setup fails.
+	       Solution:
+		    4mFailed24m message is sent including a human
+		    readable reason.
+	  Problem:
+	       Display open does not succeed before a second
+	       manage packet is received because of a time-
+	       out occuring in the display.
+	       Indication:
+		    4mManage24m packet received with Session ID
+		    matching the session attempting to
+
+
+
+			     1m120m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+		    connect to the display.
+	       Solution:
+		    4mManage24m packet is ignored.  As the stream
+		    connection will either succeed, which
+		    will result in an active session, or the
+		    stream will eventually give up hope of
+		    connecting and send a 4mFailed24m packet; no
+		    response to this 4mManage24m packet is neces-
+		    sary.
+     Timeout/Retransmission policy:
+	  Timeout after 2 seconds, exponential backoff to 32
+	  seconds.  After no more than 126 seconds, give up
+	  and report an error to the user.
+
+4mRefuse0m
+     Manager -> Display
+     Additional Fields:
+	  4mSession24m 4mID24m: CARD32
+	       Should be set to the Session ID received in
+	       the 4mManage24m packet.
+     Semantics:
+	  A 4mRefuse24m packet is sent by a manager when the Ses-
+	  sion ID received in the 4mManage24m packet does not
+	  match the current Session ID.	 The display should
+	  assume that it received an old 4mAccept24m packet and
+	  should resend its 4mRequest24m packet.
+     Problems/Solutions:
+	  Problem:
+	       Error message is lost.
+	       Indication:
+		    Display times out waiting for new con-
+		    nection, 4mRefuse24m or 4mFailed24m.
+	       Solution:
+		    Display resends 4mManage24m message.
+     Timeout/Retransmission policy:
+	  Like all packets sent from a manager to a display,
+	  this packet should never be retransmitted.
+
+4mFailed0m
+     Manager -> Display
+     Additional Fields:
+	  4mSession24m 4mID24m: CARD32
+	       Should be set to the Session ID received in
+	       the 4mManage24m packet.
+	  4mStatus24m: ARRAY8
+	       Is a human readable string indicating the
+	       reason for failure.
+     Semantics:
+	  A 4mFailed24m packet is sent by a manager when it has
+	  problems establishing the initial X connection in
+	  response to the 4mManage24m packet.
+     Problems/Solutions
+	  Same as for 4mRefuse24m.
+
+
+
+
+			     1m130m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+4mKeepAlive0m
+     Display -> Manager
+     Additional Fields:
+	  4mDisplay24m 4mNumber24m: CARD16
+	       Set to the display index for the display
+	       host.
+	  4mSession24m 4mID24m: CARD32
+	       Should be set to the Session ID received in
+	       the 4mManage24m packet during the negotiation for
+	       the current session.
+     Sematics:
+	  A 4mKeepAlive24m packet can be sent at any time during
+	  the session by a display to discover if the man-
+	  ager is running.  The manager should respond with
+	  4mAlive24m whenever it receives this type of packet.
+
+	  This allows the display to discover when the man-
+	  ager host is no longer running.  A display is not
+	  required to send 4mKeepAlive24m packets and, upon lack
+	  of receipt of 4mAlive24m packets, is not required to
+	  perform any specific action.
+
+	  The expected use of this packet is to terminate an
+	  active session when the manager host or network
+	  link fails.  The display should keep track of the
+	  time since any packet has been received from the
+	  manager host and use 4mKeepAlive24m packets when a sub-
+	  stantial time has elapsed since the most recent
+	  packet.
+     Valid Responses:
+	  4mAlive0m
+     Problems/Solutions:
+	  Problem:
+	       Manager does not receive the packet or dis-
+	       play does not receive the response.
+	       Indication:
+		    No 4mAlive24m packet is returned.
+	       Solution:
+		    Retransmit the packet with an exponen-
+		    tial backoff; start at 2 seconds and
+		    assume the host is not up after no less
+		    than 30 seconds.
+
+4mAlive0m
+     Manager -> Display
+     Additional Fields:
+	  4mSession24m 4mRunning24m: CARD8
+	       Indicates that the session identified by Ses-
+	       sion ID is currently active.  The value is
+	       zero if no session is active or one if a ses-
+	       sion is active.
+	  4mSession24m 4mID24m: CARD32
+	       Specifies the ID of the currently running
+	       session; if any.	 When no session is active
+
+
+
+			     1m140m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+	       this field should be zero.
+     Semantics:
+	  An 4mAlive24m packet is sent in response to a 4mKeepAlive0m
+	  request.  If a session is currently active on the
+	  display, the manager includes the Session ID in
+	  the packet.  The display can use this information
+	  to determine the status of the manager.
+
+1m6.  Session Termination0m
+
+When the session is over, the initial connection with the
+display (the one that acknowledges the 4mManage24m packet) will
+be closed by the manager.  If only a single session was
+active on the display, all other connections should be
+closed by the display and the display should be reset.	If
+multiple sessions are active simultaneously and the display
+can identify which connections belong to the terminated
+sesssion, those connections should be closed.  Otherwise,
+all connections should be closed and the display reset only
+when all sessions have been terminated (that is, all initial
+connections closed).
+
+The session may also be terminated at any time by the dis-
+play if the managing host no longer responds to 4mKeepAlive0m
+packets.  The exact time-outs for sending 4mKeepAlive24m packets
+is not specified in this protocol as the trade off should
+not be fixed between loading an otherwise idle system with
+spurious 4mKeepAlive24m packets and not noticing that the manager
+host is down for a long time.
+
+1m7.  State Diagrams0m
+
+The following state diagrams are designed to cover all
+actions of both the display and the manager.  Any packet
+that is received out-of-sequence will be ignored.
+
+Display:
+
+
+     4mstart24m:
+	  User-requested connect to one host -> 4mquery0m
+	  User-requested connect to some host -> 4mbroadcast0m
+	  User-requested connect to site host-list -> 4mindi-0m
+	  4mrect0m
+
+
+     4mquery24m:
+	  Send 4mQuery24m packet
+	  -> 4mcollect-query0m
+
+
+     4mcollect-query24m:
+	  Receive 4mWilling24m -> 4mstart-connection0m
+	  Receive 4mUnwilling24m -> 4mstop-connection0m
+
+
+
+			     1m150m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+	  Timeout -> 4mquery0m
+
+
+     4mbroadcast24m:
+	  Send 4mBroadcastQuery24m packet
+	  -> 4mcollect-broadcast-query0m
+
+
+     4mcollect-broadcast-query24m:
+	  Receive 4mWilling24m -> 4mupdate-broadcast-willing0m
+	  User-requested connect to one host -> 4mstart-con-0m
+	  4mnection0m
+	  Timeout -> 4mbroadcast0m
+
+
+     4mupdate-broadcast-willing24m:
+	  Add new host to the host list presented to the
+	  user
+	  -> 4mcollect-broadcast-query0m
+
+
+     4mindirect24m:
+	  Send 4mIndirectQuery24m packet
+	  -> 4mcollect-indirect-query0m
+
+
+     4mcollect-indirect-query24m:
+	  Receive 4mWilling24m -> 4mupdate-indirect-willing0m
+	  User-requested connect to one host -> 4mstart-con-0m
+	  4mnection0m
+	  Timeout -> 4mindirect0m
+
+
+     4mupdate-indirect-willing24m:
+	  Add new host to the host list presented to the
+	  user
+	  -> 4mcollect-indirect-query0m
+
+
+     4mstart-connection24m:
+	  Send 4mRequest24m packet
+	  -> 4mawait-request-response0m
+
+
+     4mawait-request-response24m:
+	  Receive 4mAccept24m -> 4mmanage0m
+	  Receive 4mDecline24m -> 4mstop-connection0m
+	  Timeout -> 4mstart-connection0m
+
+
+     4mmanage24m:
+	  Save Session ID
+	  Send 4mManage24m packet with Session ID
+	  -> 4mawait-manage-response0m
+
+
+
+			     1m160m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+     4mawait-manage-response24m:
+	  Receive 4mXOpenDisplay24m: -> 4mrun-session0m
+	  Receive 4mRefuse24m with matching Session ID -> 4mstart-0m
+	  4mconnection0m
+	  Receive 4mFailed24m with matching Session ID -> 4mstop-0m
+	  4mconnection0m
+	  Timeout -> 4mmanage0m
+
+
+     4mstop-connection24m:
+	  Display cause of termination to user
+	  -> 4mstart0m
+
+
+     4mrun-session24m:
+	  Decide to send 4mKeepAlive24m packet -> 4mkeep-alive0m
+	  Await close of first display connection
+	  -> 4mreset-display0m
+
+
+     4mkeep-alive24m:
+	  Send 4mKeepAlive24m packet with current Session ID
+	  -> 4mawait-alive0m
+
+
+     4mawait-alive24m:
+	  Receive 4mAlive24m with matching Session ID -> 4mrun-ses-0m
+	  4msion0m
+	  Receive 4mAlive24m with nonmatching Session ID or FALSE
+	  Session Running -> 4mreset-display0m
+	  Final timeout without receiving 4mAlive24m packet ->
+	  4mreset-display0m
+	  Timeout -> 4mkeep-alive0m
+
+
+     4mreset-display24m:
+	  (if possible) -> close all display connections
+	  associated with this session
+	  Last session -> close all display connections
+	  -> 4mstart0m
+
+Manager:
+
+
+     4midle24m:
+	  Receive 4mQuery24m -> 4mquery-respond0m
+	  Receive 4mBroadcastQuery24m -> 4mbroadcast-respond0m
+	  Receive 4mIndirectQuery24m -> 4mindirect-respond0m
+	  Receive 4mForwardQuery24m -> 4mforward-respond0m
+	  Receive 4mRequest24m -> 4mrequest-respond0m
+	  Receive 4mManage24m -> 4mmanage0m
+	  An active session terminates -> 4mfinish-session0m
+	  Receive 4mKeepAlive24m -> 4msend-alive0m
+	  -> 4midle0m
+
+
+
+			     1m170m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+     4mquery-respond24m:
+	  If willing to manage -> 4msend-willing0m
+	  -> 4msend-unwilling0m
+
+
+     4mbroadcast-respond24m:
+	  If willing to manage -> 4msend-willing0m
+	  -> 4midle0m
+
+
+     4mindirect-respond24m:
+	  Send 4mForwardQuery24m packets to all managers on redi-
+	  rect list
+	  If willing to manage -> 4msend-willing0m
+	  -> 4midle0m
+
+
+     4mforward-respond24m:
+	  Decode destination address, if willing to manage
+	  -> 4msend-willing0m
+	  -> 4midle0m
+
+
+     4msend-willing24m:
+	  Send 4mWilling24m packet
+	  -> 4midle0m
+
+
+     4msend-unwilling24m:
+	  Send 4mUnwilling24m packet
+	  -> 4midle0m
+
+
+     4mrequest-respond24m:
+	  If manager is willing to allow a session on dis-
+	  play -> 4maccept-session0m
+	  -> 4mdecline-session0m
+
+
+     4maccept-session24m:
+	  Generate Session ID and save Session ID, display
+	  address, and display number somewhere
+	  Send 4mAccept24m packet
+	  -> 4midle0m
+
+
+     4mdecline-session24m:
+	  Send 4mDecline24m packet
+	  -> 4midle0m
+
+
+     4mmanage24m:
+	  If Session ID matches saved Session ID -> 4mrun-ses-0m
+	  4msion0m
+
+
+
+			     1m180m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+	  If Session ID matches Session ID of session in
+	  process of starting up, or currently active ses-
+	  sion -> 4midle0m
+	  -> 4mrefuse0m
+
+
+     4mrefuse24m:
+	  Send 4mRefuse24m packet
+	  -> 4midle0m
+
+
+     4mrun-session24m:
+	  Terminate any session in progress
+	  4mXOpenDisplay0m
+	  Open display succeeds -> 4mstart-session0m
+	  -> 4mfailed0m
+
+
+     4mfailed24m:
+	  Send 4mFailed24m packet
+	  -> 4midle0m
+
+
+     4mstart-session24m:
+	  Start a new session
+	  -> 4midle0m
+
+
+     4mfinish-session24m:
+	  4mXCloseDisplay0m
+	  -> 4midle0m
+
+
+     4msend-alive24m:
+	  Send 4mAlive24m packet containing current status
+	  -> 4midle0m
+
+1m8.  Protocol Encoding0m
+
+When XDMCP is implemented on top of the Internet User Data-
+gram Protocol (UDP), port number 177 is to be used. When
+using UDP over IPv4, Broadcast Query packets are sent via
+UDP broadcast.	When using UDP over IPv6, Broadcast Query
+packets are sent via multicast, either to an address in the
+IANA registered XDMCP multicast address range of
+FF04mX24m:0:0:0:0:0:0:12B (where the 4mX24m is replaced by a valid
+scope id) or to a locally assigned multicast address. The
+version number in all packets will be 1.  Packet opcodes are
+16-bit integers.
+
+     --------------------------
+     1mPacket Name	Encoding0m
+
+
+
+
+
+			     1m190m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+     --------------------------
+     4mBroadcastQuery24m   1
+     4mQuery24m		   2
+     4mIndirectQuery24m	   3
+     4mForwardQuery24m	   4
+     4mWilling24m	   5
+     4mUnwilling24m	   6
+     4mRequest24m	   7
+     4mAccept24m	   8
+     4mDecline24m	   9
+     4mManage24m	   10
+     4mRefuse24m	   11
+     4mFailed24m	   12
+     4mKeepAlive24m	   13-
+     4mAlive24m		   14-
+     --------------------------
+
+
+Per packet information follows:
+
+
+4mQuery0m
+4mBroadcastQuery0m
+4mIndirectQuery0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Query, BroadcastQuery or IndirectQuery)
+  2    CARD16	 length
+  1    CARD8	 number of Authentication Names sent (m)
+  2    CARD16	 length of first Authentication Name (m1)
+  m1   CARD8	 first Authentication Name
+  ...		 Other Authentication Names
+
+Note that these three packets are identical except for the
+opcode field.
+
+
+4mForwardQuery0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always ForwardQuery)
+  2    CARD16	 length
+  2    CARD16	 length of Client Address (m)
+  m    CARD8	 Client Address
+  2    CARD16	 length of Client Port (n)
+  n    CARD8	 Client Port
+  1    CARD8	 number of Authentication Names sent (o)
+  2    CARD16	 length of first Authentication Name (o1)
+  o1   CARD8	 first Authentication Name
+  ...		 Other Authentication Names
+
+
+-----------
+  - A previous version of this document incor-
+rectly reversed the opcodes of 4mAlive24m and
+4mKeepAlive24m.
+
+
+
+			     1m200m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+4mWilling0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Willing)
+  2    CARD16	 length (6 + m + n + o)
+  2    CARD16	 Length of Authentication Name (m)
+  m    CARD8	 Authentication Name
+  2    CARD16	 Hostname length (n)
+  n    CARD8	 Hostname
+  2    CARD16	 Status length (o)
+  o    CARD8	 Status
+
+
+
+4mUnwilling0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Unwilling)
+  2    CARD16	 length (4 + m + n)
+  2    CARD16	 Hostname length (m)
+  m    CARD8	 Hostname
+  2    CARD16	 Status length (n)
+  n    CARD8	 Status
+
+
+
+4mRequest0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Request)
+  2    CARD16	 length
+  2    CARD16	 Display Number
+  1    CARD8	 Count of Connection Types (m)
+  2 × m		 CARD16	 Connection Types
+  1    CARD8	 Count of Connection Addresses (n)
+  2    CARD16	 Length of first Connection Address (n1)
+  n1   CARD8	 First Connection Address
+  ...		 Other connection addresses
+  2    CARD16	 Length of Authentication Name (o)
+  o    CARD8	 Authentication Name
+  2    CARD16	 Length of Authentication Data (p)
+  p    CARD8	 Authentication Data
+  1    CARD8	 Count of Authorization Names (q)
+  2    CARD16	 Length of first Authorization Name (q1)
+  q1   CARD8	 First Authorization Name
+  ...		 Other authorization names
+  2    CARD16	 Length of Manufacturer Display ID (r)
+  r    CARD8	 Manufacturer Display ID
+
+
+
+4mAccept0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Accept)
+  2    CARD16	 length (12 + n + m + o + p)
+  4    CARD32	 Session ID
+  2    CARD16	 Length of Authentication Name (n)
+
+
+
+			     1m210m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+  n    CARD8	 Authentication Name
+  2    CARD16	 Length of Authentication Data (m)
+  m    CARD8	 Authentication Data
+  2    CARD16	 Length of Authorization Name (o)
+  o    CARD8	 Authorization Name
+  2    CARD16	 Length of Authorization Data (p)
+  p    CARD8	 Authorization Data
+
+
+
+4mDecline0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Decline)
+  2    CARD16	 length (6 + m + n + o)
+  2    CARD16	 Length of Status (m)
+  m    CARD8	 Status
+  2    CARD16	 Length of Authentication Name (n)
+  n    CARD8	 Authentication Name
+  2    CARD16	 Length of Authentication Data (o)
+  o    CARD8	 Authentication Data
+
+
+
+4mManage0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Manage)
+  2    CARD16	 length (8 + m)
+  4    CARD32	 Session ID
+  2    CARD16	 Display Number
+  2    CARD16	 Length of Display Class (m)
+  m    CARD8	 Display Class
+
+
+
+4mRefuse0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Refuse)
+  2    CARD16	 length (4)
+  4    CARD32	 Session ID
+
+
+
+4mFailed0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Failed)
+  2    CARD16	 length (6 + m)
+  4    CARD32	 Session ID
+  2    CARD16	 Length of Status (m)
+  m    CARD8	 Status
+
+
+
+4mKeepAlive0m
+  2    CARD16	 version number (always 1)
+
+
+
+			     1m220m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+  2    CARD16	 opcode (always KeepAlive)
+  2    CARD16	 length (6)
+  2    CARD16	 Display Number
+  4    CARD32	 Session ID
+
+
+
+4mAlive0m
+  2    CARD16	 version number (always 1)
+  2    CARD16	 opcode (always Alive)
+  2    CARD16	 length (5)
+  1    CARD8	 Session Running (0: not running 1: running)
+  4    CARD32	 Session ID (0: not running)
+
+
+1m9.  Display Class Format0m
+
+The Display Class field of the 4mManage24m packet is used by the
+display manager to collect common sorts of displays into
+manageable groups.  This field is a string encoded of ISO-
+LATIN-1 characters in the following format:
+
+
+     4mManufacturerID24m-4mModelNumber0m
+
+
+Both elements of this string must exclude characters of the
+set { 1m-22m, 1m.22m, 1m:22m, 1m*22m, 1m?22m, 4m<space>24m }.  The ManufacturerID is a
+string that should be registered with the X Consortium.	 The
+ModelNumber is designed to identify characteristics of the
+display within the manufacturer's product line.	 This string
+should be documented in the users manual for the particular
+device and  should probably not be specifiable by the dis-
+play user to avoid unexpected configuration errors.
+
+1m10.  Manufacturer Display ID Format0m
+
+To authenticate the manager, the display and manager will
+share a private key.  The manager, then, must be able to
+discover which key to use for a particular device.  The Man-
+ufacturer Display ID field of the 4mRequest24m packet is intended
+for this purpose.  Typically, the manager host will contain
+a map between this number and the key.	This field is
+intended to be unique per display, possibly the ethernet
+address of the display in the form:
+
+
+     -Ethernet-8:0:2b:a:f:d2
+
+
+It can also be a string of the form:
+
+
+     4mManufacturerID24m-4mModelNumber24m-4mSerialNumber0m
+
+
+
+			     1m230m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+The ManufacturerID, ModelNumber and SerialNumber are encoded
+using ISO-LATIN-1 characters, excluding	 { 1m-22m, 1m.22m, 1m*22m, 1m?22m,
+4m<space>24m }
+
+When the display is shipped to a customer, it should include
+both the Manufacturer Display ID and the private key in the
+documentation set.  This information should not be modifi-
+able by the display user.
+
+1m11.  Authentication0m
+
+In an environment where authentication is not needed, XDMCP
+can disable authentication by having the display send empty
+Authentication Name and Authentication Data fields in the
+4mRequest24m packet.  In this case, the manager will not attempt
+to authenticate itself.	 Other authentication protocols may
+be developed, depending on local needs.
+
+In an unsecure environment, the display must be able to ver-
+ify that the source of the various packets is a trusted man-
+ager.  These packets will contain authentication informa-
+tion.  As an example of such a system, the following discus-
+sion describes the "XDM-AUTHENTICATION-1" and "XDM-AUTHENTI-
+CATION-2" authentication systems.  The "XDM-AUTHENTICA-
+TION-1" system uses a 56-bit shared private key, and 64 bits
+of authentication data.	 "XDM-AUTHENTICATION-2" uses a 256
+bit shared private key, and 256 bits of authentication data.
+Associated example X authorization protocol "XDM-AUTHORIZA-
+TION-1" and "XDM-AUTHORIZATION-2" will also be discussed.
+The 56-bit key is represented as a 64-bit number in network
+order (big endian).  This means that the first octet in the
+representation will be zero.  When incrementing a 64-bit
+value, the 8 octets of data will be interpreted in network
+order (big endian).  That is, the last octet will be incre-
+mented, subsequent carries propogate towards the first
+octet.
+
+·    Assumptions
+
+     1.	  The display and manager share a private key.	This
+	  key could be programmed into the display by the
+	  manufacturer and shipped with the unit.  It must
+	  not be available from the display itself, but
+	  should allow the value to be modified in some way.
+	  The system administrator would be responsible for
+	  managing a database of terminal keys.
+
+     2.	  The display can generate random authentication
+	  numbers.
+
+Some definitions first:
+
+	  {4mD24m}k=4mencryption24m 4mof24m 4mplain24m 4mtext24m 4mD24m 4mby24m 4mkey24m k
+
+
+
+
+			     1m240m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+	{/\}*k=4mdecryption24m 4mof24m 4mcrypto24m 4mtext24m /\ 4mwith24m 4mkey24m k
+
+
+		   t=4mprivate24m 4mkey24m 4mshared24m 4mby24m 4mdisplay24m 4mand24m 4mmanager0m
+
+
+		   p=4m6424m 4mbit24m 4mrandom24m 4mnumber24m 4mgenerated24m 4mby24m 4mdisplay0m
+
+
+		   a=4mauthentication24m 4mdata24m 4min24m 4mXDMCP24m 4mpackets0m
+
+
+		   o=4mper-session24m 4mprivate24m 4mkey,24m 4mgenerated24m 4mby24m 4mmanager0m
+
+
+		   ß=4mauthorization24m 4mdata0m
+
+
+"XDM-AUTHENTICATION-1" encryption will use the Data Encryp-
+tion Standard (DES, FIPS 46-3); blocks shorter than 64 bits
+will be zero-filled on the right to 64 bits.  Blocks longer
+than 64 bits will use block chaining:
+
+			    {4mD24m}k={4mD24m1}k {4mD24m2 4mxor24m {4mD24m1}k}k
+
+
+"XDM-AUTHENTICATION-2" encryption will use the Advanced
+Encryption Standard (AES, FIPS-197);  blocks shorter than
+128 bits will be zero-filled on the right to 128 bits.
+Blocks longer than 128 bits will use block chaining as shown
+above.
+
+The display generates the first authentication data in the
+4mRequest24m packet:
+
+			aRequest={p}t
+
+
+For the 4mAccept24m packet, the manager decrypts the initial mes-
+sage and returns aAccept:
+
+			       p={aRequest}*t
+
+
+			 aAccept={p+1}t
+
+
+The 4mAccept24m packet also contains the authorization intended
+for use by the X server.  A description of authorization
+type ``XDM-AUTHORIZATION-1'' follows.
+
+The 4mAccept24m packet contains the authorization name ``XDM-
+AUTHORIZATION-1''.  The authorization data is the string:
+
+
+
+
+			     1m250m
+
+
+
+
+
+X Display Manager Control Protocol		       XDMCP
+
+
+			ß4mAccept24m={o}t
+
+
+To create authorization information for connection setup
+with the X server using the XDM-AUTHORIZATION-1 authoriza-
+tion protocol, the client computes the following:
+
+		    4mN24m=4mX24m 4mclient24m 4midentifier0m
+
+
+		    4mT24m=4mCurrent24m 4mtime24m 4min24m 4mseconds24m 4mon24m 4mclient24m 4mhost24m 4m(3224m 4mbits)0m
+
+
+			  ß={p4mNT24m}o
+
+
+For TCP connections 4mN24m is 48 bits long and contains the
+32-bit IPv4 address of the client host followed by the
+16-bit port number of the client socket.  Formats for other
+connections must be registered.	 The resulting value, ß, is
+192 bits of authorization data that is sent in the connec-
+tion setup to the server.  The server receives the packet,
+decrypts the contents.	To accept the connection, the fol-
+lowing must hold:
+
+·    p must match the value generated for the most recent
+     XDMCP negotiation.
+
+·    4mT24m must be within 1200 seconds of the internally stored
+     time.  If no time been received before, the current
+     time is set to 4mT24m.
+
+·    No packet containing the same pair (4mN24m, 4mT24m) can have been
+     received in the last 1200 seconds (20 minutes).
+
+``XDM-AUTHORIZATION-2'' is identical to ``XDM-AUTHORIZA-
+TION-1'', except that for TCP connections  4mN24m is 256 bits
+long and contains the 128 bit IPv6 address of the client
+host followed by the 16 bit port number of the client
+socket, with the remainder filled with zeros, and 4mT24m is
+extended to 64-bits.  IPv4 addresses are represented as
+IPv4-mapped IPv6 addresses, with an 80-bit prefix of zero
+bits, followed by a 16-byte value of 0xFFFF, followed by the
+IPv4 address value, as defined in IETF RFC 2373. Formats for
+other connections must be  registered.
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m260m
+
+
+
+
+
+XDMCP			 X Display Manager Control Protocol
+
+
+
+		     1mTable of Contents0m
+
+
+1. Purpose and Goals . . . . . . . . . . . . . . . . . .   1
+2. Overview of the Protocol  . . . . . . . . . . . . . .   2
+3. Data Types  . . . . . . . . . . . . . . . . . . . . .   3
+4. Packet Format . . . . . . . . . . . . . . . . . . . .   4
+5. Protocol  . . . . . . . . . . . . . . . . . . . . . .   5
+6. Session Termination . . . . . . . . . . . . . . . . .  15
+7. State Diagrams  . . . . . . . . . . . . . . . . . . .  15
+8. Protocol Encoding . . . . . . . . . . . . . . . . . .  19
+9. Display Class Format	 . . . . . . . . . . . . . . . .  23
+10. Manufacturer Display ID Format . . . . . . . . . . .  23
+11. Authentication . . . . . . . . . . . . . . . . . . .  24
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m270m
+
+

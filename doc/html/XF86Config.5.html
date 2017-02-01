@@ -1,0 +1,1809 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN">
+
+<!--
+  $XFree86: xc/programs/Xserver/hw/xfree86/XF86Config.man,v 1.31 2005/03/28 16:22:54 dawes Exp $
+   
+   Copyright (c) 1994-2005 by The XFree86 Project, Inc.
+   All rights reserved.
+   
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject
+   to the following conditions:
+   
+     1.  Redistributions of source code must retain the above copyright
+         notice, this list of conditions, and the following disclaimer.
+   
+     2.  Redistributions in binary form must reproduce the above copyright
+         notice, this list of conditions and the following disclaimer
+         in the documentation and/or other materials provided with the
+         distribution, and in the same place and form as other copyright,
+         license and disclaimer information.
+   
+     3.  The end-user documentation included with the redistribution,
+         if any, must include the following acknowledgment: "This product
+         includes software developed by The XFree86 Project, Inc
+         (http://www.xfree86.org/) and its contributors", in the same
+         place and form as other third-party acknowledgments.  Alternately,
+         this acknowledgment may appear in the software itself, in the
+         same form and location as other such third-party acknowledgments.
+   
+     4.  Except as contained in this notice, the name of The XFree86
+         Project, Inc shall not be used in advertising or otherwise to
+         promote the sale, use or other dealings in this Software without
+         prior written authorization from The XFree86 Project, Inc.
+   
+   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+   IN NO EVENT SHALL THE XFREE86 PROJECT, INC OR ITS CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+   OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+   OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+   BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+   OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+   
+   Copyright © 2003, 2004, 2005 David H. Dawes.
+   Copyright © 2003, 2004, 2005 X-Oz Technologies.
+   All rights reserved.
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+   
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions, and the following disclaimer.
+   
+    2. Redistributions in binary form must reproduce the above
+       copyright notice, this list of conditions and the following
+       disclaimer in the documentation and/or other materials provided
+       with the distribution.
+   
+    3. The end-user documentation included with the redistribution,
+       if any, must include the following acknowledgment: "This product
+       includes software developed by X-Oz Technologies
+       (http://www.x-oz.com/)."  Alternately, this acknowledgment may
+       appear in the software itself, if and wherever such third-party
+
+      acknowledgments normally appear.
+   
+    4. Except as contained in this notice, the name of X-Oz
+       Technologies shall not be used in advertising or otherwise to
+       promote the sale, use or other dealings in this Software without
+       prior written authorization from X-Oz Technologies.
+   
+   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+   ARE DISCLAIMED.  IN NO EVENT SHALL X-OZ TECHNOLOGIES OR ITS CONTRIBUTORS
+   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+   OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+   OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+   BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+   OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+   
+   shorthand for double quote that works everywhere.
+ 
+-->
+<!-- manual page source format generated by PolyglotMan v3.0.8+XFree86, -->
+<!-- available at http://polyglotman.sourceforge.net/ -->
+
+<html>
+<head>
+<title>XF86Config(5) manual page</title>
+</head>
+<body bgcolor='#efefef' text='black' link='blue' vlink='#551A8B' alink='red'>
+<a href='#toc'>Table of Contents</a><p>
+
+<h2><a name='sect0' href='#toc0'>Name</a></h2>
+XF86Config - Configuration File for XFree86 
+<h2><a name='sect1' href='#toc1'>Introduction</a></h2>
+<b>XFree86</b>
+supports several mechanisms for supplying/obtaining configuration and run-time
+parameters: command line options, environment variables, the XF86Config
+configuration file, auto-detection, and fallback defaults. When the same
+information is supplied in more than one way, the highest precedence mechanism
+is used.  The list of mechanisms is ordered from highest precedence to lowest.
+ Note that not all parameters can be supplied via all methods.  The available
+command line options and environment variables (and some defaults) are
+described in the <a href='Xserver.1.html'>Xserver(1)</a>
+ and <a href='XFree86.1.html'>XFree86(1)</a>
+ manual pages.  Most configuration
+file parameters, with their defaults, are described below.  Driver and module
+specific configuration parameters are described in the relevant driver
+or module manual page. <p>
+Starting with version 4.4, <b>XFree86</b> has support for
+generating a usable configuration at run-time when no <b>XF86Config</b> file is
+provided.  The initial version of this automatic configuration support is
+targeted at the most popular hardware and software platforms supported
+by XFree86.  Some details about how this works can be found in the <a href='XFree86.1.html'>XFree86(1)</a>
+
+and <a href='getconfig.1.html'>getconfig(1)</a>
+ manual pages. <p>
+Starting with version 4.5, it is possible
+for this automatically generated configuration to supplement a partial
+static configuration.  The partial static configuration can be used to provide
+non-default configuration details for things that are not currently handled
+by the automatic configuration mechanism. 
+<h2><a name='sect2' href='#toc2'>Description</a></h2>
+<b>XFree86</b> uses a configuration
+file called <b>XF86Config</b> for its initial setup.  This configuration file is
+searched for in the following places when the server is started as a normal
+user: <p>
+<dl><br>
+<pre><i>/etc/X11/</i>&lt;cmdline&gt;
+<i>/usr/X11R6/etc/X11/</i>&lt;cmdline&gt;
+<i>/etc/X11/</i><b>$XF86CONFIG</b>
+<i>/usr/X11R6/etc/X11/</i><b>$XF86CONFIG</b>
+<i>/etc/X11/XF86Config-4</i>
+<i>/etc/X11/XF86Config</i>
+<i>/etc/XF86Config</i>
+<i>/usr/X11R6/etc/X11/XF86Config.</i>&lt;hostname&gt;
+<i>/usr/X11R6/etc/X11/XF86Config-4</i>
+<i>/usr/X11R6/etc/X11/XF86Config</i>
+<i>/usr/X11R6/lib/X11/XF86Config.</i>&lt;hostname&gt;
+<i>/usr/X11R6/lib/X11/XF86Config-4</i>
+<i>/usr/X11R6/lib/X11/XF86Config</i>
+</pre></dl>
+<p>
+where <i>&lt;cmdline&gt;</i> is a relative path (with no ".." components) specified with
+the <b>-xf86config</b> command line option, <b>$XF86CONFIG</b> is the relative path (with
+no ".." components) specified by that environment variable, and <i>&lt;hostname&gt;</i>
+is the machine's hostname as reported by <a href='gethostname.3.html'>gethostname(3)</a>
+. <p>
+When the XFree86
+server is started by the "root" user, the config file search locations
+are as follows: <p>
+<dl><br>
+<pre>&lt;cmdline&gt;
+<i>/etc/X11/</i>&lt;cmdline&gt;
+<i>/usr/X11R6/etc/X11/</i>&lt;cmdline&gt;
+<b>$XF86CONFIG</b>
+<i>/etc/X11/</i><b>$XF86CONFIG</b>
+<i>/usr/X11R6/etc/X11/</i><b>$XF86CONFIG</b>
+<b>$HOME</b><i>/XF86Config</i>
+<i>/etc/X11/XF86Config-4</i>
+<i>/etc/X11/XF86Config</i>
+<i>/etc/XF86Config</i>
+<i>/usr/X11R6/etc/X11/XF86Config.</i>&lt;hostname&gt;
+<i>/usr/X11R6/etc/X11/XF86Config-4</i>
+<i>/usr/X11R6/etc/X11/XF86Config</i>
+<i>/usr/X11R6/lib/X11/XF86Config.</i>&lt;hostname&gt;
+<i>/usr/X11R6/lib/X11/XF86Config-4</i>
+<i>/usr/X11R6/lib/X11/XF86Config</i>
+</pre></dl>
+<p>
+where <i>&lt;cmdline&gt;</i> is the path specified with the <b>-xf86config</b> command line option
+(which may be absolute or relative), <b>$XF86CONFIG</b> is the path specified
+by that environment variable (absolute or relative), <b>$HOME</b> is the path
+specified by that environment variable (usually the home directory), and
+<i>&lt;hostname&gt;</i> is the machine's hostname as reported by <a href='gethostname.3.html'>gethostname(3)</a>
+. <p>
+The <b>XF86Config</b>
+file is composed of a number of sections which may be present in any order.
+ Each section has the form: <p>
+<dl><br>
+<pre><b>Section  "</b><i>SectionName</i><b>"</b>
+    <i>SectionEntry</i>
+    ...
+<b>EndSection</b>
+</pre></dl>
+<p>
+The section names are: <p>
+<dl><br>
+<pre><b>Files          </b>File pathnames
+<b>ServerFlags    </b>Server flags
+<b>Module         </b>Dynamic module loading
+<b>InputDevice    </b>Input device description
+<b>Device         </b>Graphics device description
+<b>VideoAdaptor   </b>Xv video adaptor description
+<b>Monitor        </b>Monitor description
+<b>Modes          </b>Video modes descriptions
+<b>Screen         </b>Screen configuration
+<b>ServerLayout   </b>Overall layout
+<b>DRI            </b>DRI-specific configuration
+<b>Vendor         </b>Vendor-specific configuration
+</pre></dl>
+<p>
+The following obsolete section names are still recognised for compatibility
+purposes.  In new config files, the <b>InputDevice</b> section should be used instead.
+<p>
+<dl><br>
+<pre><b>Keyboard       </b>Keyboard configuration
+<b>Pointer        </b>Pointer/mouse configuration
+</pre></dl>
+<p>
+The old <b>XInput</b> section is no longer recognised. <p>
+The <b>ServerLayout</b> sections
+are at the highest level.  They bind together the input and output devices
+that will be used in a session.  The input devices are described in the
+<b>InputDevice</b> sections.  Output devices usually consist of multiple independent
+components (e.g., and graphics board and a monitor).  These multiple components
+are bound together in the <b>Screen</b> sections, and it is these that are referenced
+by the <b>ServerLayout</b> section.  Each <b>Screen</b> section binds together a graphics
+board and a monitor.  The graphics boards are described in the <b>Device</b> sections,
+and the monitors are described in the <b>Monitor</b> sections. <p>
+Config file keywords
+are case-insensitive, and "_" characters are ignored.  Most strings (including
+<b>Option</b> names) are also case-insensitive, and insensitive to white space
+and "_" characters. <p>
+Each config file entry usually takes up a single line
+in the file. They consist of a keyword, which is possibly followed by one
+or more arguments, with the number and types of the arguments depending
+on the keyword.  The argument types are: <p>
+<dl><br>
+<pre><b>Integer     </b>an integer number in decimal, hex or octal
+<b>Real        </b>a floating point number
+<b>String      </b>a string enclosed in double quote marks (")
+</pre></dl>
+<p>
+Note: hex integer values must be prefixed with "0x", and octal values with
+"0". <p>
+A special keyword called <b>Option</b> may be used to provide free-form data
+to various components of the server. The <b>Option</b> keyword takes either one
+or two string arguments.  The first is the option name, and the optional
+second argument is the option value.  Some commonly used option value types
+include: <p>
+<dl><br>
+<pre><b>Integer     </b>an integer number in decimal, hex or octal
+<b>Real        </b>a floating point number
+<b>String      </b>a sequence of characters
+<b>Boolean     </b>a boolean value (see below)
+<b>Frequency   </b>a frequency value (see below)
+</pre></dl>
+<p>
+Note that <i>all</i> <b>Option</b> values, not just strings, must be enclosed in quotes.
+<p>
+Boolean options may optionally have a value specified.  When no value is
+specified, the option's value is <b>TRUE</b>. The following boolean option values
+are recognised as <b>TRUE</b>: <p>
+<dl><b>1</b>, <b>on</b>, <b>true</b>, <b>yes</b> </dl>
+<p>
+and the following boolean option
+values are recognised as <b>FALSE</b>: <p>
+<dl><b>0</b>, <b>off</b>, <b>false</b>, <b>no</b> </dl>
+<p>
+If an option name is
+prefixed with "<b>No</b>", then the option value is negated. <p>
+Example: the following
+option entries are equivalent: <p>
+<dl><br>
+<pre><b>Option "Accel"   "Off"</b>
+<b>Option "NoAccel"</b>
+<b>Option "NoAccel" "On"</b>
+<b>Option "Accel"   "false"</b>
+<b>Option "Accel"   "no"</b>
+</pre></dl>
+<p>
+Frequency option values consist of a real number that is optionally followed
+by one of the following frequency units: <p>
+<dl><b>Hz</b>, <b>k</b>, <b>kHz</b>, <b>M</b>, <b>MHz</b> </dl>
+<p>
+When the unit
+name is omitted, the correct units will be determined from the value and
+the expectations of the appropriate range of the value. It is recommended
+that the units always be specified when using frequency option values to
+avoid any errors in determining the value. 
+<h2><a name='sect3' href='#toc3'>Files Section</a></h2>
+The config file
+may have multiple <b>Files</b> sections.  These are used to specify some path names
+required by the server.  Earlier <b>Files</b> sections have priority over later
+sections.  This means that a path name specified in a <b>Files</b> section cannot
+be overridden by a later <b>Files</b> section (this behaviour may change in the
+future).  Some of these paths can also be set from the command line (see
+<a href='Xserver.1.html'>Xserver(1)</a>
+ and <a href='XFree86.1.html'>XFree86(1)</a>
+). The command line settings override the values
+specified in the config file.  The <b>Files</b> section is optional, as are all
+of the entries that may appear in it. <p>
+The entries that can appear in this
+section are: 
+<dl>
+
+<dt><b>Identifier "</b><i>name</i><b>"</b> </dt>
+<dd>specifies an optional identifying name for
+the <b>Files</b> section. </dd>
+
+<dt><b>FontPath "</b><i>path</i><b>"</b> </dt>
+<dd>sets the search path for fonts.  This
+path is a comma separated list of font path elements which the XFree86
+server searches for font databases. Multiple <b>FontPath</b> entries may be specified,
+and they will be concatenated to build up the fontpath used by the server.
+ Font path elements may be either absolute directory paths, or a font server
+identifier.  Font server identifiers have the form: </dd>
+</dl>
+<p>
+<dl><i>&lt;trans&gt;</i>/<i>&lt;hostname&gt;</i>:<i>&lt;port-number&gt;</i>
+</dl>
+<p>
+<dl>where <i>&lt;trans&gt;</i> is the transport type to use to connect to the font server
+(e.g., <b>unix</b> for UNIX-domain sockets or <b>tcp</b> for a TCP/IP connection), <i>&lt;hostname&gt;</i>
+is the hostname of the machine running the font server, and <i>&lt;port-number&gt;</i>
+is the port number that the font server is listening on (usually 7100).
+<p>
+When this entry is not specified in the config file, the server falls back
+to the compiled-in default font path, which contains the following font
+path elements: <p>
+<dl><br>
+<pre><i>/usr/X11R6/lib/X11/fonts/misc/</i>
+<i>/usr/X11R6/lib/X11/fonts/Speedo/</i>
+<i>/usr/X11R6/lib/X11/fonts/Type1/</i>
+<i>/usr/X11R6/lib/X11/fonts/CID/</i>
+<i>/usr/X11R6/lib/X11/fonts/75dpi/</i>
+<i>/usr/X11R6/lib/X11/fonts/100dpi/</i>
+</pre></dl>
+<p>
+The recommended font path contains the following font path elements: <p>
+<dl><br>
+<pre><i>/usr/X11R6/lib/X11/fonts/local/</i>
+<i>/usr/X11R6/lib/X11/fonts/misc/</i>
+<i>/usr/X11R6/lib/X11/fonts/75dpi/:unscaled</i>
+<i>/usr/X11R6/lib/X11/fonts/100dpi/:unscaled</i>
+<i>/usr/X11R6/lib/X11/fonts/Type1/</i>
+<i>/usr/X11R6/lib/X11/fonts/CID/</i>
+<i>/usr/X11R6/lib/X11/fonts/Speedo/</i>
+<i>/usr/X11R6/lib/X11/fonts/75dpi/</i>
+<i>/usr/X11R6/lib/X11/fonts/100dpi/</i>
+</pre></dl>
+<p>
+Font path elements that are found to be invalid are removed from the font
+path when the server starts up. </dl>
+
+<dl>
+
+<dt><b>RGBPath "</b><i>path</i><b>"</b> </dt>
+<dd>sets the path name for the
+RGB color database. When this entry is not specified in the config file,
+the server falls back to the compiled-in default RGB path, which is: </dd>
+</dl>
+<p>
+<dl><i>/usr/X11R6/lib/X11/rgb</i>
+</dl>
+<p>
+Note that an implicit <i>.txt</i> is added to this path if the server was compiled
+to use text rather than binary format RGB color databases. 
+<dl>
+
+<dt><b>ModulePath "</b><i>path</i><b>"</b>
+</dt>
+<dd>sets the search path for loadable XFree86 server modules.  This path is
+a comma separated list of directories which the XFree86 server searches
+for loadable modules loading in the order specified.  Multiple <b>ModulePath</b>
+entries may be specified, and they will be concatenated to build the module
+search path used by the server. 
+<!--
+  The LogFile keyword is not currently implemented
+ 
+-->
+</dd>
+
+<dt><b>Options</b> </dt>
+<dd>Option flags may be specified in
+<b>Files</b> sections. </dd>
+</dl>
+
+<h2><a name='sect4' href='#toc4'>Serverflags Section</a></h2>
+The config file may have multiple <b>ServerFlags</b>
+sections.  These are used to specify some global XFree86 server options.
+Earlier <b>ServerFlags</b> sections have priority over later sections.  This means
+that an option specified in a <b>ServerFlags</b> section cannot be overridden
+by a later <b>ServerFlags</b> section.  Except for the <b>Identifier</b> entry, all of
+the entries in this section are <b>Options</b>, although for compatibility purposes
+some of the old style entries are still recognised.  Those old style entries
+are not documented here, and using them is discouraged.  The <b>ServerFlags</b>
+section is optional, as are the entries that may be specified in it. <p>
+<b>Options</b>
+specified in this section (with the exception of the <b>"DefaultServerLayout"</b>
+<b>Option</b>) may be overridden by <b>Options</b> specified in the active <b>ServerLayout</b>
+section.  Options with command line equivalents are overridden when their
+command line equivalent is used.  Entries recognised by this section are:
+
+<dl>
+
+<dt><b>Identifier "</b><i>name</i><b>"</b> </dt>
+<dd>specifies an optional identifying name for the <b>ServerFlags</b>
+section. </dd>
+
+<dt><b>Option "DefaultServerLayout"  "</b><i>layout-id</i><b>"</b> </dt>
+<dd>This specifies the default
+<b>ServerLayout</b> section to use in the absence of the <b>-layout</b> command line option.
+</dd>
+
+<dt><b>Option "NoTrapSignals"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This prevents the XFree86 server from
+trapping a range of unexpected fatal signals and exiting cleanly.  Instead,
+the XFree86 server will die and drop core where the fault occurred.  The
+default behaviour is for the XFree86 server to exit cleanly, but still
+drop a core file.  In general you never want to use this option unless you
+are debugging an XFree86 server problem and know how to deal with the consequences.
+</dd>
+
+<dt><b>Option "DontVTSwitch"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This disallows the use of the <b>Ctrl+Alt+F</b><i>n</i>
+sequence (where F<i>n</i> refers to one of the numbered function keys).  That sequence
+is normally used to switch to another "virtual terminal" on operating systems
+that have this feature.  When this option is enabled, that key sequence
+has no special meaning and is passed to clients.  Default: off. </dd>
+
+<dt><b>Option "DontZap"
+ "</b><i>boolean</i><b>"</b> </dt>
+<dd>This disallows the use of the <b>Ctrl+Alt+Backspace</b> sequence.  That
+sequence is normally used to terminate the XFree86 server. When this option
+is enabled, that key sequence has no special meaning and is passed to clients.
+ Default: off. </dd>
+
+<dt><b>Option "DontZoom"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This disallows the use of the
+<b>Ctrl+Alt+Keypad-Plus</b> and <b>Ctrl+Alt+Keypad-Minus</b> sequences.  These sequences
+allows you to switch between video modes. When this option is enabled, those
+key sequences have no special meaning and are passed to clients.  Default:
+off. </dd>
+
+<dt><b>Option "DisableVidModeExtension"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This disables the parts
+of the VidMode extension used by the xvidtune client that can be used to
+change the video modes.  Default: the VidMode extension is enabled. </dd>
+
+<dt><b>Option
+"AllowNonLocalXvidtune"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This allows the xvidtune client (and
+other clients that use the VidMode extension) to connect from another host.
+ Default: off. </dd>
+
+<dt><b>Option "DisableModInDev"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This disables the parts
+of the XFree86-Misc extension that can be used to modify the input device
+settings dynamically.  Default: that functionality is enabled. </dd>
+
+<dt><b>Option "AllowNonLocalModInDev"
+ "</b><i>boolean</i><b>"</b> </dt>
+<dd>This allows a client to connect from another host and change
+keyboard and mouse settings in the running server.  Default: off. </dd>
+
+<dt><b>Option
+"AllowMouseOpenFail"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>This allows the server to start up even
+if the mouse device can't be opened/initialised.  Default: false. </dd>
+
+<dt><b>Option "VTInit"
+ "</b><i>command</i><b>"</b> </dt>
+<dd>Runs <i>command</i> after the VT used by the server has been opened.
+The command string is passed to "/bin/sh -c", and is run with the real user's
+id with stdin and stdout set to the VT.  The purpose of this option is to
+allow system dependent VT initialisation commands to be run.  This option
+should rarely be needed.  Default: not set. </dd>
+
+<dt><b>Option "VTSysReq"  "</b><i>boolean</i><b>"</b>
+</dt>
+<dd>enables the SYSV-style VT switch sequence for non-SYSV systems which support
+VT switching.  This sequence is <b>Alt-SysRq</b> followed by a function key (<b>Fn</b>).
+This prevents the XFree86 server trapping the keys used for the default
+VT switch sequence, which means that clients can access them.  Default:
+off. </dd>
+
+<dt><b>Option "XkbDisable" "</b><i>boolean</i><b>"</b> </dt>
+<dd>disable/enable the XKEYBOARD extension.
+ The -kb command line option overrides this config file option.  Default:
+XKB is enabled. 
+<!--
+  The following four options are "undocumented".
+ 
+-->
+</dd>
+
+<dt><b>Option "BlankTime"  "</b><i>time</i><b>"</b> </dt>
+<dd>sets the inactivity timeout
+for the blanking phase of the screensaver. <i>time</i> is in minutes.  This is equivalent
+to the XFree86 server's `-s' flag, and the value can be changed at run-time
+with <a href='xset.1.html'>xset(1)</a>
+.  Default: 10 minutes. </dd>
+
+<dt><b>Option "StandbyTime"  "</b><i>time</i><b>"</b> </dt>
+<dd>sets the
+inactivity timeout for the "standby" phase of DPMS mode. <i>time</i> is in minutes,
+and the value can be changed at run-time with <a href='xset.1.html'>xset(1)</a>
+. Default: 20 minutes.
+ This is only suitable for VESA DPMS compatible monitors, and may not be
+supported by all video drivers.  It is only enabled for screens that have
+the <b>"DPMS"</b> option set (see the MONITOR section below). </dd>
+
+<dt><b>Option "SuspendTime"
+ "</b><i>time</i><b>"</b> </dt>
+<dd>sets the inactivity timeout for the "suspend" phase of DPMS mode.
+<i>time</i> is in minutes, and the value can be changed at run-time with <a href='xset.1.html'>xset(1)</a>
+.
+Default: 30 minutes.  This is only suitable for VESA DPMS compatible monitors,
+and may not be supported by all video drivers.  It is only enabled for screens
+that have the <b>"DPMS"</b> option set (see the MONITOR section below). </dd>
+
+<dt><b>Option
+"OffTime"  "</b><i>time</i><b>"</b> </dt>
+<dd>sets the inactivity timeout for the "off" phase of DPMS
+mode. <i>time</i> is in minutes, and the value can be changed at run-time with <a href='xset.1.html'>xset(1)</a>
+.
+Default: 40 minutes.  This is only suitable for VESA DPMS compatible monitors,
+and may not be supported by all video drivers.  It is only enabled for screens
+that have the <b>"DPMS"</b> option set (see the MONITOR section below). </dd>
+
+<dt><b>Option
+"Pixmap"  "</b><i>bpp</i><b>"</b> </dt>
+<dd>This sets the pixmap format to use for depth 24.  Allowed
+values for <i>bpp</i> are 24 and 32.  Default: 32 unless driver constraints don't
+allow this (which is rare).  Note: some clients don't behave well when this
+value is set to 24. </dd>
+
+<dt><b>Option "PC98"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>Specify that the machine is
+a Japanese PC-98 machine.  This should not be enabled for anything other
+than the Japanese-specific PC-98 architecture.  Default: auto-detected. 
+<!--
+  Doubt this should be documented.
+ 
+-->
+</dd>
+
+<dt><b>Option
+"Log"  "</b><i>logflag</i><b>"</b> </dt>
+<dd>This option enables special handling for log files that
+may be useful when debugging certain types of problems.  The values for
+<i>logflag</i> are <b>Flush</b> and <b>Sync</b>. <b>Flush</b> causes the log file buffer to be flushed
+after each write. <b>Sync</b> causes the log file buffer to be flushed and the
+file data to be written to the disk after each write.  The default is for
+neither of these flags to be enabled.  Enabling these flags during normal
+operation may degrade performance and/or lengthen startup time. </dd>
+
+<dt><b>Option "NoPM"
+ "</b><i>boolean</i><b>"</b> </dt>
+<dd>Disables something to do with power management events.  Default:
+PM enabled on platforms that support it. </dd>
+
+<dt><b>Option "Xinerama"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>enable
+or disable XINERAMA extension. Default is disabled. </dd>
+
+<dt><b>Option "AllowDeactivateGrabs"
+"</b><i>boolean</i><b>"</b> </dt>
+<dd>This option enables the use of the <b>Ctrl+Alt+Keypad-Divide</b> key
+sequence to deactivate any active keyboard and mouse grabs.  Default: off.
+</dd>
+
+<dt><b>Option "AllowClosedownGrabs" "</b><i>boolean</i><b>"</b> </dt>
+<dd>This option enables the use of the
+<b>Ctrl+Alt+Keypad-Multiply</b> key sequence to kill clients with an active keyboard
+or mouse grab as well as killing any application that may have locked the
+server, normally using the <a href='XGrabServer.3.html'>XGrabServer(3)</a>
+ Xlib function.  Default: off. <br>
+Note that the options <b>AllowDeactivateGrabs</b> and <b>AllowClosedownGrabs</b> will
+allow users to remove the grab used by screen saver/locker programs. An
+API was written to such cases. If you enable this option, make sure your
+screen saver/locker is updated. </dd>
+
+<dt><b>Option "HandleSpecialKeys" "</b><i>when</i><b>"</b> </dt>
+<dd>This option
+controls when the server uses the builtin handler to process special key
+combinations (such as <b>Ctrl+Alt+Backspace</b>). Normally the XKEYBOARD extension
+keymaps will provide mappings for each of the special key combinations,
+so the builtin handler is not needed unless the XKEYBOARD extension is
+disabled.  The value of <i>when</i> can be <b>Always</b>, <b>Never</b>, or <b>WhenNeeded</b>. Default:
+Use the builtin handler only if needed.  The server will scan the keymap
+for a mapping to the <b>Terminate</b> action and, if found, use XKEYBOARD for
+processing actions, otherwise the builtin handler will be used. </dd>
+</dl>
+
+<h2><a name='sect5' href='#toc5'>Module Section</a></h2>
+The
+config file may have multiple <b>Module</b> section.  They are used to specify
+additional XFree86 server modules to be loaded.  This section is ignored
+when the XFree86 server is built in static form.  The types of modules normally
+loaded in this section are XFree86 server extension modules, and font rasteriser
+modules.  Most other module types are loaded automatically when they are
+needed via other mechanisms.  The <b>Module</b> section is optional, as are all
+of the entries that may be specified in it. <p>
+
+<dl>
+
+<dt><b>Identifier "</b><i>name</i><b>"</b> </dt>
+<dd>specifies
+an optional identifying name for the <b>Module</b> section. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>Option flags
+may be specified in <b>Module</b> sections. </dd>
+</dl>
+<p>
+Entries that identify which modules
+to pre-load may be in two forms. The first and most commonly used form is
+an entry that uses the <b>Load</b> keyword, as described here: 
+<dl>
+
+<dt><b>Load  "</b><i>modulename</i><b>"</b>
+</dt>
+<dd>This instructs the server to load the module called <i>modulename</i>. The module
+name given should be the module's standard name, not the module file name.
+ The standard name is case-sensitive, and does not include the "lib" prefix,
+or the ".a", ".o", or ".so" suffixes. </dd>
+</dl>
+<p>
+<dl>Example: the Type 1 font rasteriser can
+be loaded with the following entry: <p>
+<dl><b>Load "type1"</b> </dl>
+</dl>
+<p>
+The second form of entry
+is a <b>SubSection,</b> with the subsection name being the module name, and the
+contents of the <b>SubSection</b> being <b>Options</b> that are passed to the module
+when it is loaded. <p>
+Example: the extmod module (which contains a miscellaneous
+group of server extensions) can be loaded, with the XFree86-DGA extension
+disabled by using the following entry: <p>
+<dl><br>
+<pre><b>SubSection "extmod"</b>
+<b>   Option  "omit XFree86-DGA"</b>
+<b>EndSubSection</b>
+</pre></dl>
+<p>
+Modules are searched for in each directory specified in the <b>ModulePath</b>
+search path, and in the drivers, input, extensions, fonts, and internal
+subdirectories of each of those directories. In addition to this, operating
+system specific subdirectories of all the above are searched first if they
+exist. <p>
+To see what font and extension modules are available, check the contents
+of the following directories: <p>
+<dl><br>
+<pre>/usr/X11R6/lib/modules/fonts
+/usr/X11R6/lib/modules/extensions
+</pre></dl>
+<p>
+The "bitmap" font modules is loaded automatically.  It is recommended that
+at very least the "extmod" extension module be loaded.  If it isn't some
+commonly used server extensions (like the SHAPE extension) will not be
+available. 
+<h2><a name='sect6' href='#toc6'>Inputdevice Section</a></h2>
+The config file may have multiple <b>InputDevice</b>
+sections.  There will normally be at least two: one for the core (primary)
+keyboard, and one of the core pointer.  If either of these two is missing,
+a default configuration for the missing ones will be used.  Currently the
+default configuration may not work as expected on all platforms. <p>
+<b>InputDevice</b>
+sections have the following format: <p>
+<dl><br>
+<pre><b>Section "InputDevice"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<b>    Driver     "</b><i>inputdriver</i><b>"</b>
+<i>    options</i>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The <b>Identifier</b> and <b>Driver</b> entries are required in all <b>InputDevice</b> sections.
+ All other entries are optional. <p>
+The <b>Identifier</b> entry specifies the unique
+name for this input device.  The <b>Driver</b> entry specifies the name of the
+driver to use for this input device. When using the loadable server, the
+input driver module "<i>inputdriver</i>"<i></i> will be loaded for each active <b>InputDevice</b>
+section.  An <b>InputDevice</b> section is considered active if it is referenced
+by an active <b>ServerLayout</b> section, if it is referenced by the <b>-keyboard</b>
+or <b>-pointer</b> command line options, or if it is selected implicitly as the
+core pointer or keyboard device in the absence of such explicit references.
+The most commonly used input drivers are "keyboard" and "mouse". <p>
+In the
+absence of an explicitly specified core input device, the first <b>InputDevice</b>
+marked as <b>CorePointer</b> (or <b>CoreKeyboard</b>) is used.  If there is no match there,
+the first <b>InputDevice</b> that uses the "mouse" (or "keyboard" or "kbd") driver
+is used.  The final fallback is to use built-in default configurations. <p>
+<b>InputDevice</b>
+sections recognise some driver-independent <b>Options</b>, which are described
+here.  See the individual input driver manual pages for a description of
+the device-specific options. 
+<dl>
+
+<dt><b>Option "CorePointer"</b> </dt>
+<dd>When this is set, the input
+device is installed as the core (primary) pointer device.  There must be
+exactly one core pointer.  If this option is not set here, or in the <b>ServerLayout</b>
+section, or from the <b>-pointer</b> command line option, then the first input
+device that is capable of being used as a core pointer will be selected
+as the core pointer. This option is implicitly set when the obsolete <b>Pointer</b>
+section is used. </dd>
+
+<dt><b>Option "CoreKeyboard"</b> </dt>
+<dd>When this is set, the input device
+is to be installed as the core (primary) keyboard device.  There must be
+exactly one core keyboard.  If this option is not set here, in the <b>ServerLayout</b>
+section, or from the <b>-keyboard</b> command line option, then the first input
+device that is capable of being used as a core keyboard will be selected
+as the core keyboard. This option is implicitly set when the obsolete <b>Keyboard</b>
+section is used. </dd>
+
+<dt><b>Option "AlwaysCore"  "</b><i>boolean</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>Option "SendCoreEvents"
+ "</b><i>boolean</i><b>"</b> </dt>
+<dd>Both of these options are equivalent, and when enabled cause
+the input device to always report core events.  This can be used, for example,
+to allow an additional pointer device to generate core pointer events (like
+moving the cursor, etc). </dd>
+
+<dt><b>Option "HistorySize"  "</b><i>number</i><b>"</b> </dt>
+<dd>Sets the motion
+history size.  Default: 0. </dd>
+
+<dt><b>Option "SendDragEvents"  "</b><i>boolean</i><b>"</b> </dt>
+<dd>??? </dd>
+</dl>
+
+<h2><a name='sect7' href='#toc7'>Device
+Section</a></h2>
+The config file may have multiple <b>Device</b> sections.  There must be
+at least one, for the video card being used. <p>
+<b>Device</b> sections have the following
+format: <p>
+<dl><br>
+<pre><b>Section "Device"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<b>    Driver     "</b><i>driver</i><b>"</b>
+<i>    entries</i>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The <b>Identifier</b> and <b>Driver</b> entries are required in all <b>Device</b> sections. 
+All other entries are optional. <p>
+The <b>Identifier</b> entry specifies the unique
+name for this graphics device.  The <b>Driver</b> entry specifies the name of the
+driver to use for this graphics device. When using the loadable server,
+the driver module "<i>driver</i>"<i></i> will be loaded for each active <b>Device</b> section.
+ A <b>Device</b> section is considered active if it is referenced by an active
+<b>Screen</b> section. <p>
+<b>Device</b> sections recognise some driver-independent entries
+and <b>Options</b>, which are described here.  Not all drivers make use of these
+driver-independent entries, and many of those that do don't require them
+to be specified because the information is auto-detected.  See the individual
+graphics driver manual pages for further information about this, and for
+a description of the device-specific options. Note that most of the <b>Options</b>
+listed here (but not the other entries) may be specified in the <b>Screen</b>
+section instead of here in the <b>Device</b> section. 
+<dl>
+
+<dt><b>BusID  "</b><i>bus-id</i><b>"</b> </dt>
+<dd>This specifies
+the bus location of the graphics card.  For PCI/AGP cards, the <i>bus-id</i> string
+has the form <b>PCI:</b><i>bus</i><b>:</b><i>device</i><b>:</b><i>function</i> (e.g., "PCI:1:0:0" might be appropriate
+for an AGP card). This field is usually optional in single-head configurations
+when using the primary graphics card.  In multi-head configurations, or when
+using a secondary graphics card in a single-head configuration, this entry
+is mandatory.  Its main purpose is to make an unambiguous connection between
+the device section and the hardware it is representing.  This information
+can usually be found by running the XFree86 server with the <b>-scanpci</b> command
+line option. </dd>
+
+<dt><b>Screen  </b><i>number</i> </dt>
+<dd>This option is mandatory for cards where a single
+PCI entity can drive more than one display (i.e., multiple CRTCs sharing
+a single graphics accelerator and video memory).  One <b>Device</b> section is
+required for each head, and this parameter determines which head each of
+the <b>Device</b> sections applies to.  The legal values of <i>number</i> range from 0
+to one less than the total number of heads per entity. Most drivers require
+that the primary screen (0) be present. </dd>
+
+<dt><b>Chipset  "</b><i>chipset</i><b>"</b> </dt>
+<dd>This usually
+optional entry specifies the chipset used on the graphics board.  In most
+cases this entry is not required because the drivers will probe the hardware
+to determine the chipset type.  Don't specify it unless the driver-specific
+documentation recommends that you do. </dd>
+
+<dt><b>Ramdac  "</b><i>ramdac-type</i><b>"</b> </dt>
+<dd>This optional
+entry specifies the type of RAMDAC used on the graphics board.  This is
+only used by a few of the drivers, and in most cases it is not required
+because the drivers will probe the hardware to determine the RAMDAC type
+where possible.  Don't specify it unless the driver-specific documentation
+recommends that you do. </dd>
+
+<dt><b>DacSpeed  </b><i>speed</i> </dt>
+<dd></dd>
+
+<dt><b>DacSpeed  </b><i>speed-8 speed-16 speed-24
+speed-32</i> </dt>
+<dd>This optional entry specifies the RAMDAC speed rating (which is
+usually printed on the RAMDAC chip).  The speed is in MHz.  When one value
+is given, it applies to all framebuffer pixel sizes.  When multiple values
+are give, they apply to the framebuffer pixel sizes 8, 16, 24 and 32 respectively.
+ This is not used by many drivers, and only needs to be specified when
+the speed rating of the RAMDAC is different from the defaults built in
+to driver, or when the driver can't auto-detect the correct defaults.  Don't
+specify it unless the driver-specific documentation recommends that you
+do. </dd>
+
+<dt><b>Clocks  </b><i>clock ...</i> </dt>
+<dd>specifies the pixel that are on your graphics board. 
+The clocks are in MHz, and may be specified as a floating point number.
+ The value is stored internally to the nearest kHz.  The ordering of the
+clocks is important.  It must match the order in which they are selected
+on the graphics board.  Multiple <b>Clocks</b> lines may be specified, and each
+is concatenated to form the list.  Most drivers do not use this entry, and
+it is only required for some older boards with non-programmable clocks. 
+Don't specify this entry unless the driver-specific documentation explicitly
+recommends that you do. </dd>
+
+<dt><b>ClockChip  "</b><i>clockchip-type</i><b>"</b> </dt>
+<dd>This optional entry is
+used to specify the clock chip type on graphics boards which have a programmable
+clock generator.  Only a few XFree86 drivers support programmable clock
+chips.  For details, see the appropriate driver manual page. </dd>
+
+<dt><b>VideoRam  </b><i>mem</i>
+</dt>
+<dd>This optional entry specifies the amount of video ram that is installed
+on the graphics board. This is measured in kBytes.  In most cases this is
+not required because the XFree86 server probes the graphics board to determine
+this quantity.  The driver-specific documentation should indicate when it
+might be needed. </dd>
+
+<dt><b>BiosBase  </b><i>baseaddress</i> </dt>
+<dd>This optional entry specifies the
+base address of the video BIOS for the VGA board.  This address is normally
+auto-detected, and should only be specified if the driver-specific documentation
+recommends it. </dd>
+
+<dt><b>MemBase  </b><i>baseaddress</i> </dt>
+<dd>This optional entry specifies the memory
+base address of a graphics board's linear frame buffer.  This entry is not
+used by many drivers, and it should only be specified if the driver-specific
+documentation recommends it. </dd>
+
+<dt><b>IOBase  </b><i>baseaddress</i> </dt>
+<dd>This optional entry specifies
+the IO base address.  This entry is not used by many drivers, and it should
+only be specified if the driver-specific documentation recommends it. </dd>
+
+<dt><b>ChipID
+ </b><i>id</i> </dt>
+<dd>This optional entry specifies a numerical ID representing the chip
+type. For PCI cards, it is usually the device ID.  This can be used to override
+the auto-detection, but that should only be done when the driver-specific
+documentation recommends it. </dd>
+
+<dt><b>ChipRev  </b><i>rev</i> </dt>
+<dd>This optional entry specifies
+the chip revision number.  This can be used to override the auto-detection,
+but that should only be done when the driver-specific documentation recommends
+it. </dd>
+
+<dt><b>TextClockFreq  </b><i>freq</i> </dt>
+<dd>This optional entry specifies the pixel clock frequency
+that is used for the regular text mode.  The frequency is specified in MHz.
+ This is rarely used. </dd>
+
+<dt><b>IRQ </b><i>interrupt-number</i> </dt>
+<dd>This optional entry allows an
+interrupt number to be specified. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>Option flags may be specified
+in the <b>Device</b> sections.  These include driver-specific options and driver-independent
+options.  The former are described in the driver-specific documentation. Some
+of the latter are described below in the section about the <b>Screen</b> section,
+and they may also be included here. 
+<p> </dd>
+</dl>
+
+<h2><a name='sect8' href='#toc8'>Videoadaptor Section</a></h2>
+The config file
+may have multiple <b>VideoAdaptor</b> sections, which may be referenced from <b>Screen</b>
+sections. <p>
+<b>VideoAdaptor</b> sections have the following format: <p>
+<dl><br>
+<pre><b>Section "VideoAdaptor"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<i>    entries</i>
+<i>    ...</i>
+<b>    SubSection "Port"</b>
+<i>       entries</i>
+<i>       ...</i>
+<b>    EndSubSection</b>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The only mandatory entry in a <b>VideoAdaptor</b> section is the <b>Identifier</b>. Other
+entries include: 
+<dl>
+
+<dt><b>VendorName  "</b><i>vendor</i><b>"</b> </dt>
+<dd>This optional entry specifies the
+video adaptor's manufacturer. </dd>
+
+<dt><b>BoardName  "</b><i>model</i><b>"</b> </dt>
+<dd>This optional entry specifies
+the video adaptor's model name. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>may be specified in the <b>VideoAdaptor</b>
+section. </dd>
+</dl>
+<p>
+The <b>Port</b> <b>SubSections</b> provide information about video adaptor ports.
+ Each of these may contain an <b>Identifier</b> entry and <b>Options</b>. 
+<h2><a name='sect9' href='#toc9'>Monitor Section</a></h2>
+The
+config file may have multiple <b>Monitor</b> sections.  There should normally be
+at least one, for the monitor being used, but a default configuration will
+be created when one isn't specified. <p>
+<b>Monitor</b> sections have the following
+format: <p>
+<dl><br>
+<pre><b>Section "Monitor"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<i>    entries</i>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The only mandatory entry in a <b>Monitor</b> section is the <b>Identifier</b> entry. <p>
+The
+<b>Identifier</b> entry specifies the unique name for this monitor.  The <b>Monitor</b>
+section provides information about the specifications of the monitor, monitor-specific
+<b>Options</b>, and information about the video modes to use with the monitor.
+ Specifying video modes is optional because the server now has a built-in
+list of VESA standard modes.  When modes are specified explicitly in the
+<b>Monitor</b> section (with the <b>Modes</b>, <b>ModeLine</b>, or <b>UseModes</b> keywords), built-in
+modes with the same names are not included.  Built-in modes with different
+names are, however, still implicitly included. <p>
+The entries that may be used
+in <b>Monitor</b> sections are described below. 
+<dl>
+
+<dt><b>VendorName  "</b><i>vendor</i><b>"</b> </dt>
+<dd>This optional
+entry specifies the monitor's manufacturer. </dd>
+
+<dt><b>ModelName  "</b><i>model</i><b>"</b> </dt>
+<dd>This optional
+entry specifies the monitor's model. </dd>
+
+<dt><b>HorizSync  </b><i>horizsync-range</i> </dt>
+<dd>gives the
+range(s) of horizontal sync frequencies supported by the monitor. <i>horizsync-range</i>
+may be a comma separated list of either discrete values or ranges of values.
+ A range of values is two values separated by a dash.  By default the values
+are in units of kHz.  They may be specified in MHz or Hz if <b>MHz</b> or <b>Hz</b> is
+added to the end of the line.  The data given here is used by the XFree86
+server to determine if video modes are within the specifications of the
+monitor.  This information should be available in the monitor's handbook.
+ If this entry is omitted, a default range of 28-33kHz is used. </dd>
+
+<dt><b>VertRefresh
+ </b><i>vertrefresh-range</i> </dt>
+<dd>gives the range(s) of vertical refresh frequencies supported
+by the monitor. <i>vertrefresh-range</i> may be a comma separated list of either
+discrete values or ranges of values.  A range of values is two values separated
+by a dash.  By default the values are in units of Hz.  They may be specified
+in MHz or kHz if <b>MHz</b> or <b>kHz</b> is added to the end of the line.  The data given
+here is used by the XFree86 server to determine if video modes are within
+the specifications of the monitor.  This information should be available
+in the monitor's handbook.  If this entry is omitted, a default range of
+43-72Hz is used. </dd>
+
+<dt><b>DisplaySize  </b><i>width height</i> </dt>
+<dd>This optional entry gives the
+width and height, in millimetres, of the picture area of the monitor. If
+given this is used to calculate the horizontal and vertical pitch (DPI)
+of the screen. </dd>
+
+<dt><b>Gamma  </b><i>gamma-value</i> </dt>
+<dd></dd>
+
+<dt><b>Gamma  </b><i>red-gamma green-gamma blue-gamma</i> </dt>
+<dd>This
+is an optional entry that can be used to specify the gamma correction for
+the monitor.  It may be specified as either a single value or as three separate
+RGB values.  The values should be in the range 0.1 to 10.0, and the default
+is 1.0.  Not all drivers are capable of using this information. </dd>
+
+<dt><b>UseModes 
+"</b><i>modesection-id</i><b>"</b> </dt>
+<dd>Include the set of modes listed in the <b>Modes</b> section called
+<i>modesection-id.</i> This make all of the modes defined in that section available
+for use by this monitor. </dd>
+
+<dt><b>Mode  "</b><i>name</i><b>"</b> </dt>
+<dd>This is an optional multi-line entry
+that can be used to provide definitions for video modes for the monitor.
+ In most cases this isn't necessary because the built-in set of VESA standard
+modes will be sufficient.  The <b>Mode</b> keyword indicates the start of a multi-line
+video mode description. The mode description is terminated with the <b>EndMode</b>
+keyword.  The mode description consists of the following entries: <dl></dd>
+
+<dt><b>DotClock
+ </b><i>clock</i> </dt>
+<dd>is the dot (pixel) clock rate to be used for the mode. </dd>
+
+<dt><b>HTimings 
+</b><i>hdisp hsyncstart hsyncend htotal</i> </dt>
+<dd>specifies the horizontal timings for the
+mode. </dd>
+
+<dt><b>VTimings  </b><i>vdisp vsyncstart vsyncend vtotal</i> </dt>
+<dd>specifies the vertical
+timings for the mode. </dd>
+
+<dt><b>Flags  "</b><i>flag</i><b>"</b><i> ...</i> </dt>
+<dd>specifies an optional set of mode flags,
+each of which is a separate string in double quotes. <b>"Interlace"</b> indicates
+that the mode is interlaced. <b>"DoubleScan"</b> indicates a mode where each scanline
+is doubled. <b>"+HSync"</b> and <b>"-HSync"</b> can be used to select the polarity of the
+HSync signal. <b>"+VSync"</b> and <b>"-VSync"</b> can be used to select the polarity of
+the VSync signal. <b>"Composite"</b> can be used to specify composite sync on hardware
+where this is supported. Additionally, on some hardware, <b>"+CSync"</b> and <b>"-CSync"</b>
+may be used to select the composite sync polarity. </dd>
+
+<dt><b>HSkew  </b><i>hskew</i> </dt>
+<dd>specifies
+the number of pixels (towards the right edge of the screen) by which the
+display enable signal is to be skewed.  Not all drivers use this information.
+ This option might become necessary to override the default value supplied
+by the server (if any).  "Roving" horizontal lines indicate this value needs
+to be increased.  If the last few pixels on a scan line appear on the left
+of the screen, this value should be decreased. </dd>
+
+<dt><b>VScan  </b><i>vscan</i> </dt>
+<dd>specifies the
+number of times each scanline is painted on the screen. Not all drivers
+use this information.  Values less than 1 are treated as 1, which is the
+default.  Generally, the <b>"DoubleScan"</b> <b>Flag</b> mentioned above doubles this
+value. </dd>
+</dl>
+</dl>
+
+<dl>
+
+<dt><b>ModeLine  "</b><i>name</i><b>"</b><i> mode-description</i> </dt>
+<dd>This entry is a more compact version
+of the <b>Mode</b> entry, and it also can be used to specify video modes for the
+monitor. is a single line format for specifying video modes.  In most cases
+this isn't necessary because the built-in set of VESA standard modes will
+be sufficient. </dd>
+</dl>
+<p>
+<dl>The <i>mode-description</i> is in four sections, the first three
+of which are mandatory.  The first is the dot (pixel) clock.  This is a single
+number specifying the pixel clock rate for the mode in MHz.  The second
+section is a list of four numbers specifying the horizontal timings.  These
+numbers are the <i>hdisp</i>, <i>hsyncstart</i>, <i>hsyncend</i>, and <i>htotal</i> values.  The third
+section is a list of four numbers specifying the vertical timings.  These
+numbers are the <i>vdisp</i>, <i>vsyncstart</i>, <i>vsyncend</i>, and <i>vtotal</i> values.  The final
+section is a list of flags specifying other characteristics of the mode.
+<b>Interlace</b> indicates that the mode is interlaced. <b>DoubleScan</b> indicates a
+mode where each scanline is doubled. <b>+HSync</b> and <b>-HSync</b> can be used to select
+the polarity of the HSync signal. <b>+VSync</b> and <b>-VSync</b> can be used to select
+the polarity of the VSync signal. <b>Composite</b> can be used to specify composite
+sync on hardware where this is supported. Additionally, on some hardware,
+<b>+CSync</b> and <b>-CSync</b> may be used to select the composite sync polarity.  The
+<b>HSkew</b> and <b>VScan</b> options mentioned above in the <b>Modes</b> entry description
+can also be used here. </dl>
+
+<dl>
+
+<dt><b>Option "DPMS" "</b><i>boolean</i><b>"</b> </dt>
+<dd>Set whether DPMS is enabled
+for the monitor.  The default is taken from the monitor's DDC/EDID information
+if available, or false if not. </dd>
+
+<dt><b>Option "TargetRefresh" "</b><i>refresh</i><b>"</b> </dt>
+<dd>Sets a target
+refresh rate to use for the monitor.  If the monitor has valid modes with
+a refresh rate greater or equal to this value, those with a lower refresh
+rate will not be considered when determining the default resolution to
+use.  This is improves the default resolution selection when none is specified
+explicitly.  Default: <b>TargetRefresh</b> not used. </dd>
+
+<dt><b>Option "SyncOnGreen" "</b><i>boolean</i><b>"</b>
+</dt>
+<dd>Set whether sync-on-green should be enabled.  The availability of this option
+is driver-specific.  Default: false. </dd>
+
+<dt><b>Option "PreferredMode" "</b><i>Xres</i><b>x</b><i>Yres</i><b>"</b> </dt>
+<dd>Sets
+a preferred resolution to use for the default mode.  By default the preferred
+mode resolution is taken from the DDC/EDID data if it is available and
+if it is provides a default mode preference.  This is typically true for
+flat panel displays, which have a native/preferred resolution. This option
+is not used if the <b>UsePreferredMode</b> option is false. </dd>
+
+<dt><b>Option "UsePreferredMode"
+"</b><i>boolean</i><b>"</b> </dt>
+<dd>Controls whether or not a preferred mode, either detected from
+the monitor's DDC/EDID data or provided explicitly with the <b>PreferredMode</b>
+option, is used.  Default: true. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>Additional <b>Option</b> flags, including
+driver-specific options, may be included in <b>Monitor</b> sections. 
+<p> </dd>
+</dl>
+
+<h2><a name='sect10' href='#toc10'>Modes Section</a></h2>
+The
+config file may have multiple <b>Modes</b> sections, or none.  These sections provide
+a way of defining sets of video modes independently of the <b>Monitor</b> sections.
+<b>Monitor</b> sections may include the definitions provided in these sections
+by using the <b>UseModes</b> keyword.  In most cases the <b>Modes</b> sections are not
+necessary because the built-in set of VESA standard modes will be sufficient.
+<p>
+<b>Modes</b> sections have the following format: <p>
+<dl><br>
+<pre><b>Section "Modes"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<i>    entries</i>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The <b>Identifier</b> entry specifies the unique name for this set of mode descriptions.
+The other entries permitted in <b>Modes</b> sections are the <b>Mode</b> and <b>ModeLine</b>
+entries that are described above in the <b>Monitor</b> section, as well as <b>Options</b>.
+
+<h2><a name='sect11' href='#toc11'>Screen Section</a></h2>
+The config file may have multiple <b>Screen</b> sections.  There
+must be at least one, for the "screen" being used. A "screen" represents
+the binding of a graphics device (<b>Device</b> section) and one or more monitors
+(<b>Monitor</b> sections).  A <b>Screen</b> section is considered "active" if it is referenced
+by an active <b>ServerLayout</b> section or by the <b>-screen</b> command line option.
+ If neither of those is present, the first <b>Screen</b> section found in the
+config file is considered the active one. <p>
+<b>Screen</b> sections have the following
+format: <p>
+<dl><br>
+<pre><b>Section "Screen"</b>
+<b>    Identifier "</b><i>name</i><b>"</b>
+<b>    Device     "</b><i>devid</i><b>"</b>
+<b>    Monitor    "</b><i>monid</i><b>"</b>
+<i>    entries</i>
+<i>    ...</i>
+<b>    SubSection "Display"</b>
+<i>       entries</i>
+<i>       ...</i>
+<b>    EndSubSection</b>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+The <b>Identifier</b> and <b>Device</b> entries are mandatory.  All others are optional.
+<p>
+The <b>Identifier</b> entry specifies the unique name for this screen.  The <b>Screen</b>
+section provides information specific to the whole screen, including screen-specific
+<b>Options</b>. In multi-head configurations, there will be multiple active <b>Screen</b>
+sections, one for each head. The entries available for this section are:
+
+<dl>
+
+<dt><b>Device  "</b><i>device-id</i><b>"</b> </dt>
+<dd>This mandatory entry specifies the <b>Device</b> section to
+be used for this screen.  This is what ties a specific graphics card to
+a screen.  The <i>device-id</i> must match the <b>Identifier</b> of a <b>Device</b> section in
+the config file. </dd>
+
+<dt><b>Monitor  </b><i>monitor-num</i><b> "</b><i>monitor-id</i><b>"</b> </dt>
+<dd>One of these entries may
+be given for each monitor associated with this screen.  In the absence of
+these entries, at least one default monitor will be created for the screen.
+The <i>monitor-id</i> field is mandatory, and specifies the <b>Monitor</b> section being
+referenced.  The <i>monitor-num</i> field is required when more than one monitor
+is being associated with the screen.  Each referenced monitor should be
+given a unique monitor number.  This monitor number may be given special
+significance by the driver, and it is also used to identify which <b>Display</b>
+subsection(s) are associated with the screen/monitor.  If this field is
+omitted in a multiple-monitor configuration, default values will be assigned.
+ This is not recommended, and this behaviour may change in future revisions.
+</dd>
+</dl>
+<p>
+<dl>If a <b>Monitor</b> name is not specified, a default configuration is used.  Currently
+the default configuration may not function as expected on all platforms.
+</dl>
+
+<dl>
+
+<dt><b>VideoAdaptor  "</b><i>xv-id</i><b>"</b> </dt>
+<dd>specifies an optional Xv video adaptor description
+to be used with this screen. </dd>
+
+<dt><b>DefaultDepth  </b><i>depth</i> </dt>
+<dd>specifies which color depth
+the server should use by default.  The <b>-depth</b> command line option can be
+used to override this.  If neither is specified, the default depth is driver-specific,
+but in most cases is 8. </dd>
+
+<dt><b>DefaultFbBpp  </b><i>bpp</i> </dt>
+<dd>specifies which framebuffer layout
+to use by default.  The <b>-fbbpp</b> command line option can be used to override
+this.  In most cases the driver will chose the best default value for this.
+ The only case where there is even a choice in this value is for depth
+24, where some hardware supports both a packed 24 bit framebuffer layout
+and a sparse 32 bit framebuffer layout. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>Various <b>Option</b> flags may
+be specified in the <b>Screen</b> section.  Some are driver-specific and are described
+in the driver documentation.  Others are driver-independent, and will eventually
+be described here. 
+<!--
+  XXX These should really be in an xaa man page.
+ 
+-->
+</dd>
+
+<dt><b>Option "Accel"</b> </dt>
+<dd>Enables XAA (X Acceleration Architecture),
+a mechanism that makes video cards' 2D hardware acceleration available to
+the XFree86 server.  This option is on by default, but it may be necessary
+to turn it off if there are bugs in the driver.  There are many options
+to disable specific accelerated operations, listed below.  Note that disabling
+an operation will have no effect if the operation is not accelerated (whether
+due to lack of support in the hardware or in the driver). </dd>
+
+<dt><b>Option "BiosLocation"
+"</b><i>address</i><b>"</b> </dt>
+<dd>Set the location of the BIOS for the Int10 module. One may select
+a BIOS of another card for posting or the legacy V_BIOS range located at
+0xc0000 or an alternative address (BUS_ISA).  This is only useful under
+very special circumstances and should be used with extreme care. </dd>
+
+<dt><b>Option
+"InitPrimary" "</b><i>boolean</i><b>"</b> </dt>
+<dd>Use the Int10 module to initialize the primary
+graphics card. Normally, only secondary cards are soft-booted using the Int10
+module, as the primary card has already been initialized by the BIOS at
+boot time. Default: false. </dd>
+
+<dt><b>Option "NoInt10" "</b><i>boolean</i><b>"</b> </dt>
+<dd>Disables the Int10
+module, a module that uses the int10 call to the BIOS of the graphics card
+to initialize it. Default: false. </dd>
+
+<dt><b>Option "NoMTRR"</b> </dt>
+<dd>Disables MTRR (Memory Type
+Range Register) support, a feature of modern processors which can improve
+video performance by a factor of up to 2.5. Some hardware has buggy MTRR
+support, and some video drivers have been known to exhibit problems when
+MTRR's are used. </dd>
+
+<dt><b>Option "XaaNoCPUToScreenColorExpandFill"</b> </dt>
+<dd>Disables accelerated
+rectangular expansion blits from source patterns stored in system memory
+(using a memory-mapped aperture). </dd>
+
+<dt><b>Option "XaaNoColor8x8PatternFillRect"</b> </dt>
+<dd>Disables
+accelerated fills of a rectangular region with a full-color pattern. </dd>
+
+<dt><b>Option
+"XaaNoColor8x8PatternFillTrap"</b> </dt>
+<dd>Disables accelerated fills of a trapezoidal
+region with a full-color pattern. </dd>
+
+<dt><b>Option "XaaNoDashedBresenhamLine"</b> </dt>
+<dd>Disables
+accelerated dashed Bresenham line draws. </dd>
+
+<dt><b>Option "XaaNoDashedTwoPointLine"</b>
+</dt>
+<dd>Disables accelerated dashed line draws between two arbitrary points. </dd>
+
+<dt><b>Option
+"XaaNoImageWriteRect"</b> </dt>
+<dd>Disables accelerated transfers of full-color rectangular
+patterns from system memory to video memory (using a memory-mapped aperture).
+</dd>
+
+<dt><b>Option "XaaNoMono8x8PatternFillRect"</b> </dt>
+<dd>Disables accelerated fills of a rectangular
+region with a monochrome pattern. </dd>
+
+<dt><b>Option "XaaNoMono8x8PatternFillTrap"</b> </dt>
+<dd>Disables
+accelerated fills of a trapezoidal region with a monochrome pattern. </dd>
+
+<dt><b>Option
+"XaaNoOffscreenPixmaps"</b> </dt>
+<dd>Disables accelerated draws into pixmaps stored
+in offscreen video memory. </dd>
+
+<dt><b>Option "XaaNoPixmapCache"</b> </dt>
+<dd>Disables caching of
+patterns in offscreen video memory. </dd>
+
+<dt><b>Option "XaaNoScanlineCPUToScreenColorExpandFill"</b>
+</dt>
+<dd>Disables accelerated rectangular expansion blits from source patterns stored
+in system memory (one scan line at a time). </dd>
+
+<dt><b>Option "XaaNoScanlineImageWriteRect"</b>
+</dt>
+<dd>Disables accelerated transfers of full-color rectangular patterns from system
+memory to video memory (one scan line at a time). </dd>
+
+<dt><b>Option "XaaNoScreenToScreenColorExpandFill"</b>
+</dt>
+<dd>Disables accelerated rectangular expansion blits from source patterns stored
+in offscreen video memory. </dd>
+
+<dt><b>Option "XaaNoScreenToScreenCopy"</b> </dt>
+<dd>Disables accelerated
+copies of rectangular regions from one part of video memory to another
+part of video memory. </dd>
+
+<dt><b>Option "XaaNoSolidBresenhamLine"</b> </dt>
+<dd>Disables accelerated
+solid Bresenham line draws. </dd>
+
+<dt><b>Option "XaaNoSolidFillRect"</b> </dt>
+<dd>Disables accelerated
+solid-color fills of rectangles. </dd>
+
+<dt><b>Option "XaaNoSolidFillTrap"</b> </dt>
+<dd>Disables accelerated
+solid-color fills of Bresenham trapezoids. </dd>
+
+<dt><b>Option "XaaNoSolidHorVertLine"</b>
+</dt>
+<dd>Disables accelerated solid horizontal and vertical line draws. </dd>
+
+<dt><b>Option "XaaNoSolidTwoPointLine"</b>
+</dt>
+<dd>Disables accelerated solid line draws between two arbitrary points. </dd>
+</dl>
+<p>
+Each
+<b>Screen</b> section may optionally contain one or more <b>Display</b> subsections. 
+Those subsections provide depth, fbbpp and monitor specific configuration
+information, and the ones chosen depend on the depth and/or fbbpp that
+is being used for the screen, as well as the monitor number(s) in multi-monitor
+configurations.  The <b>Display</b> subsection format is described in the section
+below. 
+<p> 
+<h2><a name='sect12' href='#toc12'>Display Subsection</a></h2>
+Each <b>Screen</b> section may have multiple <b>Display</b>
+subsections.   The "active" <b>Display</b> subsections are the first for each monitor
+number that match the depth and/or fbbpp values being used, or failing
+that, the first for each monitor number that has neither a depth or fbbpp
+value specified.  Display subsections with no monitor number specified are
+used for single monitor per screen configurations.  The <b>Display</b> subsections
+are optional.  When there isn't one that matches the monitor number and/or
+depth and/or fbbpp values being used, all the parameters that can be specified
+here fall back to their defaults. <p>
+<b>Display</b> subsections have the following
+format: <p>
+<dl><br>
+<pre><b>    SubSection "Display"</b>
+<b>        Monitor  </b><i>monitor-num</i>
+<b>        Depth  </b><i>depth</i>
+<i>        entries</i>
+<i>        ...</i>
+<b>    EndSubSection</b>
+</pre></dl>
+<p>
+None of the entries in a <b>Display</b> subsection are mandatory. 
+<dl>
+
+<dt><b>Monitor  </b><i>monitor-num</i>
+</dt>
+<dd>This entry specifies which <b>Monitor</b> entry of the <b>Screen</b> section that this
+<b>Display</b> subsection applies to.  This number should match the monitor number
+of one of the <b>Monitor</b> references in the <b>Screen</b> screen.  If it doesn't match,
+then this <b>Display</b> subsection will be ignored.  If this entry is omitted,
+it is applied to single-monitor configurations.  For multi-monitor configurations,
+the driver may also use information in this subsection for screen-wide parameters.
+ Not all of the parameters in this subsection make sense on a per-monitor
+basis.  Which get used and how they get used is currently up to the driver.
+ Entries that are relevant to multi-monitor configurations include <b>Modes</b>,
+<b>Virtual</b>, <b>ViewPort</b>, and <b>Options</b>. </dd>
+
+<dt><b>Depth  </b><i>depth</i> </dt>
+<dd>This entry specifies what colour
+depth the <b>Display</b> subsection is to be used for.  This entry is usually specified,
+but it may be omitted to create a match-all <b>Display</b> subsection or when wishing
+to match only against the <b>FbBpp</b> parameter.  The range of <i>depth</i> values that
+are allowed depends on the driver.  Most driver support 8, 15, 16 and 24.
+ Some also support 1 and/or 4, and some may support other values (like
+30).  Note: <i>depth</i> means the number of bits in a pixel that are actually
+used to determine the pixel colour.  32 is not a valid <i>depth</i> value.  Most
+hardware that uses 32 bits per pixel only uses 24 of them to hold the colour
+information, which means that the colour depth is 24, not 32. </dd>
+
+<dt><b>FbBpp  </b><i>bpp</i>
+</dt>
+<dd>This entry specifies the framebuffer format this <b>Display</b> subsection is
+to be used for.  This entry is only needed when providing depth 24 configurations
+that allow a choice between a 24 bpp packed framebuffer format and a 32bpp
+sparse framebuffer format.  In most cases this entry should not be used.
+</dd>
+
+<dt><b>Weight  </b><i>red-weight green-weight blue-weight</i> </dt>
+<dd>This optional entry specifies
+the relative RGB weighting to be used for a screen is being used at depth
+16 for drivers that allow multiple formats.  This may also be specified
+from the command line with the <b>-weight</b> option (see <a href='XFree86.1.html'>XFree86(1)</a>
+). </dd>
+
+<dt><b>Virtual 
+</b><i>xdim ydim</i> </dt>
+<dd>This optional entry specifies the virtual screen resolution to
+be used. <i>xdim</i> must be a multiple of either 8 or 16 for most drivers, and
+a multiple of 32 when running in monochrome mode.  The given value will
+be rounded down if this is not the case.  Video modes which are too large
+for the specified virtual size will be rejected.  If this entry is not present,
+the virtual screen resolution will be set to accommodate all the valid
+video modes given in the <b>Modes</b> entry.  Some drivers/hardware combinations
+do not support virtual screens. Refer to the appropriate driver-specific
+documentation for details. </dd>
+
+<dt><b>ViewPort  </b><i>x0 y0</i> </dt>
+<dd>This optional entry sets the
+upper left corner of the initial display. This is only relevant when the
+virtual screen resolution is different from the resolution of the initial
+video mode.  If this entry is not given, then the initial display will be
+centered in the virtual display area. </dd>
+
+<dt><b>Modes  "</b><i>mode-name</i><b>"</b><i> ...</i> </dt>
+<dd>This optional entry
+specifies the list of video modes to use.  Each <i>mode-name</i> specified must
+be in double quotes.  They must correspond to those specified or referenced
+in the appropriate <b>Monitor</b> section (including implicitly referenced built-in
+VESA standard modes). The server will delete modes from this list which
+don't satisfy various requirements.  The first valid mode in this list will
+be the default display mode for startup.  The list of valid modes is converted
+internally into a circular list.  It is possible to switch to the next mode
+with <b>Ctrl+Alt+Keypad-Plus</b> and to the previous mode with <b>Ctrl+Alt+Keypad-Minus</b>.
+When this entry is omitted, the valid modes referenced by the appropriate
+<b>Monitor</b> section will be used.  If the <b>Monitor</b> section contains no modes,
+then the selection will be taken from the built-in VESA standard modes. </dd>
+
+<dt><b>Visual
+ "</b><i>visual-name</i><b>"</b> </dt>
+<dd>This optional entry sets the default root visual type.  This
+may also be specified from the command line (see the <a href='Xserver.1.html'>Xserver(1)</a>
+ man page).
+ The visual types available for depth 8 are (default is <b>PseudoColor</b>): </dd>
+</dl>
+<p>
+<dl><br>
+<pre><b>StaticGray</b>
+<b>GrayScale</b>
+<b>StaticColor</b>
+<b>PseudoColor</b>
+<b>TrueColor</b>
+<b>DirectColor</b>
+</pre></dl>
+<p>
+<dl>The visual type available for the depths 15, 16 and 24 are (default is
+<b>TrueColor</b>): <p>
+<dl><br>
+<pre><b>TrueColor</b>
+<b>DirectColor</b>
+</pre></dl>
+<p>
+Not all drivers support <b>DirectColor</b> at these depths. <p>
+The visual types available
+for the depth 4 are (default is <b>StaticColor</b>): <p>
+<dl><br>
+<pre><b>StaticGray</b>
+<b>GrayScale</b>
+<b>StaticColor</b>
+<b>PseudoColor</b>
+</pre></dl>
+<p>
+The visual type available for the depth 1 (monochrome) is <b>StaticGray</b>. </dl>
+
+<dl>
+
+<dt><b>Black
+ </b><i>red green blue</i> </dt>
+<dd>This optional entry allows the "black" colour to be specified.
+ This is only supported at depth 1.  The default is black. </dd>
+
+<dt><b>White  </b><i>red green
+blue</i> </dt>
+<dd>This optional entry allows the "white" colour to be specified.  This
+is only supported at depth 1.  The default is white. </dd>
+
+<dt><b>Options</b> </dt>
+<dd>Option flags
+may be specified in the <b>Display</b> subsections.  These may include driver-specific
+options and driver-independent options.  The former are described in the
+driver-specific documentation.  Some of the latter are described above in
+the section about the <b>Screen</b> section, and they may also be included here.
+</dd>
+</dl>
+
+<h2><a name='sect13' href='#toc13'>Serverlayout Section</a></h2>
+The config file may have multiple <b>ServerLayout</b> sections.
+  A "server layout" represents the binding of one or more screens (<b>Screen</b>
+sections) and one or more input devices (<b>InputDevice</b> sections) to form
+a complete configuration.  In multi-head configurations, it also specifies
+the relative layout of the heads.  A <b>ServerLayout</b> section is considered
+"active" if it is referenced by the <b>-layout</b> command line option or by an
+<b>Option "DefaultServerLayout"</b> entry in the <b>ServerFlags</b> section (the former
+takes precedence over the latter).  If those options are not used, the first
+<b>ServerLayout</b> section found in the config file is considered the active
+one.  If no <b>ServerLayout</b> sections are present, the single active screen
+and two active (core) input devices are selected as described in the relevant
+sections above. <p>
+<b>ServerLayout</b> sections have the following format: <p>
+<dl><br>
+<pre><b>Section "ServerLayout"</b>
+<b>    Identifier   "</b><i>name</i><b>"</b>
+<b>    Screen       "</b><i>screen-id</i><b>"</b>
+<i>    ...</i>
+<b>    InputDevice  "</b><i>idev-id</i><b>"</b>
+<i>    ...</i>
+<i>    options</i>
+<i>    ...</i>
+<b>EndSection</b>
+</pre></dl>
+<p>
+Each <b>ServerLayout</b> section must have an <b>Identifier</b> entry and at least one
+<b>Screen</b> entry. <p>
+The <b>Identifier</b> entry specifies the unique name for this server
+layout.  The <b>ServerLayout</b> section provides information specific to the whole
+session, including session-specific <b>Options</b>. The <b>ServerFlags</b> options (described
+above) may be specified here, and ones given here override those given
+in the <b>ServerFlags</b> section. <p>
+The entries that may be used in this section
+are described here. 
+<dl>
+
+<dt><b>Screen  </b><i>screen-num</i><b> "</b><i>screen-id</i><b>" </b><i>position-information</i> </dt>
+<dd>One
+of these entries must be given for each screen being used in a session.
+ The <i>screen-id</i> field is mandatory, and specifies the <b>Screen</b> section being
+referenced.  The <i>screen-num</i> field is optional, and may be used to specify
+the screen number in multi-head configurations.  When this field is omitted,
+the screens will be numbered in the order that they are listed in. The numbering
+starts from 0, and must be consecutive.  The optional <i>position-information</i>
+field describes the way multiple screens are positioned.  When this information
+is not provided, the positioning of the screen defaults to <b>Absolute</b> <i>0 0</i>.
+There are a number of different ways that this information can be provided:
+<dl></dd>
+
+<dt><i>x y</i> </dt>
+<dd></dd>
+
+<dt><b>Absolute  </b><i>x y</i> </dt>
+<dd>These both specify that the upper left corner's coordinates
+are (<i>x</i>,<i>y</i>).<i></i> The <b>Absolute</b> keyword is optional.  Some older versions of XFree86
+(4.2 and earlier) don't recognise the <b>Absolute</b> keyword, so it's safest to
+just specify the coordinates without it. </dd>
+
+<dt><b>RightOf   "</b><i>screen-id</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>LeftOf   
+"</b><i>screen-id</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>Above     "</b><i>screen-id</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>Below     "</b><i>screen-id</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>Relative  "</b><i>screen-id</i><b>"</b><i>
+x y</i> </dt>
+<dd>These give the screen's location relative to another screen.  The first
+four position the screen immediately to the right, left, above or below
+the other screen.  When positioning to the right or left, the top edges
+are aligned.  When positioning above or below, the left edges are aligned.
+The <b>Relative</b> form specifies the offset of the screen's origin (upper left
+corner) relative to the origin of another screen. </dd>
+</dl>
+</dl>
+
+<dl>
+
+<dt><b>InputDevice  "</b><i>idev-id</i><b>"
+"</b><i>option</i><b>"</b><i> ...</i> </dt>
+<dd>One of these entries should be given for each input device being
+used in a session.  Normally at least two are required, one each for the
+core pointer and keyboard devices.  If either of those is missing, suitable
+<b>InputDevice</b> entries are searched for using the method described above in
+the <b>INPUTDEVICE</b> section.  The <i>idev-id</i> field is mandatory, and specifies the
+name of the <b>InputDevice</b> section being referenced.  Multiple <i>option</i> fields
+may be specified, each in double quotes.  The options permitted here are
+any that may also be given in the <b>InputDevice</b> sections.  Normally only session-specific
+input device options would be used here.  The most commonly used options
+are: </dd>
+</dl>
+<p>
+<dl><br>
+<pre><b>"CorePointer"</b>
+<b>"CoreKeyboard"</b>
+<b>"SendCoreEvents"</b>
+</pre></dl>
+<p>
+<dl>and the first two should normally be used to indicate the core pointer
+and core keyboard devices respectively. </dl>
+
+<dl>
+
+<dt><b>Options</b> </dt>
+<dd>Any option permitted in
+the <b>ServerFlags</b> section may also be specified here.  When the same option
+appears in both places, the value given here overrides the one given in
+the <b>ServerFlags</b> section. </dd>
+</dl>
+<p>
+Here is an example of a <b>ServerLayout</b> section for
+a dual headed configuration with two mice: <p>
+<dl><br>
+<pre><b>Section "ServerLayout"</b>
+<b>    Identifier  "Layout 1"</b>
+<b>    Screen      "MGA 1"</b>
+<b>    Screen      "MGA 2" RightOf "MGA 1"</b>
+<b>    InputDevice "Keyboard 1" "CoreKeyboard"</b>
+<b>    InputDevice "Mouse 1"    "CorePointer"</b>
+<b>    InputDevice "Mouse 2"    "SendCoreEvents"</b>
+<b>    Option      "BlankTime"  "5"</b>
+<b>EndSection</b>
+</pre></dl>
+
+<h2><a name='sect14' href='#toc14'>Dri Section</a></h2>
+This optional section is used to provide some information for
+the Direct Rendering Infrastructure. 
+<dl>
+
+<dt><b>Identifier "</b><i>name</i><b>"</b> </dt>
+<dd>specifies an optional
+identifying name for the <b>DRI</b> section. </dd>
+
+<dt><b>Group "</b><i>group-name</i><b>"</b> </dt>
+<dd></dd>
+
+<dt><b>Group </b><i>group-id</i> </dt>
+<dd>specifies
+the group ownership for the DRI device nodes.  It may be specified as a
+group name or as a numerical group ID. </dd>
+
+<dt><b>Mode </b><i>mode</i> </dt>
+<dd>specifies the numerical
+permissions for the DRI device nodes. </dd>
+
+<dt><b>Buffers </b><i>count size</i> </dt>
+<dd>specifies buffers.
+</dd>
+
+<dt><b>Options</b> </dt>
+<dd>Option flags may be specified in <b>DRI</b> sections. </dd>
+</dl>
+
+<h2><a name='sect15' href='#toc15'>Vendor Section</a></h2>
+The
+optional <b>Vendor</b> section may be used to provide vendor-specific configuration
+information. Multiple <b>Vendor</b> sections may be present, and they may contain
+the following entries: 
+<dl>
+
+<dt><b>Identifier "</b><i>name</i><b>"</b> </dt>
+<dd>specifies an identifying name
+for the <b>Vendor</b> section. </dd>
+
+<dt><b>VendorName "</b><i>vendor-name</i><b>"</b> </dt>
+<dd>specifies the vendor name.
+</dd>
+
+<dt><b>Options</b> </dt>
+<dd>may be specified in the <b>Vendor</b> sections. </dd>
+</dl>
+<p>
+In addition to these entries,
+there may be named <b>SubSections</b>, each of which may contain an <b>Identifier</b>
+entry and <b>Option</b> entries. <p>
+
+<h2><a name='sect16' href='#toc16'>Files</a></h2>
+For an example of an XF86Config file, see
+the file installed as /usr/X11R6/lib/X11/XF86Config.eg. </pre>
+<h2><a name='sect17' href='#toc17'>See Also</a></h2>
+<a href='X.7.html'>X(7)</a>
+, <a href='Xserver.1.html'>Xserver(1)</a>
+,
+<a href='XFree86.1.html'>XFree86(1)</a>
+, <a href='apm.4.html'>apm(4)</a>
+, 
+<!--
+  .IR ati(4),
+ <a href='chips.4.html'>chips(4)</a>
+, <a href='cirrus.4.html'>cirrus(4)</a>
+, <a href='cyrix.4.html'>cyrix(4)</a>
+, <a href='fbdev.4.html'>fbdev(4)</a>
+, <a href='glide.4.html'>glide(4)</a>
+,
+<a href='glint.4.html'>glint(4)</a>
+, <a href='i128.4.html'>i128(4)</a>
+, <a href='i740.4.html'>i740(4)</a>
+, <a href='i810.4.html'>i810(4)</a>
+, <a href='imstt.4.html'>imstt(4)</a>
+, <a href='mga.4.html'>mga(4)</a>
+, <a href='neomagic.4.html'>neomagic(4)</a>
+, <a href='nv.4.html'>nv(4)</a>
+,
+<a href='r128.4.html'>r128(4)</a>
+, <a href='rendition.4.html'>rendition(4)</a>
+, <a href='savage.4.html'>savage(4)</a>
+, <a href='s3virge.4.html'>s3virge(4)</a>
+,   .IR shadowfb(4),
+ <a href='siliconmotion.4.html'>siliconmotion(4)</a>
+, <a href='sis.4.html'>sis(4)</a>
+,
+<a href='sunbw2.4.html'>sunbw2(4)</a>
+, <a href='suncg14.4.html'>suncg14(4)</a>
+, <a href='suncg3.4.html'>suncg3(4)</a>
+, <a href='suncg6.4.html'>suncg6(4)</a>
+, <a href='sunffb.4.html'>sunffb(4)</a>
+, <a href='sunleo.4.html'>sunleo(4)</a>
+, <a href='suntcx.4.html'>suntcx(4)</a>
+,
+<a href='tdfx.4.html'>tdfx(4)</a>
+, <a href='tga.4.html'>tga(4)</a>
+, <a href='trident.4.html'>trident(4)</a>
+, <a href='tseng.4.html'>tseng(4)</a>
+, <a href='v4l.4.html'>v4l(4)</a>
+, <a href='vesa.4.html'>vesa(4)</a>
+, <a href='vga.4.html'>vga(4)</a>
+, <a href='vmware.4.html'>vmware(4)</a>
+,
+
+-->
+<br>
+README <i>&lt;<a href='http://www.xfree86.org/current/README.html'>http://www.xfree86.org/current/README.html</a>
+&gt;</i>, <br>
+RELNOTES <i>&lt;<a href='http://www.xfree86.org/current/RELNOTES.html'>http://www.xfree86.org/current/RELNOTES.html</a>
+&gt;</i>, <br>
+README.mouse <i>&lt;<a href='http://www.xfree86.org/current/mouse.html'>http://www.xfree86.org/current/mouse.html</a>
+&gt;</i>, <br>
+README.DRI <i>&lt;<a href='http://www.xfree86.org/current/DRI.html'>http://www.xfree86.org/current/DRI.html</a>
+&gt;</i>, <br>
+Install <i>&lt;<a href='http://www.xfree86.org/current/Install.html'>http://www.xfree86.org/current/Install.html</a>
+&gt;</i>. 
+<h2><a name='sect18' href='#toc18'>Authors</a></h2>
+This manual page
+was largely rewritten for XFree86 4.0 by David Dawes <i>&lt;dawes@xfree86.org&gt;</i>. <p>
+
+<hr><p>
+<a name='toc'><b>Table of Contents</b></a><p>
+<ul>
+<li><a name='toc0' href='#sect0'>Name</a></li>
+<li><a name='toc1' href='#sect1'>Introduction</a></li>
+<li><a name='toc2' href='#sect2'>Description</a></li>
+<li><a name='toc3' href='#sect3'>Files Section</a></li>
+<li><a name='toc4' href='#sect4'>Serverflags Section</a></li>
+<li><a name='toc5' href='#sect5'>Module Section</a></li>
+<li><a name='toc6' href='#sect6'>Inputdevice Section</a></li>
+<li><a name='toc7' href='#sect7'>Device Section</a></li>
+<li><a name='toc8' href='#sect8'>Videoadaptor Section</a></li>
+<li><a name='toc9' href='#sect9'>Monitor Section</a></li>
+<li><a name='toc10' href='#sect10'>Modes Section</a></li>
+<li><a name='toc11' href='#sect11'>Screen Section</a></li>
+<li><a name='toc12' href='#sect12'>Display Subsection</a></li>
+<li><a name='toc13' href='#sect13'>Serverlayout Section</a></li>
+<li><a name='toc14' href='#sect14'>Dri Section</a></li>
+<li><a name='toc15' href='#sect15'>Vendor Section</a></li>
+<li><a name='toc16' href='#sect16'>Files</a></li>
+<li><a name='toc17' href='#sect17'>See Also</a></li>
+<li><a name='toc18' href='#sect18'>Authors</a></li>
+</ul>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729255" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

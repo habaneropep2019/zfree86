@@ -1,0 +1,7128 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	      1mX Input Device Extension Library0m
+
+
+		   1mX Consortium Standard0m
+
+		 1mX Version 11, Release 6.40m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	      1mMark Patrick	Ardent Computer0m
+
+	      1mGeorge Sachs	Hewlett-Packard0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright � 1989, 1990, 1991 by Hewlett-Packard Company,
+Ardent Computer.
+
+Permission to use, copy, modify, and distribute this docu-
+mentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice and this permission
+notice appear in all copies.  Ardent, and Hewlett-Packard
+make no representations about the suitability for any pur-
+pose of the information in this document.  It is provided
+``as is'' without express or implied warranty.
+
+
+
+
+
+Copyright (c) 1989, 1990, 1991, 1992  X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+
+
+
+
+
+
+
+
+
+
+
+
+without prior written authorization from the X Consortium.
+
+
+
+4mX24m 4mWindow24m 4mSystem24m is a trademark of X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Input Extension Overview0m
+
+This document describes an extension to the X11 server.	 The
+purpose of this extension is to support the use of addi-
+tional input devices beyond the pointer and keyboard devices
+defined by the core X protocol.	 This first section gives an
+overview of the input extension.  The following sections
+correspond to chapters 9, 10, and 11, ``Window and Session
+Manager Functions'', ``Events'', and ``Event Handling Func-
+tions'' of the ``Xlib - C Language Interface'' manual and
+describe how to use the input device extension.
+
+1m1.1.	Design Approach0m
+
+The design approach of the extension is to define functions
+and events analogous to the core functions and events.	This
+allows extension input devices and events to be individually
+distinguishable from each other and from the core input
+devices and events.  These functions and events make use of
+a device identifier and support the reporting of 4mn24m-dimen-
+sional motion data as well as other data that is not cur-
+rently reportable via the core input events.
+
+1m1.2.	Core Input Devices0m
+
+The X server core protocol supports two input devices:	a
+pointer and a keyboard.	 The pointer device has two major
+functions.  First, it may be used to generate motion infor-
+mation that client programs can detect. Second, it may also
+be used to indicate the current location and focus of the X
+keyboard.  To accomplish this, the server echoes a cursor at
+the current position of the X pointer.	Unless the X key-
+board has been explicitly focused, this cursor also shows
+the current location and focus of the X keyboard.
+
+The X keyboard is used to generate input that client pro-
+grams can detect.
+
+The X keyboard and X pointer are referred to in this docu-
+ment as the 4mcore24m 4mdevices24m, and the input events they generate
+(4mKeyPress24m, 4mKeyRelease24m, 4mButtonPress24m, 4mButtonRelease24m, and
+4mMotionNotify24m) are known as the 4mcore24m 4minput24m 4mevents24m.  All other
+input devices are referred to as 4mextension24m 4minput24m 4mdevices24m,
+and the input events they generate are referred to as 4mexten-0m
+4msion24m 4minput24m 4mevents24m.
+
+			    Note
+
+     This input extension does not change the behavior
+     or functionality of the core input devices, core
+     events, or core protocol requests, with the excep-
+     tion of the core grab requests.  These requests
+     may affect the synchronization of events from
+     extension devices.	 See the explanation in the
+
+
+
+			      1m10m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+     section titled ``Event Synchronization and Core
+     Grabs.''
+
+
+Selection of the physical devices to be initially used by
+the server as the core devices is left implementation depen-
+dent.  Functions are defined that allow client programs to
+change which physical devices are used as the core devices.
+
+1m1.3.	Extension Input Devices0m
+
+The input extension controls access to input devices other
+than the X keyboard and X pointer.  It allows client pro-
+grams to select input from these devices independently from
+each other and independently from the core devices.  Input
+events from these devices are of extension types (4mDeviceKey-0m
+4mPress24m, 4mDeviceKeyRelease24m, 4mDeviceButtonPress24m, 4mDeviceButtonRe-0m
+4mlease24m, 4mDeviceMotionNotify24m, and so on) and contain a device
+identifier so that events of the same type coming from dif-
+ferent input devices can be distinguished.
+
+Extension input events are not limited in size by the size
+of the server 32-byte wire events.  Extension input events
+may be constructed by the server sending as many wire-sized
+events as necessary to return the information required for
+that event.  The library event reformatting routines are
+responsible for combining these into one or more client
+XEvents.
+
+Any input device that generates key, button, or motion data
+may be used as an extension input device.  Extension input
+devices may have zero or more keys, zero or more buttons,
+and may report zero or more axes of motion.  Motion may be
+reported as relative movements from a previous position or
+as an absolute position.  All valuators reporting motion
+information for a given extension input device must report
+the same kind of motion information (absolute or relative).
+
+This extension is designed to accommodate new types of input
+devices that may be added in the future.  The protocol
+requests that refer to specific characteristics of input
+devices organize that information by 4minput24m 4mdevice24m 4mclasses24m.
+Server implementors may add new classes of input devices
+without changing the protocol requests.
+
+All extension input devices are treated like the core X key-
+board in determining their location and focus.	The server
+does not track the location of these devices on an individ-
+ual basis and, therefore, does not echo a cursor to indicate
+their current location.	 Instead, their location is deter-
+mined by the location of the core X pointer.  Like the core
+X keyboard, some may be explicitly focused. If they are not
+explicitly focused,  their focus is determined by the loca-
+tion of the core X pointer.
+
+
+
+			      1m20m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+1m1.3.1.  Input Device Classes0m
+
+Some of the input extension requests divide input devices
+into classes based on their functionality.  This is intended
+to allow new classes of input devices to be defined at a
+later time without changing the semantics of these func-
+tions.	The following input device classes are currently
+defined:
+
+KEY	  The device reports key events.
+
+BUTTON	  The device reports button events.
+
+VALUATOR  The device reports valuator data in motion events.
+
+PROXIMITY The device reports proximity events.
+
+FOCUS	  The device can be focused.
+
+FEEDBACK  The device supports feedbacks.
+
+Additional classes may be added in the future.	Functions
+that support multiple input classes, such as the 4mXListInput-0m
+4mDevices24m function that lists all available input devices,
+organize the data they return by input class.  Client pro-
+grams that use these functions should not access data unless
+it matches a class defined at the time those clients were
+compiled.  In this way, new classes can be added without
+forcing existing clients that use these functions to be
+recompiled.
+
+1m1.4.	Using Extension Input Devices0m
+
+A client that wishes to access an input device does so
+through the library functions defined in the following sec-
+tions.	A typical sequence of requests that a client would
+make is as follows:
+
+�    4mXListInputDevices24m - lists all of the available input
+     devices.  From the information returned by this
+     request, determine whether the desired input device is
+     attached to the server.  For a description of the
+     4mXListInputDevices24m request, see the section entitled
+     ``Listing Available Devices.''
+
+�    4mXOpenDevice24m - requests that the server open the device
+     for access by this client.	 This request returns an
+     4mXDevice24m structure that is used by most other input
+     extension requests to identify the specified device.
+     For a description of the 4mXOpenDevice24m request, see the
+     section entitled ``Enabling and Disabling Extension
+     Devices.''
+
+
+
+
+
+			      1m30m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    Determine the event types and event classes needed to
+     select the desired input extension events, and identify
+     them when they are received.  This is done via macros
+     whose name corresponds to the desired event, for exam-
+     ple, 4mDeviceKeyPress24m.	For a description of these
+     macros, see the section entitled ``Selecting Extension
+     Device Events.''
+
+�    4mXSelectExtensionEvent24m - selects the desired events from
+     the server.  For a description of the 4mXSelextExtension-0m
+     4mEvent24m request, see the section entitled ``Selecting
+     Extension Device Events.''
+
+�    4mXNextEvent24m - receives the next available event.  This
+     is the core 4mXNextEvent24m function provided by the stan-
+     dard X libarary.
+
+Other requests are defined to grab and focus extension
+devices, to change their key, button, or modifier mappings,
+to control the propagation of input extension events, to get
+motion history from an extension device, and to send input
+extension events to another client.  These functions are
+described in the following sections.
+
+1m2.  Library Extension Requests0m
+
+Extension input devices are accessed by client programs
+through the use of new protocol requests.  The following
+requests are provided as extensions to Xlib.  Constants and
+structures referenced by these functions may be found in the
+files 1m<X11/extensions/XI.h> 22mand 1m<X11/extensions/XInput.h>22m,
+which are attached to this document as Appendix A.
+
+The library will return 1mNoSuchExtension 22mif an extension
+request is made to a server that does not support the input
+extension.
+
+Input extension requests cannot be used to access the X key-
+board and X pointer devices.
+
+1m2.1.	Window Manager Functions0m
+
+This section discusses the following X Input Extension Win-
+dow Manager topics:
+
+�    Changing the core devices
+
+�    Event synchronization and core grabs
+
+�    Extension active grabs
+
+�    Passively grabbing a key
+
+
+
+
+
+			      1m40m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    Passively grabbing a button
+
+�    Thawing a device
+
+�    Controlling device focus
+
+�    Controlling device feedback
+
+�    Ringing a bell on an input device
+
+�    Controlling device encoding
+
+�    Controlling button mapping
+
+�    Obtaining the state of a device
+
+1m2.1.1.  Changing the Core Devices0m
+
+These functions are provided to change which physical device
+is used as the X pointer or X keyboard.
+
+			    Note
+
+     Using these functions may change the characteris-
+     tics of the core devices.	The new pointer device
+     may have a different number of buttons from the
+     old one, or the new keyboard device may have a
+     different number of keys or report a different
+     range of keycodes.	 Client programs may be running
+     that depend on those characteristics.  For exam-
+     ple, a client program could allocate an array
+     based on the number of buttons on the pointer
+     device and then use the button numbers received in
+     button events as indices into that array.	Chang-
+     ing the core devices could cause such client pro-
+     grams to behave improperly or to terminate abnor-
+     mally if they ignore the 4mChangeDeviceNotify24m event
+     generated by these requests.
+
+
+These functions change the X keyboard or X pointer device
+and generate an 4mXChangeDeviceNotify24m event and a 4mMappingNo-0m
+4mtify24m event.  The specified device becomes the new X keyboard
+or X pointer device.  The location of the core device does
+not change as a result of this request.
+
+These requests fail and return 4mAlreadyGrabbed24m if either the
+specified device or the core device it would replace are
+grabbed by some other client.  They fail and return
+4mGrabFrozen24m if either device is frozen by the active grab of
+another client.
+
+These requests fail with a 4mBadDevice24m error if the specified
+device is invalid, has not previously been opened via
+
+
+
+			      1m50m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+4mXOpenDevice24m, or is not supported as a core device by the
+server implementation.
+
+Once the device has successfully replaced one of the core
+devices, it is treated as a core device until it is in turn
+replaced by another 4mChangeDevice24m request or until the server
+terminates.  The termination of the client that changed the
+device will not cause it to change back.  Attempts to use
+the 4mXCloseDevice24m request to close the new core device will
+fail with a 4mBadDevice24m error.
+
+
+To change which physical device is used as the X keyboard,
+use the 4mXChangeKeyboardDevice24m function.  The specified
+device must support input class 4mKeys24m (as reported in the
+4mListInputDevices24m request) or the request will fail with a
+4mBadMatch24m error.
+
+__
+|
+int XChangeKeyboardDevice(4mdisplay24m, 4mdevice24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+|__
+
+If no error occurs, 4mXChangeKeyboardDevice24m returns 4mSuccess24m.
+A 4mChangeDeviceNotify24m event with the request field set to
+4mNewKeyboard24m is sent to all clients selecting that event.  A
+4mMappingNotify24m event with the request field set to 4mMap-0m
+4mpingKeyboard24m is sent to all clients.  The requested device
+becomes the X keyboard, and the old keyboard becomes avail-
+able as an extension input device.  The focus state of the
+new keyboard is the same as the focus state of the old X
+keyboard.
+
+4mXChangeKeyboardDevice24m can generate 4mAlreadyGrabbed24m, 4mBadDe-0m
+4mvice24m, 4mBadMatch24m, and 4mGrabFrozen24m errors.
+
+
+To change which physical device is used as the X pointer,
+use the 4mXChangePointerDevice24m function.  The specified device
+must support input class 4mValuators24m (as reported in the
+4mXListInputDevices24m request) and report at least two axes of
+motion, or the request will fail with a 4mBadMatch24m error.  If
+the specified device reports more than two axes, the two
+specified in the xaxis and yaxis arguments will be used.
+Data from other valuators on the device will be ignored.
+
+
+
+
+
+			      1m60m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+If the specified device reports absolute positional informa-
+tion, and the server implementation does not allow such a
+device to be used as the X pointer, the request will fail
+with a 4mBadDevice24m error.
+__
+|
+int XChangePointerDevice(4mdisplay24m, 4mdevice24m, 4mxaxis24m, 4myaxis24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mxaxis24m;
+     int 4myaxis24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mxaxis24m     Specifies the zero-based index of the axis to be
+	  used as the x-axis of the pointer device.
+
+4myaxis24m     Specifies the zero-based index of the axis to be
+	  used as the y-axis of the pointer device.
+|__
+
+If no error occurs, 4mXChangePointerDevice24m returns 4mSuccess24m.  A
+4mChangeDeviceNotify24m event with the request field set to 4mNew-0m
+4mPointer24m is sent to all clients selecting that event.  A 4mMap-0m
+4mpingNotify24m event with the request field set to 4mMapping-0m
+4mPointer24m is sent to all clients.  The requested device
+becomes the X pointer, and the old pointer becomes available
+as an extension input device.
+
+4mXChangePointerDevice24m can generate 4mAlreadyGrabbed24m, 4mBadDevice24m,
+4mBadMatch24m, and 4mGrabFrozen24m errors.
+
+1m2.1.2.  Event Synchronization and Core Grabs0m
+
+Implementation of the input extension requires an extension
+of the meaning of event synchronization for the core grab
+requests.  This is necessary in order to allow window man-
+agers to freeze all input devices with a single request.
+
+The core grab requests require a pointer_mode and key-
+board_mode argument.  The meaning of these modes is changed
+by the input extension.	 For the 4mXGrabPointer24m and 4mXGrabBut-0m
+4mton24m requests, pointer_mode controls synchronization of the
+pointer device, and keyboard_mode controls the synchroniza-
+tion of all other input devices.  For the 4mXGrabKeyboard24m and
+4mXGrabKey24m requests, pointer_mode controls the synchronization
+of all input devices, except the X keyboard, while key-
+board_mode controls the synchronization of the keyboard.
+When using one of the core grab requests, the synchroniza-
+tion of extension devices is controlled by the mode speci-
+fied for the device not being grabbed.
+
+
+
+			      1m70m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+1m2.1.3.  Extension Active Grabs0m
+
+Active grabs of extension devices are supported via the
+4mXGrabDevice24m function in the same way that core devices are
+grabbed using the core 4mXGrabKeyboard24m function, except that
+an extension input device is passed as a function parameter.
+The 4mXUngrabDevice24m function allows a previous active grab for
+an extension device to be released.
+
+Passive grabs of buttons and keys on extension devices are
+supported via the 4mXGrabDeviceButton24m and 4mXGrabDeviceKey24m func-
+tions.	These passive grabs are released via the 4mXUngrabDe-0m
+4mviceKey24m and 4mXUngrabDeviceButton24m functions.
+
+
+To grab an extension device, use the 4mXGrabDevice24m function.
+The device must have previously been opened using the 4mXOpen-0m
+4mDevice24m function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m80m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGrabDevice(4mdisplay24m, 4mdevice24m, 4mgrab_window24m, 4mowner_events24m, 4mevent_count24m, 4mevent_list24m,
+	       4mthis_device_mode24m, 4mother_device_mode24m, 4mtime24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     Window 4mgrab_window24m;
+     Bool 4mowner_events24m;
+     int 4mevent_count24m;
+     XEventClass *4mevent_list24m;
+     int 4mthis_device_mode24m;
+     int 4mother_device_mode24m;
+     Time 4mtime24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mgrab_window0m
+	  Specifies the ID of a window associated with the
+	  device specified above.
+
+4mowner_events0m
+	  Specifies a boolean value of either 4mTrue24m or 4mFalse24m.
+
+4mevent_count0m
+	  Specifies the number of elements in the event_list
+	  array.
+
+4mevent_list0m
+	  Specifies a pointer to a list of event classes
+	  that indicate which events the client wishes to
+	  receive.  These event classes must have been
+	  obtained using the device being grabbed.
+
+4mthis_device_mode0m
+	  Controls further processing of events from this
+	  device.  You can pass one of these constants:
+	  4mGrabModeSync24m or 4mGrabModeAsync24m.
+
+4mother_device_mode0m
+	  Controls further processing of events from all
+	  other devices.  You can pass one of these con-
+	  stants: 4mGrabModeSync24m or 4mGrabModeAsync24m.
+
+4mtime24m      Specifies the time.  This may be either a time-
+	  stamp expressed in milliseconds or 4mCurrentTime24m.
+|__
+
+4mXGrabDevice24m actively grabs an extension input device and
+generates 4mDeviceFocusIn24m and 4mDeviceFocusOut24m events.  Further
+input events from this device are reported only to the grab-
+bing client.  This function overrides any previous active
+grab by this client for this device.
+
+
+
+			      1m90m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+The event_list parameter is a pointer to a list of event
+classes.  This list indicates which events the client wishes
+to receive while the grab is active.  If owner_events is
+4mFalse24m, input events from this device are reported with
+respect to grab_window and are reported only if specified in
+event_list.  If owner_events is 4mTrue24m, then if a generated
+event would normally be reported to this client, it is
+reported normally.  Otherwise, the event is reported with
+respect to the grab_window and is only reported if specified
+in event_list.
+
+The this_device_mode argument controls the further process-
+ing of events from this device, and the other_device_mode
+argument controls the further processing of input events
+from all other devices.
+
+�    If the this_device_mode argument is 4mGrabModeAsync24m,
+     device event processing continues normally; if the
+     device is currently frozen by this client, then pro-
+     cessing of device events is resumed.  If the
+     this_device_mode  argument is 4mGrabModeSync24m, the state
+     of the grabbed device (as seen by client applications)
+     appears to freeze, and no further device events are
+     generated by the server until the grabbing client
+     issues a releasing 4mXAllowDeviceEvents24m call or until the
+     device grab is released.  Actual device input events
+     are not lost while the device is frozen; they are sim-
+     ply queued for later processing.
+
+�    If the other_device_mode is 4mGrabModeAsync24m, event pro-
+     cessing from other input devices is unaffected by acti-
+     vation of the grab.  If other_device_mode is 4mGrabMod-0m
+     4meSync24m, the state of all devices except the grabbed
+     device (as seen by client applications) appears to
+     freeze, and no further events are generated by the
+     server until the grabbing client issues a releasing
+     4mXAllowEvents24m or 4mXAllowDeviceEvents24m call or until the
+     device grab is released.  Actual events are not lost
+     while the other devices are frozen; they are simply
+     queued for later processing.
+
+4mXGrabDevice24m fails on the following conditions:
+
+�    If the device is actively grabbed by some other client,
+     it returns 4mAlreadyGrabbed24m.
+
+�    If grab_window is not viewable, it returns 4mGrabNotView-0m
+     4mable24m.
+
+�    If the specified time is earlier than the last-grab-
+     time for the specified device or later than the current
+     X server time, it returns 4mGrabInvalidTime24m.  Otherwise,
+     the last-grab-time for the specified device is set to
+     the specified time and 4mCurrentTime24m is replaced by the
+
+
+
+			     1m100m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+     current X server time.
+
+�    If the device is frozen by an active grab of another
+     client, it returns 4mGrabFrozen24m.
+
+If a grabbed device is closed by a client while an active
+grab by that client is in effect, that active grab will be
+released.  Any passive grabs established by that client will
+be released.  If the device is frozen only by an active grab
+of the requesting client, it is thawed.
+
+4mXGrabDevice24m can generate 4mBadClass24m, 4mBadDevice24m, 4mBadValue24m, and
+4mBadWindow24m errors.
+
+
+To release a grab of an extension device, use the 4mXUngrabDe-0m
+4mvice24m function.
+
+__
+|
+int XUngrabDevice(4mdisplay24m, 4mdevice24m, 4mtime24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     Time 4mtime24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mtime24m      Specifies the time.  This may be either a time-
+	  stamp expressed in milliseconds, or 4mCurrentTime24m.
+|__
+
+4mXUngrabDevice24m allows a client to release an extension input
+device and any queued events if this client has it grabbed
+from either 4mXGrabDevice24m or 4mXGrabDeviceKey24m.  If any other
+devices are frozen by the grab, 4mXUngrabDevice24m thaws them.
+This function does not release the device and any queued
+events if the specified time is earlier than the last-
+device-grab time or is later than the current X server time.
+It also generates 4mDeviceFocusIn24m and 4mDeviceFocusOut24m events.
+The X server automatically performs an 4mXUngrabDevice24m if the
+event window for an active device grab becomes not viewable
+or if the client terminates without releasing the grab.
+
+4mXUngrabDevice24m can generate 4mBadDevice24m errors.
+
+1m2.1.4.  Passively Grabbing a Key0m
+
+To passively grab a single key on an extension device, use
+4mXGrabDeviceKey24m.  That device must have previously been
+opened using the 4mXOpenDevice24m function, or the request will
+fail with a 4mBadDevice24m error.  If the specified device does
+
+
+
+			     1m110m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+not support input class 4mKeys24m, the request will fail with a
+4mBadMatch24m error.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m120m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGrabDeviceKey(4mdisplay24m, 4mdevice24m, 4mkeycode24m, 4mmodifiers24m, 4mmodifier_device24m, 4mgrab_window24m,
+	   4mowner_events24m, 4mevent_count24m, 4mevent_list24m, 4mthis_device_mode24m, 4mother_device_mode24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mkeycode24m;
+     unsigned int 4mmodifiers24m;
+     XDevice *4mmodifier_device24m;
+     Window 4mgrab_window24m;
+     Bool 4mowner_events24m;
+     int 4mevent_count24m;
+     XEventClass *4mevent_list24m;
+     int 4mthis_device_mode24m;
+     int 4mother_device_mode24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mkeycode24m   Specifies the keycode of the key that is to be
+	  grabbed.  You can pass either the keycode or
+	  4mAnyKey24m.
+
+4mmodifiers24m Specifies the set of keymasks.  This mask is the
+	  bitwise inclusive OR of these keymask bits: 4mShift-0m
+	  4mMask24m, 4mLockMask24m, 4mControlMask24m, 4mMod1Mask24m, 4mMod2Mask24m,
+	  4mMod3Mask24m, 4mMod4Mask24m, and 4mMod5Mask24m.
+
+	  You can also pass 4mAnyModifier24m, which is equivalent
+	  to issuing the grab key request for all possible
+	  modifier combinations (including the combination
+	  of no modifiers).
+
+4mmodifier_device0m
+	  Specifies the device whose modifiers are to be
+	  used.	 If NULL is specified, the core X keyboard
+	  is used as the modifier_device.
+
+4mgrab_window0m
+	  Specifies the ID of a window associated with the
+	  device specified above.
+
+4mowner_events0m
+	  Specifies a boolean value of either 4mTrue24m or 4mFalse24m.
+
+4mevent_count0m
+	  Specifies the number of elements in the event_list
+	  array.
+
+4mevent_list0m
+	  Specifies a pointer to a list of event classes
+	  that indicate which events the client wishes to
+	  receive.
+
+
+
+			     1m130m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+4mthis_device_mode0m
+	  Controls further processing of events from this
+	  device.  You can pass one of these constants:
+	  4mGrabModeSync24m or 4mGrabModeAsync24m.
+
+4mother_device_mode0m
+	  Controls further processing of events from all
+	  other devices.  You can pass one of these con-
+	  stants: 4mGrabModeSync24m or 4mGrabModeAsync24m.
+|__
+
+4mXGrabDeviceKey24m is analogous to the core 4mXGrabKey24m function.
+It creates an explicit passive grab for a key on an exten-
+sion device.  The 4mXGrabDeviceKey24m function establishes a pas-
+sive grab on a device.	Consequently, in the future,
+
+�    IF the device is not grabbed and the specified key,
+     which itself can be a modifier key, is logically
+     pressed when the specified modifier keys logically are
+     down on the specified modifier device (and no other
+     keys are down),
+
+�    AND no other modifier keys logically are down,
+
+�    AND EITHER the grab window is an ancestor of (or is)
+     the focus window or the grab window is a descendent of
+     the focus window and contains the pointer,
+
+�    AND a passive grab on the same device and key combina-
+     tion does not exist on any ancestor of the grab window,
+
+�    THEN the device is actively grabbed, as for 4mXGrabDe-0m
+     4mvice24m, the last-device-grab time is set to the time at
+     which the key was pressed (as transmitted in the
+     4mDeviceKeyPress24m event), and the 4mDeviceKeyPress24m event is
+     reported.
+
+The interpretation of the remaining arguments is as for
+4mXGrabDevice24m.  The active grab is terminated automatically
+when the logical state of the device has the specified key
+released (independent of the logical state of the modifier
+keys).
+
+Note that the logical state of a device (as seen by means of
+the X protocol) may lag the physical state if device event
+processing is frozen.
+
+A modifier of 4mAnyModifier24m is equivalent to issuing the
+request for all possible modifier combinations (including
+the combination of no modifiers).  It is not required that
+all modifiers specified have currently assigned keycodes.  A
+key of 4mAnyKey24m is equivalent to issuing the request for all
+possible keycodes.  Otherwise, the key must be in the range
+specified by min_keycode and max_keycode in the information
+
+
+
+			     1m140m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+returned by the 4mXListInputDevices24m function.  If it is not
+within that range, 4mXGrabDeviceKey24m generates a 4mBadValue0m
+error.
+
+4mXGrabDeviceKey24m generates a 4mBadAccess24m error if some other
+client has issued a 4mXGrabDeviceKey24m with the same device and
+key combination on the same window.  When using 4mAnyModifier0m
+or 4mAnyKey24m, the request fails completely and the X server
+generates a 4mBadAccess24m error, and no grabs are established if
+there is a conflicting grab for any combination.
+
+4mXGrabDeviceKey24m returns 4mSuccess24m upon successful completion of
+the request.
+
+4mXGrabDeviceKey24m can generate 4mBadAccess24m, 4mBadClass24m, 4mBadDevice24m,
+4mBadMatch24m, 4mBadValue24m, and 4mBadWindow24m errors.
+
+
+To release a passive grab of a single key on an extension
+device, use 4mXUngrabDeviceKey24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m150m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XUngrabDeviceKey(4mdisplay24m, 4mdevice24m, 4mkeycode24m, 4mmodifiers24m, 4mmodifier_device24m, 4mungrab_window24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mkeycode24m;
+     unsigned int 4mmodifiers24m;
+     XDevice *4mmodifier_device24m;
+     Window 4mungrab_window24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mkeycode24m   Specifies the keycode of the key that is to be
+	  ungrabbed.  You can pass either the keycode or
+	  4mAnyKey24m.
+
+4mmodifiers24m Specifies the set of keymasks.  This mask is the
+	  bitwise inclusive OR of these keymask bits: 4mShift-0m
+	  4mMask24m, 4mLockMask24m, 4mControlMask24m, 4mMod1Mask24m, 4mMod2Mask24m,
+	  4mMod3Mask24m, 4mMod4Mask24m, and 4mMod5Mask24m.
+
+	  You can also pass 4mAnyModifier24m, which is equivalent
+	  to issuing the ungrab key request for all possible
+	  modifier combinations (including the combination
+	  of no modifiers).
+
+4mmodifier_device0m
+	       Specifies the device whose modifiers are to
+	       be used.	 If NULL is specified, the core X
+	       keyboard is used as the modifier_device.
+
+4mungrab_window24m  Specifies the ID of a window associated with
+	       the device specified above.
+|__
+
+4mXUngrabDeviceKey24m is analogous to the core 4mXUngrabKey24m func-
+tion.  It releases an explicit passive grab for a key on an
+extension input device.
+
+4mXUngrabDeviceKey24m can generate 4mBadAlloc24m, 4mBadDevice24m, 4mBadMatch24m,
+4mBadValue24m, and 4mBadWindow24m errors.
+
+1m2.1.5.  Passively Grabbing a Button0m
+
+To establish a passive grab for a single button on an exten-
+sion device, use 4mXGrabDeviceButton24m.  The specified device
+must have previously been opened using the 4mXOpenDevice24m func-
+tion, or the request will fail with a 4mBadDevice24m error.  If
+the specified device does not support input class 4mButtons24m,
+the request will fail with a 4mBadMatch24m error.
+
+
+
+
+
+			     1m160m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGrabDeviceButton(4mdisplay24m, 4mdevice24m, 4mbutton24m, 4mmodifiers24m, 4mmodifier_device24m , 4mgrab_window24m,
+		 4mowner_events24m, 4mevent_count24m, 4mevent_list24m, 4mthis_device_mode24m, 4mother_device_mode24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     unsigned int 4mbutton24m;
+     unsigned int 4mmodifiers24m;
+     XDevice *4mmodifier_device24m ;
+     Window 4mgrab_window24m;
+     Bool 4mowner_events24m;
+     int 4mevent_count24m;
+     XEventClass *4mevent_list24m;
+     int 4mthis_device_mode24m;
+     int 4mother_device_mode24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mbutton24m    Specifies the code of the button that is to be
+	  grabbed.  You can pass either the button or 4mAny-0m
+	  4mButton24m.
+
+4mmodifiers24m Specifies the set of keymasks.  This mask is the
+	  bitwise inclusive OR of these keymask bits: 4mShift-0m
+	  4mMask24m, 4mLockMask24m, 4mControlMask24m, 4mMod1Mask24m, 4mMod2Mask24m,
+	  4mMod3Mask24m, 4mMod4Mask24m, and 4mMod5Mask24m.
+
+	  You can also pass 4mAnyModifier24m, which is equivalent
+	  to issuing the grab request for all possible modi-
+	  fier combinations (including the combination of no
+	  modifiers).
+
+4mmodifier_device0m
+	  Specifies the device whose modifiers are to be
+	  used.	 If NULL is specified, the core X keyboard
+	  is used as the modifier_device.
+
+4mgrab_window0m
+	  Specifies the ID of a window associated with the
+	  device specified above.
+
+4mowner_events0m
+	  Specifies a boolean value of either 4mTrue24m or 4mFalse24m.
+
+4mevent_count0m
+	  Specifies the number of elements in the event_list
+	  array.
+
+4mevent_list0m
+	  Specifies a list of event classes that indicates
+	  which device events are to be reported to the
+	  client.
+
+
+
+			     1m170m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+4mthis_device_mode0m
+	  Controls further processing of events from this
+	  device.  You can pass one of these constants:
+	  4mGrabModeSync24m or 4mGrabModeAsync24m.
+
+4mother_device_mode0m
+	  Controls further processing of events from all
+	  other devices.  You can pass one of these con-
+	  stants: 4mGrabModeSync24m or 4mGrabModeAsync24m.
+|__
+
+4mXGrabDeviceButton24m is analogous to the core 4mXGrabButton24m func-
+tion.  It creates an explicit passive grab for a button on
+an extension input device.  Because the server does not
+track extension devices, no cursor is specified with this
+request.  For the same reason, there is no confine_to param-
+eter.  The device must have previously been opened using the
+4mXOpenDevice24m function.
+
+The 4mXGrabDeviceButton24m function establishes a passive grab on
+a device.  Consequently, in the future,
+
+�    IF the device is not grabbed and the specified button
+     is logically pressed when the specified modifier keys
+     logically are down (and no other buttons or modifier
+     keys are down),
+
+�    AND EITHER the grab window is an ancestor of (or is)
+     the focus window OR the grab window is a descendent of
+     the focus window and contains the pointer,
+
+�    AND a passive grab on the same device and button/key
+     combination does not exist on any ancestor of the grab
+     window,
+
+�    THEN the device is actively grabbed, as for 4mXGrabDe-0m
+     4mvice24m, the last-grab time is set to the time at which
+     the button was pressed (as transmitted in the 4mDevice-0m
+     4mButtonPress24m event), and the 4mDeviceButtonPress24m event is
+     reported.
+
+The interpretation of the remaining arguments is as for
+4mXGrabDevice24m.  The active grab is terminated automatically
+when logical state of the device has all buttons released
+(independent of the logical state of the modifier keys).
+
+Note that the logical state of a device (as seen by means of
+the X protocol) may lag the physical state if device event
+processing is frozen.
+
+A modifier of 4mAnyModifier24m is equivalent to issuing the
+request for all possible modifier combinations (including
+the combination of no modifiers).  It is not required that
+all modifiers specified have currently assigned keycodes.  A
+
+
+
+			     1m180m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+button of 4mAnyButton24m is equivalent to issuing the request for
+all possible buttons.  Otherwise, it is not required that
+the specified button be assigned to a physical button.
+
+4mXGrabDeviceButton24m generates a 4mBadAccess24m error if some other
+client has issued a 4mXGrabDeviceButton24m with the same device
+and button combination on the same window.  When using 4mAny-0m
+4mModifier24m or 4mAnyButton24m, the request fails completely and the
+X server generates a 4mBadAccess24m error and no grabs are estab-
+lished if there is a conflicting grab for any combination.
+
+4mXGrabDeviceButton24m can generate 4mBadAccess24m, 4mBadClass24m, 4mBadDe-0m
+4mvice24m, 4mBadMatch24m, 4mBadValue24m, and 4mBadWindow24m errors.
+
+
+To release a passive grab of a button on an extension
+device, use 4mXUngrabDeviceButton24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m190m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XUngrabDeviceButton(4mdisplay24m, 4mdevice24m, 4mbutton24m, 4mmodifiers24m, 4mmodifier_device24m, 4mungrab_window24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     unsigned int 4mbutton24m;
+     unsigned int 4mmodifiers24m;
+     XDevice *4mmodifier_device24m;
+     Window 4mungrab_window24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mbutton24m    Specifies the code of the button that is to be
+	  ungrabbed.  You can pass either a button or 4mAny-0m
+	  4mButton24m.
+
+4mmodifiers24m Specifies the set of keymasks.  This mask is the
+	  bitwise inclusive OR of these keymask bits: 4mShift-0m
+	  4mMask24m, 4mLockMask24m, 4mControlMask24m, 4mMod1Mask24m, 4mMod2Mask24m,
+	  4mMod3Mask24m, 4mMod4Mask24m, and 4mMod5Mask24m.
+
+	  You can also pass 4mAnyModifier24m, which is equivalent
+	  to issuing the ungrab key request for all possible
+	  modifier combinations (including the combination
+	  of no modifiers).
+
+4mmodifier_device0m
+	  Specifies the device whose modifiers are to be
+	  used.	 If NULL is specified, the core X keyboard
+	  is used as the modifier_device.
+
+4mungrab_window0m
+	  Specifies the ID of a window associated with the
+	  device specified above.
+|__
+
+4mXUngrabDeviceButton24m is analogous to the core 4mXUngrabButton0m
+function.  It releases an explicit passive grab for a button
+on an extension device.	 That device must have previously
+been opened using the 4mXOpenDevice24m function, or a 4mBadDevice0m
+error will result.
+
+A modifier of 4mAnyModifier24m is equivalent to issuing the
+request for all possible modifier combinations (including
+the combination of no modifiers).
+
+4mXUngrabDeviceButton24m can generate 4mBadAlloc24m, 4mBadDevice24m, 4mBad-0m
+4mMatch24m, 4mBadValue24m, and 4mBadWindow24m errors.
+
+
+
+
+
+
+
+			     1m200m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+1m2.1.6.  Thawing a Device0m
+
+To allow further events to be processed when a device has
+been frozen, use 4mXAllowDeviceEvents24m.
+__
+|
+int XAllowDeviceEvents(4mdisplay24m, 4mdevice24m, 4mevent_mode24m, 4mtime24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mevent_mode24m;
+     Time 4mtime24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mevent_mode0m
+	  Specifies the event mode.  You can pass one of
+	  these constants: 4mAsyncThisDevice24m, 4mSyncThisDevice24m,
+	  4mAsyncOtherDevices24m, 4mReplayThisDevice24m, 4mAsyncAll24m, or
+	  4mSyncAll24m.
+
+4mtime24m      Specifies the time.  This may be either a time-
+	  stamp expressed in milliseconds, or 4mCurrentTime24m.
+|__
+
+4mXAllowDeviceEvents24m releases some queued events if the client
+has caused a device to freeze.	It has no effect if the
+specified time is earlier than the last-grab time of the
+most recent active grab for the client and device, or if the
+specified time is later than the current X server time.	 The
+following describes the processing that occurs depending on
+what constant you pass to the event_mode argument:
+
+�    4mAsyncThisDevice0m
+
+     If the specified device is frozen by the client, event
+     processing for that continues as usual.  If the device
+     is frozen multiple times by the client on behalf of
+     multiple separate grabs, 4mAsyncThisDevice24m thaws for all.
+     4mAsyncThisDevice24m has no effect if the specified device
+     is not frozen by the client, but the device need not be
+     grabbed by the client.
+
+�    4mSyncThisDevice0m
+
+     If the specified device is frozen and actively grabbed
+     by the client, event processing for that device contin-
+     ues normally until the next key or button event is
+     reported to the client.  At this time, the specified
+     device again appears to freeze.  However, if the
+     reported event causes the grab to be released, the
+     specified device does not freeze.	4mSyncThisDevice24m has
+
+
+
+			     1m210m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+     no effect if the specified device is not frozen by the
+     client or is not grabbed by the client.
+
+�    4mReplayThisDevice0m
+
+     If the specified device is actively grabbed by the
+     client and is frozen as the result of an event having
+     been sent to the client (either from the activation of
+     a 4mGrabDeviceButton24m or from a previous 4mAllowDeviceEvents0m
+     with mode 4mSyncThisDevice24m, but not from a 4mGrab24m), the
+     grab is released and that event is completely repro-
+     cessed.  This time, however, the request ignores any
+     passive grabs at or above (toward the root) the grab-
+     window of the grab just released.	The request has no
+     effect if the specified device is not grabbed by the
+     client or if it is not frozen as the result of an
+     event.
+
+�    4mAsyncOtherDevices0m
+
+     If the remaining devices are frozen by the client,
+     event processing for them continues as usual.  If the
+     other devices are frozen multiple times  by the client
+     on behalf of multiple separate grabs, 4mAsyncOtherDevices0m
+     ``thaws'' for all.	 4mAsyncOtherDevices24m has no effect if
+     the devices are not frozen by the client, but those
+     devices need not be grabbed by the client.
+
+�    4mSyncAll0m
+
+     If all devices are frozen by the client, event process-
+     ing (for all devices) continues normally until the next
+     button or key event is reported to the client for a
+     grabbed device, at which time the devices again appear
+     to freeze.	 However, if the reported event causes the
+     grab to be released, then the devices do not freeze
+     (but if any device is still grabbed, then a subsequent
+     event for it will still cause all devices to freeze).
+     4mSyncAll24m has no effect unless all devices are frozen by
+     the client.  If any device is frozen twice by the
+     client on behalf of two separate grabs, 4mSyncAll24m "thaws"
+     for both (but a subsequent freeze for 4mSyncAll24m will
+     freeze each device only once).
+
+�    4mAsyncAll0m
+
+     If all devices are frozen by the client, event process-
+     ing (for all devices) continues normally.	If any
+     device is frozen multiple times by the client on behalf
+     of multiple separate grabs, 4mAsyncAll24m ``thaws ''for all.
+     If any device is frozen twice by the client on behalf
+     of two separate grabs, 4mAsyncAll24m ``thaws'' for both.
+     4mAsyncAll24m has no effect unless all devices are frozen by
+     the client.
+
+
+
+			     1m220m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+4mAsyncThisDevice24m, 4mSyncThisDevice24m, and 4mReplayThisDevice24m have
+no effect on the processing of events from the remaining
+devices.  4mAsyncOtherDevices24m has no effect on the processing
+of events from the specified device.  When the event_mode is
+4mSyncAll24m or 4mAsyncAll24m, the device parameter is ignored.
+
+It is possible for several grabs of different devices (by
+the same or different clients) to be active simultaneously.
+If a device is frozen on behalf of any grab, no event pro-
+cessing is performed for the device.  It is possible for a
+single device to be frozen because of several grabs.  In
+this case, the freeze must be released on behalf of each
+grab before events can again be processed.
+
+4mXAllowDeviceEvents24m can generate 4mBadDevice24m and 4mBadValue0m
+errors.
+
+1m2.1.7.  Controlling Device Focus0m
+
+The current focus window for an extension input device can
+be determined using the 4mXGetDeviceFocus24m function.	Extension
+devices are focused using the 4mXSetDeviceFocus24m function in
+the same way that the keyboard is focused using the core
+4mXSetInputFocus24m function, except that a device ID is passed
+as a function parameter.  One additional focus state, 4mFol-0m
+4mlowKeyboard24m, is provided for extension devices.
+
+To get the current focus state, revert state, and focus time
+of an extension device, use 4mXGetDeviceFocus24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m230m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGetDeviceFocus(4mdisplay24m, 4mdevice24m, 4mfocus_return24m, 4mrevert_to_return24m, 4mfocus_time_return24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     Window *4mfocus_return24m;
+     int *4mrevert_to_return24m;
+     Time *4mfocus_time_return24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mfocus_return0m
+	  Specifies the address of a variable into which the
+	  server can return the ID of the window that con-
+	  tains the device focus or one of the constants
+	  4mNone24m, 4mPointerRoot24m, or 4mFollowKeyboard24m.
+
+4mrevert_to_return0m
+	  Specifies the address of a variable into which the
+	  server can return the current revert_to status for
+	  the device.
+
+4mfocus_time_return0m
+	  Specifies the address of a variable into which the
+	  server can return the focus time last set for the
+	  device.
+|__
+
+4mXGetDeviceFocus24m returns the focus state, the revert-to
+state, and the last-focus-time for an extension input
+device.
+
+4mXGetDeviceFocus24m can generate 4mBadDevice24m and 4mBadMatch24m errors.
+
+
+To set the focus of an extension device, use 4mXSetDeviceFo-0m
+4mcus24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m240m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSetDeviceFocus(4mdisplay24m, 4mdevice24m, 4mfocus24m, 4mrevert_to24m, 4mtime24m)
+    Display *4mdisplay24m;
+    XDevice *4mdevice24m;
+    Window 4mfocus24m;
+    int 4mrevert_to24m;
+    Time 4mtime24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mfocus24m     Specifies the ID of the window to which the
+	  device's focus should be set.	 This may be a win-
+	  dow ID, or 4mPointerRoot24m, 4mFollowKeyboard24m, or 4mNone24m.
+
+4mrevert_to24m Specifies to which window the focus of the device
+	  should revert if the focus window becomes not
+	  viewable.  One of the following constants may be
+	  passed: 4mRevertToParent24m, 4mRevertToPointerRoot24m,
+	  4mRevertToNone24m, or 4mRevertToFollowKeyboard24m.
+
+4mtime24m      Specifies the time.  You can pass either a time-
+	  stamp, expressed in milliseconds, or 4mCurrentTime24m.
+|__
+
+4mXSetDeviceFocus24m changes the focus for an extension input
+device and the last-focus-change-time.	It has no effect if
+the specified time is earlier than the last-focus-change-
+time or is later than the current X server time.  Otherwise,
+the last-focus-change-time is set to the specified time.
+This function causes the X server to generate 4mDeviceFocusIn0m
+and 4mDeviceFocusOut24m events.
+
+The action taken by the server when this function is
+requested depends on the value of the focus argument:
+
+�    If the focus argument is 4mNone24m, all input events from
+     this device will be discarded until a new focus window
+     is set.  In this case, the revert_to argument is
+     ignored.
+
+�    If the focus argument is a window ID, it becomes the
+     focus window of the device.  If an input event from the
+     device would normally be reported to this window or to
+     one of its inferiors, the event is reported normally.
+     Otherwise, the event is reported relative to the focus
+     window.
+
+�    If the focus argument is 4mPointerRoot24m, the focus window
+     is dynamically taken to be the root window of whatever
+     screen the pointer is on at each input event.  In this
+     case, the revert_to argument is ignored.
+
+
+
+			     1m250m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    If the focus argument is 4mFollowKeyboard24m, the focus win-
+     dow is dynamically taken to be the same as the focus of
+     the X keyboard at each input event.
+
+The specified focus window must be viewable at the time
+4mXSetDeviceFocus24m is called.	 Otherwise, it generates a 4mBad-0m
+4mMatch24m error.  If the focus window later becomes not view-
+able, the X server evaluates the revert_to argument to
+determine the new focus window.
+
+�    If the revert_to argument is 4mRevertToParent24m, the focus
+     reverts to the parent (or the closest viewable ances-
+     tor), and the new revert_to value is taken to be
+     4mRevertToNone24m.
+
+�    If the revert_to argument is 4mRevertToPointerRoot24m,
+     4mRevertToFollowKeyboard24m, or 4mRevertToNone24m, the focus
+     reverts to that value.
+
+When the focus reverts, the X server generates 4mDeviceFocusIn0m
+and 4mDeviceFocusOut24m events, but the last-focus-change time is
+not affected.
+
+4mXSetDeviceFocus24m can generate 4mBadDevice24m, 4mBadMatch24m, 4mBadValue24m,
+and 4mBadWindow24m errors.
+
+1m2.1.8.  Controlling Device Feedback0m
+
+To determine the current feedback settings of an extension
+input device, use 4mXGetFeedbackControl24m.
+__
+|
+XFeedbackState * XGetFeedbackControl(4mdisplay24m, 4mdevice24m, 4mnum_feedbacks_return24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int *4mnum_feedbacks_return24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mnum_feedbacks_return0m
+	  Returns the number of feedbacks supported by the
+	  device.
+|__
+
+4mXGetFeedbackControl24m returns a list of 4mFeedbackState24m struc-
+tures that describe the feedbacks supported by the specified
+device.	 There is an 4mXFeedbackState24m structure for each class
+of feedback.  These are of variable length, but the first
+three members are common to all.
+
+
+
+
+
+			     1m260m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+} XFeedbackState;
+
+|__
+
+The common members are as follows:
+
+�    The class member identifies the class of feedback.	 It
+     may be compared to constants defined in the file
+     <4mX11/extensions/XI.h24m>.  Currently defined feedback con-
+     stants include: 4mKbdFeedbackClass24m, 4mPtrFeedbackClass24m,
+     4mStringFeedbackClass24m, 4mIntegerFeedbackClass24m, 4mLedFeedback-0m
+     4mClass24m, and 4mBellFeedbackClass24m.
+
+�    The length member specifies the length of the 4mFeedback-0m
+     4mState24m structure and can be used by clients to traverse
+     the list.
+
+�    The id member uniquely identifies a feedback for a
+     given device and class.  This allows a device to sup-
+     port more than one feedback of the same class.  Other
+     feedbacks of other classes or devices may have the same
+     ID.
+
+
+Those feedbacks equivalent to those supported by the core
+keyboard are reported in class 4mKbdFeedback24m using the 4mXKbd-0m
+4mFeedbackState24m structure, which is defined as follows:
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int click;
+     int percent;
+     int pitch;
+     int duration;
+     int led_mask;
+     int global_auto_repeat;
+     char auto_repeats[32];
+} XKbdFeedbackState;
+
+|__
+
+The additional members of the 4mXKbdFeedbackState24m structure
+report the current state of the feedback:
+
+
+
+
+
+			     1m270m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    The click member specifies the key-click volume and has
+     a value in the range 0 (off) to 100 (loud).
+
+�    The percent member specifies the bell volume and has a
+     value in the range 0 (off) to 100 (loud).
+
+�    The pitch member specifies the bell pitch in Hz. The
+     range of the value is implementation-dependent.
+
+�    The duration member specifies the duration in millisec-
+     onds of the bell.
+
+�    The led_mask member is a bit mask that describes the
+     current state of up to 32 LEDs.  A value of 1 in a bit
+     indicates that the corresponding LED is on.
+
+�    The global_auto_repeat member has a value of 4mAutoRe-0m
+     4mpeatModeOn24m or 4mAutoRepeatModeOff24m.
+
+�    The auto_repeats member is a bit vector.  Each bit set
+     to 1 indicates that auto-repeat is enabled for the cor-
+     responding key.  The vector is represented as 32 bytes.
+     Byte N (from 0) contains the bits for keys 8N to 8N +
+     7, with the least significant bit in the byte repre-
+     senting key 8N.
+
+
+Those feedbacks equivalent to those supported by the core
+pointer are reported in class 4mPtrFeedback24m using the 4mXPtr-0m
+4mFeedbackState24m structure, which is defined as follows:
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int accelNum;
+     int accelDenom;
+     int threshold;
+} XPtrFeedbackState;
+
+|__
+
+The additional members of the 4mXPtrFeedbackState24m structure
+report the current state of the feedback:
+
+�    The accelNum member returns the numerator for the
+     acceleration multiplier.
+
+�    The accelDenom member returns the denominator for the
+     acceleration multiplier.
+
+
+
+
+
+			     1m280m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    The accelDenom member returns the threshold for the
+     acceleration.
+
+
+Integer feedbacks are those capable of displaying integer
+numbers and reported via the 4mXIntegerFeedbackState24m struc-
+ture.  The minimum and maximum values that they can display
+are reported.
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int resolution;
+     int minVal;
+     int maxVal;
+} XIntegerFeedbackState;
+
+|__
+
+The additional members of the 4mXIntegerFeedbackState24m struc-
+ture report the capabilities of the feedback:
+
+�    The resolution member specifies the number of digits
+     that the feedback can display.
+
+�    The minVal member specifies the minimum value that the
+     feedback can display.
+
+�    The maxVal specifies the maximum value that the feed-
+     back can display.
+
+
+String feedbacks are those that can display character infor-
+mation and are reported via the 4mXStringFeedbackState24m struc-
+ture.  Clients set these feedbacks by passing a list of
+4mKeySyms24m to be displayed.  The 4mXGetFeedbackControl24m function
+returns the set of key symbols that the feedback can dis-
+play, as well as the maximum number of symbols that can be
+displayed.  The 4mXStringFeedbackState24m structure is defined as
+follows:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m290m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int max_symbols;
+     int  num_syms_supported;
+     KeySym *syms_supported;
+} XStringFeedbackState;
+
+|__
+
+The additional members of the 4mXStringFeedbackState24m structure
+report the capabilities of the feedback:
+
+�    The max_symbols member specifies the maximum number of
+     symbols that can be displayed.
+
+�    The syms_supported member is a pointer to the list of
+     supported symbols.
+
+�    The num_syms_supported member specifies the length of
+     the list of supported symbols.
+
+
+Bell feedbacks are those that can generate a sound and are
+reported via the 4mXBellFeedbackState24m structure.  Some imple-
+mentations may support a bell as part of a 4mKbdFeedback24m feed-
+back.  Class 4mBellFeedback24m is provided for implementations
+that do not choose to do so and for devices that support
+multiple feedbacks that can produce sound.  The meaning of
+the members is the same as that of the corresponding fields
+in the 4mXKbdFeedbackState24m structure.
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int percent;
+     int pitch;
+     int duration;
+} XBellFeedbackState;
+
+|__
+
+Led feedbacks are those that can generate a light and are
+reported via the 4mXLedFeedbackState24m structure.  Up to 32
+lights per feedback are supported.  Each bit in led_mask
+corresponds to one supported light, and the corresponding
+bit in led_values indicates whether that light is currently
+on (1) or off (0).  Some implementations may support leds as
+part of a 4mKbdFeedback24m feedback.  Class 4mLedFeedback24m is
+
+
+
+			     1m300m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+provided for implementations that do not choose to do so and
+for devices that support multiple led feedbacks.
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     Mask led_values;
+     Mask led_mask;
+} XLedFeedbackState;
+
+|__
+
+4mXGetFeedbackControl24m can generate 4mBadDevice24m and 4mBadMatch0m
+errors.
+
+
+To free the information returned by the 4mXGetFeedbackControl0m
+function, use 4mXFreeFeedbackList24m.
+__
+|
+void XFreeFeedbackList(4mlist24m)
+     XFeedbackState *4mlist24m;
+
+
+4mlist24m      Specifies the pointer to the 4mXFeedbackState24m struc-
+	  ture returned by a previous call to 4mXGetFeedback-0m
+	  4mControl24m.
+|__
+
+4mXFreeFeedbackList24m frees the list of feedback control infor-
+mation.
+
+
+To change the settings of a feedback on an extension device,
+use 4mXChangeFeedbackControl24m.  This function modifies the cur-
+rent control values of the specified feedback using informa-
+tion passed in the appropriate 4mXFeedbackControl24m structure
+for the feedback.  Which values are modified depends on the
+valuemask passed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m310m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XChangeFeedbackControl(4mdisplay24m, 4mdevice24m, 4mvaluemask24m, 4mvalue24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     unsigned long 4mvaluemask24m;
+     XFeedbackControl *4mvalue24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mvaluemask24m Specifies one value for each bit in the mask
+	  (least to most significant bit).  The values are
+	  associated with the feedbacks for the specified
+	  device.
+
+4mvalue24m     Specifies a pointer to the 4mXFeedbackControl24m struc-
+	  ture.
+|__
+
+4mXChangeFeedbackControl24m controls the device characteristics
+described by the 4mXFeedbackControl24m structure.  There is an
+4mXFeedbackControl24m structure for each class of feedback.
+These are of variable length, but the first three members
+are common to all and are as follows:
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+} XFeedbackControl;
+
+|__
+
+Feedback class 4mKbdFeedback24m controls feedbacks equivalent to
+those provided by the core keyboard using the 4mKbdFeedback-0m
+4mControl24m structure, which is defined as follows:.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m320m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int click;
+     int percent;
+     int pitch;
+     int duration;
+     int led_mask;
+     int led_value;
+     int key;
+     int auto_repeat_mode;
+} XKbdFeedbackControl;
+
+|__
+
+This class controls the device characteristics described by
+the 4mXKbdFeedbackControl24m structure.	 These include the
+key_click_percent, global_auto_repeat, and individual key
+auto-repeat.  Valid modes are 4mAutoRepeatModeOn24m, 4mAutoRepeat-0m
+4mModeOff24m, and 4mAutoRepeatModeDefault24m.
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvKeyClickPercent24m	   (1L <<
+				      0)
+#define	  4mDvPercent24m		   (1L <<
+				      1)
+#define	  4mDvPitch24m			   (1L <<
+				      2)
+#define	  4mDvDuration24m		   (1L <<
+				      3)
+#define	  4mDvLed24m			   (1L <<
+				      4)
+#define	  4mDvLedMode24m		   (1L <<
+				      5)
+#define	  4mDvKey24m			   (1L <<
+				      6)
+#define	  4mDvAutoRepeatMode24m		   (1L <<
+				      7)
+|__
+
+
+Feedback class 4mPtrFeedback24m controls feedbacks equivalent to
+those provided by the core pointer using the 4mPtrFeedbackCon-0m
+4mtrol24m structure, which is defined as follows:
+
+
+
+
+
+
+
+
+			     1m330m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int accelNum;
+     int accelDenom;
+     int threshold;
+} XPtrFeedbackControl;
+
+|__
+
+Which values are modified depends on the valuemask passed.
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvAccelnum24m		   (1L <<
+				      0)
+#define	  4mDvAccelDenom24m		   (1L <<
+				      1)
+#define	  4mDvThreshold24m		   (1L <<
+				      2)
+
+|__
+
+The acceleration, expressed as a fraction, is a multiplier
+for movement.  For example, specifying 3/1 means that the
+device moves three times as fast as normal.  The fraction
+may be rounded arbitrarily by the X server.  Acceleration
+takes effect only if the device moves more than threshold
+pixels at once and applies only to the amount beyond the
+value in the threshold argument.  Setting a value to -1
+restores the default.  The values of the accelNumerator and
+threshold fields must be nonzero for the pointer values to
+be set.	 Otherwise, the parameters will be unchanged.  Nega-
+tive values generate a 4mBadValue24m error, as does a zero value
+for the accelDenominator field.
+
+This request fails with a 4mBadMatch24m error if the specified
+device is not currently reporting relative motion.  If a
+device that is capable of reporting both relative and abso-
+lute motion has its mode changed from 4mRelative24m to 4mAbsolute0m
+by an 4mXSetDeviceMode24m request, valuator control values will
+be ignored by the server while the device is in that mode.
+
+Feedback class 4mIntegerFeedback24m controls integer feedbacks
+displayed on input devices and are reported via the 4mInte-0m
+4mgerFeedbackControl24m structure, which is defined as follows:
+
+
+
+
+
+
+
+			     1m340m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int int_to_display;
+} XIntegerFeedbackControl;
+
+|__
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvInteger24m		   (1L <<
+				      0)
+
+|__
+
+Feedback class 4mStringFeedback24m controls string feedbacks dis-
+played on input devices and reported via the 4mStringFeedback-0m
+4mControl24m structure, which is defined as follows:
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int num_keysyms;
+     KeySym *syms_to_display;
+} XStringFeedbackControl;
+
+|__
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvString24m			   (1L <<
+				      0)
+
+|__
+
+Feedback class 4mBellFeedback24m controls a bell on an input
+device and is reported via the 4mBellFeedbackControl24m struc-
+ture, which is defined as follows:
+
+
+
+
+
+
+
+
+
+
+			     1m350m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int percent;
+     int pitch;
+     int duration;
+} XBellFeedbackControl;
+
+|__
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvPercent24m		   (1L <<
+				      1)
+#define	  4mDvPitch24m			   (1L <<
+				      2)
+#define	  4mDvDuration24m		   (1L <<
+				      3)
+
+|__
+
+Feedback class 4mLedFeedback24m controls lights on an input
+device and are reported via the 4mLedFeedbackControl24m struc-
+ture, which is defined as follows:
+
+__
+|
+typedef struct {
+     XID class;
+     int length;
+     XID id;
+     int led_mask;
+     int led_values;
+} XLedFeedbackControl;
+
+|__
+
+Valid masks are as follows:
+__
+|
+
+#define	  4mDvLed24m			   (1L <<
+				      4)
+#define	  4mDvLedMode24m		   (1L <<
+				      5)
+
+|__
+
+4mXChangeFeedbackControl24m can generate 4mBadDevice24m, 4mBadFeedBack24m,
+4mBadMatch24m, and 4mBadValue24m errors.
+
+
+
+			     1m360m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+1m2.1.9.  Ringing a Bell on an Input Device0m
+
+To ring a bell on an extension input device, use 4mXDevice-0m
+4mBell24m.
+__
+|
+int XDeviceBell(4mdisplay24m, 4mdevice24m, 4mfeedbackclass24m, 4mfeedbackid24m, 4mpercent24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     XID 4mfeedbackclass24m, 4mfeedbackid24m;
+     int 4mpercent24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mfeedbackclass0m
+	  Specifies the feedbackclass.	Valid values are
+	  4mKbdFeedbackClass24m and 4mBellFeedbackClass24m.
+
+4mfeedbackid0m
+	  Specifies the ID of the feedback that has the
+	  bell.
+
+4mpercent24m   Specifies the volume in the range -100 (quiet) to
+	  100 percent (loud).
+|__
+
+4mXDeviceBell24m is analogous to the core 4mXBell24m function.	It
+rings the specified bell on the specified input device feed-
+back, using the specified volume.  The specified volume is
+relative to the base volume for the feedback.  If the value
+for the percent argument is not in the range -100 to 100
+inclusive, a 4mBadValue24m error results.  The volume at which
+the bell rings when the percent argument is nonnegative is:
+
+
+	    base - [(base * percent) / 100] + percent
+
+
+The volume at which the bell rings when the percent argument
+is negative is:
+
+
+	    base + [(base * percent) / 100]
+
+
+To change the base volume of the bell, use 4mXChangeFeedback-0m
+4mControl24m.
+
+4mXDeviceBell24m can generate 4mBadDevice24m and 4mBadValue24m errors.
+
+
+
+
+
+			     1m370m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+1m2.1.10.  Controlling Device Encoding0m
+
+To get the key mapping of an extension device that supports
+input class 4mKeys24m, use 4mXGetDeviceKeyMapping24m.
+__
+|
+KeySym * XGetDeviceKeyMapping(4mdisplay24m, 4mdevice24m, 4mfirst_keycode_wanted24m, 4mkeycode_count24m,
+		     4mkeysyms_per_keycode_return24m)
+      Display *4mdisplay24m;
+      XDevice *4mdevice24m;
+      KeyCode 4mfirst_keycode_wanted24m;
+      int 4mkeycode_count24m;
+      int *4mkeysyms_per_keycode_return24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mfirst_keycode_wanted0m
+	  Specifies the first keycode that is to be
+	  returned.
+
+4mkeycode_count0m
+	  Specifies the number of keycodes that are to be
+	  returned.
+
+4mkeysyms_per_keycode_return0m
+	  Returns the number of keysyms per keycode.
+|__
+
+4mXGetDeviceKeyMapping24m is analogous to the core 4mXGetKey-0m
+4mboardMapping24m function.  It returns the symbols for the spec-
+ified number of keycodes for the specified extension device.
+
+4mXGetDeviceKeyMapping24m returns the symbols for the specified
+number of keycodes for the specified extension device,
+starting with the specified keycode.  The first_key-
+code_wanted must be greater than or equal to min-keycode as
+returned by the 4mXListInputDevices24m request (else a 4mBadValue0m
+error results). The following value:
+
+     first_keycode_wanted + keycode_count - 1
+
+
+must be less than or equal to max-keycode as returned by the
+4mXListInputDevices24m request (else a 4mBadValue24m error results).
+
+The number of elements in the keysyms list is as follows:
+
+     keycode_count * keysyms_per_keycode_return
+
+And KEYSYM number N (counting from zero) for keycode K has
+an index (counting from zero), in keysyms, of the following:
+
+
+
+			     1m380m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+     (K - first_keycode_wanted) * keysyms_per_keycode_return + N
+
+
+The keysyms_per_keycode_return value is chosen arbitrarily
+by the server to be large enough to report all requested
+symbols.  A special KEYSYM value of 4mNoSymbol24m is used to fill
+in unused elements for individual keycodes.
+
+To free the data returned by this function, use 4mXFree24m.
+
+If the specified device has not first been opened by this
+client via 4mXOpenDevice24m, this request will fail with a 4mBadDe-0m
+4mvice24m error.  If that device does not support input class
+4mKeys24m, this request will fail with a 4mBadMatch24m error.
+
+4mXGetDeviceKeyMapping24m can generate 4mBadDevice24m, 4mBadMatch24m, and
+4mBadValue24m errors.
+
+
+To change the keyboard mapping of an extension device that
+supports input class 4mKeys24m, use 4mXChangeDeviceKeyMapping24m.
+__
+|
+int
+XChangeDeviceKeyMapping(4mdisplay24m, 4mdevice24m, 4mfirst_keycode24m, 4mkeysyms_per_keycode24m, 4mkeysyms24m,
+		     4mnum_codes24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mfirst_keycode24m;
+     int 4mkeysyms_per_keycode24m;
+     KeySym *4mkeysyms24m;
+     int 4mnum_codes24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mfirst_keycode0m
+	  Specifies the first keycode that is to be changed.
+
+4mkeysyms_per_keycode0m
+	  Specifies the keysyms that are to be used.
+
+4mkeysyms24m   Specifies a pointer to an array of keysyms.
+
+4mnum_codes24m Specifies the number of keycodes that are to be
+	  changed.
+|__
+
+4mXChangeDeviceKeyMapping24m is analogous to the core 4mXChangeKey-0m
+4mboardMapping24m function.  It defines the symbols for the spec-
+ified number of keycodes for the specified extension key-
+board device.
+
+
+
+			     1m390m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+If the specified device has not first been opened by this
+client via 4mXOpenDevice24m, this request will fail with a 4mBadDe-0m
+4mvice24m error.  If the specified device does not support input
+class 4mKeys24m, this request will fail with a 4mBadMatch24m error.
+
+The number of elements in the keysyms list must be a multi-
+ple of keysyms_per_keycode.  Otherwise, 4mXChangeDeviceKeyMap-0m
+4mping24m generates a 4mBadLength24m error.  The specified first_key-
+code must be greater than or equal to the min_keycode value
+returned by the 4mListInputDevices24m request, or this request
+will fail with a 4mBadValue24m error.  In addition, if the fol-
+lowing expression is not less than the max_keycode value
+returned by the 4mListInputDevices24m request, the request will
+fail with a 4mBadValue24m error:
+
+	    first_keycode + (num_codes / keysyms_per_keycode) - 1
+
+
+4mXChangeDeviceKeyMapping24m can generate 4mBadAlloc24m, 4mBadDevice24m,
+4mBadMatch24m, and 4mBadValue24m errors.
+
+
+To obtain the keycodes that are used as modifiers on an
+extension device that supports input class 4mKeys24m, use 4mXGetDe-0m
+4mviceModifierMapping24m.
+__
+|
+XModifierKeymap * XGetDeviceModifierMapping(4mdisplay24m, 4mdevice24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+|__
+
+4mXGetDeviceModifierMapping24m is analogous to the core 4mXGetModi-0m
+4mfierMapping24m function.  The 4mXGetDeviceModifierMapping24m func-
+tion returns a newly created 4mXModifierKeymap24m structure that
+contains the keys being used as modifiers for the specified
+device.	 The structure should be freed after use with
+4mXFreeModifierMapping24m.  If only zero values appear in the set
+for any modifier, that modifier is disabled.
+
+4mXGetDeviceModifierMapping24m can generate 4mBadDevice24m and 4mBad-0m
+4mMatch24m errors.
+
+
+To set which keycodes are to be used as modifiers for an
+extension device, use 4mXSetDeviceModifierMapping24m.
+
+
+
+
+
+
+			     1m400m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSetDeviceModifierMapping(4mdisplay24m, 4mdevice24m, 4mmodmap24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     XModifierKeymap *4mmodmap24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mmodmap24m    Specifies a pointer to the 4mXModifierKeymap24m struc-
+	  ture.
+|__
+
+4mXSetDeviceModifierMapping24m is analogous to the core 4mXSetModi-0m
+4mfierMapping24m function.  The 4mXSetDeviceModifierMapping24m func-
+tion specifies the keycodes of the keys, if any, that are to
+be used as modifiers.  A zero value means that no key should
+be used.  No two arguments can have the same nonzero keycode
+value.	Otherwise, 4mXSetDeviceModifierMapping24m generates a
+4mBadValue24m error.  There are eight modifiers, and the modi-
+fiermap member of the 4mXModifierKeymap24m structure contains
+eight sets of max_keypermod keycodes, one for each modifier
+in the order 4mShift24m, 4mLock24m, 4mControl24m, 4mMod124m, 4mMod224m, 4mMod324m, 4mMod424m,
+and 4mMod524m.	Only nonzero keycodes have meaning in each set,
+and zero keycodes are ignored.	In addition, all of the
+nonzero keycodes must be in the range specified by min_key-
+code and max_keycode reported by the 4mXListInputDevices24m func-
+tion.  Otherwise, 4mXSetModifierMapping24m generates a 4mBadValue0m
+error.	No keycode may appear twice in the entire map.	Oth-
+erwise, it generates a 4mBadValue24m error.
+
+A X server can impose restrictions on how modifiers can be
+changed, for example, if certain keys do not generate up
+transitions in hardware or if multiple modifier keys are not
+supported.  If some such restriction is violated, the status
+reply is 4mMappingFailed24m, and none of the modifiers are
+changed.  If the new keycodes specified for a modifier dif-
+fer from those currently defined and any (current or new)
+keys for that modifier are in the logically down state, the
+status reply is 4mMappingBusy24m, and none of the modifiers are
+changed.  4mXSetModifierMapping24m generates a 4mDeviceMappingNo-0m
+4mtify24m event on a 4mMappingSuccess24m status.
+
+4mXSetDeviceModifierMapping24m can generate 4mBadAlloc24m, 4mBadDevice24m,
+4mBadMatch24m, and 4mBadValue24m errors.
+
+1m2.1.11.  Controlling Button Mapping0m
+
+To set the mapping of the buttons on an extension device,
+use 4mXSetDeviceButtonMapping24m.
+
+
+
+
+
+			     1m410m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSetDeviceButtonMapping(4mdisplay24m, 4mdevice24m, 4mmap24m, 4mnmap24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     unsigned char 4mmap24m[];
+     int 4mnmap24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mmap24m       Specifies the mapping list.
+
+4mnmap24m      Specifies the number of items in the mapping list.
+|__
+
+4mXSetDeviceButtonMapping24m sets the mapping of the buttons on
+an extension device.  If it succeeds, the X server generates
+a 4mDeviceMappingNotify24m event, and 4mXSetDeviceButtonMapping0m
+returns 4mMappingSuccess24m.  Elements of the list are indexed
+starting from one.  The length of the list must be the same
+as 4mXGetDeviceButtonMapping24m would return, or a 4mBadValue24m error
+results.  The index is a button number, and the element of
+the list defines the effective number.	A zero element dis-
+ables a button, and elements are not restricted in value by
+the number of physical buttons.	 However, no two elements
+can have the same nonzero value, or a 4mBadValue24m error
+results.  If any of the buttons to be altered are logically
+in the down state, 4mXSetDeviceButtonMapping24m returns 4mMapping-0m
+4mBusy24m, and the mapping is not changed.
+
+4mXSetDeviceButtonMapping24m can generate 4mBadDevice24m, 4mBadMatch24m,
+and 4mBadValue24m errors.
+
+
+To get the button mapping, use 4mXGetDeviceButtonMapping24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m420m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGetDeviceButtonMapping(4mdisplay24m, 4mdevice24m, 4mmap_return24m, 4mnmap24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     unsigned char 4mmap_return24m[];
+     int 4mnmap24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mmap_return0m
+	  Specifies the mapping list.
+
+4mnmap24m      Specifies the number of items in the mapping list.
+|__
+
+4mXGetDeviceButtonMapping24m returns the current mapping of the
+specified extension device.  Elements of the list are
+indexed starting from one.  4mXGetDeviceButtonMapping24m returns
+the number of physical buttons actually on the pointer.	 The
+nominal mapping for the buttons is the identity mapping:
+map[i]=i.  The nmap argument specifies the length of the
+array where the button mapping is returned, and only the
+first nmap elements are returned in map_return.
+
+4mXGetDeviceButtonMapping24m can generate 4mBadDevice24m and 4mBadMatch0m
+errors.
+
+1m2.1.12.  Obtaining the State of a Device0m
+
+To obtain information that describes the state of the keys,
+buttons, and valuators of an extension device, use 4mXQueryDe-0m
+4mviceState24m.
+__
+|
+XDeviceState * XQueryDeviceState(4mdisplay24m, 4mdevice24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+|__
+
+4mXQueryDeviceState24m returns a pointer to an 4mXDeviceState0m
+structure, which points to a list of structures that
+describe the state of the keys, buttons, and valuators on
+the device:
+
+
+
+
+
+
+			     1m430m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID device_id;
+     int num_classes;
+     XInputClass *data;
+} XDeviceState;
+
+|__
+
+The structures are of variable length, but the first two
+members are common to all and are as follows:
+
+__
+|
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+} XInputClass;
+
+|__
+
+The class member contains a class identifier.  This identi-
+fier can be compared with constants defined in the file
+<4mX11/extensions/XI.h24m>.  Currently defined constants are:
+4mKeyClass24m, 4mButtonClass24m, and 4mValuatorClass24m.
+
+The length member contains the length of the structure and
+can be used by clients to traverse the list.
+
+The 4mXValuatorState24m structure describes the current state of
+the valuators on the device.  The num_valuators member con-
+tains the number of valuators on the device.  The mode mem-
+ber is a mask whose bits report the data mode and other
+state information for the device.  The following bits are
+currently defined:
+
+     DeviceMode		 1 << 0Relative = 0, Absolute = 1
+     ProximityState	 1 << 1InProximity = 0, OutOfProximity = 1
+
+The valuators member contains a pointer to an array of inte-
+gers that describe the current value of the valuators.	If
+the mode is 4mRelative24m, these values are undefined.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m440m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     unsigned char num_valuators;
+     unsigned char mode;
+     int *valuators;
+} XValuatorState;
+
+|__
+
+The 4mXKeyState24m structure describes the current state of the
+keys on the device.  Byte N (from 0) contains the bits for
+key 8N to 8N + 7 with the least significant bit in the byte
+representing key 8N.
+
+__
+|
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     short num_keys;
+     char keys[32];
+} XKeyState;
+
+|__
+
+The 4mXButtonState24m structure describes the current state of
+the buttons on the device.  Byte N (from 0) contains the
+bits for button 8N to 8N + 7 with the least significant bit
+in the byte representing button 8N.
+
+__
+|
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     short num_buttons;
+     char buttons[32];
+} XButtonState;
+
+|__
+
+4mXQueryDeviceState24m can generate 4mBadDevice24m errors.
+
+
+To free the data returned by this function, use 4mXFreeDe-0m
+4mviceState24m.
+
+
+
+
+
+
+
+
+
+			     1m450m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+void XFreeDeviceState(4mstate24m)
+     XDeviceState *state;
+
+
+4mstate24m     Specifies the pointer to the 4mXDeviceState24m data
+	  returned by a previous call to 4mXQueryDeviceState24m.
+|__
+
+4mXFreeDeviceState24m frees the device state data.
+
+1m2.2.	Events0m
+
+The input extension creates input events analogous to the
+core input events.  These extension input events are gener-
+ated by manipulating one of the extension input devices.
+The remainder of this section discusses the following X
+Input Extension event topics:
+
+�    Event types
+
+�    Event classes
+
+�    Event structures
+
+1m2.2.1.  Event Types0m
+
+Event types are integer numbers that a client can use to
+determine what kind of event it has received.  The client
+compares the type field of the event structure with known
+event types to make this determination.
+
+The core input event types are constants and are defined in
+the header file <4mX11/X.h24m>.	 Extension event types are not
+constants.  Instead, they are dynamically allocated by the
+extension's request to the X server when the extension is
+initialized.  Because of this, extension event types must be
+obtained by the client from the server.
+
+The client program determines the event type for an exten-
+sion event by using the information returned by the 4mXOpenDe-0m
+4mvice24m request.  This type can then be used for comparison
+with the type field of events received by the client.
+
+Extension events propagate up the window hierarchy in the
+same manner as core events.  If a window is not interested
+in an extension event, it usually propagates to the closest
+ancestor that is interested, unless the dont_propagate list
+prohibits it.  Grabs of extension devices may alter the set
+of windows that receive a particular extension event.
+
+The following table lists the event category and its associ-
+ated event type or types.
+
+
+
+
+			     1m460m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+------------------------------------------------------
+1mEvent Category	      Event Type0m
+------------------------------------------------------
+Device key		    4mDeviceKeyPress0m
+			    4mDeviceKeyRelease0m
+Device motion		    4mDeviceButtonPress0m
+			    4mDeviceButtonRelease0m
+			    4mDeviceMotionNotify0m
+Device input focus	    4mDeviceFocusIn0m
+			    4mDeviceFocusOut0m
+Device state notification   4mDeviceStateNotify0m
+Device proximity	    4mProximityIn0m
+			    4mProximityOut0m
+Device mapping		    4mDeviceMappingNotify0m
+Device change		    4mChangeDeviceNotify0m
+------------------------------------------------------
+
+
+1m2.2.2.  Event Classes0m
+
+Event classes are integer numbers that are used in the same
+way as the core event masks.  They are used by a client pro-
+gram to indicate to the server which events that client pro-
+gram wishes to receive.
+
+The core input event masks are constants and are defined in
+the header file <4mX11/X.h24m>.	 Extension event classes are not
+constants.  Instead, they are dynamically allocated by the
+extension's request to the X server when the extension is
+initialized.  Because of this, extension event classes must
+be obtained by the client from the server.
+
+The event class for an extension event and device is
+obtained from information returned by the 4mXOpenDevice24m func-
+tion.  This class can then be used in an 4mXSelectExtension-0m
+4mEvent24m request to ask that events of that type from that
+device be sent to the client program.
+
+For 4mDeviceButtonPress24m events, the client may specify whether
+or not an implicit passive grab should be done when the but-
+ton is pressed.	 If the client wants to guarantee that it
+will receive a 4mDeviceButtonRelease24m event for each 4mDeviceBut-0m
+4mtonPress24m event it receives, it should specify the 4mDeviceBut-0m
+4mtonPressGrab24m class in addition to the 4mDeviceButtonPress0m
+class.	This restricts the client in that only one client at
+a time may request 4mDeviceButtonPress24m events from the same
+device and window if any client specifies this class.
+
+If any client has specified the 4mDeviceButtonPressGrab24m class,
+any requests by any other client that specify the same
+device and window and specify either 4mDeviceButtonPress24m or
+4mDeviceButtonPressGrab24m will cause an 4mAccess24m error to be gen-
+erated.
+
+
+
+
+			     1m470m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+If only the 4mDeviceButtonPress24m class is specified, no
+implicit passive grab will be done when a button is pressed
+on the device.	Multiple clients may use this class to spec-
+ify the same device and window combination.
+
+The client may also select 4mDeviceMotion24m events only when a
+button is down.	 It does this by specifying the event
+classes 4mDeviceButton1Motion24m through 4mDeviceButton5Motion24m.  An
+input device will support only as many button motion classes
+as it has buttons.
+
+1m2.2.3.  Event Structures0m
+
+Each extension event type has a corresponding structure
+declared in <4mX11/extensions/XInput.h24m>.  All event structures
+have the following common members:
+
+type	  Set to the event type number that uniquely identi-
+	  fies it.  For example, when the X server reports a
+	  4mDeviceKeyPress24m event to a client application, it
+	  sends an 4mXDeviceKeyPressEvent24m structure.
+
+serial	  Set from the serial number reported in the proto-
+	  col but expanded from the 16-bit least significant
+	  bits to a full 32-bit value.
+
+send_event
+	  Set to 4mTrue24m if the event came from an 4mXSendEvent0m
+	  request.
+
+display	  Set to a pointer to a structure that defines the
+	  display on which the event was read.
+
+Extension event structures report the current position of
+the X pointer.	In addition, if the device reports motion
+data and is reporting absolute data, the current value of
+any valuators the device contains is also reported.
+
+1m2.2.3.1.  Device Key Events0m
+
+Key events from extension devices contain all the informa-
+tion that is contained in a key event from the X keyboard.
+In addition, they contain a device ID and report the current
+value of any valuators on the device, if that device is
+reporting absolute data.  If data for more than six valua-
+tors is being reported, more than one key event will be
+sent.  The axes_count member contains the number of axes
+that are being reported.  The server sends as many of these
+events as are needed to report the device data.	 Each event
+contains the total number of axes reported in the axes_count
+member and the first axis reported in the current event in
+the first_axis member.	If the device supports input class
+4mValuators24m, but is not reporting absolute mode data, the
+axes_count member  contains zero (0).
+
+
+
+			     1m480m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+The location reported in the x, y and x_root, y_root members
+is the location of the core X pointer.
+
+The 4mXDeviceKeyEvent24m structure is defined as follows:
+
+__
+|
+typedef struct {
+     int type;		      /* of event */
+     unsigned long serial;    /* # of last request processed */
+     Bool send_event;	      /* true if from SendEvent request */
+     Display *display;	      /* Display the event was read from */
+     Window window;	      /* "event" window reported relative to */
+     XID deviceid;
+     Window root;	      /* root window event occurred on */
+     Window subwindow;	      /* child window */
+     Time time;		      /* milliseconds */
+     int x, y;		      /* x, y coordinates in event window */
+     int x_root;	      /* coordinates relative to root */
+     int y_root;	      /* coordinates relative to root */
+     unsigned int state;      /* key or button mask */
+     unsigned int keycode;    /* detail */
+     Bool same_screen;	      /* same screen flag */
+     unsigned int device_state;/* device key or button mask */
+     unsigned char axes_count;
+     unsigned char first_axis;
+     int axis_data[6];
+} XDeviceKeyEvent;
+
+typedef XDeviceKeyEvent XDeviceKeyPressedEvent;
+typedef XDeviceKeyEvent XDeviceKeyReleasedEvent;
+|__
+
+
+1m2.2.3.2.  Device Button Events0m
+
+Button events from extension devices contain all the infor-
+mation that is contained in a button event from the X
+pointer.  In addition, they contain a device ID and report
+the current value of any valuators on the device if that
+device is reporting absolute data.  If data for more than
+six valuators is being reported, more than one button event
+may be sent.  The axes_count member contains the number of
+axes that are being reported.  The server sends as many of
+these events as are needed to report the device data.  Each
+event contains the total number of axes reported in the
+axes_count member and the first axis reported in the current
+event in the first_axis member.	 If the device supports
+input class 4mValuators24m, but is not reporting absolute mode
+data, the axes_count member contains zero (0).
+
+The location reported in the x, y and x_root, y_root members
+is the location of the core X pointer.
+
+
+
+
+			     1m490m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     int type;		      /* of event */
+     unsigned long serial;    /* # of last request processed by server */
+     Bool send_event;	      /* true if from a SendEvent request */
+     Display *display;	      /* Display the event was read from */
+     Window window;	      /* "event" window reported relative to */
+     XID deviceid;
+     Window root;	      /* root window that the event occurred on */
+     Window subwindow;	      /* child window */
+     Time time;		      /* milliseconds */
+     int x, y;		      /* x, y coordinates in event window */
+     int x_root;	      /* coordinates relative to root */
+     int y_root;	      /* coordinates relative to root */
+     unsigned int state;      /* key or button mask */
+     unsigned int button;     /* detail */
+     Bool same_screen;	      /* same screen flag */
+     unsigned int device_state;/* device key or button mask */
+     unsigned char axes_count;
+     unsigned char first_axis;
+     int axis_data[6];
+} XDeviceButtonEvent;
+
+typedef XDeviceButtonEvent XDeviceButtonPressedEvent;
+typedef XDeviceButtonEvent XDeviceButtonReleasedEvent;
+|__
+
+
+1m2.2.3.3.  Device Motion Events0m
+
+Motion events from extension devices contain all the infor-
+mation that is contained in a motion event from the X
+pointer.  In addition, they contain a device ID and report
+the current value of any valuators on the device.
+
+The location reported in the x, y and x_root, y_root members
+is the location of the core X pointer, and so is 2-dimen-
+sional.
+
+Extension motion devices may report motion data for a vari-
+able number of axes.  The axes_count member contains the
+number of axes that are being reported.	 The server sends as
+many of these events as are needed to report the device
+data.  Each event contains the total number of axes reported
+in the axes_count member and the first axis reported in the
+current event in the first_axis member.
+
+
+
+
+
+
+
+
+
+
+
+			     1m500m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     int type;		      /* of event */
+     unsigned long serial;    /* # of last request processed by server */
+     Bool send_event;	      /* true if from a SendEvent request */
+     Display *display;	      /* Display the event was read from */
+     Window window;	      /* "event" window reported relative to */
+     XID deviceid;
+     Window root;	      /* root window that the event occurred on */
+     Window subwindow;	      /* child window */
+     Time time;		      /* milliseconds */
+     int x, y;		      /* x, y coordinates in event window */
+     int x_root;	      /* coordinates relative to root */
+     int y_root;	      /* coordinates relative to root */
+     unsigned int state;      /* key or button mask */
+     char is_hint;	      /* detail */
+     Bool same_screen;	      /* same screen flag */
+     unsigned int device_state;/* device key or button mask */
+     unsigned char axes_count;
+     unsigned char first_axis;
+     int axis_data[6];
+} XDeviceMotionEvent;
+|__
+
+
+1m2.2.3.4.  Device Focus Events0m
+
+These events are equivalent to the core focus events.  They
+contain the same information, with the addition of a device
+ID to identify which device has had a focus change, and a
+timestamp.
+
+4mDeviceFocusIn24m and 4mDeviceFocusOut24m events are generated for
+focus changes of extension devices in the same manner as
+core focus events are generated.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m510m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     int type;		 /* of event */
+     unsigned long serial;/* # of last request processed by server */
+     Bool send_event;	 /* true if this came from a SendEvent request */
+     Display *display;	 /* Display the event was read from */
+     Window window;	 /* "event" window it is reported relative to */
+     XID deviceid;
+     int mode;		 /* NotifyNormal, NotifyGrab, NotifyUngrab */
+     int detail;
+			 /*
+			 * NotifyAncestor, NotifyVirtual, NotifyInferior,
+			 * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
+			 * NotifyPointerRoot, NotifyDetailNone
+			 */
+     Time time;
+} XDeviceFocusChangeEvent;
+
+typedef XDeviceFocusChangeEvent XDeviceFocusInEvent;
+typedef XDeviceFocusChangeEvent XDeviceFocusOutEvent;
+|__
+
+
+1m2.2.3.5.  Device StateNotify Event0m
+
+This event is analogous to the core keymap event but reports
+the current state of the device for each input class that it
+supports.  It is generated after every 4mDeviceFocusIn24m event
+and 4mEnterNotify24m event and is delivered to clients who have
+selected 4mXDeviceStateNotify24m events.
+
+If the device supports input class 4mValuators24m, the mode mem-
+ber in the 4mXValuatorStatus24m structure is a bitmask that
+reports the device mode, proximity state, and other state
+information.  The following bits are currently defined:
+
+     0x01      Relative = 0, Absolute = 1
+     0x02      InProximity = 0, OutOfProximity = 1
+
+
+If the device supports more valuators than can be reported
+in a single 4mXEvent24m, multiple 4mXDeviceStateNotify24m events will
+be generated.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m520m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+} XInputClass;
+
+typedef struct {
+     int type;
+     unsigned long serial;    /* # of last request processed by server */
+     Bool send_event;	      /* true if this came from a SendEvent request */
+     Display *display;	      /* Display the event was read from */
+     Window window;
+     XID deviceid;
+     Time time;
+     int num_classes;
+     char data[64];
+} XDeviceStateNotifyEvent;
+
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     unsigned char num_valuators;
+     unsigned char mode;
+     int valuators[6];
+} XValuatorStatus;
+
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     short num_keys;
+     char keys[32];
+} XKeyStatus;
+
+typedef struct {
+     unsigned char class;
+     unsigned char length;
+     short num_buttons;
+     char buttons[32];
+} XButtonStatus;
+|__
+
+
+1m2.2.3.6.  Device Mapping Event0m
+
+This event is equivalent to the core 4mMappingNotify24m event.
+It notifies client programs when the mapping of keys, modi-
+fiers, or buttons on an extension device has changed.
+
+
+
+
+
+
+
+
+
+
+			     1m530m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     int type;
+     unsigned long serial;
+     Bool send_event;
+     Display *display;
+     Window window;
+     XID deviceid;
+     Time time;
+     int request;
+     int first_keycode;
+     int count;
+} XDeviceMappingEvent;
+|__
+
+
+1m2.2.3.7.  ChangeDeviceNotify Event0m
+
+This event has no equivalent in the core protocol.  It noti-
+fies client programs when one of the core devices has been
+changed.
+
+__
+|
+typedef struct {
+     int type;
+     unsigned long serial;
+     Bool send_event;
+     Display *display;
+     Window window;
+     XID deviceid;
+     Time time;
+     int request;
+} XChangeDeviceNotifyEvent;
+|__
+
+
+1m2.2.3.8.  Proximity Events0m
+
+These events have no equivalent in the core protocol.  Some
+input devices such as graphics tablets or touchscreens may
+send these events to indicate that a stylus has moved into
+or out of contact with a positional sensing surface.
+
+The event contains the current value of any valuators on the
+device if that device is reporting absolute data.  If data
+for more than six valuators is being reported, more than one
+proximity event may be sent.  The axes_count member contains
+the number of axes that are being reported.  The server
+sends as many of these events as are needed to report the
+device data.  Each event contains the total number of axes
+reported in the axes_count member and the first axis
+reported in the current event in the first_axis member.	 If
+the device supports input class 4mValuators24m, but is not
+
+
+
+			     1m540m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+reporting absolute mode data, the axes_count member contains
+zero (0).
+
+__
+|
+typedef struct {
+     int type;		      /* ProximityIn or ProximityOut */
+     unsigned long serial;    /* # of last request processed by server */
+     Bool send_event;	      /* true if this came from a SendEvent request */
+     Display *display;	      /* Display the event was read from */
+     Window window;
+     XID deviceid;
+     Window root;
+     Window subwindow;
+     Time time;
+     int x, y;
+     int x_root, y_root;
+     unsigned int state;
+     Bool same_screen;
+     unsigned int device_state;/* device key or button mask */
+     unsigned char axes_count;
+     unsigned char first_axis;
+     int axis_data[6];
+} XProximityNotifyEvent;
+
+typedef XProximityNotifyEvent XProximityInEvent;
+typedef XProximityNotifyEvent XProximityOutEvent;
+|__
+
+
+1m2.3.	Event Handling Functions0m
+
+This section discusses the X Input Extension event handling
+functions that allow you to:
+
+�    Determine the extension version
+
+�    List the available devices
+
+�    Enable and disable extension devices
+
+�    Change the mode of a device
+
+�    Initialize valuators on an input device
+
+�    Get input device controls
+
+�    Change input device controls
+
+�    Select extension device events
+
+�    Determine selected device events
+
+
+
+
+
+			     1m550m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    Control event propogation
+
+�    Send an event
+
+�    Get motion history
+
+1m2.3.1.  Determining the Extension Version0m
+
+__
+|
+XExtensionVersion * XGetExtensionVersion(4mdisplay24m, 4mname24m)
+     Display *4mdisplay24m;
+     char *4mname24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mname24m      Specifies the name of the desired extension.
+|__
+
+4mXGetExtensionVersion24m allows a client to determine whether a
+server supports the desired version of the input extension.
+
+The 4mXExtensionVersion24m structure returns information about
+the version of the extension supported by the server and is
+defined as follows:
+
+__
+|
+typedef struct {
+     Bool present;
+     short major_version;
+     short minor_version;
+} XExtensionVersion;
+
+|__
+
+The major and minor versions can be compared with constants
+defined in the header file <4mX11/extensions/XI.h24m>.	Each ver-
+sion is a superset of the previous versions.
+
+You should use 4mXFree24m to free the data returned by this func-
+tion.
+
+1m2.3.2.  Listing Available Devices0m
+
+A client program that wishes to access a specific device
+must first determine whether that device is connected to the
+X server.  This is done through the 4mXListInputDevices24m func-
+tion, which will return a list of all devices that can be
+opened by the X server.	 The client program can use one of
+the names defined in the <4mX11/extensions/XI.h24m> header file
+in an 4mXInternAtom24m request to determine the device type of
+the desired device.  This type can then be compared with the
+
+
+
+			     1m560m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+device types returned by the 4mXListInputDevices24m request.
+
+__
+|
+XDeviceInfo * XListInputDevices(4mdisplay24m, 4mndevices24m)
+     Display *4mdisplay24m;
+     int *4mndevices24m;	    /* RETURN */
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mndevices24m  Specifies the address of a variable into which the
+	  server can return the number of input devices
+	  available to the X server.
+|__
+
+4mXListInputDevices24m allows a client to determine which devices
+are available for X input and information about those
+devices.  An array of 4mXDeviceInfo24m structures is returned,
+with one element in the array for each device.	The number
+of devices is returned in the ndevices argument.
+
+The X pointer device and X keyboard device are reported, as
+well as all available extension input devices.	The use mem-
+ber of the 4mXDeviceInfo24m structure specifies the current use
+of the device.	If the value of this member is 4mIsXPointer24m,
+the device is the X pointer device.  If the value is 4mIsXKey-0m
+4mboard24m, the device is the X keyboard device.  If the value is
+4mIsXExtensionDevice24m, the device is available for use as an
+extension input device.
+
+Each 4mXDeviceInfo24m entry contains a pointer to a list of
+structures that describe the characteristics of each class
+of input supported by that device.  The num_classes member
+contains the number of entries in that list.
+
+If the device supports input class 4mValuators24m, one of the
+structures pointed to by the 4mXDeviceInfo24m structure will be
+an 4mXValuatorInfo24m structure.  The axes member of that struc-
+ture contains the address of an array of 4mXAxisInfo24m struc-
+tures.	There is one element in this array for each axis of
+motion reported by the device.	The number of elements in
+this array is contained in the num_axes element of the 4mXVal-0m
+4muatorInfo24m structure.  The size of the motion buffer for the
+device is reported in the motion_buffer member of the 4mXValu-0m
+4matorInfo24m structure.
+
+The 4mXDeviceInfo24m structure is defined as follows:
+
+
+
+
+
+
+
+
+
+			     1m570m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct _XDeviceInfo {
+     XID id;
+     Atom type;
+     char *name;
+     int num_classes;
+     int use;
+     XAnyClassPtr inputclassinfo;
+} XDeviceInfo;
+
+|__
+
+The structures pointed to by the 4mXDeviceInfo24m structure are
+defined as follows:
+
+__
+|
+typedef struct _XKeyInfo {
+     XID class;
+     int length;
+     unsigned short min_keycode;
+     unsigned short max_keycode;
+     unsigned short num_keys;
+} XKeyInfo;
+
+typedef struct _XButtonInfo {
+     XID class;
+     int length;
+     short num_buttons;
+} XButtonInfo;
+
+typedef struct _XValuatorInfo {
+     XID class;
+     int length;
+     unsigned char num_axes;
+     unsigned char mode;
+     unsigned long motion_buffer;
+     XAxisInfoPtr axes;
+} XValuatorInfo;
+
+|__
+
+The 4mXAxisInfo24m structure pointed to by the 4mXValuatorInfo0m
+structure is defined as follows:
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m580m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct _XAxisInfo {
+     int resolution;
+     int min_value;
+     int max_value;
+} XAxisInfo;
+
+|__
+
+The following atom names are defined in the <4mX11/exten-0m
+4msions/XI.h24m> header file.
+
+MOUSE		    QUADRATURE
+TABLET		    SPACEBALL
+KEYBOARD	    DATAGLOVE
+TOUCHSCREEN	    EYETRACKER
+TOUCHPAD	    CURSORKEYS
+BUTTONBOX	    FOOTMOUSE
+BARCODE		    ID_MODULE
+KNOB_BOX	    ONE_KNOB
+TRACKBALL	    NINE_KNOB
+
+
+These names can be used in an 4mXInternAtom24m request to return
+an atom that can be used for comparison with the type member
+of the 4mXDeviceInfo24m structure.
+
+4mXListInputDevices24m returns NULL if there are no input devices
+to list.
+
+
+To free the data returned by 4mXListInputDevices24m, use 4mXFreeDe-0m
+4mviceList24m.
+
+
+__
+|
+void XFreeDeviceList(4mlist24m)
+    XDeviceInfo *4mlist24m;
+
+
+4mlist24m      Specifies the pointer to the 4mXDeviceInfo24m array
+	  returned by a previous call to 4mXListInputDevices24m.
+|__
+
+4mXFreeDeviceList24m frees the list of input device information.
+
+1m2.3.3.  Enabling and Disabling Extension Devices0m
+
+Each client program that wishes to access an extension
+device must request that the server open that device by
+calling the 4mXOpenDevice24m function.
+
+
+
+
+
+			     1m590m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+XDevice * XOpenDevice(4mdisplay24m, 4mdevice_id24m)
+     Display *4mdisplay24m;
+     XID 4mdevice_id24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice_id24m Specifies the ID that uniquely identifies the
+	  device to be opened.	This ID is obtained from the
+	  4mXListInputDevices24m request.
+|__
+
+4mXOpenDevice24m opens the device for the requesting client and,
+on success, returns an 4mXDevice24m structure, which is defined
+as follows:
+
+__
+|
+typedef struct {
+     XID device_id;
+     int num_classes;
+     XInputClassInfo *classes;
+} XDevice;
+
+|__
+
+The 4mXDevice24m structure contains a pointer to an array of 4mXIn-0m
+4mputClassInfo24m structures.  Each element in that array con-
+tains information about events of a particular input class
+supported by the input device.
+
+The 4mXInputClassInfo24m structure is defined as follows:
+
+__
+|
+typedef struct {
+     unsigned char input_class;
+     unsigned char event_type_base;
+} XInputClassInfo;
+
+|__
+
+A client program can determine the event type and event
+class for a given event by using macros defined by the input
+extension.  The name of the macro corresponds to the desired
+event, and the macro is passed the structure that describes
+the device from which input is desired, for example:
+
+
+     DeviceKeyPress(XDevice *device, event_type, event_class)
+
+
+
+
+
+
+			     1m600m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+The macro will fill in the values of the event class to be
+used in an 4mXSelectExtensionEvent24m request to select the event
+and the event type to be used in comparing with the event
+types of events received via 4mXNextEvent24m.
+
+4mXOpenDevice24m can generate 4mBadDevice24m errors.
+
+
+Before terminating, the client program should request that
+the server close the device by calling the 4mXCloseDevice0m
+function.
+__
+|
+int XCloseDevice(4mdisplay24m, 4mdevice24m)
+     Display *display;
+     XDevice *device;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device to be closed.
+|__
+
+4mXCloseDevice24m closes the device for the requesting client and
+frees the associated 4mXDevice24m structure.
+
+A client may open the same extension device more than once.
+Requests after the first successful one return an additional
+4mXDevice24m structure with the same information as the first,
+but otherwise have no effect.  A single 4mXCloseDevice24m request
+will terminate that client's access to the device.
+
+Closing a device releases any active or passive grabs the
+requesting client has established.  If the device is frozen
+only by an active grab of the requesting client, any queued
+events are released.
+
+If a client program terminates without closing a device, the
+server will automatically close that device on behalf of the
+client.	 This does not affect any other clients that may be
+accessing that device.
+
+4mXCloseDevice24m can generate 4mBadDevice24m errors.
+
+1m2.3.4.  Changing the Mode of a Device0m
+
+Some devices are capable of reporting either relative or
+absolute motion data.  To change the mode of a device from
+relative to absolute, use 4mXSetDeviceMode24m.
+
+
+
+
+
+
+
+
+			     1m610m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSetDeviceMode(4mdisplay24m, 4mdevice24m, 4mmode24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mmode24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device whose mode should be changed.
+
+4mmode24m      Specifies the mode.  You can pass 4mAbsolute24m or 4mRel-0m
+	  4mative24m.
+|__
+
+4mXSetDeviceMode24m allows a client to request the server to
+change the mode of a device that is capable of reporting
+either absolute positional data or relative motion data.  If
+the device is invalid or if the client has not previously
+requested that the server open the device via an 4mXOpenDevice0m
+request, this request will fail with a 4mBadDevice24m error.  If
+the device does not support input class 4mValuators24m or if it
+is not capable of reporting the specified mode, the request
+will fail with a 4mBadMatch24m error.
+
+This request will fail and return 4mDeviceBusy24m if another
+client has already opened the device and requested a differ-
+ent mode.
+
+4mXSetDeviceMode24m can generate 4mBadDevice24m, 4mBadMatch24m, 4mBadMode24m,
+and 4mDeviceBusy24m errors.
+
+1m2.3.5.  Initializing Valuators on an Input Device0m
+
+Some devices that report absolute positional data can be
+initialized to a starting value.  Devices that are capable
+of reporting relative motion or absolute positional data may
+require that their valuators be initialized to a starting
+value after the mode of the device is changed to 4mAbsolute24m.
+
+
+To initialize the valuators on such a device, use 4mXSetDe-0m
+4mviceValuators24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m620m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+Status XSetDeviceValuators(4mdisplay24m, 4mdevice24m, 4mvaluators24m, 4mfirst_valuator24m, 4mnum_valuators24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int *4mvaluators24m, 4mfirst_valuator24m, 4mnum_valuators24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device whose valuators should be
+	  initialized.
+
+4mvaluators24m Specifies the values to which each valuator should
+	  be set.
+
+4mfirst_valuator0m
+	  Specifies the first valuator to be set.
+
+4mnum_valuators0m
+	  Specifies the number of valuators to be set.
+|__
+
+4mXSetDeviceValuators24m initializes the specified valuators on
+the specified extension input device.  Valuators are num-
+bered beginning with zero.  Only the valuators in the range
+specified by first_valuator and num_valuators are set.	A
+4mBadValue24m error results if the number of valuators supported
+by the device is less than the following expression:
+
+     first_valuator + num_valuators
+
+
+If the request succeeds, 4mSuccess24m is returned.  If the speci-
+fied device is grabbed by some other client, the request
+will fail and a status of 4mAlreadyGrabbed24m will be returned.
+
+4mXSetDeviceValuators24m can generate 4mBadDevice24m, 4mBadLength24m, 4mBad-0m
+4mMatch24m, and 4mBadValue24m errors.
+
+1m2.3.6.  Getting Input Device Controls0m
+
+Some input devices support various configuration controls
+that can be queried or changed by clients.  The set of sup-
+ported controls will vary from one input device to another.
+Requests to manipulate these controls will fail if either
+the target X server or the target input device does not sup-
+port the requested device control.
+
+Each device control has a unique identifier.  Information
+passed with each device control varies in length and is
+mapped by data structures unique to that device control.
+
+
+
+
+
+
+			     1m630m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+To query a device control, use 4mXGetDeviceControl24m.
+__
+|
+XDeviceControl * XGetDeviceControl(4mdisplay24m, 4mdevice24m, 4mcontrol24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mcontrol24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device whose configuration control
+	  status is to be returned.
+
+4mcontrol24m   Identifies the specific device control to be
+	  queried.
+|__
+
+4mXGetDeviceControl24m returns the current state of the specified
+device control.	 If the target X server does not support
+that device control, a 4mBadValue24m error is returned.	 If the
+specified device does not support that device control, a
+4mBadMatch24m error is returned.
+
+If the request is successful, a pointer to a generic 4mXDe-0m
+4mviceState24m structure is returned.  The information returned
+varies according to the specified control and is mapped by a
+structure appropriate for that control.	 The first two mem-
+bers are common to all device controls and are defined as
+follows:
+
+__
+|
+typedef struct {
+     XID control;
+     int length;
+} XDeviceState;
+
+|__
+
+The control may be compared to constants defined in the file
+<4mX11/extensions/XI.h24m>.  Currently defined device controls
+include DEVICE_RESOLUTION.
+
+The information returned for the DEVICE_RESOLUTION control
+is defined in the 4mXDeviceResolutionState24m structure, which is
+defined as follows:
+
+
+
+
+
+
+
+
+
+
+			     1m640m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID control;
+     int length;
+     int num_valuators;
+     int *resolutions;
+     int *min_resolutions;
+     int *max_resolutions;
+} XDeviceResolutionState;
+
+|__
+
+This device control returns a list of valuators and the
+range of valid resolutions allowed for each.  Valuators are
+numbered beginning with zero (0).  Resolutions for all valu-
+ators on the device are returned.  For each valuator i on
+the device, resolutions[i] returns the current setting of
+the resolution, min_resolutions[i] returns the minimum valid
+setting, and max_resolutions[i] returns the maximum valid
+setting.
+
+When this control is specified, 4mXGetDeviceControl24m fails with
+a 4mBadMatch24m error if the specified device has no valuators.
+
+4mXGetDeviceControl24m can generate 4mBadMatch24m and 4mBadValue24m errors.
+
+1m2.3.7.  Changing Input Device Controls0m
+
+Some input devices support various configuration controls
+that can be changed by clients.	 Typically, this would be
+done to initialize the device to a known state or configura-
+tion.  The set of supported controls will vary from one
+input device to another.  Requests to manipulate these con-
+trols will fail if either the target X server or the target
+input device does not support the requested device control.
+Setting the device control will also fail if the target
+input device is grabbed by another client or is open by
+another client and has been set to a conflicting state.
+
+Each device control has a unique identifier.  Information
+passed with each device control varies in length and is
+mapped by data structures unique to that device control.
+
+
+To change a device control, use 4mXChangeDeviceControl24m.
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m650m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+Status XChangeDeviceControl(4mdisplay24m, 4mdevice24m, 4mcontrol24m, 4mvalue24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     int 4mcontrol24m;
+     XDeviceControl *4mvalue24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device whose configuration control
+	  status is to be modified.
+
+4mcontrol24m   Identifies the specific device control to be
+	  changed.
+
+4mvalue24m     Specifies a pointer to an 4mXDeviceControl24m structure
+	  that describes which control is to be changed and
+	  how it is to be changed.
+|__
+
+4mXChangeDeviceControl24m changes the current state of the speci-
+fied device control.  If the target X server does not sup-
+port that device control, a 4mBadValue24m error is returned.  If
+the specified device does not support that device control, a
+4mBadMatch24m error is returned.  If another client has the tar-
+get device grabbed, a status of 4mAlreadyGrabbed24m is returned.
+If another client has the device open and has set it to a
+conflicting state, a status of 4mDeviceBusy24m is returned.  If
+the request fails for any reason, the device control will
+not be changed.
+
+If the request is successful, the device control will be
+changed and a status of 4mSuccess24m is returned.  The informa-
+tion passed varies according to the specified control and is
+mapped by a structure appropriate for that control.  The
+first two members are common to all device controls:
+
+__
+|
+typedef struct {
+     XID control;
+     int length;
+} XDeviceControl;
+
+|__
+
+The control may be set using constants defined in the
+<4mX11/extensions/XI.h24m> header file.	 Currently defined device
+controls include DEVICE_RESOLUTION.
+
+The information that can be changed by the DEVICE_RESOLUTION
+control is defined in the 4mXDeviceResolutionControl24m struc-
+ture, which is defined as follows:
+
+
+
+			     1m660m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+typedef struct {
+     XID control;
+     int length;
+     int first_valuator;
+     int num_valuators;
+     int *resolutions;
+} XDeviceResolutionControl;
+
+|__
+
+This device control changes the resolution of the specified
+valuators on the specified extension input device.  Valua-
+tors are numbered beginning with zero.	Only the valuators
+in the range specified by first_valuator and num_valuators
+are set.  A value of -1 in the resolutions list indicates
+that the resolution for this valuator is not to be changed.
+The num_valuators member specifies the number of valuators
+in the resolutions list.
+
+When this control is specified, 4mXChangeDeviceControl24m fails
+with a 4mBadMatch24m error if the specified device has no valua-
+tors.  If a resolution is specified that is not within the
+range of valid values (as returned by 4mXGetDeviceControl24m),
+4mXChangeDeviceControl24m fails with a 4mBadValue24m error.  A 4mBad-0m
+4mValue24m error results if the number of valuators supported by
+the device is less than the following expression:
+
+
+     first_valuator + num_valuators,
+
+
+4mXChangeDeviceControl24m can generate 4mBadMatch24m and 4mBadValue0m
+errors.
+
+1m2.3.8.  Selecting Extension Device Events0m
+
+To select device input events, use 4mXSelectExtensionEvent24m.
+The parameters passed are a pointer to a list of classes
+that define the desired event types and devices, a count of
+the number of elements in the list, and the ID of the window
+from which events are desired.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m670m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSelectExtensionEvent(4mdisplay24m, 4mwindow24m, 4mevent_list24m, 4mevent_count24m)
+     Display *4mdisplay24m;
+     Window 4mwindow24m;
+     XEventClass *4mevent_list24m;
+     int 4mevent_count24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mwindow24m    Specifies the ID of the window from which the
+	  client wishes to receive events.
+
+4mevent_list0m
+	  Specifies a pointer to an array of event classes
+	  that specify which events are desired.
+
+4mevent_count0m
+	  Specifies the number of elements in the
+	  event_list.
+|__
+
+4mXSelectExtensionEvent24m requests the server to send events
+that match the events and devices described by the event
+list and that come from the requested window.  The elements
+of the 4mXEventClass24m array are the event_class values obtained
+by invoking a macro with the pointer to an 4mXDevice24m structure
+returned by the 4mXOpenDevice24m request.  For example, the
+4mDeviceKeyPress24m macro would return the 4mXEventClass24m for
+4mDeviceKeyPress24m events from the specified device if it were
+invoked in the following form:
+
+     DeviceKeyPress (XDevice *device, event_type, event_class)
+
+
+Macros are defined for the following event classes:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m680m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+4mDeviceKeyPress0m
+4mDeviceKeyRelease0m
+4mDeviceButtonPress0m
+4mDeviceButtonRelease0m
+4mDeviceMotionNotify0m
+4mDeviceFocusIn0m
+4mDeviceFocusOut0m
+4mProximityIn0m
+4mProximityOut0m
+4mDeviceStateNotify0m
+4mDeviceMappingNotify0m
+4mChangeDeviceNotify0m
+4mDevicePointerMotionHint0m
+4mDeviceButton1Motion0m
+4mDeviceButton2Motion0m
+4mDeviceButton3Motion,0m
+4mDeviceButton4Motion0m
+4mDeviceButton5Motion0m
+4mDeviceButtonMotion,0m
+4mDeviceOwnerGrabButton0m
+4mDeviceButtonPressGrab0m
+
+
+To get the next available event from within a client pro-
+gram, use the core 4mXNextEvent24m function.  This returns the
+next event whether it came from a core device or an exten-
+sion device.
+
+Succeeding 4mXSelectExtensionEvent24m requests using event
+classes for the same device as was specified on a previous
+request will replace the previous set of selected events
+from that device with the new set.
+
+4mXSelectExtensionEvent24m can generate 4mBadAccess24m, 4mBadClass24m,
+4mBadLength24m, and 4mBadWindow24m errors.
+
+1m2.3.9.  Determining Selected Device Events0m
+
+To determine which extension events are currently selected
+from a given window, use 4mXGetSelectedExtensionEvents24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m690m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XGetSelectedExtensionEvents(4mdisplay24m, 4mwindow24m, 4mthis_client_count24m, 4mthis_client24m,
+			4mall_clients_count24m, 4mall_clients24m)
+     Display *4mdisplay24m;
+     Window 4mwindow24m;
+     int *4mthis_client_count24m;  /* RETURN */
+     XEventClass **4mthis_client24m;	   /* RETURN */
+     int *4mall_clients_count24m;  /* RETURN */
+     XEventClass **4mall_clients24m;	   /* RETURN */
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mwindow24m    Specifies the ID of the window from which the
+	  client wishes to receive events.
+
+4mthis_client_count0m
+	  Returns the number of elements in the this_client
+	  list.
+
+4mthis_client0m
+	  Returns a list of 4mXEventClasses24m that specify which
+	  events are selected by this client.
+
+4mall_clients_count0m
+	  Returns the number of elements in the all_clients
+	  list.
+
+4mall_clients0m
+	  Returns a list of 4mXEventClasses24m that specify which
+	  events are selected by all clients.
+|__
+
+4mXGetSelectedExtensionEvents24m returns pointers to two event
+class arrays.  One lists the extension events selected by
+this client from the specified window.	The other lists the
+extension events selected by all clients from the specified
+window.	 This information is analogous to that returned in
+your_event_mask and all_event_masks of the 4mXWindowAttributes0m
+structure when an 4mXGetWindowAttributes24m request is made.  To
+free the two arrays returned by this function, use 4mXFree24m.
+
+4mXGetSelectedExtensionEvents24m can generate 4mBadWindow24m errors.
+
+1m2.3.10.  Controlling Event Propagation0m
+
+Extension events propagate up the window hierarchy in the
+same manner as core events.  If a window is not interested
+in an extension event, it usually propagates to the closest
+ancestor that is interested, unless the dont_propagate list
+prohibits it.  Grabs of extension devices may alter the set
+of windows that receive a particular extension event.
+
+
+
+
+
+			     1m700m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+Client programs may control event propagation through the
+use of the following two functions: 4mXChangeDeviceDontPropa-0m
+4mgateList24m and 4mXGetDeviceDontPropagateList24m.
+
+__
+|
+int XChangeDeviceDontPropagateList(4mdisplay24m, 4mwindow24m, 4mevent_count24m, 4mevents24m, 4mmode24m)
+     Display *4mdisplay24m;
+     Window 4mwindow24m;
+     int 4mevent_count24m;
+     XEventClass *4mevents24m;
+     int 4mmode24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mwindow24m    Specifies the desired window.
+
+4mevent_count0m
+	  Specifies the number of elements in the events
+	  list.
+
+4mevents24m    Specifies a pointer to the list of XEventClasses.
+
+4mmode24m      Specifies the mode.  You can pass 4mAddToList24m or
+	  4mDeleteFromList24m.
+|__
+
+4mXChangeDeviceDontPropagateList24m adds an event to or deletes
+an event from the do_not_propagate list of extension events
+for the specified window.  There is one list per window, and
+the list remains for the life of the window.  The list is
+not altered if a client that changed the list terminates.
+
+Suppression of event propagation is not allowed for all
+events.	 If a specified 4mXEventClass24m is invalid because sup-
+pression of that event is not allowed, a 4mBadClass24m error
+results.
+
+4mXChangeDeviceDontPropagateList24m can generate 4mBadClass24m, 4mBad-0m
+4mMode24m, and 4mBadWindow24m errors.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m710m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+XEventClass * XGetDeviceDontPropagateList(4mdisplay24m, 4mwindow24m, 4mevent_count24m)
+      Display *4mdisplay24m;
+      Window 4mwindow24m;
+      int *4mevent_count24m;	   /*RETURN */
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mwindow24m    Specifies the desired window.
+
+4mevent_count0m
+	  Returns the number of elements in the array
+	  returned by this function.
+|__
+
+4mXGetDeviceDontPropagateList24m allows a client to determine the
+do_not_propagate list of extension events for the specified
+window.	 It returns an array of 4mXEventClass24m, each 4mXEvent-0m
+4mClass24m representing a device/event type pair.  To free the
+data returned by this function, use 4mXFree24m.
+
+4mXGetDeviceDontPropagateList24m can generate 4mBadWindow24m errors.
+
+1m2.3.11.  Sending an Event0m
+
+To send an extension event to another client, use 4mXSendEx-0m
+4mtensionEvent24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m720m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+int XSendExtensionEvent(4mdisplay24m, 4mdevice24m, 4mwindow24m, 4mpropagate24m, 4mevent_count24m, 4mevent_list24m, 4mevent24m)
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     Window 4mwindow24m;
+     Bool 4mpropagate24m;
+     int 4mevent_count24m;
+     XEventClass *4mevent_list24m;
+     XEvent *4mevent24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the device whose ID is recorded in the
+	  event.
+
+4mwindow24m    Specifies the destination window ID.  You can pass
+	  a window ID, 4mPointerWindow24m or 4mInputFocus24m.
+
+4mpropagate24m Specifies a boolean value that is either 4mTrue24m or
+	  4mFalse24m.
+
+4mevent_count0m
+	  Specifies the number of elements in the event_list
+	  array.
+
+4mevent_list0m
+	  Specifies a pointer to an array of 4mXEventClass24m.
+
+4mevent24m     Specifies a pointer to the event that is to be
+	  sent.
+|__
+
+4mXSendExtensionEvent24m identifies the destination window,
+determines which clients should receive the specified event,
+and ignores any active grabs.  It requires a list of 4mXEvent-0m
+4mClass24m to be specified.  These are obtained by opening an
+input device with the 4mXOpenDevice24m request.
+
+4mXSendExtensionEvent24m uses the window argument to identify the
+destination window as follows:
+
+�    If you pass 4mPointerWindow24m, the destination window is
+     the window that contains the pointer.
+
+�    If you pass 4mInputFocus24m and if the focus window contains
+     the pointer, the destination window is the window that
+     contains the pointer.  If the focus window does not
+     contain the pointer, the destination window is the
+     focus window.
+
+To determine which clients should receive the specified
+events, 4mXSendExtensionEvent24m uses the propagate argument as
+follows:
+
+
+
+			     1m730m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+�    If propagate is 4mFalse24m, the event is sent to every
+     client selecting from the destination window any of the
+     events specified in the event_list array.
+
+�    If propagate is 4mTrue24m and no clients have selected from
+     the destination window any of the events specified in
+     the event_list array, the destination is replaced with
+     the closest ancestor of destination for which some
+     client has selected one of the specified events and for
+     which no intervening window has that event in its
+     do_not_propagate mask.  If no such window exists, or if
+     the window is an ancestor of the focus window, and
+     4mInputFocus24m was originally specified as the destination,
+     the event is not sent to any clients.  Otherwise, the
+     event is reported to every client selecting on the
+     final destination any of the events specified in
+     event_list.
+
+The event in the 4mXEvent24m structure must be one of the events
+defined by the input extension, so that the X server can
+correctly byte swap the contents as necessary.	The contents
+of the event are otherwise unaltered and unchecked by the X
+server except to force send_event to 4mTrue24m in the forwarded
+event and to set the sequence number in the event correctly.
+
+4mXSendExtensionEvent24m returns zero if the conversion-to-wire
+protocol failed; otherwise, it returns nonzero.
+
+4mXSendExtensionEvent24m can generate 4mBadClass24m, 4mBadDevice24m, 4mBad-0m
+4mValue24m, and 4mBadWindow24m errors.
+
+1m2.3.12.  Getting Motion History0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m740m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+__
+|
+XDeviceTimeCoord * XGetDeviceMotionEvents(4mdisplay24m, 4mdevice24m, 4mstart24m, 4mstop24m, 4mnevents_return24m, 4mmode_return24m,
+		     4maxis_count_return24m);
+     Display *4mdisplay24m;
+     XDevice *4mdevice24m;
+     Time 4mstart24m, 4mstop24m;
+     int *4mnevents_return24m;
+     int *4mmode_return24m;
+     int *4maxis_count_return24m;
+
+
+4mdisplay24m   Specifies the connection to the X server.
+
+4mdevice24m    Specifies the desired device.
+
+4mstart24m     Specifies the start time.
+
+4mstop24m      Specifies the stop time.
+
+4mnevents_return0m
+	  Returns the number of positions in the motion
+	  buffer returned for this request.
+
+4mmode_return0m
+	  Returns the mode of the nevents information.	The
+	  mode will be one of the following: 4mAbsolute24m or
+	  4mRelative24m.
+
+4maxis_count_return0m
+	  Returns the number of axes reported in each of the
+	  positions returned.
+|__
+
+4mXGetDeviceMotionEvents24m returns all positions in the device's
+motion history buffer that fall between the specified start
+and stop times inclusive.  If the start time is in the
+future or is later than the stop time, no positions are
+returned.
+
+The return type for this function is an 4mXDeviceTimeCoord0m
+structure, which is defined as follows:
+
+__
+|
+typedef struct {
+     Time time;
+     unsigned int *data;
+} XDeviceTimeCoord;
+
+|__
+
+The data member is a pointer to an array of data items.
+Each item is of type int, and there is one data item per
+axis of motion reported by the device.	The number of axes
+
+
+
+			     1m750m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+reported by the device is returned in the axis_count vari-
+able.
+
+The value of the data items depends on the mode of the
+device.	 The mode is returned in the mode variable.  If the
+mode is 4mAbsolute24m, the data items are the raw values gener-
+ated by the device.  These may be scaled by the client pro-
+gram using the maximum values that the device can generate
+for each axis of motion that it reports.  The maximum value
+for each axis is reported in the max_val member of the 4mXAx-0m
+4misInfo24m structure, which is part of the information returned
+by the 4mXListInputDevices24m request.
+
+If the mode is 4mRelative24m, the data items are the relative
+values generated by the device.	 The client program must
+choose an initial position for the device and maintain a
+current position by accumulating these relative values.
+
+Consecutive calls to 4mXGetDeviceMotionEvents24m can return data
+of different modes, that is, if some client program has
+changed the mode of the device via an 4mXSetDeviceMode0m
+request.
+
+4mXGetDeviceMotionEvents24m can generate 4mBadDevice24m and 4mBadMatch0m
+errors.
+
+
+To free the data returned by 4mXGetDeviceMotionEvents24m, use
+4mXFreeDeviceMotionEvents24m.
+
+__
+|
+void XFreeDeviceMotionEvents(4mevents24m)
+      XDeviceTimeCoord *4mevents24m;
+
+
+4mevents24m    Specifies the pointer to the 4mXDeviceTimeCoord0m
+	  array returned by a previous call to 4mXGetDeviceMo-0m
+	  4mtionEvents24m.
+|__
+
+4mXFreeDeviceMotionEvents24m frees the specified array of motion
+information.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m760m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+			 1mAppendix A0m
+
+The following information is contained in the 1m<X11/exten-0m
+1msions/XInput.h> 22mand 1m<X11/extensions/XI.h> 22mheader files:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m770m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+/************************************************************
+
+Copyright 1989, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+
+Copyright 1989 by Hewlett-Packard Company, Palo Alto, California.
+
+	       All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of Hewlett-Packard not be
+used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.
+
+HEWLETT-PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+HEWLETT-PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.
+
+********************************************************/
+/* $XFree86: xc/doc/specs/Xi/library.ms,v 1.3 2006/01/09 14:56:34 dawes Exp $ */
+
+/* Definitions used by the library and client */
+
+#ifndef _XINPUT_H_
+#define _XINPUT_H_
+
+#include <X11/Xlib.h>
+#include <X11/extensions/XI.h>
+
+
+
+			     1m780m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#define _deviceKeyPress	      0
+#define _deviceKeyRelease     1
+
+#define _deviceButtonPress    0
+#define _deviceButtonRelease  1
+
+#define _deviceMotionNotify   0
+
+#define _deviceFocusIn	      0
+#define _deviceFocusOut	      1
+
+#define _proximityIn	      0
+#define _proximityOut	      1
+
+#define _deviceStateNotify    0
+#define _deviceMappingNotify  1
+#define _changeDeviceNotify   2
+
+#define FindTypeAndClass(d,type,_class,classid,offset)	   { int _i; XInputClassInfo *_ip;     type = 0; _class = 0;	 for (_i=0, _ip= ((XDevice *) d)->classes;    _i< ((XDevice *) d)->num_classes;	      _i++, _ip++)  if (_ip->input_class == classid)	   {type =  _ip->event_type_base + offset;	 _class =  ((XDevice *) d)->device_id << 8 | type;}}
+
+#define DeviceKeyPress(d,type,_class)	  FindTypeAndClass(d, type, _class, KeyClass, _deviceKeyPress)
+
+#define DeviceKeyRelease(d,type,_class)	    FindTypeAndClass(d, type, _class, KeyClass, _deviceKeyRelease)
+
+#define DeviceButtonPress(d,type,_class)     FindTypeAndClass(d, type, _class, ButtonClass, _deviceButtonPress)
+
+#define DeviceButtonRelease(d,type,_class)     FindTypeAndClass(d, type, _class, ButtonClass, _deviceButtonRelease)
+
+#define DeviceMotionNotify(d,type,_class)     FindTypeAndClass(d, type, _class, ValuatorClass, _deviceMotionNotify)
+
+#define DeviceFocusIn(d,type,_class)	 FindTypeAndClass(d, type, _class, FocusClass, _deviceFocusIn)
+
+#define DeviceFocusOut(d,type,_class)	  FindTypeAndClass(d, type, _class, FocusClass, _deviceFocusOut)
+
+#define ProximityIn(d,type,_class)     FindTypeAndClass(d, type, _class, ProximityClass, _proximityIn)
+
+#define ProximityOut(d,type,_class)	FindTypeAndClass(d, type, _class, ProximityClass, _proximityOut)
+
+#define DeviceStateNotify(d,type,_class)     FindTypeAndClass(d, type, _class, OtherClass, _deviceStateNotify)
+
+#define DeviceMappingNotify(d,type,_class)     FindTypeAndClass(d, type, _class, OtherClass, _deviceMappingNotify)
+
+#define ChangeDeviceNotify(d,type,_class)     FindTypeAndClass(d, type, _class, OtherClass, _changeDeviceNotify)
+
+#define DevicePointerMotionHint(d,type,_class)	   { _class =  ((XDevice *) d)->device_id << 8 | _devicePointerMotionHint;}
+
+#define DeviceButton1Motion(d,type,_class)     { _class =  ((XDevice *) d)->device_id << 8 | _deviceButton1Motion;}
+
+#define DeviceButton2Motion(d,type,_class)     { _class =  ((XDevice *) d)->device_id << 8 | _deviceButton2Motion;}
+
+#define DeviceButton3Motion(d,type,_class)     { _class =  ((XDevice *) d)->device_id << 8 | _deviceButton3Motion;}
+
+#define DeviceButton4Motion(d,type, _class)	{ _class =  ((XDevice *) d)->device_id << 8 | _deviceButton4Motion;}
+
+
+
+
+			     1m790m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#define DeviceButton5Motion(d,type,_class)     { _class =  ((XDevice *) d)->device_id << 8 | _deviceButton5Motion;}
+
+#define DeviceButtonMotion(d,type, _class)     { _class =  ((XDevice *) d)->device_id << 8 | _deviceButtonMotion;}
+
+#define DeviceOwnerGrabButton(d,type,_class)	 { _class =  ((XDevice *) d)->device_id << 8 | _deviceOwnerGrabButton;}
+
+#define DeviceButtonPressGrab(d,type,_class)	 { _class =  ((XDevice *) d)->device_id << 8 | _deviceButtonGrab;}
+
+#define NoExtensionEvent(d,type,_class)	    { _class =	((XDevice *) d)->device_id << 8 | _noExtensionEvent;}
+
+#define BadDevice(dpy,error) _xibaddevice(dpy, &error)
+
+#define BadClass(dpy,error) _xibadclass(dpy, &error)
+
+#define BadEvent(dpy,error) _xibadevent(dpy, &error)
+
+#define BadMode(dpy,error) _xibadmode(dpy, &error)
+
+#define DeviceBusy(dpy,error) _xidevicebusy(dpy, &error)
+
+/***************************************************************
+ *
+ * DeviceKey events.  These events are sent by input devices that
+ * support input class Keys.
+ * The location of the X pointer is reported in the coordinate
+ * fields of the x,y and x_root,y_root fields.
+ *
+ */
+
+typedef struct
+    {
+    int		   type;	 /* of event */
+    unsigned long  serial;	 /* # of last request processed */
+    Bool	   send_event;	 /* true if from SendEvent request */
+    Display	   *display;	 /* Display the event was read from */
+    Window	   window;	 /* "event" window reported relative to */
+    XID		   deviceid;
+    Window	   root;	 /* root window event occured on */
+    Window	   subwindow;	 /* child window */
+    Time	   time;	 /* milliseconds */
+    int		   x, y;	 /* x, y coordinates in event window */
+    int		   x_root;	 /* coordinates relative to root */
+    int		   y_root;	 /* coordinates relative to root */
+    unsigned int   state;	 /* key or button mask */
+    unsigned int   keycode;	 /* detail */
+    Bool	   same_screen;	 /* same screen flag */
+    unsigned int   device_state; /* device key or button mask */
+    unsigned char  axes_count;
+    unsigned char  first_axis;
+    int		   axis_data[6];
+    } XDeviceKeyEvent;
+
+typedef XDeviceKeyEvent XDeviceKeyPressedEvent;
+typedef XDeviceKeyEvent XDeviceKeyReleasedEvent;
+
+
+
+			     1m800m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+/*******************************************************************
+ *
+ * DeviceButton events.	 These events are sent by extension devices
+ * that support input class Buttons.
+ *
+ */
+
+typedef struct {
+    int		  type;		/* of event */
+    unsigned long serial;	/* # of last request processed by server */
+    Bool	  send_event;	/* true if from a SendEvent request */
+    Display	  *display;	/* Display the event was read from */
+    Window	  window;	/* "event" window reported relative to */
+    XID		  deviceid;
+    Window	  root;		/* root window that the event occured on */
+    Window	  subwindow;	/* child window */
+    Time	  time;		/* milliseconds */
+    int		  x, y;		/* x, y coordinates in event window */
+    int		  x_root;	/* coordinates relative to root */
+    int		  y_root;	/* coordinates relative to root */
+    unsigned int  state;	/* key or button mask */
+    unsigned int  button;	/* detail */
+    Bool	  same_screen;	/* same screen flag */
+    unsigned int  device_state; /* device key or button mask */
+    unsigned char axes_count;
+    unsigned char first_axis;
+    int		  axis_data[6];
+    } XDeviceButtonEvent;
+
+typedef XDeviceButtonEvent XDeviceButtonPressedEvent;
+typedef XDeviceButtonEvent XDeviceButtonReleasedEvent;
+
+/*******************************************************************
+ *
+ * DeviceMotionNotify event.  These events are sent by extension devices
+ * that support input class Valuators.
+ *
+ */
+
+typedef struct
+    {
+    int		  type;	       /* of event */
+    unsigned long serial;      /* # of last request processed by server */
+    Bool	  send_event;  /* true if from a SendEvent request */
+    Display	  *display;    /* Display the event was read from */
+    Window	  window;      /* "event" window reported relative to */
+    XID		  deviceid;
+    Window	  root;	       /* root window that the event occured on */
+    Window	  subwindow;   /* child window */
+    Time	  time;	       /* milliseconds */
+    int		  x, y;	       /* x, y coordinates in event window */
+    int		  x_root;      /* coordinates relative to root */
+    int		  y_root;      /* coordinates relative to root */
+    unsigned int  state;       /* key or button mask */
+
+
+
+			     1m810m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    char	  is_hint;     /* detail */
+    Bool	  same_screen; /* same screen flag */
+    unsigned int  device_state; /* device key or button mask */
+    unsigned char axes_count;
+    unsigned char first_axis;
+    int		  axis_data[6];
+    } XDeviceMotionEvent;
+
+/*******************************************************************
+ *
+ * DeviceFocusChange events.  These events are sent when the focus
+ * of an extension device that can be focused is changed.
+ *
+ */
+
+typedef struct
+    {
+    int		  type;	      /* of event */
+    unsigned long serial;     /* # of last request processed by server */
+    Bool	  send_event; /* true if from a SendEvent request */
+    Display	  *display;   /* Display the event was read from */
+    Window	  window;     /* "event" window reported relative to */
+    XID		  deviceid;
+    int		  mode;	      /* NotifyNormal, NotifyGrab, NotifyUngrab */
+    int		  detail;
+     /*
+      * NotifyAncestor, NotifyVirtual, NotifyInferior,
+      * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
+      * NotifyPointerRoot, NotifyDetailNone
+      */
+    Time		time;
+    } XDeviceFocusChangeEvent;
+
+typedef XDeviceFocusChangeEvent XDeviceFocusInEvent;
+typedef XDeviceFocusChangeEvent XDeviceFocusOutEvent;
+
+/*******************************************************************
+ *
+ * ProximityNotify events.  These events are sent by those absolute
+ * positioning devices that are capable of generating proximity information.
+ *
+ */
+
+typedef struct
+    {
+    int		    type;      /* ProximityIn or ProximityOut */
+    unsigned long   serial;    /* # of last request processed by server */
+    Bool	    send_event; /* true if this came from a SendEvent request */
+    Display	    *display;  /* Display the event was read from */
+    Window	    window;
+    XID		      deviceid;
+    Window	    root;
+    Window	    subwindow;
+    Time	    time;
+
+
+
+			     1m820m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    int		    x, y;
+    int		    x_root, y_root;
+    unsigned int    state;
+    Bool	    same_screen;
+    unsigned int    device_state; /* device key or button mask */
+    unsigned char   axes_count;
+    unsigned char   first_axis;
+    int		    axis_data[6];
+    } XProximityNotifyEvent;
+typedef XProximityNotifyEvent XProximityInEvent;
+typedef XProximityNotifyEvent XProximityOutEvent;
+
+/*******************************************************************
+ *
+ * DeviceStateNotify events are generated on EnterWindow and FocusIn
+ * for those clients who have selected DeviceState.
+ *
+ */
+
+typedef struct
+    {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    } XInputClass;
+
+typedef struct {
+    int		  type;
+    unsigned long serial;	/* # of last request processed by server */
+    Bool	  send_event;	/* true if this came from a SendEvent request */
+    Display	  *display;	/* Display the event was read from */
+    Window	  window;
+    XID		  deviceid;
+    Time	  time;
+    int		  num_classes;
+    char    data[64];
+} XDeviceStateNotifyEvent;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    unsigned char   num_valuators;
+    unsigned char   mode;
+    int			 valuators[6];
+} XValuatorStatus;
+
+typedef struct {
+
+
+
+			     1m830m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    short      num_keys;
+    char	    keys[32];
+} XKeyStatus;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    short      num_buttons;
+    char	    buttons[32];
+} XButtonStatus;
+
+/*******************************************************************
+ *
+ * DeviceMappingNotify event.  This event is sent when the key mapping,
+ * modifier mapping, or button mapping of an extension device is changed.
+ *
+ */
+
+typedef struct {
+    int		  type;
+    unsigned long serial;	/* # of last request processed by server */
+    Bool	  send_event;	/* true if this came from a SendEvent request */
+    Display	  *display;	/* Display the event was read from */
+    Window	  window;	/* unused */
+    XID		  deviceid;
+    Time	  time;
+    int		  request;	/* one of MappingModifier, MappingKeyboard,
+				    MappingPointer */
+    int		  first_keycode;/* first keycode */
+    int		  count;	/* defines range of change w. first_keycode*/
+} XDeviceMappingEvent;
+
+/*******************************************************************
+ *
+ * ChangeDeviceNotify event.  This event is sent when an
+ * XChangeKeyboard or XChangePointer request is made.
+ *
+ */
+
+typedef struct {
+    int		  type;
+    unsigned long serial;	/* # of last request processed by server */
+    Bool	  send_event;	/* true if this came from a SendEvent request */
+    Display	  *display;	/* Display the event was read from */
+
+
+
+			     1m840m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    Window	  window;	/* unused */
+    XID		  deviceid;
+    Time	  time;
+    int		  request;	/* NewPointer or NewKeyboard */
+} XChangeDeviceNotifyEvent;
+
+/*******************************************************************
+ *
+ * Control structures for input devices that support input class
+ * Feedback.  These are used by the XGetFeedbackControl and
+ * XChangeFeedbackControl functions.
+ *
+ */
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+     XID	    c_class;
+#else
+     XID	    class;
+#endif
+     int	    length;
+     XID	    id;
+} XFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    click;
+    int	    percent;
+    int	    pitch;
+    int	    duration;
+    int	    led_mask;
+    int	    global_auto_repeat;
+    char    auto_repeats[32];
+} XKbdFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    accelNum;
+    int	    accelDenom;
+    int	    threshold;
+} XPtrFeedbackState;
+
+
+
+
+			     1m850m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    resolution;
+    int	    minVal;
+    int	    maxVal;
+} XIntegerFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    max_symbols;
+    int	    num_syms_supported;
+    KeySym  *syms_supported;
+} XStringFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    percent;
+    int	    pitch;
+    int	    duration;
+} XBellFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    led_values;
+    int	    led_mask;
+} XLedFeedbackState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+     XID	    c_class;
+
+
+
+			     1m860m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#else
+     XID	    class;
+#endif
+     int	    length;
+     XID      id;
+} XFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    accelNum;
+    int	    accelDenom;
+    int	    threshold;
+} XPtrFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    click;
+    int	    percent;
+    int	    pitch;
+    int	    duration;
+    int	    led_mask;
+    int	    led_value;
+    int	    key;
+    int	    auto_repeat_mode;
+} XKbdFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    num_keysyms;
+    KeySym  *syms_to_display;
+} XStringFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+
+
+
+			     1m870m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    int_to_display;
+} XIntegerFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    percent;
+    int	    pitch;
+    int	    duration;
+} XBellFeedbackControl;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	    c_class;
+#else
+    XID	    class;
+#endif
+    int	    length;
+    XID	    id;
+    int	    led_mask;
+    int	    led_values;
+} XLedFeedbackControl;
+
+/*******************************************************************
+ *
+ * Device control structures.
+ *
+ */
+
+typedef struct {
+     XID	    control;
+     int	    length;
+} XDeviceControl;
+
+typedef struct {
+     XID	    control;
+     int	    length;
+     int	    first_valuator;
+     int	    num_valuators;
+     int	    *resolutions;
+} XDeviceResolutionControl;
+
+typedef struct {
+     XID	    control;
+     int	    length;
+
+
+
+			     1m880m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+     int	    num_valuators;
+     int	    *resolutions;
+     int	    *min_resolutions;
+     int	    *max_resolutions;
+} XDeviceResolutionState;
+
+/*******************************************************************
+ *
+ * An array of XDeviceList structures is returned by the
+ * XListInputDevices function.	Each entry contains information
+ * about one input device.  Among that information is an array of
+ * pointers to structures that describe the characteristics of
+ * the input device.
+ *
+ */
+
+typedef struct _XAnyClassinfo *XAnyClassPtr;
+
+typedef struct _XAnyClassinfo {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	  c_class;
+#else
+    XID	  class;
+#endif
+    int	  length;
+    } XAnyClassInfo;
+
+typedef struct _XDeviceInfo *XDeviceInfoPtr;
+
+typedef struct _XDeviceInfo
+    {
+    XID			id;
+    Atom		type;
+    char		*name;
+    int			num_classes;
+    int			use;
+    XAnyClassPtr    inputclassinfo;
+    } XDeviceInfo;
+
+typedef struct _XKeyInfo *XKeyInfoPtr;
+
+typedef struct _XKeyInfo
+    {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID		    c_class;
+#else
+    XID		    class;
+#endif
+    int		    length;
+    unsigned short	min_keycode;
+    unsigned short	max_keycode;
+    unsigned short	num_keys;
+    } XKeyInfo;
+
+
+
+
+			     1m890m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+typedef struct _XButtonInfo *XButtonInfoPtr;
+
+typedef struct _XButtonInfo {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID	       c_class;
+#else
+    XID	       class;
+#endif
+    int	       length;
+    short      num_buttons;
+    } XButtonInfo;
+
+typedef struct _XAxisInfo *XAxisInfoPtr;
+
+typedef struct _XAxisInfo {
+    int	  resolution;
+    int	  min_value;
+    int	  max_value;
+    } XAxisInfo;
+
+typedef struct _XValuatorInfo *XValuatorInfoPtr;
+
+typedef struct _XValuatorInfo
+    {
+#if defined(__cplusplus) || defined(c_plusplus)
+    XID		    c_class;
+#else
+    XID		    class;
+#endif
+    int		    length;
+    unsigned char	num_axes;
+    unsigned char	mode;
+    unsigned long	motion_buffer;
+    XAxisInfoPtr	axes;
+    } XValuatorInfo;
+
+
+/*******************************************************************
+ *
+ * An XDevice structure is returned by the XOpenDevice function.
+ * It contains an array of pointers to XInputClassInfo structures.
+ * Each contains information about a class of input supported by the
+ * device, including a pointer to an array of data for each type of event
+ * the device reports.
+ *
+ */
+
+
+typedef struct {
+	unsigned char	input_class;
+	unsigned char	event_type_base;
+} XInputClassInfo;
+
+typedef struct {
+
+
+
+			     1m900m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+	XID		       device_id;
+	int		       num_classes;
+	XInputClassInfo	       *classes;
+} XDevice;
+
+
+/*******************************************************************
+ *
+ * The following structure is used to return information for the
+ * XGetSelectedExtensionEvents function.
+ *
+ */
+
+typedef struct {
+	XEventClass	event_type;
+	XID		device;
+} XEventList;
+
+/*******************************************************************
+ *
+ * The following structure is used to return motion history data from
+ * an input device that supports the input class Valuators.
+ * This information is returned by the XGetDeviceMotionEvents function.
+ *
+ */
+
+typedef struct {
+	Time   time;
+	int    *data;
+} XDeviceTimeCoord;
+
+
+/*******************************************************************
+ *
+ * Device state structure.
+ * This is returned by the XQueryDeviceState request.
+ *
+ */
+
+typedef struct {
+	XID	    device_id;
+	int	    num_classes;
+	XInputClass *data;
+} XDeviceState;
+
+/*******************************************************************
+ *
+ * Note that the mode field is a bitfield that reports the Proximity
+ * status of the device as well as the mode.  The mode field should
+ * be OR'd with the mask DeviceMode and compared with the values
+ * Absolute and Relative to determine the mode, and should be OR'd
+ * with the mask ProximityState and compared with the values InProximity
+ * and OutOfProximity to determine the proximity state.
+ *
+
+
+
+			     1m910m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+ */
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    unsigned char   num_valuators;
+    unsigned char   mode;
+    int			 *valuators;
+} XValuatorState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    short      num_keys;
+    char	    keys[32];
+} XKeyState;
+
+typedef struct {
+#if defined(__cplusplus) || defined(c_plusplus)
+    unsigned char   c_class;
+#else
+    unsigned char   class;
+#endif
+    unsigned char   length;
+    short      num_buttons;
+    char	    buttons[32];
+} XButtonState;
+
+/*******************************************************************
+ *
+ * Function definitions.
+ *
+ */
+
+_XFUNCPROTOBEGIN
+
+extern int     XChangeKeyboardDevice(
+    Display*	    /* display */,
+    XDevice*	    /* device */
+);
+
+extern int     XChangePointerDevice(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int		    /* xaxis */,
+    int		    /* yaxis */
+
+
+
+			     1m920m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+);
+
+extern int     XGrabDevice(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Window	    /* grab_window */,
+    Bool       /* ownerEvents */,
+    int		    /* event count */,
+    XEventClass*    /* event_list */,
+    int		    /* this_device_mode */,
+    int		    /* other_devices_mode */,
+    Time       /* time */
+);
+
+extern int     XUngrabDevice(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Time       /* time */
+);
+
+extern int     XGrabDeviceKey(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned int    /* key */,
+    unsigned int    /* modifiers */,
+    XDevice*	    /* modifier_device */,
+    Window	    /* grab_window */,
+    Bool       /* owner_events */,
+    unsigned int    /* event_count */,
+    XEventClass*    /* event_list */,
+    int		    /* this_device_mode */,
+    int		    /* other_devices_mode */
+);
+
+extern int     XUngrabDeviceKey(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned int    /* key */,
+    unsigned int    /* modifiers */,
+    XDevice*	    /* modifier_dev */,
+    Window	    /* grab_window */
+);
+
+extern int     XGrabDeviceButton(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned int    /* button */,
+    unsigned int    /* modifiers */,
+    XDevice*	    /* modifier_device */,
+    Window	    /* grab_window */,
+    Bool       /* owner_events */,
+    unsigned int    /* event_count */,
+    XEventClass*    /* event_list */,
+    int		    /* this_device_mode */,
+
+
+
+			     1m930m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    int		    /* other_devices_mode */
+);
+
+extern int     XUngrabDeviceButton(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned int    /* button */,
+    unsigned int    /* modifiers */,
+    XDevice*	    /* modifier_dev */,
+    Window	    /* grab_window */
+);
+
+extern int     XAllowDeviceEvents(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int		    /* event_mode */,
+    Time       /* time */
+);
+
+extern int     XGetDeviceFocus(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Window*	    /* focus */,
+    int*       /* revert_to */,
+    Time*      /* time */
+);
+
+extern int     XSetDeviceFocus(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Window	    /* focus */,
+    int		    /* revert_to */,
+    Time       /* time */
+);
+
+extern XFeedbackState	 *XGetFeedbackControl(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int*       /* num_feedbacks */
+);
+
+extern void    XFreeFeedbackList(
+    XFeedbackState* /* list */
+);
+
+extern int     XChangeFeedbackControl(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned long   /* mask */,
+    XFeedbackControl*	 /* f */
+);
+
+extern int     XDeviceBell(
+    Display*	    /* display */,
+
+
+
+			     1m940m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    XDevice*	    /* device */,
+    XID		    /* feedbackclass */,
+    XID		    /* feedbackid */,
+    int		    /* percent */
+);
+
+extern KeySym  *XGetDeviceKeyMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+#if NeedWidePrototypes
+    unsigned int    /* first */,
+#else
+    KeyCode	    /* first */,
+#endif
+    int		    /* keycount */,
+    int*       /* syms_per_code */
+);
+
+extern int     XChangeDeviceKeyMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int		    /* first */,
+    int		    /* syms_per_code */,
+    KeySym*	    /* keysyms */,
+    int		    /* count */
+);
+
+extern XModifierKeymap	 *XGetDeviceModifierMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */
+);
+
+extern int     XSetDeviceModifierMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    XModifierKeymap*	 /* modmap */
+);
+
+extern int     XSetDeviceButtonMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned char*  /* map[] */,
+    int		    /* nmap */
+);
+
+extern int     XGetDeviceButtonMapping(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    unsigned char*  /* map[] */,
+    unsigned int    /* nmap */
+);
+
+extern XDeviceState *XQueryDeviceState(
+    Display*	    /* display */,
+
+
+
+			     1m950m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    XDevice*	    /* device */
+);
+
+extern void    XFreeDeviceState(
+    XDeviceState*   /* list */
+);
+
+extern XExtensionVersion *XGetExtensionVersion(
+    Display*	    /* display */,
+    _Xconst char*   /* name */
+);
+
+extern XDeviceInfo  *XListInputDevices(
+    Display*	    /* display */,
+    int*       /* ndevices */
+);
+
+extern void    XFreeDeviceList(
+    XDeviceInfo*    /* list */
+);
+
+extern XDevice *XOpenDevice(
+    Display*	    /* display */,
+    XID		    /* id */
+);
+
+extern int     XCloseDevice(
+    Display*	    /* display */,
+    XDevice*	    /* device */
+);
+
+extern int     XSetDeviceMode(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int		    /* mode */
+);
+
+extern int     XSetDeviceValuators(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int*       /* valuators */,
+    int		    /* first_valuator */,
+    int		    /* num_valuators */
+);
+
+extern XDeviceControl	 *XGetDeviceControl(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    int		    /* control */
+);
+
+extern int     XChangeDeviceControl(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+
+
+
+			     1m960m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+    int		    /* control */,
+    XDeviceControl* /* d */
+);
+
+extern int     XSelectExtensionEvent(
+    Display*	    /* display */,
+    Window	    /* w */,
+    XEventClass*    /* event_list */,
+    int		    /* count */
+);
+
+extern int XGetSelectedExtensionEvents(
+    Display*	    /* display */,
+    Window	    /* w */,
+    int*       /* this_client_count */,
+    XEventClass**   /* this_client_list */,
+    int*       /* all_clients_count */,
+    XEventClass**   /* all_clients_list */
+);
+
+extern int     XChangeDeviceDontPropagateList(
+    Display*	    /* display */,
+    Window	    /* window */,
+    int		    /* count */,
+    XEventClass*    /* events */,
+    int		    /* mode */
+);
+
+extern XEventClass  *XGetDeviceDontPropagateList(
+    Display*	    /* display */,
+    Window	    /* window */,
+    int*       /* count */
+);
+
+extern Status  XSendExtensionEvent(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Window	    /* dest */,
+    Bool       /* prop */,
+    int		    /* count */,
+    XEventClass*    /* list */,
+    XEvent*	    /* event */
+);
+
+extern XDeviceTimeCoord	 *XGetDeviceMotionEvents(
+    Display*	    /* display */,
+    XDevice*	    /* device */,
+    Time       /* start */,
+    Time       /* stop */,
+    int*       /* nEvents */,
+    int*       /* mode */,
+    int*       /* axis_count */
+);
+
+
+
+
+			     1m970m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+extern void    XFreeDeviceMotionEvents(
+    XDeviceTimeCoord*	 /* events */
+);
+
+extern void    XFreeDeviceControl(
+    XDeviceControl* /* control */
+);
+
+extern void _xibaddevice(Display *dpy, int *error);
+extern void _xibadclass(Display *dpy, int *error);
+extern void _xibadevent(Display *dpy, int *error);
+extern void _xibadmode(Display *dpy, int *error);
+extern void _xidevicebusy(Display *dpy, int *error);
+
+
+_XFUNCPROTOEND
+
+#endif /* _XINPUT_H_ */
+
+/************************************************************
+
+Copyright 1989, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+
+Copyright 1989 by Hewlett-Packard Company, Palo Alto, California.
+
+	       All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of Hewlett-Packard not be
+used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.
+
+
+
+			     1m980m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+HEWLETT-PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+HEWLETT-PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.
+
+********************************************************/
+/* $XFree86: xc/doc/specs/Xi/library.ms,v 1.3 2006/01/09 14:56:34 dawes Exp $ */
+
+/* Definitions used by the server, library and client */
+
+#ifndef _XI_H_
+
+#define _XI_H_
+
+#define sz_xGetExtensionVersionReq	8
+#define sz_xGetExtensionVersionReply	     32
+#define sz_xListInputDevicesReq		     4
+#define sz_xListInputDevicesReply	32
+#define sz_xOpenDeviceReq		8
+#define sz_xOpenDeviceReply		32
+#define sz_xCloseDeviceReq		8
+#define sz_xSetDeviceModeReq		8
+#define sz_xSetDeviceModeReply		     32
+#define sz_xSelectExtensionEventReq	     12
+#define sz_xGetSelectedExtensionEventsReq    8
+#define sz_xGetSelectedExtensionEventsReply  32
+#define sz_xChangeDeviceDontPropagateListReq 12
+#define sz_xGetDeviceDontPropagateListReq    8
+#define sz_xGetDeviceDontPropagateListReply  32
+#define sz_xGetDeviceMotionEventsReq	     16
+#define sz_xGetDeviceMotionEventsReply	     32
+#define sz_xChangeKeyboardDeviceReq	     8
+#define sz_xChangeKeyboardDeviceReply	     32
+#define sz_xChangePointerDeviceReq	8
+#define sz_xChangePointerDeviceReply	     32
+#define sz_xGrabDeviceReq		20
+#define sz_xGrabDeviceReply		32
+#define sz_xUngrabDeviceReq		12
+#define sz_xGrabDeviceKeyReq		20
+#define sz_xGrabDeviceKeyReply		     32
+#define sz_xUngrabDeviceKeyReq		     16
+#define sz_xGrabDeviceButtonReq		     20
+#define sz_xGrabDeviceButtonReply	32
+#define sz_xUngrabDeviceButtonReq	16
+#define sz_xAllowDeviceEventsReq	12
+#define sz_xGetDeviceFocusReq		8
+#define sz_xGetDeviceFocusReply		     32
+#define sz_xSetDeviceFocusReq		16
+#define sz_xGetFeedbackControlReq	8
+#define sz_xGetFeedbackControlReply	     32
+#define sz_xChangeFeedbackControlReq	     12
+
+
+
+			     1m990m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#define sz_xGetDeviceKeyMappingReq	8
+#define sz_xGetDeviceKeyMappingReply	     32
+#define sz_xChangeDeviceKeyMappingReq	     8
+#define sz_xGetDeviceModifierMappingReq	     8
+#define sz_xSetDeviceModifierMappingReq	     8
+#define sz_xSetDeviceModifierMappingReply    32
+#define sz_xGetDeviceButtonMappingReq	     8
+#define sz_xGetDeviceButtonMappingReply	     32
+#define sz_xSetDeviceButtonMappingReq	     8
+#define sz_xSetDeviceButtonMappingReply	     32
+#define sz_xQueryDeviceStateReq		     8
+#define sz_xQueryDeviceStateReply	32
+#define sz_xSendExtensionEventReq	16
+#define sz_xDeviceBellReq		8
+#define sz_xSetDeviceValuatorsReq	8
+#define sz_xSetDeviceValuatorsReply	     32
+#define sz_xGetDeviceControlReq		     8
+#define sz_xGetDeviceControlReply	32
+#define sz_xChangeDeviceControlReq	8
+#define sz_xChangeDeviceControlReply	     32
+
+#define INAME		 "XInputExtension"
+
+#define XI_KEYBOARD "KEYBOARD"
+#define XI_MOUSE    "MOUSE"
+#define XI_TABLET   "TABLET"
+#define XI_TOUCHSCREEN	 "TOUCHSCREEN"
+#define XI_TOUCHPAD "TOUCHPAD"
+#define XI_BARCODE  "BARCODE"
+#define XI_BUTTONBOX	 "BUTTONBOX"
+#define XI_KNOB_BOX "KNOB_BOX"
+#define XI_ONE_KNOB "ONE_KNOB"
+#define XI_NINE_KNOB	 "NINE_KNOB"
+#define XI_TRACKBALL	 "TRACKBALL"
+#define XI_QUADRATURE	 "QUADRATURE"
+#define XI_ID_MODULE	 "ID_MODULE"
+#define XI_SPACEBALL	 "SPACEBALL"
+#define XI_DATAGLOVE	 "DATAGLOVE"
+#define XI_EYETRACKER	 "EYETRACKER"
+#define XI_CURSORKEYS	 "CURSORKEYS"
+#define XI_FOOTMOUSE	 "FOOTMOUSE"
+
+#define Dont_Check	      0
+#define XInput_Initial_Release		1
+#define XInput_Add_XDeviceBell		2
+#define XInput_Add_XSetDeviceValuators	3
+#define XInput_Add_XChangeDeviceControl 4
+
+#define XI_Absent	 0
+#define XI_Present	 1
+
+#define XI_Initial_Release_Major	1
+#define XI_Initial_Release_Minor	0
+
+
+
+
+			     1m1000m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#define XI_Add_XDeviceBell_Major	1
+#define XI_Add_XDeviceBell_Minor	1
+
+#define XI_Add_XSetDeviceValuators_Major     1
+#define XI_Add_XSetDeviceValuators_Minor     2
+
+#define XI_Add_XChangeDeviceControl_Major    1
+#define XI_Add_XChangeDeviceControl_Minor    3
+
+#define DEVICE_RESOLUTION     1
+
+#define NoSuchExtension	      1
+
+#define COUNT		 0
+#define CREATE		 1
+
+#define NewPointer	 0
+#define NewKeyboard	 1
+
+#define XPOINTER	 0
+#define XKEYBOARD	 1
+
+#define UseXKeyboard	      0xFF
+
+#define IsXPointer	 0
+#define IsXKeyboard	 1
+#define IsXExtensionDevice    2
+
+#define AsyncThisDevice	      0
+#define SyncThisDevice	      1
+#define ReplayThisDevice 2
+#define AsyncOtherDevices     3
+#define AsyncAll	 4
+#define SyncAll		      5
+
+#define FollowKeyboard	      3
+#ifndef RevertToFollowKeyboard
+#define RevertToFollowKeyboard	   3
+#endif
+
+#define DvAccelNum		(1L << 0)
+#define DvAccelDenom		(1L << 1)
+#define DvThreshold		(1L << 2)
+
+#define DvKeyClickPercent     (1L<<0)
+#define DvPercent	 (1L<<1)
+#define DvPitch		      (1L<<2)
+#define DvDuration	 (1L<<3)
+#define DvLed		 (1L<<4)
+#define DvLedMode	 (1L<<5)
+#define DvKey		 (1L<<6)
+#define DvAutoRepeatMode (1L<<7)
+
+#define DvString		(1L << 0)
+
+
+
+			     1m1010m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+#define DvInteger		(1L << 0)
+
+#define DeviceMode		(1L << 0)
+#define Relative		0
+#define Absolute		1
+/* Merged from Metrolink tree for XINPUT stuff	  */
+#define TS_Raw			   57
+#define TS_Scaled		   58
+#define SendCoreEvents		   59
+#define DontSendCoreEvents	   60
+/* End of merged section */
+
+#define ProximityState		(1L << 1)
+#define InProximity		(0L << 1)
+#define OutOfProximity		(1L << 1)
+
+#define AddToList		0
+#define DeleteFromList		1
+
+#define KeyClass	 0
+#define ButtonClass	      1
+#define ValuatorClass	      2
+#define FeedbackClass	      3
+#define ProximityClass	 4
+#define FocusClass	      5
+#define OtherClass	      6
+
+#define KbdFeedbackClass      0
+#define PtrFeedbackClass      1
+#define StringFeedbackClass   2
+#define IntegerFeedbackClass	   3
+#define LedFeedbackClass      4
+#define BellFeedbackClass     5
+
+#define _devicePointerMotionHint 0
+#define _deviceButton1Motion   1
+#define _deviceButton2Motion   2
+#define _deviceButton3Motion   3
+#define _deviceButton4Motion   4
+#define _deviceButton5Motion   5
+#define _deviceButtonMotion    6
+#define _deviceButtonGrab      7
+#define _deviceOwnerGrabButton	    8
+#define _noExtensionEvent      9
+
+#define XI_BadDevice	 0
+#define XI_BadEvent 1
+#define XI_BadMode  2
+#define XI_DeviceBusy	 3
+#define XI_BadClass 4
+
+/* Make XEventClass be a CARD32 for 64 bit servers.  Don't affect client
+ * definition of XEventClass since that would be a library interface change.
+ * See the top of X.h for more _XSERVER64 magic.
+
+
+
+			     1m1020m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+ */
+#ifdef _XSERVER64
+typedef	  CARD32	 XEventClass;
+#else
+typedef	  unsigned long	 XEventClass;
+#endif
+
+/*******************************************************************
+ *
+ * Extension version structure.
+ *
+ */
+
+typedef struct {
+	int    present;
+	short  major_version;
+	short  minor_version;
+} XExtensionVersion;
+
+#endif /* _XI_H_ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m1030m
+
+
+
+
+
+1mX Input Extension Library		      X11, Release 6.40m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m1040m
+
+
+
+
+
+
+
+
+
+		     1mTable of Contents0m
+
+
+1. Input Extension Overview  . . . . . . . . . . . . . .   1
+1.1. Design Approach . . . . . . . . . . . . . . . . . .   1
+1.2. Core Input Devices	 . . . . . . . . . . . . . . . .   1
+1.3. Extension Input Devices . . . . . . . . . . . . . .   2
+1.3.1. Input Device Classes  . . . . . . . . . . . . . .   3
+1.4. Using Extension Input Devices . . . . . . . . . . .   3
+2. Library Extension Requests  . . . . . . . . . . . . .   4
+2.1. Window Manager Functions  . . . . . . . . . . . . .   4
+2.1.1. Changing the Core Devices . . . . . . . . . . . .   5
+2.1.2. Event Synchronization and Core Grabs  . . . . . .   7
+2.1.3. Extension Active Grabs  . . . . . . . . . . . . .   8
+2.1.4. Passively Grabbing a Key	 . . . . . . . . . . . .  11
+2.1.5. Passively Grabbing a Button . . . . . . . . . . .  16
+2.1.6. Thawing a Device	 . . . . . . . . . . . . . . . .  21
+2.1.7. Controlling Device Focus	 . . . . . . . . . . . .  23
+2.1.8. Controlling Device Feedback . . . . . . . . . . .  26
+2.1.9. Ringing a Bell on an Input Device . . . . . . . .  37
+2.1.10. Controlling Device Encoding  . . . . . . . . . .  38
+2.1.11. Controlling Button Mapping . . . . . . . . . . .  41
+2.1.12. Obtaining the State of a Device	 . . . . . . . .  43
+2.2. Events  . . . . . . . . . . . . . . . . . . . . . .  46
+2.2.1. Event Types . . . . . . . . . . . . . . . . . . .  46
+2.2.2. Event Classes . . . . . . . . . . . . . . . . . .  47
+2.2.3. Event Structures	 . . . . . . . . . . . . . . . .  48
+2.2.3.1. Device Key Events . . . . . . . . . . . . . . .  48
+2.2.3.2. Device Button Events  . . . . . . . . . . . . .  49
+2.2.3.3. Device Motion Events  . . . . . . . . . . . . .  50
+2.2.3.4. Device Focus Events . . . . . . . . . . . . . .  51
+2.2.3.5. Device StateNotify Event  . . . . . . . . . . .  52
+2.2.3.6. Device Mapping Event  . . . . . . . . . . . . .  53
+2.2.3.7. ChangeDeviceNotify Event  . . . . . . . . . . .  54
+2.2.3.8. Proximity Events  . . . . . . . . . . . . . . .  54
+2.3. Event Handling Functions  . . . . . . . . . . . . .  55
+2.3.1. Determining the Extension Version . . . . . . . .  56
+2.3.2. Listing Available Devices . . . . . . . . . . . .  56
+2.3.3. Enabling and Disabling Extension Devices	 . . . .  59
+2.3.4. Changing the Mode of a Device . . . . . . . . . .  61
+2.3.5. Initializing Valuators on an Input Device . . . .  62
+2.3.6. Getting Input Device Controls . . . . . . . . . .  63
+2.3.7. Changing Input Device Controls  . . . . . . . . .  65
+2.3.8. Selecting Extension Device Events . . . . . . . .  67
+2.3.9. Determining Selected Device Events  . . . . . . .  69
+2.3.10. Controlling Event Propagation  . . . . . . . . .  70
+2.3.11. Sending an Event . . . . . . . . . . . . . . . .  72
+2.3.12. Getting Motion History . . . . . . . . . . . . .  74
+2.3.12. Appendix A . . . . . . . . . . . . . . . . . . .  77
+
+
+
+
+
+
+
+			      1mi0m
+
+

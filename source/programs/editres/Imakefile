@@ -1,0 +1,13 @@
+XCOMM $XFree86: xc/programs/editres/Imakefile,v 1.2 2006/01/09 15:00:41 dawes Exp $
+
+        DEPLIBS = XawClientDepLibs XkbClientDepLibs
+LOCAL_LIBRARIES = XawClientLibs XkbClientLibs
+           SRCS = actions.c comm.c editres.c geometry.c handler.c setvalues.c \
+		  svpopup.c utils.c widgets.c wtree.c 
+           OBJS = actions.o comm.o editres.o geometry.o handler.o setvalues.o \
+		  svpopup.o utils.o widgets.o wtree.o 
+        DEFINES = XkbClientDefines
+
+ComplexProgramTarget(editres)
+InstallAppDefaults(Editres)
+InstallAppDefaultsLong(Edit-col,Editres-color)

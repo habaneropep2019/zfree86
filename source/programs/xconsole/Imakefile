@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/programs/xconsole/Imakefile,v 3.3 2006/01/09 15:01:02 dawes Exp $
+
+          SRCS = xconsole.c
+          OBJS = xconsole.o
+       PROGRAMS = xconsole
+        DEPLIBS = XawClientDepLibs
+LOCAL_LIBRARIES = XawClientLibs
+
+ComplexProgramTarget(xconsole)
+
+InstallAppDefaults(XConsole)

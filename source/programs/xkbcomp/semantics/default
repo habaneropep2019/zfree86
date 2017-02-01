@@ -1,0 +1,7 @@
+// $XFree86: xc/programs/xkbcomp/semantics/default,v 1.2 2006/01/09 15:01:25 dawes Exp $
+default xkb_semantics "default" {
+
+xkb_types		{ include "default" 	};
+xkb_compatibility	{ include "default"	};
+
+};

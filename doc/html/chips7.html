@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Troubleshooting </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Troubleshooting </EM><BR>
+<b>Previous:</b> <A HREF="chips6.html"><EM>The Full Story on Clock Limitations </EM></A><BR>
+<b>Next:</b> <A HREF="chips8.html"><EM>Disclaimer </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="10"></A>7. Troubleshooting </H2>
+
+<p>
+<dl>
+<dt><b> The cursor appears as a white box, after switching modes</b><dd><p>There is a known bug in the H/W cursor, that sometimes causes
+the cursor to be redrawn as a white box, when the mode is changed.
+This can be fixed by moving the cursor to a different region,
+switching to the console and back again, or if it is too annoying
+the H/W cursor can be disabled by removing the "<code>HWcursor</code>"
+option.</p>
+<dt><b> The cursor hot-spot isn't at the same point as the cursor</b><dd><p>With modes on the 6555x machines that are stretched to fill the
+flat panel, the H/W cursor is not correspondingly stretched. This
+is a small and long-standing bug in the current server. You can
+avoid this by either using the "<code>NoStretch</code>" option or
+removing the <code>HWcursor</code>" option.</p>
+<dt><b> The lower part of the screen is corrupted</b><dd><p>Many DSTN screens use the top of video ram to implement a frame
+accelerator. This reduces the amount of video ram available to
+the modes. The server doesn't prevent the user from specifying
+a mode that will use this memory, it prints a warning on the console.
+The effect of this problem will be that the lower part of the screen
+will reside in the same memory as the frame accelerator and will
+therefore be corrupt. Try reducing the amount of memory consumed
+by the mode.</p>
+<dt><b> There is a video signal, but the screen doesn't sync.</b><dd><p>You are using a mode that your screen cannot handle. If it is a
+non-standard mode, maybe you need to tweak the timings a bit. If
+it is a standard mode and frequency that your screen should be
+able to handle, try to find different timings for a similar mode
+and frequency combination. For LCD modes, it is possible that your
+LCD panel requires different panel timings at the text console than
+with a graphics mode. In this case you will need the
+"<code>UseModeline</code>" and perhaps also the "<code>FixPanelSize</code>"
+options to reprogram the LCD panel timings to sensible values.</p>
+<dt><b> `Wavy' screen.</b><dd><p>Horizontal waving or jittering of the whole screen, continuously
+(independent from drawing operations).  You are probably using a
+dot clock that is too high (or too low); it is also possible that
+there is interference with a close MCLK. Try a lower dot clock.
+For CRT's you can also try to tweak the mode timings; try increasing
+the second horizontal value somewhat.</p>
+<dt><b> Crash or hang after start-up (probably with a black screen).</b><dd><p>Try the "<code>NoAccel</code>" or one of the XAA acceleration options
+discussed above. Check that the BIOS settings are OK; in particular,
+disable caching of 0xa0000-0xaffff. Disabling hidden DRAM refresh
+may also help.</p>
+<dt><b> Hang as the first text is appearing on the screen on SVR4 machines.</b><dd><p>This problem has been reported under UnixWare 1.x, but not tracked
+down. It doesn't occur under UnixWare 2.x and only occurs on the
+HiQV series of chips. It might affect some other SVR4 operating
+systems as well. The workaround is to turn off the use of CPU to
+screen acceleration with the
+"<code>XaaNoCPUToScreenColorExapndFill</code>" option.</p>
+<dt><b> Crash, hang, or trash on the screen after a graphics operation.</b><dd><p>This may be related to a bug in one of the accelerated
+functions, or a problem with the BitBLT engine. Try the
+"<code>NoAccel</code>" or one of the XAA acceleration options
+discussed above. Also check the BIOS settings. It is also possible
+that with a high dot clock and depth on a large screen there is
+very little bandwidth left for using the BitBLT engine. Try
+reducing the clock.</p>
+<dt><b> Chipset is not detected.</b><dd><p>Try forcing the chipset to a type that is most similar to what
+you have.</p>
+<dt><b>The screen is blank when starting X</b><dd><p>One possible cause of this problem with older linux kernels is that
+the "APM_DISPLAY_BLANK" option didn't work correct. Either upgrade
+your kernel or rebuild it with the "APM_DISPLAY_BLANK" option
+disabled. If the problem remains, or you aren't using linux, a
+CRT/LCD or switch to and from the virtual console will often fix it.</p>
+<dt><b> Textmode is not properly restored</b><dd><p>This has been reported on some configurations. Many laptops
+use the programmable clock of the 6554x chips at the console.
+It is not always possible to find out the setting that is
+used for this clock if BIOS has written the MClk after the
+VClk. Hence the server assumes a 25.175MHz clock at the
+console. This is correct for most modes, but can cause some
+problems. Usually this is fixed by switching between the LCD
+and CRT. Alternatively the user can use the "<code>TextClockFreq</code>"
+option described above to select a different clock for the
+text console. Another possible cause of this problem is if 
+linux kernels are compiled with the "APM_DISPLAY_BLANK" option.
+As mentioned before, try disabling this option.</p>
+<dt><b> I can't display 640x480 on my 800x600 LCD</b><dd><p>The problem here is that the flat panel needs timings that
+are related to the panel size, and not the mode size. There is
+no facility in the current Xservers to specify these values,
+and so the server attempts to read the panel size from the
+chip. If the user has used the "<code>UseModeline</code>" or
+"<code>FixPanelSize</code>" options the panel timings are derived
+from the mode, which can be different than the panel size. Try
+deleting theses options	from XF86Config or using an LCD/CRT switch.</p>
+<dt><b> I can't get a 320x240 mode to occupy the whole 640x480 LCD</b><dd><p>There is a bug in the 6554x's H/W cursor for modes that are
+doubled vertically. The lower half of the screen is not accessible.
+The servers solution to this problem is not to do doubling vertically.
+Which results in the 320x240 mode only expanded to 640x360. If this
+is a problem, a work around is to remove the "<code>HWcursor</code>"
+option. The server will then allow the mode to occupy the whole
+640x480 LCD.</p>
+<dt><b> After a suspend/resume my screen is messed up</b><dd><p>During a suspend/resume, the BIOS controls what is read and 
+written back to the registers. If the screen is using a mode
+that BIOS doesn't know about, then there is no guarantee that
+it will be resumed correctly. For this reason a mode that is
+as close to VESA like as possible should be selected. It is also
+possible that the VGA palette can be affected by a suspend/resume.
+Using an 8bpp, the colour will then be displayed incorrectly. This
+shouldn't affect higher depths, and is fixable with a switch to
+the virtual console and back.</p>
+<dt><b> The right hand edge of the mode isn't visible on the LCD</b><dd><p>This is usually due to a problem with the "<code>LcdCenter</code>"
+option. If this option is removed form XF86Config, then the problem
+might go away. Alternatively the manufacturer could have incorrectly
+programmed the panel size in the EGA console mode. The
+"<code>FixPanelSize</code>" can be used to force the modeline values into
+the panel size registers. Two machines that are known to have this
+problem are the "<code>HP OmniBook 5000</code>" and the "<code>NEC  Versa
+4080</code>".</p>
+<dt><b> My TFT screen has a reddish tint in 24bpp mode</b><dd><p>For 6554x chipsets the server assumes that the TFT bus width is
+24bits. If this is not true then the screen will appear to have a
+reddish tint. This can be fixed by using the "<code>18BitBus</code>"
+option. Note that the reverse is also true. If the "<code>18BitBus</code>"
+is used and the TFT bus width is 24bpp, then the screen will appear
+reddish. Note that this option only has an effect on TFT screens. </p>
+<dt><b> SuperProbe won't work with my chipset</b><dd><p>At least one non-PCI bus system with a HiQV chipset has been found to
+require the "<code>-no_bios</code>" option for SuperProbe to correctly
+detect the chipset with the factory default BIOS settings. The server
+itself can correctly detect the chip in the same situation.</p>
+<dt><b> My 690xx machine lockups when using the "<code>MMIO</code>" option</b><dd><p>The 690xx MMIO mode has been implemented entirely from the manual
+as I don't have the hardware to test it on. At this point no testing
+has been done and it is entirely possible that the "<code>MMIO</code>
+option will lockup your machine. You have been warned! However if
+you do try this option and are willing to debug it, I'd like to hear
+from you.</p>
+<dt><b> My TrueColor windows are corrupted when using the "<code>Overlay</code>" option </b><dd><p>Chips and Technologies specify that the memory clock used with the
+multimedia engine running should be lower than that used without. As
+use of the HiQV chipsets multimedia engine was supposed to be for
+things like zoomed video overlays, its use was supposed to be
+occasional and so most machines have their memory clock set to a value
+that is too high for use with the "<code>Overlay</code>" option. So with 
+the "<code>Overlay</code>" option, using the "<code>SetMClk</code>" option to
+reduce the speed of the memory clock is recommended.</p>
+<dt><b> The mpeg video playing with the XVideo extension has corrupted colours </b><dd><p>The XVideo extension has only recently been added to the chips driver.
+Some YUV to RGB colour have been noted at 15 and 16 bit colour depths.
+However, 8 and 24 bit colour depths seem to work fine.</p>
+<dt><b> My ct69030 machine locks up when starting XFree86</b><dd><p>The ct69030 chipset introduced a new dual channel architecture. In its
+current form, XFree86 can not take advantage of this second display
+channel. In fact if the video BIOS on the machine sets the ct69030
+to a dual channel mode by default, XFree86 will lockup hard at this
+point. The solution is to use the BIOS setup to change to a single
+display channel mode, ensuring that both the IOSS and MSS registers
+are set to a single channel mode. Work is underway to fix this.</p>
+<dt><b> I can't start X-windows with 16, 24 or 32bpp</b><dd><p>Firstly, is your machine capable of 16/24/32bpp with the mode
+specified. Many LCD displays are incapable of using a 24bpp 
+mode. Also you need at least a 65540 to use 16/24bpp and at least a
+65550 for 32bpp. The amount of memory used by the mode will be
+doubled/tripled/quadrupled. The correct options to start the server
+with these modes are</p>
+<p>
+<pre>
+	  startx -- -depth 16             5-6-5 RGB ('64K color', XGA)
+	  startx -- -depth 15             5-5-5 RGB ('Hicolor')
+	  startx -- -depth 24             8-8-8 RGB truecolor
+</pre>
+
+or with the HiQV series of chips you might try
+<pre>
+	  startx -- -depth 24 -fbbpp 32   8-8-8 RGB truecolor
+</pre>
+
+however as XFree86 version 4.8.0 allows 32bpp pixmaps to be
+used with framebuffers operating in 24bpp, this mode of operating
+will cost performance for no gain in functionality.</p>
+<p>Note that the "<code>-bpp</code>" option has been removed
+and replaced with a "<code>-depth</code>" and "<code>-fbbpp</code>"
+option because of the confusion between the depth and number of
+bits per pixel used to represent to framebuffer and the pixmaps
+in the screens memory.</p>
+</dl>
+</p>
+<p>A general problem with the server that can manifested in many way such
+as drawing errors, wavy screens, etc is related to the programmable
+clock. Many potential programmable clock register setting are unstable.
+However luckily there are many different clock register setting that
+can give the same or very similar clocks. The clock code can be fooled
+into giving a different and perhaps more stable clock by simply changing
+the clock value slightly. For example 65.00MHz might be unstable while
+65.10MHz is not. So for unexplained problems not addressed above, please
+try to alter the clock you are using slightly, say in steps of 0.05MHz
+and see if the problem goes away. Alternatively, using the
+"<code>CRTClkIndx</code>" or "<code>FPClkIndx</code>" option with HiQV chips might
+also help.</p>
+
+<p>For other screen drawing related problems, try the "<code>NoAccel</code>" or
+one of the XAA acceleration options discussed above. A useful trick for
+all laptop computers is to switch between LCD/CRT (usually with something
+like Fn-F5), if the screen is having problems.</p>
+<p>If you are having driver-related problems that are not addressed by this
+document, or if you have found bugs in accelerated functions, you can
+try contacting the XFree86 team (the current driver maintainer can be
+reached at 
+<EM><A HREF="mailto:dbateman@club-internet.fr">dbateman@club-internet.fr</A></EM>
+ or 
+<EM><A HREF="mailto:eich@xfree86.org">eich@xfree86.org</A></EM>
+),
+or post in the Usenet newsgroup "<i>comp.windows.x.i386unix</i>".</p>
+
+ <HR NOSHADE>
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>Troubleshooting </EM><BR>
+<b>Previous:</b> <A HREF="chips6.html"><EM>The Full Story on Clock Limitations </EM></A><BR>
+<b>Next:</b> <A HREF="chips8.html"><EM>Disclaimer </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728824" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

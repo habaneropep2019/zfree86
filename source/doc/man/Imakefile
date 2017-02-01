@@ -1,0 +1,31 @@
+XCOMM $XFree86: xc/doc/man/Imakefile,v 1.10 2006/01/09 14:56:17 dawes Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags
+
+#if BuildXvLibrary
+XVDIR = Xv
+#endif
+#if BuildGLXLibrary
+GLXDIRS = GL GLw
+#endif
+#if BuildGLULibrary
+GLUDIRS = GLU
+#endif
+#if BuildDmxLibrary
+DMXDIR = DMX
+#endif
+
+#if InstallMiscManPages
+MISCDIR = misc
+#endif
+
+#if InstallLibManPages
+LIBMANDIRS = X11 Xt Xext Xi Xau $(XVDIR) $(GLXDIRS) $(GLUDIRS) $(DMXDIR)
+#endif
+
+SUBDIRS = general $(LIBMANDIRS) $(MISCDIR)
+
+all::
+
+MakeSubdirs($(SUBDIRS))

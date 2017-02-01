@@ -1,0 +1,7 @@
+// $XFree86: xc/programs/xkbcomp/torture/sym_interp2,v 1.2 2006/01/09 15:01:31 dawes Exp $
+xkb_compatibility "torture2" 
+
+interpret ISO_Next_Group {
+	repeat= True;
+	action= NoAction();
+};

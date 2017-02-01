@@ -1,0 +1,4500 @@
+%!PS-Adobe-3.0
+%%BoundingBox: (atend)
+%%Pages: (atend)
+%%PageOrder: (atend)
+%%DocumentFonts: (atend)
+%%Creator: Frame 5.1
+%%DocumentData: Clean7Bit
+%%EndComments
+%%BeginProlog
+%-
+%- Frame ps_prolog 5.0, for use with Frame 5.0 products
+%- This ps_prolog file is Copyright (c) 1986-1996 Adobe Systems, Incoporated.
+%- All rights reserved.  This ps_prolog file may be freely copied and 
+%- distributed in conjunction with documents created using FrameMaker, 
+%- FrameMaker/SGML FrameReader and FrameViewer as long as this 
+%- copyright notice is preserved.
+%-
+%- FrameMaker users specify the proper paper size for each print job in the
+%- "Print" dialog's "Printer Paper Size" "Width" and "Height~ fields.  If the
+%- printer that the PS file is sent to does not support the requested paper
+%- size, or if there is no paper tray of the proper size currently installed, 
+%- then the job will not be printed.  The following flag, if set to true, will
+%- cause the job to print on the default paper in such cases.
+/FMAllowPaperSizeMismatch            false def
+%-
+%- Frame products normally print colors as their true color on a color printer
+%- or as shades of gray, based on luminance, on a black-and white printer. The
+%- following flag, if set to true, forces all non-white colors to print as pure
+%- black. This has no effect on bitmap images.
+/FMPrintAllColorsAsBlack             false def
+%-
+%- Frame products can either set their own line screens or use a printer's 
+%- default settings. Three flags below control this separately for no 
+%- separations, spot separations and process separations. If a flag
+%- is true, then the default printer settings will not be changed. If it is
+%- false, Frame products will use their own settings from a table based on
+%- the printer's resolution.
+/FMUseDefaultNoSeparationScreen      true  def
+/FMUseDefaultSpotSeparationScreen    true  def
+/FMUseDefaultProcessSeparationScreen false def
+%-
+%- For any given PostScript printer resolution, Frame products have two sets of 
+%- screen angles and frequencies for printing process separations, which are 
+%- recomended by Adobe. The following variable chooses the higher frequencies
+%- when set to true or the lower frequencies when set to false. This is only
+%- effective if the appropriate FMUseDefault...SeparationScreen flag is false.
+/FMUseHighFrequencyScreens true def
+%-
+%- The following is a set of predefined optimal frequencies and angles for various
+%- common dpi settings. This is taken from "Advances in Color Separation Using
+%- PostScript Software Technology," from Adobe Systems (3/13/89 P.N. LPS 0043)
+%- and corrolated with information which is in various PPD (4.0) files.
+%-
+%- The "dpiranges" figure is the minimum dots per inch device resolution which
+%- can support this setting. The "low" and "high" values are controlled by the
+%- setting of the FMUseHighFrequencyScreens flag above. The "TDot" flags control
+%- the use of the "Yellow Triple Dot" feature whereby the frequency id divided by
+%- three, but the dot function is "trippled" giving a block of 3x3 dots per cell.
+%-
+%- PatFreq is a compromise pattern frequency for ps Level 2 printers which is close
+%- to the ideal WYSIWYG pattern frequency of 9 repetitions/inch but does not beat
+%- (too badly) against the screen frequencies of any separations for that DPI.
+% This is computed by taking dpi/9 as the ideal pixels per repetition, and then
+% computing a tiling size in printer pixels for each of the four separations as 
+% (dpi/screenFreq)*(cos(screenAngle)+sin(screenAngle)) Actually, this is the same 
+% for Cyan and Magenta). Then, we take a "nice" LCM of the tile sizes close to
+% the desired pattern tile where the beat factor is not more than 2 or 3.
+%
+/dpiranges   [  2540    2400    1693     1270    1200     635      600      0      ] def
+/CMLowFreqs  [ 100.402  94.8683 89.2289 100.402  94.8683  66.9349  63.2456 47.4342 ] def
+/YLowFreqs   [  95.25   90.0    84.65    95.25   90.0     70.5556  66.6667 50.0    ] def
+/KLowFreqs   [  89.8026 84.8528 79.8088  89.8026 84.8528  74.8355  70.7107 53.033  ] def
+/CLowAngles  [  71.5651 71.5651 71.5651 71.5651  71.5651  71.5651  71.5651 71.5651 ] def
+/MLowAngles  [  18.4349 18.4349 18.4349 18.4349  18.4349  18.4349  18.4349 18.4349 ] def
+/YLowTDot    [  true    true    false    true    true     false    false   false   ] def
+
+/CMHighFreqs [ 133.87  126.491 133.843  108.503 102.523  100.402   94.8683 63.2456 ] def
+/YHighFreqs  [ 127.0   120.0   126.975  115.455 109.091   95.25    90.0    60.0    ] def
+/KHighFreqs  [ 119.737 113.137 119.713  128.289 121.218   89.8026  84.8528 63.6395 ] def
+/CHighAngles [  71.5651 71.5651 71.5651  70.0169 70.0169  71.5651  71.5651 71.5651 ] def
+/MHighAngles [  18.4349 18.4349 18.4349  19.9831 19.9831  18.4349  18.4349 18.4349 ] def
+/YHighTDot   [  false   false   true     false   false    true     true    false   ] def
+
+/PatFreq     [	10.5833 10.0     9.4055  10.5833 10.0	  10.5833  10.0	   9.375   ] def
+%-
+%- PostScript Level 2 printers contain an "Accurate Screens" feature which can
+%- improve process separation rendering at the expense of compute time. This 
+%- flag is ignored by PostScript Level 1 printers.
+/FMUseAcccurateScreens true def
+%-
+%- The following PostScript procedure defines the spot function that Frame
+%- products will use for process separations. You may un-comment-out one of
+%- the alternative functions below, or use your own.
+%-
+%- Dot function
+/FMSpotFunction {abs exch abs 2 copy add 1 gt 
+		{1 sub dup mul exch 1 sub dup mul add 1 sub }
+		{dup mul exch dup mul add 1 exch sub }ifelse } def
+%-
+%- Line function
+%- /FMSpotFunction { pop } def
+%-
+%- Elipse function
+%- /FMSpotFunction { dup 5 mul 8 div mul exch dup mul exch add 
+%-		sqrt 1 exch sub } def
+%-
+%-
+
+/FMversion (5.0) def % matches PS_VERSION in fmprintdriver
+
+% PostScript Level 1 = true, 2 = false
+/fMLevel1 /languagelevel where {pop languagelevel} {1} ifelse 2 lt def
+
+% Set up Color vs. Black-and-White
+/FMPColor
+	fMLevel1 {
+		false
+		/colorimage where {pop pop true} if
+	} {
+%		statusdict /processcolors known {
+%			statusdict /processcolors get exec
+%		} {1} ifelse
+%		1 gt
+		true
+	} ifelse
+def
+
+/FrameDict 400 dict def % should check this value each time changes made
+
+%
+% For NeWS we add a fake errordict, so we can psh files
+%
+systemdict /errordict known not {/errordict 10 dict def
+		errordict /rangecheck {stop} put} if
+
+%- The readline in PS 23.0 doesn't recognize cr's as nl's on AppleTalk
+FrameDict /tmprangecheck errordict /rangecheck get put % save old rangecheck
+errordict /rangecheck {FrameDict /bug true put} put % will flag bug found
+FrameDict /bug false put % flag bug not found
+mark % since we're not sure what will happen next
+%- Some PS machines read past the CR, so keep the following 3 lines together!
+currentfile 5 string readline
+00
+0000000000
+cleartomark % junk from readline and rangecheck
+errordict /rangecheck FrameDict /tmprangecheck get put % restore rangecheck
+FrameDict /bug get { % redefine readline if last one got a rangecheck
+	/readline {
+		/gstring exch def
+		/gfile exch def
+		/gindex 0 def
+		{
+			gfile read pop % get a char
+			dup 10 eq {exit} if % exit if LF
+			dup 13 eq {exit} if % exit if CR
+			gstring exch gindex exch put % store it away
+			/gindex gindex 1 add def % bump index
+		} loop
+		pop % eol character
+		gstring 0 gindex getinterval true % simulate real readline
+		} bind def
+	} if
+
+% outer-world defs
+
+/FMshowpage /showpage load def
+/FMquit /quit load def
+
+/FMFAILURE { % enter with two error strings on the stack
+	dup = flush % send a copy of the message to the console
+	FMshowpage % msg on a page by itself, so it can't be, say, black on black
+	/Helvetica findfont 12 scalefont setfont
+	72 200 moveto show
+	72 220 moveto show
+	FMshowpage % we might be in the middle of some EPS, where "showpage"
+	FMquit % and "quit" are redefined
+	} def % only used once at most, so no bind
+
+/FMVERSION {
+	FMversion ne {
+		(Adobe Frame product version does not match ps_prolog!  Check installation;)
+		(also check ~/fminit and ./fminit for old versions) FMFAILURE
+		} if
+	} def % only used at startup, so no bind
+
+/FMBADEPSF { % Call with bad operator name on stack (as a string)
+	(Adobe's PostScript Language Reference Manual, 2nd Edition, section H.2.4)
+	(says your EPS file is not valid, as it calls X              )
+	dup dup (X) search pop exch pop exch pop length % parmstr errstr errstr indx
+	5 -1 roll % errstr errstr index parmstr
+	putinterval % errstr
+	FMFAILURE
+	} def
+
+% standard concatprocs routine
+/fmConcatProcs
+	{
+	/proc2 exch cvlit def/proc1 exch cvlit def/newproc proc1 length proc2 length add array def
+	newproc 0 proc1 putinterval newproc proc1 length proc2 putinterval newproc cvx
+}def
+
+% Put all local variables here in alphabetical order.
+FrameDict begin [
+	/ALDsave
+	/FMdicttop
+	/FMoptop
+	/FMpointsize
+	/FMsaveobject
+	/b
+	/bitmapsave
+	/blut
+	/bpside
+	/bs
+	/bstring
+	/bwidth
+	/c
+	/cf
+	/cs
+	/cynu
+	/depth
+	/edown
+	/fh
+	/fillvals
+	/fw
+	/fx
+	/fy
+	/g
+	/gfile
+	/gindex
+	/grnt
+	/gryt
+	/gstring
+	/height
+	/hh
+	/i
+	/im
+	/indx
+	/is
+	/k
+	/kk
+	/landscape
+	/lb
+	/len
+	/llx
+	/lly
+	/m
+	/magu
+	/manualfeed
+	/n
+	/offbits
+	/onbits
+	/organgle
+	/orgbangle
+	/orgbfreq
+	/orgbproc
+	/orgbxfer
+	/orgfreq
+	/orggangle
+	/orggfreq
+	/orggproc
+	/orggxfer
+	/orgmatrix
+	/orgproc
+	/orgrangle
+	/orgrfreq
+	/orgrproc
+	/orgrxfer
+	/orgxfer
+	/pagesave
+	/paperheight
+	/papersizedict
+	/paperwidth
+	/pos
+	/pwid
+	/r
+	/rad
+	/redt
+	/sl
+	/str
+	/tran
+	/u
+	/urx
+	/ury
+	/val
+	/width
+	/width
+	/ws
+	/ww
+	/x
+	/x1
+	/x2
+	/xindex
+	/xpoint
+	/xscale
+	/xx
+	/y
+	/y1
+	/y2
+	/yelu
+	/yindex
+	/ypoint
+	/yscale
+	/yy
+] { 0 def } forall
+
+% Start of PDF/Acrobat support
+
+% Bind def
+/FmBD {bind def} bind def
+
+systemdict /pdfmark known {
+	/fMAcrobat true def
+
+	% FmPD is a conditional PDFMark
+	/FmPD /pdfmark load def
+	
+	% FmPT is a show text operator which only show up when distiller is active
+	/FmPT /show load def
+	
+	% FmPD2 and FmPA are Acrobat 2.0-specific
+	currentdistillerparams /CoreDistVersion get 2000 ge {
+	
+		% FmPD2 is like FmPD but for Acrobat 2.0-specific PDF
+		/FmPD2 /pdfmark load def
+		
+		% x y/name FmPA
+		% 	is equivalent to
+		% [/Dest/name/View[/FitH x y FmDC exch pop]/DEST FmPD
+		% It is a shortcut for pagragraph Uinique ID designators whic occurr commonly.
+		/FmPA { mark exch /Dest exch 5 3 roll 
+				/View [ /XYZ null 6 -2 roll FmDC exch pop null] /DEST FmPD 
+		}FmBD
+	} {
+		% These are No-Ops for Distiller 1.0
+		/FmPD2 /cleartomark load def
+		/FmPA {pop pop pop}FmBD
+	} ifelse
+} {
+	% these are the No-Ops for regular PostScript
+	/fMAcrobat false def
+	/FmPD /cleartomark load def
+	/FmPD2 /cleartomark load def
+	/FmPT /pop load def
+	/FmPA {pop pop pop}FmBD
+} ifelse
+
+% This convert a set of X Y coordinates from the current user space to the default
+% PostScript coordinates needed by some pdfmark variants. We also convert to 
+% integer because the distiller doesn't always like floats!
+/FmDC {
+	transform fMDefaultMatrix itransform cvi exch cvi exch
+}FmBD
+
+% This converts four numbers into a bounding box making sure the first two are maller than the last two
+/FmBx {
+	dup 3 index lt {3 1 roll exch} if 
+	1 index 4 index lt {4 -1 roll 3 1 roll exch 4 1 roll} if
+}FmBD
+
+% End of PDF/Acrobat support
+
+%
+% Color separation code
+%
+
+% Constants.
+
+/FMnone 0 def
+/FMcyan 1 def
+/FMmagenta 2 def
+/FMyellow 3 def
+/FMblack 4 def
+/FMcustom 5 def
+
+/fMNegative false def % we are inverting the page
+
+% Variables.
+
+/FrameSepIs FMnone def % separation we are printing
+% If FrameSepIs is FMcustom, this is the custom color
+/FrameSepBlack 0 def
+/FrameSepYellow 0 def
+/FrameSepMagenta 0 def
+/FrameSepCyan 0 def
+/FrameSepRed 1 def
+/FrameSepGreen 1 def
+/FrameSepBlue 1 def
+/FrameCurGray 1 def
+/FrameCurPat null def
+
+/FrameCurColors [ 0 0 0 1 0 0 0 ] def % c m y k r g b
+
+% Utility routines
+
+/FrameColorEpsilon .001 def	% epsilon by which values can differ and sill be equal
+/eqepsilon {		% v1 v2 eqeps bool
+	sub dup 0 lt {neg} if
+	FrameColorEpsilon le
+} bind def
+
+% are the cmyk and cmykrgb arrays on the stack the same color?
+/FrameCmpColorsCMYK { % [ c1 m1 y1 k1 ] [ c2 m2 y2 k2 r2 g2 b2] -> bool
+	2 copy 0 get exch 0 get eqepsilon {
+		2 copy 1 get exch 1 get eqepsilon {
+			2 copy 2 get exch 2 get eqepsilon {
+				3 get exch 3 get eqepsilon
+			} {pop pop false} ifelse
+		}{pop pop false} ifelse
+	} {pop pop false} ifelse
+} bind def
+% are the rgb and cmykrgb arrays on the stack the same color?
+/FrameCmpColorsRGB { % [ r1 g1 b1 ] [ c2 m2 y2 k2 r2 g2 b2] -> bool
+	2 copy 4 get exch 0 get eqepsilon {
+		2 copy 5 get exch 1 get eqepsilon {
+			6 get exch 2 get eqepsilon
+		}{pop pop false} ifelse
+	} {pop pop false} ifelse
+} bind def
+
+% convert r g b to c m y k
+/RGBtoCMYK { % r g b
+	1 exch sub % r g y
+	3 1 roll % y r g
+	1 exch sub % y r m
+	3 1 roll % m y r
+	1 exch sub % m y c
+	3 1 roll % c m y
+	3 copy % c m y c m y
+	2 copy % c m y c m y m y
+	le { pop } { exch pop } ifelse % c m y c min(m,y)
+	2 copy % c m y c min(m,y) c min(m,y)
+	le { pop } { exch pop } ifelse % c m y min(c, min(m,y))
+	dup dup dup % c m y k k k k
+	6 1 roll % c k m y k k k
+	4 1 roll % c k m k y k k
+	7 1 roll % k c k m k y k
+	sub % k c k m k y
+	6 1 roll % y k c k m k
+	sub % y k c k m
+	5 1 roll % m y k c k
+	sub % m y k c
+	4 1 roll % c m y k 
+} bind def
+/CMYKtoRGB { % c m y k CMYKtoRGB r g b
+	dup dup 4 -1 roll add 						  % c m k k y+k
+	5 1 roll 3 -1 roll add 						  % y+k c k m+k
+	4 1 roll add 								  % m+k y+k c+k
+	1 exch sub dup 0 lt {pop 0} if 3 1 roll 	  % r m+k y+k
+	1 exch sub dup 0 lt {pop 0} if exch 	      % r b m+k
+	1 exch sub dup 0 lt {pop 0} if exch	  		  % r g b
+} bind def
+
+% Public routines
+
+
+% Happens at the top of each page that is a separation
+/FrameSepInit {
+	1.0 RealSetgray
+} bind def
+% Tell the separation code that this separation is for a custom color
+/FrameSetSepColor { % c m y k r g b
+	/FrameSepBlue exch def
+	/FrameSepGreen exch def
+	/FrameSepRed exch def
+	/FrameSepBlack exch def
+	/FrameSepYellow exch def
+	/FrameSepMagenta exch def
+	/FrameSepCyan exch def
+	/FrameSepIs FMcustom def
+	setCurrentScreen	
+} bind def
+% Tell the separation code that this separation is Cyan
+/FrameSetCyan {
+	/FrameSepBlue 1.0 def
+	/FrameSepGreen 1.0 def
+	/FrameSepRed 0.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 1.0 def
+	/FrameSepIs FMcyan def
+	setCurrentScreen	
+} bind def
+ 
+% Tell the separation code that this separation is Magenta
+/FrameSetMagenta {
+	/FrameSepBlue 1.0 def
+	/FrameSepGreen 0.0 def
+	/FrameSepRed 1.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 1.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMmagenta def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code that this separation is Yellow
+/FrameSetYellow {
+	/FrameSepBlue 0.0 def
+	/FrameSepGreen 1.0 def
+	/FrameSepRed 1.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 1.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMyellow def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code that this separation is Black
+/FrameSetBlack {
+	/FrameSepBlue 0.0 def
+	/FrameSepGreen 0.0 def
+	/FrameSepRed 0.0 def
+	/FrameSepBlack 1.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMblack def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code we are not doing a separation
+/FrameNoSep { %
+	/FrameSepIs FMnone def
+	setCurrentScreen
+} bind def
+
+% Initialize the separation code with all the custom colors we are
+% separating (not process colors)
+/FrameSetSepColors { % list of arrays of [c m y k r g b] count 
+	FrameDict begin
+	[ exch 1 add 1 roll ]
+	/FrameSepColors  % array of arrays of colors we are separating
+	exch def end
+	} bind def
+
+% is this color array in the array of custom color separations?
+/FrameColorInSepListCMYK { % [ c m y k ] -> bool
+	FrameSepColors {  % color elem-of-array
+       		exch dup 3 -1 roll % color color elem
+       		FrameCmpColorsCMYK % color bool
+       		{ pop true exit } if
+    	} forall % exits with either [color] or true
+	dup true ne {pop false} if
+	} bind def
+/FrameColorInSepListRGB { % [ r g b ] -> bool
+	FrameSepColors {  % color elem-of-array
+       		exch dup 3 -1 roll % color color elem
+       		FrameCmpColorsRGB % color bool
+       		{ pop true exit } if
+    	} forall % exits with either [color] or true
+	dup true ne {pop false} if
+	} bind def
+
+% Level 1 color operators saved and redefined
+/RealSetgray /setgray load def
+/RealSetrgbcolor /setrgbcolor load def
+/RealSethsbcolor /sethsbcolor load def
+end 
+
+% Setgray patch
+/setgray { % num
+	FrameDict begin
+	FrameSepIs FMnone eq
+		{ RealSetgray } 
+		{ % go to white unless the current sep color is black
+		FrameSepIs FMblack eq 
+			{ RealSetgray } 
+			{ FrameSepIs FMcustom eq 
+			  FrameSepRed 0 eq and
+			  FrameSepGreen 0 eq and
+			  FrameSepBlue 0 eq and {
+			  	RealSetgray
+			  } {
+				1 RealSetgray pop 
+			  } ifelse
+			} ifelse
+		} ifelse
+	end
+} bind def
+/setrgbcolor { % r g b
+	FrameDict begin
+	FrameSepIs FMnone eq
+	{  RealSetrgbcolor }
+	{
+		3 copy [ 4 1 roll ] % r g b [ r g b ]
+		FrameColorInSepListRGB
+		{
+				FrameSepBlue eq exch 
+			 	FrameSepGreen eq and exch 
+			 	FrameSepRed eq and
+			 	{ 0 } { 1 } ifelse
+		}
+		{
+			FMPColor {
+				RealSetrgbcolor
+				currentcmykcolor
+			} {
+				RGBtoCMYK
+			} ifelse
+			FrameSepIs FMblack eq
+			{1.0 exch sub 4 1 roll pop pop pop} {
+			FrameSepIs FMyellow eq
+			{pop 1.0 exch sub 3 1 roll pop pop} {
+			FrameSepIs FMmagenta eq
+			{pop pop 1.0 exch sub exch pop } {
+			FrameSepIs FMcyan eq
+			{pop pop pop 1.0 exch sub } 
+			{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+		} ifelse
+		RealSetgray
+	} 
+	ifelse
+	end
+} bind def
+/sethsbcolor {
+	FrameDict begin
+	FrameSepIs FMnone eq 
+	{ RealSethsbcolor } 
+	{
+		RealSethsbcolor % safe since we will overwrite the color state
+		currentrgbcolor  % r g b - Let PostsCript to the conversion.
+		setrgbcolor % call our version
+	} 
+	ifelse
+	end
+} bind def
+FrameDict begin
+
+/setcmykcolor where {
+	pop /RealSetcmykcolor /setcmykcolor load def
+} {
+	/RealSetcmykcolor {
+		4 1 roll
+		3 { 3 index add 0 max 1 min 1 exch sub 3 1 roll} repeat 
+		RealSetrgbcolor pop
+	} bind def
+} ifelse
+userdict /setcmykcolor { % c m y k
+		FrameDict begin
+		FrameSepIs FMnone eq
+		{ RealSetcmykcolor } 
+		{
+			4 copy [ 5 1 roll ]
+			FrameColorInSepListCMYK
+			{
+				FrameSepBlack eq exch 
+				FrameSepYellow eq and exch 
+				FrameSepMagenta eq and exch 
+				FrameSepCyan eq and 
+				{ 0 } { 1 } ifelse
+			}
+			{
+				FrameSepIs FMblack eq
+				{1.0 exch sub 4 1 roll pop pop pop} {
+				FrameSepIs FMyellow eq
+				{pop 1.0 exch sub 3 1 roll pop pop} {
+				FrameSepIs FMmagenta eq
+				{pop pop 1.0 exch sub exch pop } {
+				FrameSepIs FMcyan eq
+				{pop pop pop 1.0 exch sub } 
+				{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+			} ifelse
+			RealSetgray
+		}
+		ifelse
+		end
+	} bind put
+
+% Set up a prototype pattern for PostScript Level 2
+fMLevel1 { 
+	% set up screen functions for the patterns in PS level 1
+	% each entry contains an angle, spot function, flipped spot function,
+	% gray level and frequency multiplier.
+	/patScreenDict 7 dict dup begin
+		<0f1e3c78f0e1c387> [ 45  { pop } {exch pop} 		.5   2 sqrt] FmBD
+		<0f87c3e1f0783c1e> [ 135 { pop } {exch pop}			.5   2 sqrt] FmBD
+		<cccccccccccccccc> [ 0   { pop } dup				.5   2	   ] FmBD
+		<ffff0000ffff0000> [ 90  { pop } dup				.5   2	   ] FmBD
+		<8142241818244281> [ 45  { 2 copy lt {exch} if pop}	dup .75  2 sqrt] FmBD
+		<03060c183060c081> [ 45  { pop } {exch pop}			.875 2 sqrt] FmBD
+		<8040201008040201> [ 135 { pop } {exch pop}			.875 2 sqrt] FmBD
+	end def
+} { % prototype level 2 pattern dictionary
+	% define some PostScript procedures for known jaggy patterns.
+	/patProcDict 5 dict dup begin
+		<0f1e3c78f0e1c387> { 3 setlinewidth -1 -1 moveto 9 9 lineto stroke 
+											4 -4 moveto 12 4 lineto stroke
+											-4 4 moveto 4 12 lineto stroke} bind def
+		<0f87c3e1f0783c1e> { 3 setlinewidth -1 9 moveto 9 -1 lineto stroke 
+											-4 4 moveto 4 -4 lineto stroke
+											4 12 moveto 12 4 lineto stroke} bind def
+		<8142241818244281> { 1 setlinewidth -1 9 moveto 9 -1 lineto stroke
+											-1 -1 moveto 9 9 lineto stroke } bind def
+		<03060c183060c081> { 1 setlinewidth -1 -1 moveto 9 9 lineto stroke 
+											4 -4 moveto 12 4 lineto stroke
+											-4 4 moveto 4 12 lineto stroke} bind def
+		<8040201008040201> { 1 setlinewidth -1 9 moveto 9 -1 lineto stroke 
+											-4 4 moveto 4 -4 lineto stroke
+											4 12 moveto 12 4 lineto stroke} bind def
+	end def
+	/patDict 15 dict dup begin
+		/PatternType 1 def		% Always 1 for PS Level 2
+		/PaintType 2 def		% Uncolored pattern
+		/TilingType 3 def		% constant spacing and faster tiling
+		/BBox [ 0 0 8 8 ] def 	% bounding box
+		/XStep 8 def			% X offset
+		/YStep 8 def			% Y offset
+		/PaintProc {
+			begin
+			patProcDict bstring known {
+				patProcDict bstring get exec
+			} {
+				8 8 true [1 0 0 -1 0 8] bstring imagemask
+			} ifelse
+			end
+		} bind def
+	end def
+} ifelse
+
+%combineColor puts together the current gray value (which could also be
+%a fraction of on bits for a fill pattern and the current color and calls
+%the appropriate function
+%
+/combineColor {
+    FrameSepIs FMnone eq
+	{
+		graymode fMLevel1 or not {
+			% Level 2 pattern
+			[/Pattern [/DeviceCMYK]] setcolorspace
+			FrameCurColors 0 4 getinterval aload pop FrameCurPat setcolor
+		} {
+			FrameCurColors 3 get 1.0 ge {
+				FrameCurGray RealSetgray
+			} {
+				fMAcrobat not FMPColor graymode and and {
+					0 1 3 { 
+						FrameCurColors exch get
+						1 FrameCurGray sub mul
+					} for
+					RealSetcmykcolor
+				} {
+					4 1 6 {
+						FrameCurColors exch get
+						graymode {
+							1 exch sub 1 FrameCurGray sub mul 1 exch sub
+						} {
+							1.0 lt {FrameCurGray} {1} ifelse
+						} ifelse
+					} for
+					RealSetrgbcolor
+				} ifelse
+			} ifelse
+		} ifelse
+	} { % separation case
+		FrameCurColors 0 4 getinterval aload
+		FrameColorInSepListCMYK {
+			FrameSepBlack eq exch 
+			FrameSepYellow eq and exch 
+			FrameSepMagenta eq and exch 
+			FrameSepCyan eq and
+			FrameSepIs FMcustom eq and
+			{ FrameCurGray } { 1 } ifelse
+		} {
+			FrameSepIs FMblack eq
+			{FrameCurGray 1.0 exch sub mul 1.0 exch sub 4 1 roll pop pop pop} {
+			FrameSepIs FMyellow eq
+			{pop FrameCurGray 1.0 exch sub mul 1.0 exch sub 3 1 roll pop pop} {
+			FrameSepIs FMmagenta eq
+			{pop pop FrameCurGray 1.0 exch sub mul 1.0 exch sub exch pop } {
+			FrameSepIs FMcyan eq
+			{pop pop pop FrameCurGray 1.0 exch sub mul 1.0 exch sub } 
+			{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+		} ifelse
+		graymode fMLevel1 or not {
+			% Level 2 pattern
+			[/Pattern [/DeviceGray]] setcolorspace
+			FrameCurPat setcolor
+		} { 
+			graymode not fMLevel1 and {
+				% Level 1 patterns are either all there or not there at all
+				dup 1 lt {pop FrameCurGray} if
+			} if
+			RealSetgray
+		} ifelse
+	} ifelse
+} bind def
+
+/savematrix {
+	orgmatrix currentmatrix pop
+	} bind def
+/restorematrix {
+	orgmatrix setmatrix
+	} bind def
+/fMDefaultMatrix matrix defaultmatrix def
+/fMatrix2 matrix def
+/dpi    72 0 fMDefaultMatrix dtransform
+    dup mul exch   dup mul add   sqrt def
+	
+% freq and sangle are used for ps Level 1 pattern building.
+/freq dpi dup 72 div round dup 0 eq {pop 1} if 8 mul div def
+/sangle 1 0 fMDefaultMatrix dtransform exch atan def
+	sangle fMatrix2 rotate 
+	fMDefaultMatrix fMatrix2 concatmatrix 
+	dup 0 get /sflipx exch def
+	    3 get /sflipy exch def
+
+%
+% screen index depending on dpi
+%	- screenIndex smallint
+/screenIndex {
+	0 1 dpiranges length 1 sub { dup dpiranges exch get 1 sub dpi le {exit} {pop} ifelse } for
+} bind def
+
+%
+% These routines get the standard Adobe frequencies, angles, and spot functions
+% depending on the DPI
+%
+% - getCyanScreen freq angle spotfunction
+/getCyanScreen {
+	FMUseHighFrequencyScreens { CHighAngles CMHighFreqs} {CLowAngles CMLowFreqs} ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get /FMSpotFunction load
+} bind def
+
+%
+% - getMagentaScreen freq angle spotFunction
+/getMagentaScreen {
+	FMUseHighFrequencyScreens { MHighAngles CMHighFreqs } {MLowAngles CMLowFreqs} ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get /FMSpotFunction load
+} bind def
+
+%
+% - getYellowScreen freq angle spotFunction
+% note that some of these use a "tripple dot" function at 1/3 the frequency
+/getYellowScreen {
+	FMUseHighFrequencyScreens { YHighTDot YHighFreqs} { YLowTDot YLowFreqs } ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get { 3 div
+			{2 { 1 add 2 div 3 mul dup floor sub 2 mul 1 sub exch} repeat
+			FMSpotFunction } } {/FMSpotFunction load } ifelse
+			0.0 exch
+} bind def
+
+%
+% - getBlackScreen freq angle spotFunction
+/getBlackScreen  {
+	FMUseHighFrequencyScreens { KHighFreqs } { KLowFreqs } ifelse
+		screenIndex get 45.0 /FMSpotFunction load 
+} bind def
+
+%
+% - getSpotScreen freq angle spotFunction
+/getSpotScreen {
+	getBlackScreen
+} bind def
+
+%
+% - getCompositeScreen freq angle spotFunction
+/getCompositeScreen {
+	getBlackScreen
+} bind def
+
+% FmSetScreen sets the screen for either PostScript Level 1 or Level 2 and optionally
+% sets the accuratescreens flag in the latter case
+% freq angle spotfunction FMSetScreen -
+/FMSetScreen 
+	fMLevel1 { /setscreen load 
+	}{ {
+		8 dict begin
+		/HalftoneType 1 def
+		/SpotFunction exch def
+		/Angle exch def
+		/Frequency exch def
+		/AccurateScreens FMUseAcccurateScreens def
+		currentdict end sethalftone
+	} bind } ifelse
+def
+
+% This sets the default screen as was set at the beginning of the job
+% - setDefaultScreen -
+/setDefaultScreen {
+	FMPColor {
+		orgrxfer cvx orggxfer cvx orgbxfer cvx orgxfer cvx setcolortransfer
+	}
+	{
+		orgxfer cvx settransfer
+	} ifelse
+	orgfreq organgle orgproc cvx setscreen
+} bind def
+
+% This sets the current screen depending on FrameSepIs
+% - setCurrentScreen -
+/setCurrentScreen {
+	FrameSepIs FMnone eq {
+		FMUseDefaultNoSeparationScreen {
+			setDefaultScreen
+		} {
+			getCompositeScreen FMSetScreen
+		} ifelse
+	} {
+		FrameSepIs FMcustom eq {
+			FMUseDefaultSpotSeparationScreen {
+				setDefaultScreen
+			} {
+				getSpotScreen FMSetScreen
+			} ifelse
+		} {
+			FMUseDefaultProcessSeparationScreen {
+				setDefaultScreen
+			} {
+				FrameSepIs FMcyan eq {
+					getCyanScreen FMSetScreen
+				} {
+					FrameSepIs FMmagenta eq {
+						getMagentaScreen FMSetScreen
+					} {
+						FrameSepIs FMyellow eq {
+							getYellowScreen FMSetScreen
+						} {
+							getBlackScreen FMSetScreen
+						} ifelse
+					} ifelse
+				} ifelse
+			} ifelse
+		} ifelse
+	} ifelse 
+} bind def
+
+
+end
+
+% End of Color separation code
+%
+	
+/FMDOCUMENT { % xscale yscale edown negative paperwidth paperheight manfeed numcopies numfonts
+	array /FMfonts exch def % Why isn't this in FrameDict???
+	/#copies exch def
+	FrameDict begin
+	0 ne /manualfeed exch def
+	/paperheight exch def
+	/paperwidth exch def
+	0 ne /fMNegative exch def % invert page
+	0 ne /edown exch def % flip page along y axis
+	/yscale exch def
+	/xscale exch def
+
+	fMLevel1 {
+		manualfeed {setmanualfeed} if
+		/FMdicttop countdictstack 1 add def % some PS's leave junk on dict ...
+		/FMoptop count def % ...or on operand stack...
+		setpapername % This stuff may alter the transfer/screen/angle
+		manualfeed {true} {papersize} ifelse % true->more work to do
+		{manualpapersize} {false} ifelse % true->more work to do
+		{desperatepapersize} {false} ifelse % true->failed completely
+		{papersizefailure} if
+		count -1 FMoptop {pop pop} for
+		countdictstack -1 FMdicttop {pop end} for %...if tray not installed
+		}
+		{2 dict
+		 dup /PageSize [paperwidth paperheight] put
+		 manualfeed {dup /ManualFeed manualfeed put} if
+		 {setpagedevice} stopped {papersizefailure} if
+		}
+	ifelse % fMLevel1
+	
+	FMPColor {
+		currentcolorscreen
+			cvlit /orgproc exch def
+				  /organgle exch def 
+				  /orgfreq exch def
+			cvlit /orgbproc exch def
+				  /orgbangle exch def 
+				  /orgbfreq exch def
+			cvlit /orggproc exch def
+				  /orggangle exch def 
+				  /orggfreq exch def
+			cvlit /orgrproc exch def
+				  /orgrangle exch def 
+				  /orgrfreq exch def
+
+			currentcolortransfer 
+			fMNegative {
+				1 1 4 { 
+					pop { 1 exch sub } fmConcatProcs 4 1 roll
+				} for
+				4 copy
+				setcolortransfer
+			} if
+			cvlit /orgxfer exch def
+			cvlit /orgbxfer exch def
+			cvlit /orggxfer exch def
+			cvlit /orgrxfer exch def
+	} {
+		currentscreen 
+			cvlit /orgproc exch def
+				  /organgle exch def 
+				  /orgfreq exch def
+				  
+		currenttransfer 
+		fMNegative {
+			{ 1 exch sub } fmConcatProcs
+			dup settransfer
+		} if 
+		cvlit /orgxfer exch def
+	} ifelse
+
+	end % FrameDict
+} def % only used at startup, so no bind
+
+/FMBEGINPAGE { % pagewidth pageheight landscape color-arrays count
+	FrameDict begin % for the whole page...
+	/pagesave save def
+	3.86 setmiterlimit
+	/landscape exch 0 ne def
+	landscape { % check for landscape
+		90 rotate 0 exch dup /pwid exch def neg translate pop 
+	}{
+		pop /pwid exch def
+	} ifelse
+	edown { [-1 0 0 1 pwid 0] concat } if
+% paint the whole page in "white".  If the page is inverted, then
+% this will actually paint our black background
+	0 0 moveto paperwidth 0 lineto paperwidth paperheight lineto 
+	0 paperheight lineto 0 0 lineto 1 setgray fill
+	xscale yscale scale
+	/orgmatrix matrix def
+	gsave % for CLIP
+} def % only used infrequently, so no bind
+
+/FMENDPAGE {
+	grestore % for CLIP
+	pagesave restore
+	end % FrameDict
+	showpage
+	} def % only used infrequently, so no bind
+
+/FMFONTDEFINE { % fontindex nonstd_encoding fontname -- 
+	FrameDict begin
+	findfont % fontindex nonstd_encoding font
+	ReEncode % fontindex font'
+	1 index exch % fontindex fontindex font'
+	definefont % fontindex font"
+	FMfonts 3 1 roll %  FMfonts fontindex font"
+	put
+	end % FrameDict
+	} def % only used infrequently, so no bind
+
+/FMFILLS {
+	FrameDict begin dup
+	array /fillvals exch def
+	dict /patCache exch def
+	end % framedict
+	} def % Only called once, so no bind
+
+/FMFILL {
+	FrameDict begin
+	 fillvals 3 1 roll put
+	end % FrameDict
+	} def % only used infrequently, so no bind
+
+% Set things to a known, quiescent state, for when we switch to another writer
+/FMNORMALIZEGRAPHICS { 
+	newpath
+	1 setlinewidth
+	0 setlinecap
+	0 0 0 sethsbcolor
+	0 setgray % Not FMsetgray; only called outside of our environment!
+	} bind def
+
+/FMBEGINEPSF { % <theta> llx lly urx ury fw fh fx fy
+	end % FrameDict
+	/FMEPSF save def % in userdict
+	/showpage {} def % this def is in userdict
+%- See Adobe's "PostScript Language Reference Manual, 2nd Edition", page 714.
+%- "...the following operators MUST NOT be used in an EPS file:" (emphasis ours)
+	/banddevice {(banddevice) FMBADEPSF} def
+	/clear {(clear) FMBADEPSF} def
+	/cleardictstack {(cleardictstack) FMBADEPSF} def % FMBADEPSF knows this is the longest!
+	/copypage {(copypage) FMBADEPSF} def
+	/erasepage {(erasepage) FMBADEPSF} def
+	/exitserver {(exitserver) FMBADEPSF} def
+	/framedevice {(framedevice) FMBADEPSF} def
+	/grestoreall {(grestoreall) FMBADEPSF} def
+	/initclip {(initclip) FMBADEPSF} def
+	/initgraphics {(initgraphics) FMBADEPSF} def
+%	/initmatrix {(initmatrix) FMBADEPSF} def	% Aldus Freehand 4.0 epsf uses this harmlessly <Gus 4/26/95>
+	/quit {(quit) FMBADEPSF} def
+	/renderbands {(renderbands) FMBADEPSF} def
+	/setglobal {(setglobal) FMBADEPSF} def
+	/setpagedevice {(setpagedevice) FMBADEPSF} def
+	/setshared {(setshared) FMBADEPSF} def
+	/startjob {(startjob) FMBADEPSF} def
+	/lettertray {(lettertray) FMBADEPSF} def
+	/letter {(letter) FMBADEPSF} def
+	/lettersmall {(lettersmall) FMBADEPSF} def
+	/11x17tray {(11x17tray) FMBADEPSF} def
+	/11x17 {(11x17) FMBADEPSF} def
+	/ledgertray {(ledgertray) FMBADEPSF} def
+	/ledger {(ledger) FMBADEPSF} def
+	/legaltray {(legaltray) FMBADEPSF} def
+	/legal {(legal) FMBADEPSF} def
+	/statementtray {(statementtray) FMBADEPSF} def
+	/statement {(statement) FMBADEPSF} def
+	/executivetray {(executivetray) FMBADEPSF} def
+	/executive {(executive) FMBADEPSF} def
+	/a3tray {(a3tray) FMBADEPSF} def
+	/a3 {(a3) FMBADEPSF} def
+	/a4tray {(a4tray) FMBADEPSF} def
+	/a4 {(a4) FMBADEPSF} def
+	/a4small {(a4small) FMBADEPSF} def
+	/b4tray {(b4tray) FMBADEPSF} def
+	/b4 {(b4) FMBADEPSF} def
+	/b5tray {(b5tray) FMBADEPSF} def
+	/b5 {(b5) FMBADEPSF} def
+	FMNORMALIZEGRAPHICS % in case we're in a strange state
+	[/fy /fx /fh /fw /ury /urx /lly /llx] {exch def} forall % neat trick
+	fx fw 2 div add fy fh 2 div add  translate
+	rotate
+	fw 2 div neg fh 2 div neg translate
+	fw urx llx sub div fh ury lly sub div scale % then scale
+	llx neg lly neg translate % then compensate for LL offset 
+	/FMdicttop countdictstack 1 add def % high-water mark of dict stack
+	/FMoptop count def % tricky! "/FMoptop" on stack
+	} bind def
+
+/FMENDEPSF {
+	count -1 FMoptop {pop pop} for % clear EPS junk from operand stack
+	countdictstack -1 FMdicttop {pop end} for % ditto for dict stack
+	FMEPSF restore
+	FrameDict begin % for the whole page...
+	} bind def
+
+FrameDict begin % put most defs here
+
+/setmanualfeed {
+%%BeginFeature *ManualFeed True
+	 statusdict /manualfeed true put
+%%EndFeature
+	} bind def
+
+/max {2 copy lt {exch} if pop} bind def
+/min {2 copy gt {exch} if pop} bind def
+/inch {72 mul} def
+
+/pagedimen { % name width height
+	paperheight sub abs 16 lt exch % 16pt is an arbitrary slop amount
+	paperwidth sub abs 16 lt and
+	{/papername exch def} {pop} ifelse
+	} bind def
+
+/setpapername { % Already set up: paperwidth paperheight and manualfeed
+	/papersizedict 14 dict def % one for /papername, one for /unknown
+	papersizedict begin
+	/papername /unknown def % in case no match
+		/Letter 8.5 inch 11.0 inch pagedimen
+		/LetterSmall 7.68 inch 10.16 inch pagedimen
+		/Tabloid 11.0 inch 17.0 inch pagedimen
+		/Ledger 17.0 inch 11.0 inch pagedimen
+		/Legal 8.5 inch 14.0 inch pagedimen
+		/Statement 5.5 inch 8.5 inch pagedimen
+		/Executive 7.5 inch 10.0 inch pagedimen
+		/A3 11.69 inch 16.5 inch pagedimen
+		/A4 8.26 inch 11.69 inch pagedimen
+		/A4Small 7.47 inch 10.85 inch pagedimen
+		/B4 10.125 inch 14.33 inch pagedimen
+		/B5 7.16 inch 10.125 inch pagedimen
+	end
+	} bind def
+
+/papersize {
+	papersizedict begin
+		/Letter {lettertray letter} def
+		/LetterSmall {lettertray lettersmall} def
+		/Tabloid {11x17tray 11x17} def
+		/Ledger {ledgertray ledger} def
+		/Legal {legaltray legal} def
+		/Statement {statementtray statement} def
+		/Executive {executivetray executive} def
+		/A3 {a3tray a3} def
+		/A4 {a4tray a4} def
+		/A4Small {a4tray a4small} def
+		/B4 {b4tray b4} def
+		/B5 {b5tray b5} def
+		/unknown {unknown} def
+	papersizedict dup papername known {papername} {/unknown} ifelse get
+	end
+	statusdict begin stopped end % return true if more work to do
+	} bind def
+
+/manualpapersize {
+	papersizedict begin
+		/Letter {letter} def
+		/LetterSmall {lettersmall} def
+		/Tabloid {11x17} def
+		/Ledger {ledger} def
+		/Legal {legal} def
+		/Statement {statement} def
+		/Executive {executive} def
+		/A3 {a3} def
+		/A4 {a4} def
+		/A4Small {a4small} def
+		/B4 {b4} def
+		/B5 {b5} def
+		/unknown {unknown} def
+	papersizedict dup papername known {papername} {/unknown} ifelse get
+	end
+	stopped % return true if more work to do
+	} bind def
+
+/desperatepapersize {
+	statusdict /setpageparams known
+		{
+		paperwidth paperheight 0 1 
+		statusdict begin
+		{setpageparams} stopped % return true iff failed
+		end
+		} {true} ifelse % return true iff failed
+	} bind def
+
+/papersizefailure {
+	FMAllowPaperSizeMismatch not
+		{
+(The requested paper size is not available in any currently-installed tray)
+(Edit the PS file to "FMAllowPaperSizeMismatch true" to use default tray)
+		 FMFAILURE } if
+	} def
+
+%
+% Font re-encoding to include diacritics
+% 
+/DiacriticEncoding [
+
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /space /exclam /quotedbl
+/numbersign /dollar /percent /ampersand /quotesingle /parenleft
+/parenright /asterisk /plus /comma /hyphen /period /slash /zero /one
+/two /three /four /five /six /seven /eight /nine /colon /semicolon
+/less /equal /greater /question /at /A /B /C /D /E /F /G /H /I /J /K
+/L /M /N /O /P /Q /R /S /T /U /V /W /X /Y /Z /bracketleft /backslash
+/bracketright /asciicircum /underscore /grave /a /b /c /d /e /f /g /h
+/i /j /k /l /m /n /o /p /q /r /s /t /u /v /w /x /y /z /braceleft /bar
+/braceright /asciitilde /.notdef /Adieresis /Aring /Ccedilla /Eacute
+/Ntilde /Odieresis /Udieresis /aacute /agrave /acircumflex /adieresis
+/atilde /aring /ccedilla /eacute /egrave /ecircumflex /edieresis
+/iacute /igrave /icircumflex /idieresis /ntilde /oacute /ograve
+/ocircumflex /odieresis /otilde /uacute /ugrave /ucircumflex
+/udieresis /dagger /.notdef /cent /sterling /section /bullet
+/paragraph /germandbls /registered /copyright /trademark /acute
+/dieresis /.notdef /AE /Oslash /.notdef /.notdef /.notdef /.notdef
+/yen /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/ordfeminine /ordmasculine /.notdef /ae /oslash /questiondown
+/exclamdown /logicalnot /.notdef /florin /.notdef /.notdef
+/guillemotleft /guillemotright /ellipsis /.notdef /Agrave /Atilde
+/Otilde /OE /oe /endash /emdash /quotedblleft /quotedblright
+/quoteleft /quoteright /.notdef /.notdef /ydieresis /Ydieresis
+/fraction /currency /guilsinglleft /guilsinglright /fi /fl /daggerdbl
+/periodcentered /quotesinglbase /quotedblbase /perthousand
+/Acircumflex /Ecircumflex /Aacute /Edieresis /Egrave /Iacute
+/Icircumflex /Idieresis /Igrave /Oacute /Ocircumflex /.notdef /Ograve
+/Uacute /Ucircumflex /Ugrave /dotlessi /circumflex /tilde /macron
+/breve /dotaccent /ring /cedilla /hungarumlaut /ogonek /caron
+
+] def
+
+/ReEncode { % nonstd_encoding font -- reencodedfont
+	dup % nonstd_encoding font font
+	length % nonstd_encoding font dictlength
+	dict begin % nonstd_encoding font % currentdict = newdict
+	{% forall % forall is over font to be copied
+	1 index /FID ne % skip FID
+		{def} % defs go into newfontdict which is currentdict
+		{pop pop} ifelse % copy all keys including /Encoding
+	} forall % nonstd_encoding
+	0 eq {/Encoding DiacriticEncoding def} if % --
+	currentdict % push a copy of the copied font dict onto operand stack
+	end % font' % before popping it off dictionary stack
+	} bind def
+
+FMPColor 
+	% setup procs for color printing
+	{
+
+	/BEGINBITMAPCOLOR { % iw, ih, width, height, theta, x y 
+		BITMAPCOLOR} def
+	/BEGINBITMAPCOLORc { % iw, ih, width, height, theta, x y 
+		BITMAPCOLORc} def
+	/BEGINBITMAPTRUECOLOR { 
+		BITMAPTRUECOLOR } def
+	/BEGINBITMAPTRUECOLORc { 
+		BITMAPTRUECOLORc } def
+	/BEGINBITMAPCMYK { 
+		BITMAPCMYK } def
+	/BEGINBITMAPCMYKc { 
+		BITMAPCMYKc } def
+	}
+	% setup procs for B&W printing
+	{
+	/BEGINBITMAPCOLOR { % iw, ih, width, height, theta, x y 
+		BITMAPGRAY} def
+	/BEGINBITMAPCOLORc { % iw, ih, width, height, theta, x y 
+		BITMAPGRAYc} def
+	/BEGINBITMAPTRUECOLOR { 
+		BITMAPTRUEGRAY } def
+	/BEGINBITMAPTRUECOLORc { 
+		BITMAPTRUEGRAYc } def
+	/BEGINBITMAPCMYK { 
+		BITMAPCMYKGRAY } def
+	/BEGINBITMAPCMYKc { 
+		BITMAPCMYKGRAYc } def
+	}
+ifelse
+
+/K { % c m y k r g b SEPARATION
+	FMPrintAllColorsAsBlack {
+		dup 1 eq 2 index 1 eq and 3 index 1 eq and not
+			{7 {pop} repeat 0 0 0 1 0 0 0} if
+	} if 
+	FrameCurColors astore 
+	pop combineColor
+} bind def
+%
+% graymode is true if we are just doing gray fills, this way do not keep calling
+% setscreen. I don't know what the cost is on calling setscreen with defaults, but
+% this is easy to keep track of, and we know for sure we aren't wasting cycles.
+% if graymode is false and fMLevel1 is false, then we are using Level 2 patterns.
+%
+/graymode true def
+
+% used by level 1 patterns
+% defaultflip matrixentry fmGetFlit -> eith -1 or 1
+fMLevel1 {
+	/fmGetFlip {
+		fMatrix2 exch get mul 0 lt { -1 } { 1 } ifelse
+	} FmBD
+} if
+
+/setPatternMode {
+	fMLevel1 {
+		2 index patScreenDict exch known {
+			pop pop
+			patScreenDict exch get aload pop % angle spot fspot gray mult
+			freq 								% freq
+			mul									% times multiplier
+			5 2 roll							% angle spot fspot gray mult freq -> gray freq angle spot fspot
+			fMatrix2 currentmatrix 1 get 0 ne {
+				3 -1 roll 90 add 3 1 roll 		% landscape
+				sflipx 1 fmGetFlip sflipy 2 fmGetFlip neg mul
+			} {  								% portrait     
+				sflipx 0 fmGetFlip sflipy 3 fmGetFlip mul 
+			} ifelse
+			0 lt {exch pop} {pop} ifelse 		% take regular or flipped spot function
+			fMNegative { 
+				{neg} fmConcatProcs 			% invert spot function
+			} if
+			bind
+			% we need to bypass any screen filter and go directly to systemdict
+			% to avoid problems with Kodak Precision calibration software
+			% <Gus 9/13/93>
+			systemdict /setscreen get exec		% leave graylevel on stack
+			/FrameCurGray exch def
+		} {
+			/bwidth  exch def
+			/bpside  exch def
+			/bstring exch def
+			/onbits 0 def  /offbits 0 def
+			freq sangle landscape {90 add} if 
+				{/ypoint exch def
+				 /xpoint exch def
+				 /xindex xpoint 1 add 2 div bpside mul cvi def
+				 /yindex ypoint 1 add 2 div bpside mul cvi def
+				 bstring yindex bwidth mul xindex 8 idiv add get
+				 1 7 xindex 8 mod sub bitshift and 0 ne fMNegative {not} if
+				 {/onbits  onbits  1 add def 1}
+				 {/offbits offbits 1 add def 0}
+				 ifelse
+				}
+				setscreen
+			offbits offbits onbits add div fMNegative {1.0 exch sub} if
+			/FrameCurGray exch def
+		} ifelse
+	} { % Level 2 version
+		pop pop
+		dup patCache exch known {
+			patCache exch get
+		} { % not in cache
+			dup
+			patDict /bstring 3 -1 roll put
+			patDict 
+			9 PatFreq screenIndex get div dup matrix scale
+%			9 orgfreq 
+%				organgle sin abs organgle cos abs add div
+%				dup 16 div round dup 0 le {pop 1} if  % Unix pattern size
+%			    dup  9 div round dup 0 le {pop 1} if  % Mac larger (WYSIWYG) size
+%					div div dup matrix scale % This gives Unix pattern size.
+			makepattern
+			dup 
+			patCache 4 -1 roll 3 -1 roll put
+		} ifelse
+		/FrameCurGray 0 def
+		/FrameCurPat exch def
+	} ifelse
+	/graymode false def
+	combineColor
+} bind def
+
+/setGrayScaleMode {
+	graymode not {
+		/graymode true def
+		fMLevel1 {
+			setCurrentScreen
+		} if
+	} if
+	/FrameCurGray exch def
+	combineColor
+} bind def
+
+/normalize {
+	transform round exch round exch itransform
+	} bind def
+
+/dnormalize {
+	dtransform round exch round exch idtransform
+	} bind def
+
+/lnormalize { % line widths are always odd so that arrow heads work
+	0 dtransform exch cvi 2 idiv 2 mul 1 add exch idtransform pop
+	} bind def
+
+/H { % THICK
+	lnormalize setlinewidth
+	} bind def
+
+/Z {
+	setlinecap
+	} bind def
+	
+% This is used to fill or stroke white behind a Level 2 pattern
+/PFill {
+	graymode fMLevel1 or not {
+		gsave 1 setgray eofill grestore
+	} if
+} bind def
+/PStroke {
+	graymode fMLevel1 or not {
+		gsave 1 setgray stroke grestore
+	} if
+	stroke
+} bind def
+
+/X { % TEXTURE
+	fillvals exch get
+	dup type /stringtype eq
+	{8 1 setPatternMode} % Silly to pass parameters here
+	{setGrayScaleMode}
+	ifelse
+	} bind def
+
+/V { % FILL
+	PFill gsave eofill grestore
+	} bind def
+
+/Vclip {
+	clip
+	} bind def
+
+/Vstrk {
+	currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/N { % PEN
+	PStroke
+	} bind def
+
+/Nclip {
+	strokepath clip newpath
+	} bind def
+
+/Nstrk {
+	currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/M {newpath moveto} bind def
+/E {lineto} bind def
+/D {curveto} bind def
+/O {closepath} bind def
+
+/L { % POLYLINE
+ 	/n exch def
+	newpath
+	normalize
+	moveto 
+	2 1 n {pop normalize lineto} for
+	} bind def
+
+/Y { % POLYGON !!!
+	L % POLYLINE
+	closepath
+	} bind def
+
+/R { % RECT x1 y1 x2 y2
+	/y2 exch def
+	/x2 exch def
+	/y1 exch def
+	/x1 exch def
+	x1 y1
+	x2 y1
+	x2 y2
+	x1 y2
+	4 Y % POLYGON
+	} bind def
+
+/rarc % Leaves all sorts of junk on the operand stack for caller to clear off
+	{rad % arcto might fail if we're scaled way down
+	 arcto
+	} bind def
+
+/RR { % ROUNDRECT x1 y1 x2 y2 r
+	/rad exch def
+	normalize
+	/y2 exch def
+	/x2 exch def
+	normalize
+	/y1 exch def
+	/x1 exch def
+	mark
+	newpath
+	{
+	x1 y1 rad add moveto
+	x1 y2 x2 y2 rarc
+	x2 y2 x2 y1 rarc
+	x2 y1 x1 y1 rarc
+	x1 y1 x1 y2 rarc
+	closepath
+	} stopped {x1 y1 x2 y2 R} if % in case rarc failed for degenerate arcs
+	cleartomark
+	} bind def
+
+/RRR { % ROUNDRECT ROTATED xs ys x1 y1 x2 y2 x3 y3 x4 y4 r
+	/rad exch def
+	normalize /y4 exch def /x4 exch def
+	normalize /y3 exch def /x3 exch def
+	normalize /y2 exch def /x2 exch def
+	normalize /y1 exch def /x1 exch def
+	newpath
+	normalize moveto % eats xs ys
+	mark
+	{
+	x2 y2 x3 y3 rarc
+	x3 y3 x4 y4 rarc
+	x4 y4 x1 y1 rarc
+	x1 y1 x2 y2 rarc
+	closepath
+	} stopped
+	 {x1 y1 x2 y2 x3 y3 x4 y4 newpath moveto lineto lineto lineto closepath} if
+	cleartomark
+	} bind def
+
+/C { % CLIP
+	grestore
+	gsave
+	R % RECT
+	clip
+	setCurrentScreen
+} bind def
+
+/CP { % CLIPPOLY p1x p1y p2x p2y ... n 
+	grestore
+	gsave
+	Y % POLYGON
+	clip
+	setCurrentScreen
+} bind def
+
+/F { % FONT
+	FMfonts exch get
+	FMpointsize scalefont
+	setfont
+	} bind def
+
+/Q { % POINTSIZE (& font)
+	/FMpointsize exch def
+	F % could be slightly optimized here
+	} bind def
+
+/T { % TEXT <string> <x> <y>
+	moveto show
+	} bind def
+
+% Callers of RF (rotate/flip) must gsave (or save) first; (g)restore when done
+/RF { % <flip> <theta>
+	rotate
+	0 ne {-1 1 scale} if
+	} bind def
+
+/TF { % TEXTFLIPROTATE <string> <flip> <theta> <x> <y>
+	gsave
+	moveto 
+	RF
+	show
+	grestore
+	} bind def
+
+/P { % PADTEXT <pad> <string> <x> <y>
+	moveto
+	0 32 3 2 roll widthshow
+	} bind def
+
+/PF { % PADTEXTFLIPROTATE <pad> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto 
+	RF
+	0 32 3 2 roll widthshow
+	grestore
+	} bind def
+
+/S { % SPREADTEXT <spread> <string> <x> <y>
+	moveto
+	0 exch ashow
+	} bind def
+
+/SF { % SPREADTEXTFLIPROTATE <spread> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto
+	RF
+	0 exch ashow
+	grestore
+	} bind def
+
+/B { % PADSPREADTEXT <pad> <spread> <string> <x> <y>
+	moveto
+	0 32 4 2 roll 0 exch awidthshow
+	} bind def
+
+/BF { % PADSPREADTEXTFLIPROTATE <pad> <spread> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto
+	RF
+	0 32 4 2 roll 0 exch awidthshow
+	grestore
+	} bind def
+
+/G { % ARCFILL theta1 theta2 width height x y
+	gsave
+	newpath
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	PFill fill
+	grestore
+	} bind def
+
+/Gstrk {
+	savematrix
+    newpath
+    2 index 2 div add exch 3 index 2 div sub exch % theta1 theta2 width height x y
+    normalize 2 index 2 div sub exch 3 index 2 div add exch % theta1 theta2 width height x y
+    translate
+    scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    restorematrix
+    currentlinewidth exch setlinewidth PStroke setlinewidth
+    } bind def
+
+/Gclip { % ARCFILL theta1 theta2 width height x y swid
+	newpath
+	savematrix
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	clip newpath
+	restorematrix
+	} bind def
+
+/GG { % ARCFILL ROTATED theta1 theta2 width height angle x y
+	gsave
+	newpath
+	normalize translate 0.0 0.0 moveto % eats x y
+	rotate % eats angle
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath
+	PFill
+	fill
+	grestore
+	} bind def
+
+/GGclip { % ARCFILL ROTATED theta1 theta2 width height angle x y
+	savematrix
+	newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath
+	clip newpath
+	restorematrix
+	} bind def
+
+/GGstrk { % ARCFILL ROTATED swid theta1 theta2 width height angle x y
+	savematrix
+    newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath 
+	restorematrix
+    currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/A { % ARCPEN theta1 theta2 width height x y
+	gsave
+	savematrix
+	newpath
+	2 index 2 div add exch 3 index 2 div sub exch % theta1 theta2 width height x y
+	normalize 2 index 2 div sub exch 3 index 2 div add exch % theta1 theta2 width height x y
+	translate 
+	scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	restorematrix
+	PStroke
+	grestore
+	} bind def
+
+/Aclip {
+	newpath
+	savematrix
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	strokepath clip newpath
+	restorematrix
+} bind def
+
+/Astrk {
+	Gstrk
+} bind def
+
+/AA { % ARCPEN ROTATED theta1 theta2 width height angle x y
+	gsave
+	savematrix
+	newpath
+	% theta1 theta2 width height angle x y
+	3 index 2 div add exch 4 index 2 div sub exch 
+	% theta1 theta2 width height angle x y
+	normalize 3 index 2 div sub exch 4 index 2 div add exch
+	translate % eats x y
+	rotate % eats angle
+	scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	restorematrix
+	PStroke
+	grestore
+	} bind def
+
+/AAclip {
+	savematrix
+	newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath
+	strokepath clip newpath
+	restorematrix
+} bind def
+
+/AAstrk {
+	GGstrk
+} bind def
+
+/BEGINPRINTCODE { % -x -y width height
+	/FMdicttop countdictstack 1 add def % high-water mark of dict stack
+	/FMoptop count 7 sub def % tricky! 7 params on stack, plus "/FMoptop"
+	/FMsaveobject save def
+	userdict begin % insulate user from FrameDict; not in /FMdicttop count
+	/showpage {} def % this def is in userdict
+	FMNORMALIZEGRAPHICS % in case we're in a strange state
+	3 index neg 3 index neg translate
+	} bind def
+
+/ENDPRINTCODE {
+	count -1 FMoptop {pop pop} for % clear user junk from operand stack
+	countdictstack -1 FMdicttop {pop end} for % ditto for dict stack
+	FMsaveobject restore % this is now safe, unless user very malicious
+	} bind def
+
+/gn { % get a number in a funny encoding scheme
+	0 % result on stack
+	{	46 mul % shift old digits
+		cf read pop % get next character
+		32 sub % zero is the space character
+		dup 46 lt {exit} if % quit if we're the last digit
+		46 sub add % add in this digit and loop around for next
+		} loop
+	add % result on stack
+	} bind def
+
+/cfs { % create a string of length "sl" filled with "val"s
+	/str sl string def % create string as "str"
+	0 1 sl 1 sub {str exch val put} for % fill array
+	str def % define real array name, too; name is on stack from caller
+	} bind def
+
+/ic [ % "case" stmt list of procedures that the image commands should call
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0223
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0223
+	0
+	{0 hx} {1 hx} {2 hx} {3 hx} {4 hx} {5 hx} {6 hx} {7 hx} {8 hx} {9 hx}
+	{10 hx} {11 hx} {12 hx} {13 hx} {14 hx} {15 hx} {16 hx} {17 hx} {18 hx}
+	{19 hx} {gn hx} {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
+	{13} {14} {15} {16} {17} {18} {19} {gn} {0 wh} {1 wh} {2 wh} {3 wh}
+	{4 wh} {5 wh} {6 wh} {7 wh} {8 wh} {9 wh} {10 wh} {11 wh} {12 wh}
+	{13 wh} {14 wh} {gn wh} {0 bl} {1 bl} {2 bl} {3 bl} {4 bl} {5 bl} {6 bl}
+	{7 bl} {8 bl} {9 bl} {10 bl} {11 bl} {12 bl} {13 bl} {14 bl} {gn bl}
+	{0 fl} {1 fl} {2 fl} {3 fl} {4 fl} {5 fl} {6 fl} {7 fl} {8 fl} {9 fl}
+	{10 fl} {11 fl} {12 fl} {13 fl} {14 fl} {gn fl}
+	] def
+
+/ms { % make all the strings
+	/sl exch def % remember length of currently existing strings
+	/val 255 def % that's white
+	/ws cfs % make "ws" a string filled with white
+	/im cfs % and "im" is a complete image scanline
+	/val 0 def % that's black
+	/bs cfs % make "bs" a string filled with black
+	/cs cfs % here's where we'll put complete command lines
+	} bind def
+
+400 ms % make strings that will be plenty long for most applications
+
+/ip { % image procedure; reads and executes commands to make scanlines
+	is % leave image string and...
+	0 % ...image position on stack all through this procedure
+	cf cs readline pop % get a string of commands
+	{	ic exch get exec % execute next command
+		add % all commands leave a length on the stack; update pos
+		} forall % step through all commands
+	pop % get rid of image position pointer
+	% image string left on stack, so it's returned to image primitive
+	} bind def
+/rip { % this is similar to ip above, except for 24 bit images
+	   % this takes an extra argument, the width of the image
+	  % do red
+	  bis ris copy pop % copy blue to red
+      is
+      0
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop % remove is and position from stack
+	  ris gis copy pop % copy red to green
+	  dup is exch % position of green is width bytes into is
+	  % do green
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  gis bis copy pop % copy green to blue
+	  dup add is exch % position of blue is 2*width bytes into is
+	  % do blue
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+      pop 
+      
+      } bind def
+
+/rip4 { % this is similar to ip above, except for 32 bit images
+	   % this takes an extra argument, the width of the image
+	  % do cyan
+	  kis cis copy pop % copy black to cyan
+      is
+      0
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop % remove is and position from stack
+	  cis mis copy pop % copy cyan to magenta
+	  dup is exch % position of magenta is width bytes into is
+	  % do magenta
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  mis yis copy pop % copy magenta to yellow
+	  dup dup add is exch % position of yellow is 2*width bytes into is
+	  % do yellow
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  yis kis copy pop % copy yellow to black
+	  3 mul is exch % position of black is 3*width bytes into is
+	  % do black
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+      pop 
+      
+      } bind def
+
+
+/wh { % fill a number of bytes with "white"
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	ws 0 len getinterval im pos len getinterval copy pop
+	pos len % remember where we got to
+	} bind def
+
+/bl { % fill a number of bytes with "black"
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	bs 0 len getinterval im pos len getinterval copy pop
+	pos len % remember where we got to
+	} bind def
+
+/s1 1 string def
+
+/fl { % fill a number of bytes with a specific hex value
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	/val cf s1 readhexstring pop 0 get def
+	pos 1 pos len add 1 sub {im exch val put} for
+	pos len % remember where we got to
+	} bind def
+
+/hx { % read hex bytes directly; on entry, stack has <str> <pos> <len>
+	3 copy getinterval % stack has <str> <pos> <len> <substr>
+	cf exch readhexstring pop pop % stack back to <str> <pos> <len>
+	} bind def
+
+/wbytes { % width depth -> wb      find width in bytes  given 1, 2, 8 or 24 or 32
+      dup dup
+      8 gt { pop 8 idiv mul }
+      { 8 eq {pop} {1 eq {7 add 8 idiv} {3 add 4 idiv} ifelse} ifelse } ifelse
+	} bind def
+/BEGINBITMAPBWc { % iw, ih, width, height, theta, x y 
+	1 {} COMMONBITMAPc
+	} bind def
+/BEGINBITMAPGRAYc { % iw, ih, width, height, theta, x y 
+	8 {} COMMONBITMAPc
+	} bind def
+/BEGINBITMAP2BITc { % iw, ih, width, height, theta, x y 
+	2 {} COMMONBITMAPc
+	} bind def
+%
+% Common routine for imaging compressed images
+%
+/COMMONBITMAPc { % iw, ih, width, height, theta, x y depth proc
+		 % (x,y) is the lower left corner of the image
+	/cvtProc exch def
+	/depth exch def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def % LW+ has a buggy memory leak!
+	cvtProc                % run the desired proc after save has occurred
+	/is im 0 lb getinterval def % image substring
+	ws 0 lb getinterval is copy pop % whiten it
+	/cf currentfile def % evaluate "currentfile" only once
+	width height depth [width 0 0 height neg 0 height] % top to bottom
+	{ip} image % zap!
+	bitmapsave restore % avoid occasional disaster on the LW+
+	grestore
+	} bind def
+/BEGINBITMAPBW { % iw, ih, width, height, theta, x y 
+	1 {} COMMONBITMAP
+	} bind def
+/BEGINBITMAPGRAY { % iw, ih, width, height, theta, x y 
+	8 {} COMMONBITMAP
+	} bind def
+/BEGINBITMAP2BIT { % iw, ih, width, height, theta, x y 
+	2 {} COMMONBITMAP
+	} bind def
+%
+% Common routine for uncompressed images
+%
+/COMMONBITMAP { % iw, ih, width, height, theta, x y depth proc
+	/cvtProc exch def
+	/depth exch def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/bitmapsave save def % LW+ has a buggy memory leak!
+	cvtProc              % run the desired proc after save has occurred
+	/is width depth wbytes string def
+	/cf currentfile def % evaluate "currentfile" only once
+	width height depth [width 0 0 height neg 0 height] % top to bottom
+	{cf is readhexstring pop} image
+	bitmapsave restore % avoid occasional disaster on the LW+
+	grestore
+	} bind def
+
+%
+% All this hairy color setup stuff gus wrote on the mac, I just copied and
+% changed the variable names to be humanly readable.
+
+/ngrayt 256 array def
+/nredt 256 array def
+/nbluet 256 array def
+/ngreent 256 array def
+
+fMLevel1 {
+/colorsetup {
+	currentcolortransfer
+	/gryt exch def
+	/blut exch def
+	/grnt exch def
+	/redt exch def
+	0 1 255 {
+		/indx exch def
+		/cynu 1 red indx get 255 div sub def
+		/magu 1 green indx get 255 div sub def
+		/yelu 1 blue indx get 255 div sub def
+		/kk cynu magu min yelu min def
+% The HP PaintJet XL300 ignores the gray transfer curve but still sets its
+% default black generation and undercolor removal functions as if it is
+% used. This causes black colors not to work. Bug#56844 <Gus 2/22/93>
+% - We go back to the old (correct?) way of doing this since this code
+% is now bypassed for PS Level 2 printers in favor of colorSetup2 which
+% uses PS Level 2 indexed color, which is much cleaner. <Gus 3/3/93>
+		/u kk currentundercolorremoval exec def
+%-		/u 0 def
+		nredt indx 1 0 cynu u sub max sub redt exec put
+		ngreent indx 1 0 magu u sub max sub grnt exec put
+		nbluet indx 1 0 yelu u sub max sub blut exec put
+		ngrayt indx 1 kk currentblackgeneration exec sub gryt exec put
+	} for
+	{255 mul cvi nredt exch get}
+	{255 mul cvi ngreent exch get}
+	{255 mul cvi nbluet exch get}
+	{255 mul cvi ngrayt exch get}
+	setcolortransfer
+	{pop 0} setundercolorremoval
+	{} setblackgeneration
+	} bind def
+}
+{
+% Here, we set up indexed color for imaging on PS Level 2 without mucking around
+% with the transfer functions.
+
+/colorSetup2 {
+	[ /Indexed /DeviceRGB 255 
+		{dup red exch get 255 div 
+		 exch dup green exch get 255 div 
+		 exch blue exch get 255 div}
+	] setcolorspace
+} bind def
+} ifelse
+
+%
+% Setup a transfer function to convert psuedo color values into grayscale
+% values based on the color lookup tables.
+%
+/fakecolorsetup {
+	/tran 256 string def
+	0 1 255 {/indx exch def 
+		tran indx
+		red indx get 77 mul
+		green indx get 151 mul
+		blue indx get 28 mul
+		add add 256 idiv put} for
+	currenttransfer
+	{255 mul cvi tran exch get 255.0 div}
+	exch fmConcatProcs settransfer
+} bind def
+%
+% image a color image
+%
+/BITMAPCOLOR { % iw, ih, width, height, theta, x y 
+	/depth 8 def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/bitmapsave save def
+	fMLevel1 {	
+		colorsetup
+		/is width depth wbytes string def
+		/cf currentfile def % evaluate "currentfile" only once
+		width height depth [width 0 0 height neg 0 height] % top to bottom
+		{cf is readhexstring pop} {is} {is} true 3 colorimage 
+	} {
+		colorSetup2
+		/is width depth wbytes string def
+		/cf currentfile def % evaluate "currentfile" only once
+		7 dict dup begin
+			/ImageType 1 def
+			/Width width def
+			/Height height def
+			/ImageMatrix [width 0 0 height neg 0 height] def
+			/DataSource {cf is readhexstring pop} bind def
+			/BitsPerComponent depth def
+			/Decode [0 255] def
+		end image	
+	} ifelse
+	bitmapsave restore 
+	grestore
+	} bind def
+%
+% Compressed color image rendering
+%
+/BITMAPCOLORc { % iw, ih, width, height, theta, x y 
+	/depth 8 def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+	fMLevel1 {	
+		colorsetup
+		/is im 0 lb getinterval def % image substring
+		ws 0 lb getinterval is copy pop % whiten it
+		/cf currentfile def % evaluate "currentfile" only once
+		width height depth [width 0 0 height neg 0 height] % top to bottom
+		{ip} {is} {is} true 3 colorimage
+	} {
+		colorSetup2
+		/is im 0 lb getinterval def % image substring
+		ws 0 lb getinterval is copy pop % whiten it
+		/cf currentfile def % evaluate "currentfile" only once
+		7 dict dup begin
+			/ImageType 1 def
+			/Width width def
+			/Height height def
+			/ImageMatrix [width 0 0 height neg 0 height] def
+			/DataSource {ip} bind def
+			/BitsPerComponent depth def
+			/Decode [0 255] def
+		end image	
+	} ifelse
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPTRUECOLORc { 
+	/depth 24 def
+        gsave
+ 	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/ris im 0 width getinterval def	% red part of im
+	/gis im width width getinterval def	% green part of im
+	/bis im width 2 mul width getinterval def % blue part of im
+        
+	ws 0 lb getinterval is copy pop 
+	/cf currentfile def 
+	width height 8 [width 0 0 height neg 0 height] 
+	{width rip pop ris} {gis} {bis} true 3 colorimage
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPCMYKc { 
+	/depth 32 def
+        gsave
+ 	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/cis im 0 width getinterval def	% cyan part of im
+	/mis im width width getinterval def	% magenta part of im
+	/yis im width 2 mul width getinterval def % yellow part of im
+	/kis im width 3 mul width getinterval def % black part of im
+        
+	ws 0 lb getinterval is copy pop 
+	/cf currentfile def 
+	width height 8 [width 0 0 height neg 0 height] 
+	{width rip4 pop cis} {mis} {yis} {kis} true 4 colorimage
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPTRUECOLOR { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /gis width string def
+        /bis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop } 
+        { cf gis readhexstring pop } 
+        { cf bis readhexstring pop } 
+        true 3 colorimage 
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYK { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /mis width string def
+        /yis width string def
+        /kis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop } 
+        { cf mis readhexstring pop } 
+        { cf yis readhexstring pop } 
+        { cf kis readhexstring pop } 
+        true 4 colorimage 
+        bitmapsave restore 
+        grestore
+        } bind def
+%
+% image a color image to a b&width device
+%
+/BITMAPTRUEGRAYc { 
+	/depth 24 def
+        gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+        /bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/ris im 0 width getinterval def	% red part of im
+	/gis im width width getinterval def	% green part of im
+	/bis im width 2 mul width getinterval def % blue part of im
+        ws 0 lb getinterval is copy pop 
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        {width rip pop ris gis bis width gray} image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYKGRAYc { 
+	/depth 32 def
+        gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+        /bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/cis im 0 width getinterval def	% cyan part of im
+	/mis im width width getinterval def	% magenta part of im
+	/yis im width 2 mul width getinterval def % yellow part of im
+	/kis im width 3 mul width getinterval def % black part of im
+        ws 0 lb getinterval is copy pop 
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        {width rip pop cis mis yis kis width cgray} image
+        bitmapsave restore 
+        grestore
+        } bind def
+/cgray { % c m y k width
+        /ww exch def
+        /k exch def
+        /y exch def
+        /m exch def
+        /c exch def
+        0 1 ww 1 sub { /i exch def c i get m i get y i get k i get CMYKtoRGB
+				.144 mul 3 1 roll .587 mul 3 1 roll .299 mul add add
+				c i 3 -1 roll floor cvi put } for
+        c
+ 		} bind def
+/gray { % r g b width
+        /ww exch def
+        /b exch def
+        /g exch def
+        /r exch def
+        0 1 ww 1 sub { /i exch def r i get .299 mul g i get .587 mul
+			b i get .114 mul add add r i 3 -1 roll floor cvi put } for
+        r
+        } bind def
+/BITMAPTRUEGRAY { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /gis width string def
+        /bis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop 
+          cf gis readhexstring pop 
+          cf bis readhexstring pop width gray}  image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYKGRAY { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /yis width string def
+        /mis width string def
+        /kis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop 
+          cf mis readhexstring pop 
+          cf yis readhexstring pop 
+          cf kis readhexstring pop width cgray}  image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPGRAY { % iw, ih, width, height, theta, x y 
+	8 {fakecolorsetup} COMMONBITMAP
+	} bind def
+/BITMAPGRAYc { % iw, ih, width, height, theta, x y 
+	8 {fakecolorsetup} COMMONBITMAPc
+	} bind def
+/ENDBITMAP {
+	} bind def
+end % of FrameDict definitions
+
+% OPI stuff
+	/ALDmatrix matrix def ALDmatrix currentmatrix pop
+/StartALD {
+	/ALDsave save def
+	 savematrix
+	 ALDmatrix setmatrix
+	} bind def
+/InALD {
+	 restorematrix
+	} bind def
+/DoneALD {
+	 ALDsave restore
+	} bind def
+
+% Dashed lines stuff
+/I { setdash } bind def
+/J { [] 0 setdash } bind def
+
+%%EndProlog
+%%BeginSetup
+(5.0) FMVERSION
+1 1 0 0 612 792 0 1 9 FMDOCUMENT
+0 0 /Times-Roman FMFONTDEFINE
+1 0 /Times-Bold FMFONTDEFINE
+2 0 /Helvetica FMFONTDEFINE
+3 0 /Times-Italic FMFONTDEFINE
+32 FMFILLS
+0 0 FMFILL
+1 0.1 FMFILL
+2 0.3 FMFILL
+3 0.5 FMFILL
+4 0.7 FMFILL
+5 0.9 FMFILL
+6 0.97 FMFILL
+7 1 FMFILL
+8 <0f1e3c78f0e1c387> FMFILL
+9 <0f87c3e1f0783c1e> FMFILL
+10 <cccccccccccccccc> FMFILL
+11 <ffff0000ffff0000> FMFILL
+12 <8142241818244281> FMFILL
+13 <03060c183060c081> FMFILL
+14 <8040201008040201> FMFILL
+16 1 FMFILL
+17 0.9 FMFILL
+18 0.7 FMFILL
+19 0.5 FMFILL
+20 0.3 FMFILL
+21 0.1 FMFILL
+22 0.03 FMFILL
+23 0 FMFILL
+24 <f0e1c3870f1e3c78> FMFILL
+25 <f0783c1e0f87c3e1> FMFILL
+26 <3333333333333333> FMFILL
+27 <0000ffff0000ffff> FMFILL
+28 <7ebddbe7e7dbbd7e> FMFILL
+29 <fcf9f3e7cf9f3f7e> FMFILL
+30 <7fbfdfeff7fbfdfe> FMFILL
+%%EndSetup
+%%BeginPaperSize: Letter
+%%EndPaperSize
+%%Page: "1" 1
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 18 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Documen) 234.01 636 T
+(t) 372 636 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(V) 263.4 612 T
+(ersion 1.0) 274.6 612 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(X11 Release 6.4) 245.76 588 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+3 12 Q
+(Arnaud Le Hor) 267.06 540 T
+(s) 340.27 540 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(lehor) 273.26 526 T
+(s@x.or) 298.48 526 T
+(g) 332.74 526 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(X Consortium, Inc.) 259.67 512 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+3 14 Q
+(Abstr) 282.38 446.67 T
+(act) 312.51 446.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(This document describes the RX MIME type and ho) 72 415 T
+(w it can be used to pro) 323 415 T
+(vide a means to e) 431.47 415 T
+(x) 514.61 415 T
+(e-) 520.43 415 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.24 (cute remote applications, such as X W) 72 401 P
+-0.24 (indo) 254.38 401 P
+-0.24 (w) 275.42 401 P
+-0.24 (System) 286.85 401 P
+-0.24 (clients, from a W) 324.95 401 P
+-0.24 (orld W) 406.59 401 P
+-0.24 (ide W) 439.53 401 P
+-0.24 (eb bro) 467.32 401 P
+-0.24 (wser) 497.11 401 P
+-0.24 (. T) 519.1 401 P
+-0.24 (o) 531.24 401 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(achie) 72 387 T
+(v) 97.02 387 T
+(e this, the RX document must con) 102.84 387 T
+(v) 265.36 387 T
+(e) 271.18 387 T
+(y enough information for an application to get e) 276.32 387 T
+(v) 505.99 387 T
+(ery-) 511.81 387 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.29 (thing it needs to connect to the v) 72 373 P
+-0.29 (arious resources a) 225.99 373 P
+-0.29 (v) 311.13 373 P
+-0.29 (ailable in the user\325) 316.83 373 P
+-0.29 (s en) 404.28 373 P
+-0.29 (vironment and display a) 422.51 373 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(graphic user interf) 72 359 T
+(ace, possibly passing through some security \336re) 159.85 359 T
+(w) 389.2 359 T
+(all.) 397.74 359 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Cop) 226.49 295 T
+(yright \251 1996 X Consortium) 246.38 295 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 10 Q
+-0.2 (Permission is hereby granted, free of char) 72 270.33 P
+-0.2 (ge, to an) 237.52 270.33 P
+-0.2 (y person obtaining a cop) 271.13 270.33 P
+-0.2 (y of this softw) 368.56 270.33 P
+-0.2 (are and associated documen-) 425.36 270.33 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.14 (tation \336les \050the \322Softw) 72 258.33 P
+-0.14 (are\323\051, to deal in the Softw) 162.29 258.33 P
+-0.14 (are without restriction, including without limitation the rights to use,) 264.78 258.33 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(cop) 72 246.33 T
+(y) 86.34 246.33 T
+(, modify) 90.69 246.33 T
+(, mer) 123.93 246.33 T
+(ge, publish, distrib) 144.3 246.33 T
+(ute, sublicense, and sell copies of the Softw) 218.55 246.33 T
+(are, and to permit persons to whom) 393.15 246.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(the Softw) 72 234.33 T
+(are is furnished to do so, subject to the follo) 110.51 234.33 T
+(wing conditions:) 285.8 234.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The abo) 72 210.33 T
+(v) 104.34 210.33 T
+(e cop) 109.19 210.33 T
+(yright notice and this permission notice shall be included in all copies or substantial portions of the) 130.47 210.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Softw) 72 198.33 T
+(are.) 95.79 198.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(THE SOFTW) 72 174.33 T
+(ARE IS PR) 126.63 174.33 T
+(O) 172.35 174.33 T
+(VIDED \322) 179.07 174.33 T
+(AS IS\323, WITHOUT W) 216.31 174.33 T
+(ARRANTY OF ANY KIND, EXPRESS OR IMPLIED,) 307.31 174.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(INCLUDING B) 72 162.33 T
+(UT NO) 136.61 162.33 T
+(T LIMITED T) 166.48 162.33 T
+(O THE W) 224.62 162.33 T
+(ARRANTIES OF MERCHANT) 264.52 162.33 T
+(ABILITY) 393.59 162.33 T
+(, FITNESS FOR A P) 432.29 162.33 T
+(AR-) 515.55 162.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.17 (TICULAR PURPOSE AND NONINFRINGEMENT) 72 150.33 P
+-0.17 (. IN NO EVENT SHALL THE X CONSOR) 283.77 150.33 P
+-0.17 (TIUM BE LIABLE) 459.15 150.33 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(FOR ANY CLAIM, D) 72 138.33 T
+(AMA) 162.15 138.33 T
+(GES OR O) 185.08 138.33 T
+(THER LIABILITY) 229.68 138.33 T
+(, WHETHER IN AN A) 306.43 138.33 T
+(CTION OF CONTRA) 399.62 138.33 T
+(CT) 488.66 138.33 T
+(, T) 500.7 138.33 T
+(OR) 511.63 138.33 T
+(T) 524.92 138.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.21 (OR O) 72 126.33 P
+-0.21 (THER) 95 126.33 P
+-0.21 (WISE, ARISING FR) 120.56 126.33 P
+-0.21 (OM, OUT OF OR IN CONNECTION WITH THE SOFTW) 204.47 126.33 P
+-0.21 (ARE OR THE USE OR) 442.42 126.33 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(O) 72 114.33 T
+(THER DEALINGS IN THE SOFTW) 78.82 114.33 T
+(ARE.) 227.6 114.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.03 (Except as contained in this notice, the name of the X Consortium shall not be used in adv) 72 90.33 P
+-0.03 (ertising or otherwise to pro-) 428.48 90.33 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(mote the sale, use or other dealings in this Softw) 72 78.33 T
+(are without prior written authorization from the X Consortium.) 266.33 78.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 582 54 648 R
+V
+52 397 54 409 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "1" 1
+%%Page: "2" 2
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(2) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 14 Q
+(1. Intr) 72 710.67 T
+(oduction) 109.86 710.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+-0.15 (The RX MIME type [4] document is designed to pro) 72 682 P
+-0.15 (vide a means to e) 323.45 682 P
+-0.15 (x) 405.99 682 P
+-0.15 (ecute remote applications,) 411.81 682 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(such as X W) 72 668 T
+(indo) 132.5 668 T
+(w System clients, from a W) 153.54 668 T
+(orld W) 285.9 668 T
+(ide W) 319.08 668 T
+(eb bro) 347.11 668 T
+(wser) 377.14 668 T
+(. Ho) 399.13 668 T
+(we) 419.5 668 T
+(v) 433.19 668 T
+(er) 439.01 668 T
+(, the document) 447.85 668 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(itself is not suf) 72 654 T
+(\336cient. T) 142.7 654 T
+(o be of an) 185.08 654 T
+(y use. it requires the bro) 232.55 654 T
+(wser to use the information it contains) 348.23 654 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(and to react accordingly) 72 640 T
+(. The general model is that the RX document con) 186.85 640 T
+(v) 422.34 640 T
+(e) 428.16 640 T
+(ys to the bro) 433.31 640 T
+(wser the) 492.67 640 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(list of services the application needs to run. In reaction the bro) 72 626 T
+(wser sets up the user en) 370.98 626 T
+(vironment) 484.14 626 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(for the application to run, and starts the application by feeding the web serv) 72 612 T
+(er back the rele) 434.42 612 T
+(v) 507.76 612 T
+(ant) 513.46 612 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(information. The RX document can list both required and optional services, lea) 72 598 T
+(ving) 452.04 598 T
+(t) 476.38 598 T
+(he bro) 479.71 598 T
+(wser) 509.74 598 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(to decide, possibly based on user preferences, which services are a) 72 584 T
+(v) 391 584 T
+(ailable and/or preferred.) 396.7 584 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.15 (This document describes the RX MIME type and ho) 72 556 P
+-0.15 (w the bro) 321.77 556 P
+-0.15 (wser is e) 366.48 556 P
+-0.15 (xpected to start the applica-) 407.98 556 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(tion by running a CGI script or equi) 72 542 T
+(v) 244.02 542 T
+(alent [6].) 249.72 542 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 14 Q
+(2. Notational Con) 72 506.67 T
+(v) 176.83 506.67 T
+(entions and Generic Grammar) 183.69 506.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(All of the mechanisms speci\336ed in this document are described in both prose and an augmented) 72 478 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Backus-Naur F) 72 464 T
+(orm \050BNF\051. Readers need to be f) 144.8 464 T
+(amiliar with the notation in order to understand) 302.32 464 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(this speci\336cation. The augmented BNF includes the follo) 72 450 T
+(wing constructs:) 345.68 450 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(name = de\336nition) 108 422 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The name of a rule is simply the name itself \050without an) 126 403 T
+(y enclosing \322<\322 and \322>\323\051 and) 394.79 403 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(is separated from its de\336nition by the equal character \322=\323. Whitespace is only signi\336-) 126 389 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(cant in that indentation of continuation lines is used to indicate a rule de\336nition that) 126 375 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(spans more than one line. Angle brack) 126 361 T
+(ets are used within de\336nitions whene) 310.18 361 T
+(v) 487.52 361 T
+(er their) 493.34 361 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(presence will f) 126 347 T
+(acilitate discerning the use of rule names.) 196.52 347 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\322literal\323) 108 319 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.05 (Quotation marks surround literal te) 126 300 P
+-0.05 (xt. Unless stated otherwise, the te) 294.25 300 P
+-0.05 (xt is case-insensi-) 454.79 300 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ti) 126 286 T
+(v) 132.37 286 T
+(e.) 138.19 286 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(rule1 | rule2) 108 258 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.12 (Elements separated by a bar \050\322) 126 239 P
+-0.12 (|\323) 272.37 239 P
+-0.12 (\051 are alternati) 280.1 239 P
+-0.12 (v) 343.54 239 P
+-0.12 (es, e.g., \322yes | no\323 will accept yes or no.) 349.36 239 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050rule1 rule2\051) 108 211 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Elements enclosed in parentheses are treated as a single element. Thus, \322\050elem \050foo |) 126 192 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(bar\051 elem\051\323 allo) 126 178 T
+(ws the tok) 201.67 178 T
+(en sequences \322elem foo elem\323 and \322elem bar elem\323.) 250.88 178 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(*rule) 108 150 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The character \322*\323 preceding an element indicates repetition. The full form is) 126 131 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\322<n>*<m>element\323 indicating at least <n> and at most <m> occurrences of element.) 126 117 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Def) 126 103 T
+(ault v) 143.87 103 T
+(alues are 0 and in\336nity so that \322*\050element\051\323 allo) 170.57 103 T
+(ws an) 400.9 103 T
+(y number) 428.38 103 T
+(, including) 473.56 103 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(zero; \3221*element\323 requires at least one; and \3221*2element\323 allo) 126 89 T
+(ws one or tw) 426.29 89 T
+(o.) 487.82 89 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 594 54 606 R
+V
+52 235 54 247 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "2" 2
+%%Page: "3" 3
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(3) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+([rule]) 108 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Square brack) 126 693 T
+(ets enclose optional elements; \322[foo bar]\323 is equi) 188.86 693 T
+(v) 422.84 693 T
+(alent to \322*1\050foo bar\051\323.) 428.54 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 F
+(2.1 Basic Rules) 72 667 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(The follo) 72 639 T
+(wing rules are used throughout this speci\336cation to describe basic parsing constructs.) 116.03 639 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(OCTET) 108 620 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 620 T
+(y 8-bit sequence of data>) 261.68 620 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ALPHA) 108 601 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 601 T
+(y US-ASCII letter \322) 261.68 601 T
+(A\323..) 356.38 601 T
+(\323Z\323 and \322a\323..) 375.53 601 T
+(\323z\323>) 437.99 601 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(DIGIT) 108 582 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 582 T
+(y US-ASCII digit \3220\323..) 261.68 582 T
+(\3239\323>) 371.17 582 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(CHAR) 108 563 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 563 T
+(y character>) 261.68 563 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(CTL) 108 544 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 544 T
+(y US-ASCII control character) 261.68 544 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+( \050octets 0 - 31\051 and DEL \050127\051>) 234 530 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(CR) 108 511 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <US-ASCII CR, carriage return \05013\051>) 234 511 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(LF) 108 492 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <US-ASCII LF) 234 492 T
+(, linefeed \05010\051>) 317.24 492 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(SP) 108 473 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <US-ASCII SP) 234 473 T
+(, space \05032\051>) 316.21 473 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(HT) 108 454 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <US-ASCII HT) 234 454 T
+(, horizontal-tab \0509\051>) 319.31 454 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(SPECIAL) 108 435 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322;\323 | \322?\323 | \322,) 234 435 T
+(\323 | \322=\323 | \322<\322 | \322>\323 | SP | HT | CR | LF) 298.03 435 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(STRING) 108 416 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*<an) 234 416 T
+(y CHAR e) 273.68 416 T
+(xcept CTLs and SPECIALs>) 324.17 416 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(TEXT) 108 397 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <an) 234 397 T
+(y OCTET e) 261.68 397 T
+(xcept CTLs, b) 317.5 397 T
+(ut including CR and LF>) 385.58 397 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 14 Q
+(3. The RX MIME type) 72 361.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 12 Q
+(3.1 General f) 72 335 T
+(orm) 138.02 335 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(The general form of an RX document is a list of HTML P) 72 307 T
+(ARAM elements, as drafted by the) 348.19 307 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(WWW Consortium [5] in its simplest form:) 72 293 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\322<P) 108 265 T
+(ARAM N) 125.66 265 T
+(AME=\323 name \322V) 172.91 265 T
+(ALUE=\323 v) 256.03 265 T
+(alue \322>\323) 308.82 265 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(One adv) 72 237 T
+(antage of this syntax is to pro) 112.02 237 T
+(vide HTML authors with the possibility to easily mo) 253.16 237 T
+(v) 505.66 237 T
+(e ele-) 511.48 237 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ments from the RX document to the HTML document itself, when the OBJECT tag becomes) 72 223 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(standard and is fully supported by web bro) 72 209 T
+(wsers. The list of possible parameters is de\336ned in the) 276.67 209 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(follo) 72 195 T
+(wing section.) 94.37 195 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(In addition the standard HTML comment element, which is of the form:) 72 167 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\322<!--\323 TEXT \322-->\323) 108 139 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(is supported.) 72 111 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "3" 3
+%%Page: "4" 4
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(4) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 12 Q
+(3.2 P) 72 712 T
+(arameters) 97.21 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(First, an RX document can specify the RX v) 72 684 T
+(ersion number with the VERSION parameter which) 284.8 684 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(can ha) 72 670 T
+(v) 102.74 670 T
+(e the follo) 108.56 670 T
+(wing v) 156.92 670 T
+(alue \050in augmented BNF\051:) 189.62 670 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(v) 108 651 T
+(ersion) 113.82 651 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*DIGIT \322.) 234 651 T
+(\323 1*DIGIT) 298.91 651 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This allo) 72 623 T
+(ws the document to specify a major and minor numbers. When not speci\336ed the def) 114.04 623 T
+(ault) 515.52 623 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(v) 72 609 T
+(alue for this parameter is 1.0. When speci\336ed this must appear \336rst in the document.) 77.7 609 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Then, an RX document can contain an) 72 581 T
+(y of the parameters described belo) 256.12 581 T
+(w) 420.77 581 T
+(, in an) 428.65 581 T
+(y order:) 458.14 581 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(A) 108 553 T
+(CTION) 116.18 553 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The URL to fetch to initiate the remote e) 126 534 T
+(x) 321.79 534 T
+(ecution. It is equi) 327.61 534 T
+(v) 410.64 534 T
+(alent to the D) 416.34 534 T
+(A) 480.85 534 T
+(T) 488.18 534 T
+(A) 494.4 534 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(attrib) 126 520 T
+(ute of the OBJECT element and the SRC parameter of the Netscape\252 EMBED) 151.09 520 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(element.) 126 506 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(REQ) 108 478 T
+(UIRED-SER) 131.88 478 T
+(VICES) 193.58 478 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.31 (This indicates the list of services the application needs to run. This list can contain one) 126 459 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(or more of UI, PRINT as described belo) 126 445 T
+(w) 318.32 445 T
+(.) 326.21 445 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(UI) 108 417 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This indicates the list of User Interf) 126 398 T
+(ace protocols the application supports, in order of) 296.52 398 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(preference \050from the most to the least preferred\051.) 126 384 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(PRINT) 108 356 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This indicates the list of printing protocols the application support, in order of prefer-) 126 337 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ence \050from the most to the least preferred\051.) 126 323 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(WIDTH and HEIGHT) 108 295 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This allo) 126 276 T
+(ws the HTML author to specify the def) 168.04 276 T
+(ault geometry of the application pri-) 355.55 276 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(mary windo) 126 262 T
+(w) 183.36 262 T
+(.) 191.24 262 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(EMBEDDED) 108 234 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This indicates whether the application is to be embedded in the bro) 126 215 T
+(wser or not. If not) 447.32 215 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.06 (speci\336ed in the RX document, the def) 126 201 P
+-0.06 (ault v) 307.15 201 P
+-0.06 (alue is YES, unless o) 333.79 201 P
+-0.06 (v) 435.03 201 P
+-0.06 (erridden by bro) 440.85 201 P
+-0.06 (wser) 514.41 201 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(or user settings.) 126 187 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(A) 108 159 T
+(UT) 116 159 T
+(O-ST) 131.78 159 T
+(AR) 157.33 159 T
+(T) 173.28 159 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This speci\336es whether the application should be launched immediately upon retrie) 126 140 T
+(v) 520.98 140 T
+(al) 526.68 140 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.43 (of the RX document or only on user demand. F) 126 126 P
+-0.43 (or instance, this could be on a user click) 348.58 126 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.41 (on the embedded re) 126 112 P
+-0.41 (gion, or whate) 218.91 112 P
+-0.41 (v) 286.79 112 P
+-0.41 (er other user interf) 292.61 112 P
+-0.41 (ace element the bro) 380.23 112 P
+-0.41 (wser w) 472.35 112 P
+-0.41 (ants to) 506.14 112 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(pro) 126 98 T
+(vide for this. If not speci\336ed in the RX document, the def) 141.82 98 T
+(ault v) 416.66 98 T
+(alue is YES, unless) 443.36 98 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(o) 126 84 T
+(v) 131.82 84 T
+(erridden by bro) 137.64 84 T
+(wser or user settings.) 211.32 84 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "4" 4
+%%Page: "5" 5
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(5) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(APP-GR) 108 712 T
+(OUP) 150.19 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This speci\336es the logical application group to which the application is related. The) 126 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(intent of this attrib) 126 679 T
+(ute is to allo) 214.76 679 T
+(w se) 273.47 679 T
+(v) 294.83 679 T
+(eral remote applications to be considered as a sin-) 300.65 679 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(gle logical application or) 126 665 T
+(, on the contrary) 245.17 665 T
+(, to separate v) 323.04 665 T
+(arious applications from each) 389.39 665 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(other) 126 651 T
+(.) 150 651 T
+( If not speci\336ed in the RX document, the application is considered to be alone) 153 651 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(within its o) 126 637 T
+(wn logical group.) 179.71 637 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.08 (The possible v) 72 609 P
+-0.08 (alues for each of these parameters is respecti) 141.54 609 P
+-0.08 (v) 354.96 609 P
+-0.08 (ely de\336ned as follo) 360.78 609 P
+-0.08 (ws \050in augmented) 451.91 609 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(BNF\051:) 72 595 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(action) 108 576 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <script URI>) 234 576 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(requ) 108 557 T
+(ir) 129.32 557 T
+(ed-services) 136.66 557 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= service *\050 \322,) 234 557 T
+(\323 service \051) 301.24 557 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(service) 126 538 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322UI\323 | \322PRINT\323) 234 538 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ui) 108 519 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= protocols) 234 519 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(protocols) 126 500 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= protocol *\050 \322,) 234 500 T
+(\323 protocol \051) 307.25 500 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(protocol) 126 481 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= STRING) 234 481 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(print) 108 462 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= protocols) 234 462 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(width) 108 443 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*DIGIT) 234 443 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(height) 108 424 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*DIGIT) 234 424 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(embedded) 108 405 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322YES\323 | \322NO\323) 234 405 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(auto-start) 108 386 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322YES\323 | \322NO) 234 386 T
+(\323) 308.15 386 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(a) 108 367 T
+(pp-group) 113.33 367 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= STRING) 234 367 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(In addition to this e) 72 339 T
+(xhausti) 165.16 339 T
+(v) 199.52 339 T
+(e list of parameters, an RX document can also contain parameters) 205.34 339 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(only rele) 72 325 T
+(v) 114.02 325 T
+(ant to a particular protocol. The names of these parameters must be pre\336x) 119.72 325 T
+(ed by the) 473.14 325 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(related protocol name and the v) 72 311 T
+(alue can) 223.33 311 T
+(b) 265.98 311 T
+(e an) 271.98 311 T
+(ything. There may be as man) 291.46 311 T
+(y such parameters as) 430.58 311 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(desired. These parameters are de\336ned as follo) 72 297 T
+(ws:) 291.3 297 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(param-name) 108 278 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= protocol \322-\323 STRING) 234 278 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(param-v) 108 259 T
+(alue) 147.68 259 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= STRING) 234 259 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Ev) 72 231 T
+(ery parameter can also be speci\336ed in the HTML document as an attrib) 85.15 231 T
+(ute of the OBJECT or) 426.17 231 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(EMBED element when one is used. When this is the case and a parameter is speci\336ed both in) 72 217 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(HTML and RX, the HTML instance has precedence o) 72 203 T
+(v) 330.76 203 T
+(er the RX one. The only e) 336.58 203 T
+(xception to this) 460.7 203 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(rule is the VERSION parameter which only af) 72 189 T
+(fects the set of parameters to which it is attached,) 293.99 189 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(whether this is in HTML or RX.) 72 175 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 F
+(3.3 Retur) 72 149 T
+(ned P) 119.81 149 T
+(arameters) 148.69 149 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(Once the bro) 72 121 T
+(wser has read the RX document and performed an) 133.68 121 T
+(y necessary initialization, in) 374.1 121 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(response it should start the application at the appropriate time \050see auto-start\051 by fetching the) 72 107 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(action URI, via an HTTP GET request [3], with the follo) 72 93 T
+(wing parameters list:) 344.33 93 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 633 54 659 R
+V
+52 534 54 565 R
+V
+52 477 54 508 R
+V
+52 363 54 394 R
+V
+52 307 54 319 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "5" 5
+%%Page: "6" 6
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(6) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(return-parameters) 108 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= *\050 \322?\323 return-parameter \051) 234 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(return-parameter) 126 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= ui-return | print-return) 234 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(|) 243 679 T
+( width-return | height-return | embedded-retur) 245.4 679 T
+(n) 463.81 679 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(|) 243 665 T
+( e) 245.4 665 T
+(xtra-param-return) 253.55 665 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ui-return) 108 646 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322UI=\323) 234 646 T
+(ui-url) 276.85 646 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(print-return) 108 627 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322PRINT=\323) 234 627 T
+(print-url) 298.86 627 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(width-return) 108 608 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322WIDTH=\323 1*DIGIT) 234 608 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(height-return) 108 589 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322HEIGHT=\323 1*DIGIT) 234 589 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(embedded-return) 108 570 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322EMBEDDED=\323 embedded) 234 570 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(e) 108 551 T
+(xtra-param-return) 113.15 551 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= protocol \322-\323 STRING \322=\323 STRING) 234 551 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(F) 72 523 T
+(or each requested service speci\336ed in the RX document the web bro) 78.49 523 T
+(wser can respond with the) 404.45 523 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(corresponding return parameter) 72 509 T
+(. If an) 222.62 509 T
+(y of the requested services is not listed in the returned) 250.76 509 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(parameters, it should be assumed that the service is una) 72 495 T
+(v) 337.72 495 T
+(ailable.) 343.42 495 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The action URI, which should be a CGI script or equi) 72 467 T
+(v) 329.33 467 T
+(alent, must not only start the application) 335.03 467 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(with the gi) 72 453 T
+(v) 123.04 453 T
+(en parameters, it is also e) 128.86 453 T
+(xpected to produce a v) 249.98 453 T
+(alid document of type \322te) 358.32 453 T
+(xt/plain\323.) 480.12 453 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.2 (The \336rst line of this document must contain an error code, either 0 for success or non zero for f) 72 439 P
+-0.2 (ail-) 524 439 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ure. The non e) 72 425 T
+(xistence of this line should be considered as a sign of f) 141.13 425 T
+(ailure. The rest of the docu-) 403.31 425 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ment can then contain some error messages to be displayed by the bro) 72 411 T
+(wser) 407.64 411 T
+(.) 429.64 411 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 14 Q
+(4. Ho) 72 375.67 T
+(w the RX document will be used in the X W) 103.75 375.67 T
+(indo) 364.05 375.67 T
+(w System) 390.37 375.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 12 Q
+(4.1) 72 349 T
+(P) 90 349 T
+(arameters) 97.21 349 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(I) 72 321 T
+(n X for the UI and PRINT services respecti) 76 321 T
+(v) 283.64 321 T
+(ely the) 289.46 321 T
+(protocols) 324.79 321 T
+(X and XPRINT) 372.46 321 T
+(a) 450.78 321 T
+(re supported and) 456.11 321 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(are then v) 72 307 T
+(alid protocol names) 119.02 307 T
+(.) 213.67 307 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(A) 72 279 T
+(lso the follo) 80.66 279 T
+(wing additional parameters are recognized:) 137.7 279 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(X-UI-LBX, X-PRINT) 108 251 T
+(-LBX) 213.54 251 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(These parameters indicate) 126 232 T
+(whether or not t) 254.29 232 T
+(he application is LBX capable.) 330.61 232 T
+( If not speci-) 478.92 232 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.43 (\336ed in the RX document, the def) 126 218 P
+-0.43 (ault v) 280.29 218 P
+-0.43 (alue is NO, unless o) 306.57 218 P
+-0.43 (v) 401 218 P
+-0.43 (erridden by bro) 406.82 218 P
+-0.43 (wser or user) 479.64 218 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(settings.) 126 204 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(X-UI-INPUT) 108 176 T
+(-METHOD) 171.54 176 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.11 (This indicates that the application can mak) 126 157 P
+-0.11 (e use of an input method serv) 330.54 157 P
+-0.11 (er) 471.01 157 P
+-0.11 (.) 479.68 157 P
+-0.11 ( If not spec-) 482.68 157 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(i\336ed in the RX document, the def) 126 143 T
+(ault v) 286.2 143 T
+(alue is NO, unless o) 312.9 143 T
+(v) 409.04 143 T
+(erridden by bro) 414.86 143 T
+(wser or) 488.54 143 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(user settings.) 126 129 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(X-A) 108 101 T
+(UTH) 128.66 101 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.29 (This parameter speci\336es a def) 126 82 P
+-0.29 (ault list of authentication mechanisms, in order of prefer-) 268.02 82 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 623 54 701 R
+V
+52 275 54 357 R
+V
+52 200 54 240 R
+V
+52 125 54 165 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "6" 6
+%%Page: "7" 7
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(7) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(ence \050from the most to the least preferred\051, applying to all services.) 126 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(X-UI-A) 108 684 T
+(UTH, X-PRINT) 145.32 684 T
+(-A) 222.2 684 T
+(UTH, X-UI-LBX-A) 234.2 684 T
+(UTH, and X-PRINT) 330.18 684 T
+(-LBX-A) 427.39 684 T
+(UTH) 467.39 684 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(These parameters specify a list of authentication mechanisms, in order of preference) 126 665 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050from the most to the least preferred\051, applying to one service in particular) 126 651 T
+(, that is X,) 481.78 651 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.01 (XPRINT) 126 637 P
+-0.01 (, LBX for X, and LBX for XPRINT respecti) 168.44 637 P
+-0.01 (v) 380.7 637 P
+-0.01 (ely) 386.52 637 P
+-0.01 (. The) 400.4 637 P
+-0.01 (y ha) 424.87 637 P
+-0.01 (v) 444.95 637 P
+-0.01 (e precedence o) 450.77 637 P
+-0.01 (v) 521.86 637 P
+-0.01 (er) 527.68 637 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(the global X-A) 126 623 T
+(UTH parameter when both are speci\336ed.) 197.33 623 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The X-UI-LBX, X-PRINT) 72 595 T
+(-LBX parameters can ha) 199.2 595 T
+(v) 316.58 595 T
+(e the follo) 322.4 595 T
+(wing v) 370.76 595 T
+(alue:) 403.46 595 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(x-lbx) 108 576 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322YES\323 | \322NO\323) 234 576 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The X-UI-INPUT) 72 548 T
+(-METHOD parameter can ha) 157.2 548 T
+(v) 297.24 548 T
+(e the follo) 303.06 548 T
+(wing v) 351.42 548 T
+(alue:) 384.12 548 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(x-ui-input-method) 108 529 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \050 \322YES\323 [ \322;\323 URL ] \051 | \322NO\323) 234 529 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(This speci\336es whether an input method serv) 72 501 T
+(er is a) 283.13 501 T
+(v) 311.54 501 T
+(ailable or not, and if one is its location can be) 317.24 501 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(speci\336ed as an URL.) 72 487 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Each of the X-UI-A) 72 459 T
+(UTH, X-PRINT) 166.97 459 T
+(-A) 243.85 459 T
+(UTH, X-UI-LBX) 255.85 459 T
+(-A) 339.83 459 T
+(UTH) 351.83 459 T
+(, and X-PRINT) 376.49 459 T
+(-LBX) 449.04 459 T
+(-A) 477.04 459 T
+(UTH) 489.04 459 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(parameters ha) 72 445 T
+(v) 138.73 445 T
+(e the follo) 144.55 445 T
+(wing v) 192.91 445 T
+(alue:) 225.61 445 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xauths) 108 426 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= xauth *\050 \322,) 234 426 T
+(\323 xauth\051) 293.92 426 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xauth) 126 407 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= xauth-name [ \322:\323 xauth-data ]) 234 407 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xauth-name) 126 388 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*<an) 234 388 T
+(y CHAR e) 273.68 388 T
+(xcept CTLs, SPECIALs and \322:\323>) 324.17 388 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xauth-data) 126 369 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= STRING) 234 369 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(The authentication mechanism name can be for instance MIT) 72 341 T
+(-MA) 365.5 341 T
+(GIC-COOKIE-1 or MIT) 388.34 341 T
+(-KER-) 505.21 341 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(BER) 72 327 T
+(OS-5 while the authentication data w) 94.86 327 T
+(ould) 273.05 327 T
+(be,) 297.38 327 T
+(respecti) 314.71 327 T
+(v) 351.73 327 T
+(ely) 357.55 327 T
+(, n) 371.44 327 T
+(othing or) 383.44 327 T
+(a K) 430.1 327 T
+(erberos principal) 446.8 327 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(and realm; for instance \322) 72 313 T
+(webserv) 190.63 313 T
+(er@mycorp.com) 230.44 313 T
+(\323.) 311.14 313 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 F
+(4.2) 72 287 T
+(Retur) 90 287 T
+(ned parameters) 119.81 287 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(In the GET request, the returned URLs for the UI and PRINT services, that is for the X and) 72 259 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(XPRINT protocols, are of the form:) 72 245 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ui-url) 108 226 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322x11:\323 xdisplay [ \322;\323 auth ]) 234 226 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xdisplay) 126 207 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= display | decnet-display) 234 207 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(display) 126 188 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= [ transport \322/\323 ] host \322:\323 display-num [ \322.) 234 188 T
+(\323 screen-num ]) 437.89 188 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(transport) 126 169 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322local\323 | \322tcp\323 | \322decnet\323) 234 169 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(decnet-display) 126 150 T
+0 9.6 Q
+(1) 195.98 154.8 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(= host \322::\323 display-num [ \322.) 234 150 T
+(\323 screen-num ]) 364.58 150 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(host) 126 131 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= <A le) 234 131 T
+(g) 270.68 131 T
+(al Internet host domain name or IP address \050in dotted-) 276.62 131 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(decimal form\051, as de\336ned by Section 2.1 of RFC 1123>) 243 117 T
+0 0 0 1 0 0 0 K
+72 96 540 111 C
+0 0 0 1 0 0 0 K
+81 109 225 109 2 L
+0.5 H
+2 Z
+0 X
+0 0 0 1 0 0 0 K
+N
+0 0 0 1 0 0 0 K
+0 0 612 792 C
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(1.) 90 89.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(this syntax is supported for compatibility with Xlib and is equi) 102 89.33 T
+(v) 352.31 89.33 T
+(alent to the general display speci\336cation) 357.06 89.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(with decnet as the transport.) 102 77.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 113 54 467 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "7" 7
+%%Page: "8" 8
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(8) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(display-num) 126 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*DIGIT) 234 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(screen-num) 126 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*DIGIT) 234 693 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(auth) 126 674 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322auth=\323 xauth) 234 674 T
+0 9.6 Q
+(1) 311.52 678.8 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+(print-url) 108 655 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322xprint:\323 xprinter [ \322;\323 auth]) 234 655 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xprinter) 126 636 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= [ printer) 234 636 T
+(-name \322@\323 ][ transport \322/\323 ] host \322:\323 display-num) 282.52 636 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(printer) 126 617 T
+(-name) 157.75 617 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= 1*<an) 234 617 T
+(y CHAR e) 273.68 617 T
+(xcept CTLs, SPECIALs and \322@\323>) 324.17 617 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(And i) 72 589 T
+(n re) 99 589 T
+(sponse to the X-UI-LBX, X-PRINT) 117.32 589 T
+(-LBX parameters, t) 288.53 589 T
+(he follo) 381.5 589 T
+(wing) 418.2 589 T
+(is g) 445.2 589 T
+(i) 462.2 589 T
+(v) 465.24 589 T
+(en as part of) 471.06 589 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(the GET request:) 72 575 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(x-ui-lbx-return) 108 556 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322X-UI-LBX=\323 \050 \322YES\323 [ \322;\323 auth ] \051 | \322NO\323) 234 556 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(x-print-lbx-return) 108 537 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(= \322X-PRINT) 234 537 T
+(-LBX=\323 \050 \322YES\323 [ \322;\323 auth ] \051 | \322NO\323) 295.32 537 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 F
+(4.3 Example) 72 511 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+-0.23 (An HTML document specifying an RX MIME-type document using the OBJECT tag w) 72 483 P
+-0.23 (ould look) 491.78 483 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(lik) 72 469 T
+(e:) 84.55 469 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+2 F
+(<HTML>) 108 441 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(...) 108 427 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<OBJECT data=http://www) 108 413 T
+(.domain.com/CalendarT) 251.34 413 T
+(ool.rx) 377.94 413 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(type=application/x-rx) 162 399 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(width=500 height=400>) 162 385 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<IMG SRC=http://www) 108 371 T
+(.domain.com/CalendarT) 228.65 371 T
+(ool.gif AL) 355.25 371 T
+(T=CalendarT) 403.96 371 T
+(ool>) 472.87 371 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(</OBJECT>) 108 357 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(...) 108 343 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(</HTML>) 108 329 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(W) 72 301 T
+(ith the Netscape\252 EMBED tag it w) 82.85 301 T
+(ould look lik) 255.8 301 T
+(e:) 317.03 301 T
+0 9.6 Q
+(2) 325.69 305.8 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+2 12 Q
+(<HTML>) 108 273 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(...) 108 259 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<EMBED SRC=http://www) 108 245 T
+(.domain.com/CalendarT) 248.65 245 T
+(ool.rx width=500 height=400>) 375.25 245 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(...) 108 231 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(</HTML>) 108 217 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(The document SimCity) 72 189 T
+(.rx could contain the follo) 183.23 189 T
+(wing:) 307.25 189 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+2 F
+(<P) 108 161 T
+(ARAM Name=VERSION V) 121.57 161 T
+(alue=1.0>) 263.1 161 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 147 T
+(ARAM Name=A) 121.57 147 T
+(CTION V) 206.23 147 T
+(alue=http://www) 254.06 147 T
+(.domain.com/CalendarT) 339.05 147 T
+(ool.pl>) 465.65 147 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 133 T
+(ARAM Name=REQ) 121.57 133 T
+(UIRED-SER) 224.47 133 T
+(VICES V) 289.87 133 T
+(alue=UI>) 336.38 133 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 119 T
+(ARAM Name=UI V) 121.57 119 T
+(ALUE=X>) 220.97 119 T
+0 0 0 1 0 0 0 K
+72 96 540 111 C
+0 0 0 1 0 0 0 K
+81 109 225 109 2 L
+0.5 H
+2 Z
+0 X
+0 0 0 1 0 0 0 K
+N
+0 0 0 1 0 0 0 K
+0 0 612 792 C
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(1.) 90 89.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(xauth is de\336ned further) 102 89.33 T
+(.) 194.49 89.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(2.) 90 77.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(One cannot specify an alternati) 102 77.33 T
+(v) 226.16 77.33 T
+(e such as, an image, within the EMBED tag.) 231.01 77.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 585 54 720 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "8" 8
+%%Page: "9" 9
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(9) 303.5 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+2 12 Q
+(<P) 108 712 T
+(ARAM Name=X-UI-LBX V) 121.57 712 T
+(alue=YES>) 259.76 712 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 698 T
+(ARAM Name=X-A) 121.57 698 T
+(UTH V) 217.99 698 T
+(alue=MIT) 253.15 698 T
+(-MA) 301.82 698 T
+(GIC-COOKIE-1>) 323.46 698 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 684 T
+(ARAM Name=EMBEDDED V) 121.57 684 T
+(alue=YES>) 277.09 684 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(<P) 108 670 T
+(ARAM Name=APP-GR) 121.57 670 T
+(OUP V) 244.36 670 T
+(alue=CalendarT) 280.86 670 T
+(oolAppGroup1>) 365.12 670 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+(From which the bro) 72 642 T
+(wser w) 166.69 642 T
+(ould reply by a GET of the follo) 200.89 642 T
+(wing URI:) 355.57 642 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+2 F
+(http://www) 108 614 T
+(.dom) 163.3 614 T
+(a) 189.97 614 T
+(in.com/CalendarT) 196.64 614 T
+(ool.pl) 289.9 614 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(?UI=x11:m) 135 600 T
+(yhost.m) 193.18 600 T
+(ydomain.org:0;auth=MIT) 235.01 600 T
+(-MA) 363.72 600 T
+(GIC-COOKIE-1:044B3244D) 385.36 600 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(?WIDTH=500?HEIGHT=400?EMBEDDED=YES) 135 586 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(?X-UI-LBX=YES;auth=MIT) 135 572 T
+(-MA) 276.05 572 T
+(GIC-COOKIE-1:1A7C4C1F312B3) 297.68 572 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 F
+-0.04 (Note that the URI is really made of a single line and is only presented on se) 72 544 P
+-0.04 (v) 433.68 544 P
+-0.04 (eral lines in this doc-) 439.5 544 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(ument to mak) 72 530 T
+(e it easier to read.) 137.88 530 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 610 54 622 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "9" 9
+%%Page: "10" 10
+%%BeginPaperSize: Letter
+%%EndPaperSize
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 0 0 0 1 1 1]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+ 8 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+J
+0 0 0 1 0 0 0 K
+0 10 Q
+0 X
+0 0 0 1 0 0 0 K
+(The RX Document) 267.95 749.33 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(10) 301 36 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+1 14 Q
+(5. Refer) 72 710.67 T
+(ences) 119.17 710.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 12 Q
+([1] T) 72 682 T
+(. Berners-Lee,) 95.44 682 T
+( \322U) 163.74 682 T
+(ni) 180.73 682 T
+(v) 189.77 682 T
+(ersal Resource Identi\336ers in WWW) 195.59 682 T
+(: A Unifying Syntax for the Expres-) 366.43 682 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(sion of Names and Addresses of Objects on the Netw) 72 668 T
+(ork as used in the W) 328.16 668 T
+(orld-W) 425.52 668 T
+(ide W) 459.7 668 T
+(eb) 487.73 668 T
+(\323,) 499.06 668 T
+( RFC) 507.38 668 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(1630, CERN, June 1994 \050http://ds.internic.net/rfc/rfc1630.txt\051.) 72 654 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+([2] T) 72 626 T
+(. Berners-Lee, L. Masinter) 95.44 626 T
+(, and M. McCahill.,) 222.25 626 T
+(\322) 319.58 626 T
+(Uniform Resource Locators \050URL\051) 324.91 626 T
+(\323) 493.87 626 T
+(, RFC) 499.2 626 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(1738, CERN, Xerox Corporation, Uni) 72 612 T
+(v) 254.69 612 T
+(ersity of Minnesota, December 1994) 260.51 612 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050http://ds.internic.net/rfc/rfc1738.txt\051.) 72 598 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.22 ([3] T) 72 570 P
+-0.22 (. Berners-Lee, R. Fielding, and H. Frystyk,) 95.21 570 P
+-0.22 (\322) 302.65 570 P
+-0.22 (Hyperte) 307.98 570 P
+-0.22 (xt T) 346.45 570 P
+-0.22 (ransfer Protocol -- HTTP/1.0) 365.47 570 P
+-0.22 (\323,) 504.12 570 P
+-0.22 ( May) 512.45 570 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(1996 \050http://www) 72 556 T
+(.ics.uci.edu/pub/ietf/http/rfc1945.html\051.) 156.89 556 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+([4] N. Borenstein and N. Freed, \322MIME \050Multipurpose Internet Mail Extensions\051 P) 72 528 T
+(art One:) 471.77 528 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Mechanisms for Specifying and Describing the F) 72 514 T
+(ormat of Internet Message Bodies\323, RFC 1521,) 307.79 514 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Bellcore, Innosoft, September 1993 \050http://ds.internic.net/rfc/rfc1521.txt\051.) 72 500 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+([5] Da) 72 472 T
+(v) 102.74 472 T
+(e Raggett,) 108.56 472 T
+(\322) 160.22 472 T
+(Inserting objects into HTML) 165.55 472 T
+(\323,) 303.88 472 T
+( W3C W) 312.2 472 T
+(orking Draft 22-Apr) 353.9 472 T
+(-96) 450.97 472 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050http://www) 72 458 T
+(.w3.or) 129.89 458 T
+(g/pub/WWW/TR/WD-object-960422.html\051.) 160.33 458 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+([6] Da) 72 430 T
+(vid Robinson,) 102.74 430 T
+(\322) 173.09 430 T
+(The WWW Common Gate) 178.42 430 T
+(w) 307.09 430 T
+(ay Interf) 315.64 430 T
+(ace V) 356.5 430 T
+(ersion 1.1) 382.81 430 T
+(\323) 430.14 430 T
+(, Uni) 435.47 430 T
+(v) 459.17 430 T
+(ersity of Cam-) 464.99 430 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(bridge UK, 15 February 1996 \050http://www) 72 416 T
+(.ast.cam.ac.uk/~drtr/cgi-spec.html\051.) 275.2 416 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+52 664 54 690 R
+V
+52 622 54 634 R
+V
+52 566 54 578 R
+V
+52 468 54 480 R
+V
+52 426 54 438 R
+V
+0 0 0 1 0 0 0 K
+FMENDPAGE
+%%EndPage: "10" 10
+%%Trailer
+%%BoundingBox: 0 0 612 792
+%%PageOrder: Ascend
+%%Pages: 10
+%%DocumentFonts: Times-Roman
+%%+ Times-Bold
+%%+ Helvetica
+%%+ Times-Italic
+%%EOF

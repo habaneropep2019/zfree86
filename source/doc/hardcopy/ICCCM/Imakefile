@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/ICCCM/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(icccm,icccm.PS.gz)
+InstallHardcopyDoc(icccm.idx,icccm.idx.PS.gz)
+

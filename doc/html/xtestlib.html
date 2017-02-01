@@ -1,0 +1,470 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:16:41 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Description">2. Description</a><br>
+<a href="#3. C Language Binding">3. C Language Binding</a><br>
+<a href="#4. References">4. References</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>XTEST
+Extension Library</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+2.2 X Consortium Standard</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Kieron
+Drake <br>
+UniSoft Ltd.</small></small></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1992 by UniSoft Group Ltd.</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, and distribute this documentation for any
+purpose and without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in
+all copies. UniSoft makes no representations about the
+suitability for any purpose of the information in this
+document. This documentation is provided &lsquo;&lsquo;as
+is&rsquo;&rsquo; without express or implied warranty.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1992, 1994 X Consortium</p>
+
+<p style="margin-top: 1em" valign="top">Permission is
+hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</p>
+
+<p style="margin-top: 1em" valign="top">The above copyright
+notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p style="margin-top: 1em" valign="top">THE SOFTWARE IS
+PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT WARRANTY
+OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Except as contained
+in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written
+authorization from the X Consortium.</p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension is a
+minimal set of client and server extensions required to
+completely test the X11 server with no user
+intervention.</p>
+
+<p style="margin-top: 1em" valign="top">This extension is
+not intended to support general journaling and playback of
+user actions. This is a difficult area [XTrap, 89] as it
+attempts to synchronize synthetic user interactions with
+their effects; it is at the higher level of dialogue
+recording/playback rather than at the strictly lexical
+level. We are interested only in the latter, simpler, case.
+A more detailed discussion and justification of the
+extension functionality is given in [Drake, 91].</p>
+
+<p style="margin-top: 1em" valign="top">We are aiming only
+to provide a minimum set of facilities that solve immediate
+testing and validation problems. The testing extension
+itself needs testing, where possible, and so should be as
+simple as possible.</p>
+
+<p style="margin-top: 1em" valign="top">We have also tried
+to:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Confine the
+extension to an appropriate high level within the server to
+minimize portability problems. In practice this means that
+the extension should be at the DIX level or use the DIX/DDX
+interface, or both. This has effects, in particular, on the
+level at which &quot;input synthesis&quot; can occur.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Minimize the
+changes required in the rest of the server.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="90%">
+
+
+<p style="margin-top: 1em" valign="top">Minimize
+performance penalties on normal server operation.</p></td>
+</table>
+
+<a name="2. Description"></a>
+<h2>2. Description</h2>
+
+
+<p style="margin-top: 1em" valign="top">The functions
+provided by this extension fall into two groups:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="34%">
+
+
+<p style="margin-top: 1em" valign="top"><b>Client
+Operations</b></p> </td>
+<td width="66%">
+</td>
+</table>
+
+<p style="margin-left:25%;">These routines manipulate
+otherwise hidden client-side behavior. The actual
+implementation will depend on the details of the actual
+language binding and what degree of request buffering,
+GContext caching, and so on, is provided. In the C binding,
+defined in section 7, routines are provided to access the
+internals of two opaque data structures --<i>GC</i>s and
+<i>Visual</i>s-- and to discard any requests pending within
+the output buffer of a connection. The exact details can be
+expected to differ for other language bindings.</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="30%">
+
+
+<p style="margin-top: 1em" valign="top"><b>Server
+Requests</b></p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-left:25%;">The first of these requests is
+similar to that provided in most extensions: it allows a
+client to specify a major and minor version number to the
+server and for the server to respond with major and minor
+versions of its own. The remaining two requests allow the
+following:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Access to an
+otherwise &quot;write-only&quot; server resource: the cursor
+associated with a given window</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="8%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Perhaps most
+importantly, limited synthesis of input device events,
+almost as if a cooperative user had moved the pointing
+device or pressed a key or button.</p></td>
+</table>
+
+<a name="3. C Language Binding"></a>
+<h2>3. C Language Binding</h2>
+
+
+<p style="margin-top: 1em" valign="top">The C functions
+either provide direct access to the protocol and add no
+additional semantics to those defined in section 5 or they
+correspond directly to the abstract descriptions of client
+operations in section 4.</p>
+
+<p style="margin-top: 1em" valign="top">All XTEST extension
+functions and procedures, and all manifest constants and
+macros, will start with the string &quot;XTest&quot;. All
+operations are classified as server/client (Server) or
+client-only (Client). All routines that have return type
+Status will return nonzero for &quot;success&quot; and zero
+for &quot;failure.&quot; Even if the XTEST extension is
+supported, the server may withdraw such facilities
+arbitrarily; in which case they will subsequently return
+zero.</p>
+
+<p style="margin-top: 1em" valign="top">The include file
+for this extension is &lt;<i>X11/extensions/XTest.h</i>&gt;.
+__ &#9474;</p>
+
+<p style="margin-top: 1em" valign="top">Bool <br>
+XTestQueryExtension(<i>display</i>, <i>event_base</i>,
+<i>error_base</i>, <i>major_version</i>,
+<i>minor_version</i>) <br>
+Display *<i>display</i>; <br>
+int *<i>event_base</i>; /* RETURN */ <br>
+int *<i>error_base</i>; /* RETURN */ <br>
+int *<i>major_version</i>; /* RETURN */ <br>
+int *<i>minor_version</i>; /* RETURN */ &#9474;__</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestQueryExtension</i>
+returns <i>True</i> if the specified display supports the
+XTEST extension, else <i>False</i>. If the extension is
+supported, *event_base would be set to the event number for
+the first event for this extension and *error_base would be
+set to the error number for the first error for this
+extension. As no errors or events are defined for this
+version of the extension, the values returned here are not
+defined (nor useful). If the extension is supported,
+*major_version and *minor_version are set to the major and
+minor version numbers of the extension supported by the
+display. Otherwise, none of the arguments are set. __
+&#9474;</p>
+
+<p style="margin-top: 1em" valign="top">Bool <br>
+XTestCompareCursorWithWindow(<i>display</i>, <i>window</i>,
+<i>cursor</i>) <br>
+Display *<i>display</i>; <br>
+Window <i>window</i>; <br>
+Cursor <i>cursor</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestCompareCursorWithWindow</i> performs a
+comparison of the cursor whose ID is specified by cursor
+(which may be <i>None</i>) with the cursor of the window
+specified by window returning <i>True</i> if they are the
+same and <i>False</i> otherwise. If the extension is not
+supported, then the request is ignored and zero is returned.
+__ &#9474;</p>
+
+<p style="margin-top: 1em" valign="top">Bool <br>
+XTestCompareCurrentCursorWithWindow(<i>display</i>,
+<i>window</i>) <br>
+Display *<i>display</i>; <br>
+Window <i>window</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestCompareCurrentCursorWithWindow</i>
+performs a comparison of the current cursor with the cursor
+of the specified window returning <i>True</i> if they are
+the same and <i>False</i> otherwise. If the extension is not
+supported, then the request is ignored and zero is returned.
+__ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestFakeKeyEvent(<i>display</i>,
+<i>keycode</i>, <i>is_press</i>, <i>delay</i>) <br>
+Display *<i>display</i>; <br>
+unsigned int <i>keycode</i>; <br>
+Bool <i>is_press</i>; <br>
+unsigned long <i>delay</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestFakeKeyEvent</i> requests the server to
+simulate either a <i>KeyPress</i> (if is_press is
+<i>True</i>) or a <i>KeyRelease</i> (if is_press is
+<i>False</i>) of the key with the specified keycode;
+otherwise, the request is ignored.</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, the simulated event will not be processed until
+delay milliseconds after the request is received (if delay
+is <i>CurrentTime</i>, then this is interpreted as no delay
+at all). No other requests from this client will be
+processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been
+completed. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestFakeButtonEvent(<i>display</i>,
+<i>button</i>, <i>is_press</i>, <i>delay</i>) <br>
+Display *<i>display</i>; <br>
+unsigned int <i>button</i>; <br>
+Bool <i>is_press</i>; <br>
+unsigned long <i>delay</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestFakeButtonEvent</i> requests the server
+to simulate either a <i>ButtonPress</i> (if is_press is
+<i>True</i>) or a <i>ButtonRelease</i> (if is_press is
+<i>False</i>) of the logical button numbered by the
+specified button; otherwise, the request is ignored.</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, the simulated event will not be processed until
+delay milliseconds after the request is received (if delay
+is <i>CurrentTime</i>, then this is interpreted as no delay
+at all). No other requests from this client will be
+processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been
+completed. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestFakeMotionEvent(<i>display</i>,
+<i>screen_number</i>, <i>x</i>, <i>y</i>, <i>delay</i>) <br>
+Display *<i>display</i>; <br>
+int <i>screen_number</i>; <br>
+int <i>x y</i>; <br>
+unsigned long <i>delay</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestFakeMotionEvent</i> requests the server
+to simulate a movement of the pointer to the specified
+position (x, y) on the root window of screen_number;
+otherwise, the request is ignored. If screen_number is -1,
+the current screen (that the pointer is on) is used.</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, the simulated event will not be processed until
+delay milliseconds after the request is received (if delay
+is <i>CurrentTime</i>, then this is interpreted as no delay
+at all). No other requests from this client will be
+processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been
+completed. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestFakeRelativeMotionEvent(<i>display</i>,
+<i>screen_number</i>, <i>x</i>, <i>y</i>, <i>delay</i>) <br>
+Display *<i>display</i>; <br>
+int <i>screen_number</i>; <br>
+int <i>x y</i>; <br>
+unsigned long <i>delay</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, <i>XTestFakeRelativeMotionEvent</i> requests the
+server to simulate a movement of the pointer by the
+specified offsets (x, y) relative to the current pointer
+position on screen_number; otherwise, the request is
+ignored. If screen_number is -1, the current screen (that
+the pointer is on) is used.</p>
+
+<p style="margin-top: 1em" valign="top">If the extension is
+supported, the simulated event will not be processed until
+delay milliseconds after the request is received (if delay
+is <i>CurrentTime</i>, then this is interpreted as no delay
+at all). No other requests from this client will be
+processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been
+completed. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestGrabControl(<i>display</i>,
+<i>impervious</i>) <br>
+Display *<i>display</i>; <br>
+Bool <i>impervious</i>; &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If impervious is
+<i>True</i>, then the executing client becomes impervious to
+server grabs. If impervious is <i>False</i>, then the
+executing client returns to the normal state of being
+susceptible to server grabs. __ &#9474;</p>
+
+<p style="margin-top: 1em" valign="top">Bool <br>
+XTestSetGContextOfGC(<i>gc</i>, <i>gid</i>) <br>
+GC <i>gc</i>; <br>
+GContext <i>gid</i>; &#9474;__</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestSetGContextOfGC</i>
+sets the GContext within the opaque datatype referenced by
+gc to be that specified by gid. __ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top">XTestSetVisualIDOfVisual(<i>visual</i>,
+<i>visualid</i>) <br>
+Visual *<i>visual</i>; <br>
+VisualID <i>visualid</i>; &#9474;__</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestSetVisualIDOfVisual</i>
+sets the VisualID within the opaque datatype referenced by
+visual to be that specified by visualid. __ &#9474;</p>
+
+<p style="margin-top: 1em" valign="top">Bool <br>
+XTestDiscard(<i>display</i>) <br>
+Display *<i>display</i>; &#9474;__</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XTestDiscard</i>
+discards any requests within the output buffer for the
+specified display. It returns <i>True</i> if any requests
+were discarded; otherwise, it returns <i>False</i>.</p>
+
+<a name="4. References"></a>
+<h2>4. References</h2>
+
+
+<p style="margin-left:25%; margin-top: 1em">Annicchiarico,
+D., et al., <i>XTrap: The XTrap Architecture</i>. Digital
+Equipment Corporation, July 1991.</p>
+
+<p style="margin-left:25%; margin-top: 1em">Drake, K. J.,
+<i>Some Proposals for a Minimum X11 Testing Extension</i>.
+UniSoft Ltd., June 1991.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729547" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

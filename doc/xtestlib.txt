@@ -1,0 +1,528 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		  1mXTEST Extension Library0m
+
+
+
+			Version 2.2
+		   X Consortium Standard
+
+
+
+
+
+
+			Kieron Drake
+			UniSoft Ltd.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © 1992 by UniSoft Group Ltd.
+
+Permission to use, copy, modify, and distribute this docu-
+mentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice and this permission
+notice appear in all copies.  UniSoft makes no representa-
+tions about the suitability for any purpose of the informa-
+tion in this document.	This documentation is provided ``as
+is'' without express or implied warranty.
+
+
+
+
+
+
+Copyright © 1992, 1994 X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview0m
+
+This extension is a minimal set of client and server exten-
+sions required to completely test the X11 server with no
+user intervention.
+
+This extension is not intended to support general journaling
+and playback of user actions.  This is a difficult area
+[XTrap, 89] as it attempts to synchronize synthetic user
+interactions with their effects; it is at the higher level
+of dialogue recording/playback rather than at the strictly
+lexical level.	We are interested only in the latter, sim-
+pler, case.  A more detailed discussion and justification of
+the extension functionality is given in [Drake, 91].
+
+We are aiming only to provide a minimum set of facilities
+that solve immediate testing and validation problems.  The
+testing extension itself needs testing, where possible, and
+so should be as simple as possible.
+
+We have also tried to:
+
+·    Confine the extension to an appropriate high level
+     within the server to minimize portability problems.  In
+     practice this means that the extension should be at the
+     DIX level or use the DIX/DDX interface, or both.  This
+     has effects, in particular, on the level at which
+     "input synthesis" can occur.
+
+·    Minimize the changes required in the rest of the
+     server.
+
+·    Minimize performance penalties on normal server opera-
+     tion.
+
+
+1m2.  Description0m
+
+The functions provided by this extension fall into two
+groups:
+
+1mClient Operations0m
+     These routines manipulate otherwise hidden client-side
+     behavior.	The actual implementation will depend on the
+     details of the actual language binding and what degree
+     of request buffering, GContext caching, and so on, is
+     provided.	In the C binding, defined in section 7, rou-
+     tines are provided to access the internals of two
+     opaque data structures --4mGC24ms and 4mVisual24ms-- and to dis-
+     card any requests pending within the output buffer of a
+     connection.  The exact details can be expected to dif-
+     fer for other language bindings.
+
+
+
+
+
+			      1m10m
+
+
+
+
+
+		   XTEST Extension Library
+
+
+1mServer Requests0m
+     The first of these requests is similar to that provided
+     in most extensions: it allows a client to specify a
+     major and minor version number to the server and for
+     the server to respond with major and minor versions of
+     its own.  The remaining two requests allow the follow-
+     ing:
+
+     ·	  Access to an otherwise "write-only" server
+	  resource: the cursor associated with a given win-
+	  dow
+
+     ·	  Perhaps most importantly, limited synthesis of
+	  input device events, almost as if a cooperative
+	  user had moved the pointing device or pressed a
+	  key or button.
+
+1m3.  C Language Binding0m
+
+The C functions either provide direct access to the protocol
+and add no additional semantics to those defined in section
+5 or they correspond directly to the abstract descriptions
+of client operations in section 4.
+
+All XTEST extension functions and procedures, and all mani-
+fest constants and macros, will start with the string
+"XTest".  All operations are classified as server/client
+(Server) or client-only (Client).  All routines that have
+return type Status will return nonzero for "success" and
+zero for "failure."  Even if the XTEST extension is sup-
+ported, the server may withdraw such facilities arbitrarily;
+in which case they will subsequently return zero.
+
+The include file for this extension is <4mX11/exten-0m
+4msions/XTest.h24m>.
+
+__
+|
+Bool
+XTestQueryExtension(4mdisplay24m, 4mevent_base24m, 4merror_base24m, 4mmajor_version24m, 4mminor_version24m)
+     Display *4mdisplay24m;
+     int *4mevent_base24m; /* RETURN */
+     int *4merror_base24m; /* RETURN */
+     int *4mmajor_version24m; /* RETURN */
+     int *4mminor_version24m; /* RETURN */
+
+|__
+
+4mXTestQueryExtension24m returns 4mTrue24m if the specified display
+supports the XTEST extension, else 4mFalse24m.	If the extension
+is supported, *event_base would be set to the event number
+for the first event for this extension and *error_base would
+be set to the error number for the first error for this
+extension.  As no errors or events are defined for this
+
+
+
+			      1m20m
+
+
+
+
+
+		   XTEST Extension Library
+
+
+version of the extension, the values returned here are not
+defined (nor useful).  If the extension is supported,
+*major_version and *minor_version are set to the major and
+minor version numbers of the extension supported by the dis-
+play.  Otherwise, none of the arguments are set.
+
+
+__
+|
+Bool
+XTestCompareCursorWithWindow(4mdisplay24m, 4mwindow24m, 4mcursor24m)
+     Display *4mdisplay24m;
+     Window 4mwindow24m;
+     Cursor 4mcursor24m;
+
+|__
+
+If the extension is supported, 4mXTestCompareCursorWithWindow0m
+performs a comparison of the cursor whose ID is specified by
+cursor (which may be 4mNone24m) with the cursor of the window
+specified by window returning 4mTrue24m if they are the same and
+4mFalse24m otherwise.  If the extension is not supported, then
+the request is ignored and zero is returned.
+
+
+__
+|
+Bool
+XTestCompareCurrentCursorWithWindow(4mdisplay24m, 4mwindow24m)
+     Display *4mdisplay24m;
+     Window 4mwindow24m;
+
+|__
+
+If the extension is supported, 4mXTestCompareCurrentCursor-0m
+4mWithWindow24m performs a comparison of the current cursor with
+the cursor of the specified window returning 4mTrue24m if they
+are the same and 4mFalse24m otherwise.	If the extension is not
+supported, then the request is ignored and zero is returned.
+
+
+__
+|
+XTestFakeKeyEvent(4mdisplay24m, 4mkeycode24m, 4mis_press24m, 4mdelay24m)
+     Display *4mdisplay24m;
+     unsigned int 4mkeycode24m;
+     Bool 4mis_press24m;
+     unsigned long 4mdelay24m;
+
+|__
+
+If the extension is supported, 4mXTestFakeKeyEvent24m requests
+the server to simulate either a 4mKeyPress24m (if is_press is
+4mTrue24m) or a 4mKeyRelease24m (if is_press is 4mFalse24m) of the key with
+
+
+
+			      1m30m
+
+
+
+
+
+		   XTEST Extension Library
+
+
+the specified keycode; otherwise, the request is ignored.
+
+If the extension is supported, the simulated event will not
+be processed until delay milliseconds after the request is
+received (if delay is 4mCurrentTime24m, then this is interpreted
+as no delay at all).  No other requests from this client
+will be processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been com-
+pleted.
+
+
+__
+|
+XTestFakeButtonEvent(4mdisplay24m, 4mbutton24m, 4mis_press24m, 4mdelay24m)
+     Display *4mdisplay24m;
+     unsigned int 4mbutton24m;
+     Bool 4mis_press24m;
+     unsigned long 4mdelay24m;
+
+|__
+
+If the extension is supported, 4mXTestFakeButtonEvent24m requests
+the server to simulate either a 4mButtonPress24m (if is_press is
+4mTrue24m) or a 4mButtonRelease24m (if is_press is 4mFalse24m) of the logi-
+cal button numbered by the specified button; otherwise, the
+request is ignored.
+
+If the extension is supported, the simulated event will not
+be processed until delay milliseconds after the request is
+received (if delay is 4mCurrentTime24m, then this is interpreted
+as no delay at all).  No other requests from this client
+will be processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been com-
+pleted.
+
+
+__
+|
+XTestFakeMotionEvent(4mdisplay24m, 4mscreen_number24m, 4mx24m, 4my24m, 4mdelay24m)
+     Display *4mdisplay24m;
+     int 4mscreen_number24m;
+     int 4mx24m 4my24m;
+     unsigned long 4mdelay24m;
+
+|__
+
+If the extension is supported, 4mXTestFakeMotionEvent24m requests
+the server to simulate a movement of the pointer to the
+specified position (x, y) on the root window of screen_num-
+ber; otherwise, the request is ignored.	 If screen_number is
+-1, the current screen (that the pointer is on) is used.
+
+If the extension is supported, the simulated event will not
+be processed until delay milliseconds after the request is
+
+
+
+			      1m40m
+
+
+
+
+
+		   XTEST Extension Library
+
+
+received (if delay is 4mCurrentTime24m, then this is interpreted
+as no delay at all).  No other requests from this client
+will be processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been com-
+pleted.
+
+
+__
+|
+XTestFakeRelativeMotionEvent(4mdisplay24m, 4mscreen_number24m, 4mx24m, 4my24m, 4mdelay24m)
+     Display *4mdisplay24m;
+     int 4mscreen_number24m;
+     int 4mx24m 4my24m;
+     unsigned long 4mdelay24m;
+
+|__
+
+If the extension is supported, 4mXTestFakeRelativeMotionEvent0m
+requests the server to simulate a movement of the pointer by
+the specified offsets (x, y) relative to the current pointer
+position on screen_number; otherwise, the request is
+ignored.  If screen_number is -1, the current screen (that
+the pointer is on) is used.
+
+If the extension is supported, the simulated event will not
+be processed until delay milliseconds after the request is
+received (if delay is 4mCurrentTime24m, then this is interpreted
+as no delay at all).  No other requests from this client
+will be processed until this delay, if any, has expired and
+subsequent processing of the simulated event has been com-
+pleted.
+
+
+__
+|
+XTestGrabControl(4mdisplay24m, 4mimpervious24m)
+     Display *4mdisplay24m;
+     Bool 4mimpervious24m;
+
+|__
+
+If impervious is 4mTrue24m, then the executing client becomes
+impervious to server grabs.  If impervious is 4mFalse24m, then
+the executing client returns to the normal state of being
+susceptible to server grabs.
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m50m
+
+
+
+
+
+		   XTEST Extension Library
+
+__
+|
+Bool
+XTestSetGContextOfGC(4mgc24m, 4mgid24m)
+     GC 4mgc24m;
+     GContext 4mgid24m;
+
+|__
+
+4mXTestSetGContextOfGC24m sets the GContext within the opaque
+datatype referenced by gc to be that specified by gid.
+
+
+__
+|
+XTestSetVisualIDOfVisual(4mvisual24m, 4mvisualid24m)
+     Visual *4mvisual24m;
+     VisualID 4mvisualid24m;
+
+|__
+
+4mXTestSetVisualIDOfVisual24m sets the VisualID within the opaque
+datatype referenced by visual to be that specified by visu-
+alid.
+
+
+__
+|
+Bool
+XTestDiscard(4mdisplay24m)
+     Display *4mdisplay24m;
+
+|__
+
+4mXTestDiscard24m discards any requests within the output buffer
+for the specified display.  It returns 4mTrue24m if any requests
+were discarded; otherwise, it returns 4mFalse24m.
+
+1m4.  References0m
+
+Annicchiarico, D., et al., 4mXTrap:24m 4mThe24m 4mXTrap24m 4mArchitecture24m.
+     Digital Equipment Corporation, July 1991.
+
+Drake, K. J., 4mSome24m 4mProposals24m 4mfor24m 4ma24m 4mMinimum24m 4mX1124m 4mTesting0m
+     4mExtension24m.  UniSoft Ltd., June 1991.
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m60m
+
+

@@ -1,0 +1,29 @@
+XCOMM $XFree86: xc/programs/xrx/htdocs/Imakefile,v 1.4 2006/01/09 15:01:44 dawes Exp $
+
+#ifndef HtmlDir
+#define HtmlDir /files/web/xfiles/consortium/plug-in
+#endif
+#ifndef WebServer
+#define WebServer www.x.org
+#endif
+
+      HTMLDIR = HtmlDir
+    WEBSERVER = WebServer
+
+#define RxTarget(name)							@@\
+all:: name.rx								@@\
+									@@\
+name.rx: name								@@\
+	sed -e s/WEBSERVER/$(WEBSERVER)/g name >$@			@@\
+									@@\
+InstallNonExecFile(name.rx,$(HTMLDIR))					@@\
+InstallNonExecFile(name.html,$(HTMLDIR))
+
+RxTarget(bitmap)
+RxTarget(dtcm)
+RxTarget(excel)
+RxTarget(xclock)
+RxTarget(xload)
+
+clean::
+	$(RM) *.rx

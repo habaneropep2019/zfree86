@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/ICE/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(ICElib,ICElib.PS.gz)
+InstallHardcopyDoc(ice,ice.PS.gz)
+

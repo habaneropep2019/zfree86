@@ -1,0 +1,1767 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:56:53 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title>Font server implementation overview</title>
+
+</head>
+<body>
+
+<h1 align=center>Font server implementation overview</h1>
+
+<a href="#1. Introduction">1. Introduction</a><br>
+<a href="#2. Startup">2. Startup</a><br>
+<a href="#3. Per client processing">3. Per client processing</a><br>
+<a href="#4. Client shutdown">4. Client shutdown</a><br>
+<a href="#5. Server reset and cleanup">5. Server reset and cleanup</a><br>
+<a href="#6. Server offloading">6. Server offloading</a><br>
+<a href="#7. Font server data structures">7. Font server data structures</a><br>
+<a href="#8. Font Path Element functions">8. Font Path Element functions</a><br>
+<a href="#9. Font specific functions">9. Font specific functions</a><br>
+<a href="#10. Font directories and aliases">10. Font directories and aliases</a><br>
+<a href="#11. Handling scalable fonts">11. Handling scalable fonts</a><br>
+<a href="#12. Access control">12. Access control</a><br>
+<a href="#13. Licensing">13. Licensing</a><br>
+<a href="#14. DIFS contents">14. DIFS contents</a><br>
+<a href="#15. OS contents">15. OS contents</a><br>
+<a href="#16. Utility functions">16. Utility functions</a><br>
+<a href="#17. Server request details">17. Server request details</a><br>
+<a href="#17.1. Connection">17.1. Connection</a><br>
+<a href="#17.2. ListExtension">17.2. ListExtension</a><br>
+<a href="#17.3. QueryExtension">17.3. QueryExtension</a><br>
+<a href="#17.4. ListCatalogues">17.4. ListCatalogues</a><br>
+<a href="#17.5. SetCatalogues">17.5. SetCatalogues</a><br>
+<a href="#17.6. GetCatalogues">17.6. GetCatalogues</a><br>
+<a href="#17.7. CreateAC">17.7. CreateAC</a><br>
+<a href="#17.8. FreeAC">17.8. FreeAC</a><br>
+<a href="#17.9. SetAuthorization">17.9. SetAuthorization</a><br>
+<a href="#17.10. SetResolution">17.10. SetResolution</a><br>
+<a href="#17.11. GetResolution">17.11. GetResolution</a><br>
+<a href="#17.12. ListFonts">17.12. ListFonts</a><br>
+<a href="#17.13. ListFontsWithXInfo">17.13. ListFontsWithXInfo</a><br>
+<a href="#17.14. OpenBitmapFont">17.14. OpenBitmapFont</a><br>
+<a href="#17.15. QueryXInfo">17.15. QueryXInfo</a><br>
+<a href="#17.16. QueryXExtents8 QueryXExtents16">17.16. QueryXExtents8 QueryXExtents16</a><br>
+<a href="#17.17. QueryXBitmaps8 QueryXBitmaps16">17.17. QueryXBitmaps8 QueryXBitmaps16</a><br>
+<a href="#17.18. CloseFont">17.18. CloseFont</a><br>
+<a href="#18. Configuration">18. Configuration</a><br>
+
+<hr>
+
+
+<p align=center valign="top"><i>Dave Lemke</i> <br>
+Network Computing Devices, Inc. <br>
+Copyright &copy; 1991 Network Computing Devices, Inc.</p>
+
+<a name="1. Introduction"></a>
+<h2>1. Introduction</h2>
+
+
+<p style="margin-top: 1em" valign="top">The font server
+uses the same client/server model as X. The basic structure
+is that of the X Consortium X11R5 X server, and those who
+know that code should find the <i>os</i> and <i>difs</i>
+(device independent font server) layers familiar.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>                        +-----------------+
+                  +-----|      difs       |------+
+                  |     +-----------------+      |
+                  |                              |
+                +----+                  +------------+
+                | os |                  | renderers  |
+                +----+                  +------------+</small></b></pre>
+
+
+
+<p style="margin-top: 1em" valign="top"><b>Definitions</b></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">Renderer. Code that
+knows how to take font data in its raw format and convert it
+to the font server&rsquo;s format.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">Font Path Element
+(FPE). An instance of a renderer, associated with a specific
+font source, (ie a directory of PCF bitmaps).</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The <i>difs</i>
+layer interprets the requests, and handles the renderer
+independent work. This includes error checking of requests,
+and the top level font database. It also contains various
+utility functionality such as caching and byte swapping.</p>
+
+<p style="margin-top: 1em" valign="top">The <i>os</i> layer
+sets up the communications channel, reads requests and sends
+the raw data of replies and events. It also handles font
+server configuration issues, controlled by command line
+arguments and a configuration file.</p>
+
+<p style="margin-top: 1em" valign="top">The renderer layer
+contains all font-specific code, and is responsible for
+rendering a font (which may mean just reading a bitmap from
+disk, or may include scaling of outline data), computing a
+fonts properties and header information.</p>
+
+<a name="2. Startup"></a>
+<h2>2. Startup</h2>
+
+
+<p style="margin-top: 1em" valign="top">At startup, the
+font server handles any command line arguments, initializes
+any OS-specific data, and then sets up the communications.
+Various internal databases are then initialized (extensions,
+the font catalogue, etc).</p>
+
+<p style="margin-top: 1em" valign="top">The config file, an
+ordered list of font sources, cache size hints, default
+resolutions, and security information, is then read in. Each
+of these source names could be a directory name, the name of
+another font server, or some other string that a particular
+renderer can recognize.</p>
+
+<p style="margin-top: 1em" valign="top">The default font
+catalogue is then built up by taking each of the font source
+names and comparing it with the names a renderer recognizes.
+The one that matches this name will become attached to this
+source. A renderer will
+&lsquo;&lsquo;understand&rsquo;&rsquo; a name if it can
+parse the data in that directory, or recognize that it is a
+valid font server address, or recognizes a special string.
+Thus a collection of valid font path elements is built up.
+Each <b>FPE</b> has a set of functions to support opening a
+font and accessing its data.</p>
+
+<p style="margin-top: 1em" valign="top">Font information is
+accessed via method functions in the <b>Font.</b> When a
+font is first loaded, the header information and properties
+are loaded/computed. The font also initializes its function
+pointers to do the proper work. When specific metrics or
+bitmaps are required, they are access via the font&rsquo;s
+functions. A disk-based bitmap font will probably want to
+load all data when first accessed. A scaled font or FS font
+may want to do more selective caching. In both cases, the
+renderer can use the utility functions to keep track of this
+data. Changing values of bitmap formats could result in the
+font having multiple copies of data in different formats,
+which the renderer may use the utility functions to
+manage.</p>
+
+<a name="3. Per client processing"></a>
+<h2>3. Per client processing</h2>
+
+
+<p style="margin-top: 1em" valign="top">Each entity
+attaching to the server is a client. Each client has its own
+authorization and resolution information, and its own view
+of the font database. A font open to one client may not be
+open to another, though the font server may have it
+loaded.</p>
+
+<p style="margin-top: 1em" valign="top">After
+initialization, new clients can attach to the font server
+and have their requests processed. For each request that is
+searching for a font <b>(OpenBitmapFont)</b> or listing font
+names <b>(ListFonts, ListFontsWithXInfo),</b> the pattern is
+given to each <b>FPE.</b></p>
+
+
+<p style="margin-top: 1em" valign="top"><b>OpenBitmapFont</b>
+will take the supplied name and pass it to each <b>FPE.</b>
+The <b>FPE</b> will return one of three things:
+<i>Success,</i> and the font object; <i>BadFont,</i> because
+it doesn&rsquo;t know the font; or <i>BadFont</i> and an
+alias name, when it has an alias for the font. If
+<i>Success</i> is returned, the server goes on to create an
+ID (or find an existing one) and return a reply. If
+<i>BadFont</i> is returned, it goes on to the next
+<b>FPE.</b> If it reaches the end without finding a font, an
+error is returned to the client. If an alias is returned,
+the search resets to the first <b>FPE</b> and starts again,
+using the alias as the new font name. This allows aliases to
+work across different <b>FPEs,</b> without any ordering
+restrictions.</p>
+
+<p style="margin-top: 1em" valign="top">When each
+<b>FPE</b> receives a font name to open, it searches for the
+font&rsquo;s existence. If it can&rsquo;t find, or can only
+find an alias, it returns <i>BadFont</i> and any alias. If
+it finds the font, it checks the authorization and license
+status of the font to that of the client. If it passes, it
+then creates a new font object, and reads and/or computes at
+least the font&rsquo;s header information and properties.
+(It may also want to produce the bitmaps and extents, but
+that choice is left to the renderer.)</p>
+
+<p style="margin-top: 1em" valign="top">When a font&rsquo;s
+information is accessed, the interpreter routine looks up
+the font ID to find the font object, and then uses the
+font&rsquo;s access functions to get the data. These
+functions will return the data in the format expected by the
+client.</p>
+
+<a name="4. Client shutdown"></a>
+<h2>4. Client shutdown</h2>
+
+
+<p style="margin-top: 1em" valign="top">When a client
+disconnects, all its references to any fonts it still has
+opened are removed. If no other clients reference these
+fonts, they may be freed, though the server may choose to
+cache them.</p>
+
+<a name="5. Server reset and cleanup"></a>
+<h2>5. Server reset and cleanup</h2>
+
+
+<p style="margin-top: 1em" valign="top">A server may be
+reset to flush the caches, re-read the configuration file,
+and a new list of <b>FPEs</b> to be built, via an
+OS-specific outside action. In UNIX, this will be handled
+via signals; in VMS it could be handled via an async trap or
+event flag.</p>
+
+<a name="6. Server offloading"></a>
+<h2>6. Server offloading</h2>
+
+
+<p style="margin-top: 1em" valign="top">In order to deal
+with numerous clients without major performance degradation,
+the server must be able to clone itself, or provide the
+client with a substitute server via the alternate server
+mechanism. Since both strategies have their uses, both will
+be supported. For a server that has plenty of host memory or
+CPU, but insufficient sockets, cloning may be a good choice.
+For a host with limited memory, assigning an alternate
+server on a different host may be a good choice. The server
+will make this decision based on configuration options.</p>
+
+<a name="7. Font server data structures"></a>
+<h2>7. Font server data structures</h2>
+
+
+<p style="margin-left:10%; margin-top: 1em">The
+<b>Client</b> handles per-client information and interpreter
+status.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct _Client {
+    int         index;
+    pointer     osPrivate;
+    int         noClientException;
+    int         (**requestVector) ();
+    pointer     requestBuffer;
+    int         clientGone;
+    int         sequence;
+    Bool        swapped;
+    long        last_request_time;
+    void        (*pSwapReplyFunc) ();
+    AuthContextPtr auth;
+    char       *catalogues;
+    int         num_catalogues;
+    Mask        eventmask;
+    fsResolution *resolutions;
+    int         num_resolutions;
+}           ClientRec, *ClientPtr;</small></b></pre>
+
+
+<p style="margin-left:10%; margin-top: 1em">The <b>Font</b>
+contains basic font information, including header
+information and properties.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct _font    {
+      int   refcount;
+      fsHeader    header;
+      fsBitmapFormat    format;
+      int   (*get_glyphs)();
+      int   (*get_metrics)();
+      int   (*get_extents)();
+      int   (*get_bitmaps)();
+      int   (*unload_font)();
+      FontPathElementPtr      fpe;
+      int   *client_ids;
+      Bool  restricted_font;
+}     FontRec *FontPtr;</small></b></pre>
+
+
+<p style="margin-left:10%; margin-top: 1em">The
+<b>ClientFont</b> is a wrapper on top of <b>Font,</b>
+handling client specific font information.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct _clientfont {
+      FontPtr     font;
+      int   clientindex;
+}     ClientFontRec, *ClientFontRec;</small></b></pre>
+
+
+<p style="margin-left:10%; margin-top: 1em">The
+<b>AuthContext</b> contains authorization information.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef     struct _authcontext     {
+      char  *authname;
+      char  *authdata;
+      FSID  acid;
+}     AuthContextRec *AuthContextPtr;</small></b></pre>
+
+
+<a name="8. Font Path Element functions"></a>
+<h2>8. Font Path Element functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">These functions are
+associated with each renderer, and handle all aspects of
+font access. Font data access is controlled via another set
+of functions described later. These functions are intended
+to support the R5 X server as well as the font server. As a
+result, some design decisions were made to support both
+models. When the <i>difs</i> layer needs to access a font,
+it uses these functions.</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef unsigned long   Mask;
+
+typedef unsigned char   *pointer;
+
+
+typedef struct _FontPathElement {
+    int         name_length;
+    char       *name;
+    int         type;
+    int         refcount;
+    pointer     private;
+}           FontPathElementRec, *FontPathElementPtr;</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">The FPE&rsquo;s
+reference count is incremented when it is added to the
+current list of FPEs and when it opens a font. It is
+decremented when it is no longer in the current list and
+when it closes a font. All reference changes are handled by
+the <i>difs</i> layer. The count is required to support font
+catalogue changes that may occur while the fontserver has
+fonts open, and keeps FPEs from being lost.</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct FontNames {
+    int     nnames;
+    int     size;
+    int     *length;
+    char    **names;
+}         FontNamesRec, *FontNamesPtr;
+
+typedef struct {
+      Bool  (*name_check)();
+      int   (*init_fpe)();
+      int   (*reset_fpe)();
+      int   (*free_fpe)();
+      int   (*open_font)();
+      int   (*close_font)();
+      int   (*list_fonts)();
+      int   (*start_list_fonts_with_info)();
+      int   (*list_next_font_with_info)();
+      int   (*wakeup_fpe)();
+      int   (*client_died);
+      FontNamesPtr      renderer_names;
+} FPEFunctions;
+
+
+int   init_fpe_type(Bool (name_func)(),
+            int (init_func)(), int (free_func)(), int (reset_func),
+            int (open_func)(), int (close_func)(),
+            int (list_func)(),
+            int (start_lfwi_func)(), int (next_lfwi_func)(),
+            int (wakeup_func)(),
+            int (client_died_func)()
+            )</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">This is called by
+the renderer when it is initialized at the beginning of
+time, and sets up an FPEFunctions entry for the
+renderer.</p>
+
+<p style="margin-top: 1em" valign="top">The
+<b>FPEFunctions</b> have the following parameters:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>Bool  name_check(char *name);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">If <i>name</i> is
+something the renderer recognizes as a valid font source
+name, it return True, otherwise False. ie, if <i>name</i> is
+a directory name, or is prefixed by the renderer&rsquo;s
+prefix, and the directory contains font data the renderer
+can interpret, it would return True.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   init_fpe(FontPathElementPtr fpe);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Does any
+initialization work for the renderer. The name in <i>fpe</i>
+will be one whose prefix matches the list returned when the
+renderer was initialized.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   reset_fpe(FontPathElementPtr fpe);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Tells <i>fpe</i> to
+reset any internal state about what fonts it has available.
+This will typically be called because the font
+server&rsquo;s <b>FPE</b> search list has been changed. The
+<i>fpe</i> should reset any cached state of available fonts
+(ie, re-read this<i>fonts.dir)</i>when</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   free_fpe(FontPathElementPtr fpe);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Frees any
+renderer-specific data and closes any files or sockets.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   open_font(pointer client, FontPathElementPtr fpe, Mask flags,
+            char *fontname, int namelength,
+            fsBitmapFormat format_hint, fsBitmapFormatMask format_mask,
+            XID fontid, FontPtr *ppfont, char **alias);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Opens the font. The
+bits marked by the<i>format_mask</i>in <i>format_hint</i>
+are used where applicable. The resulting FontPtr is returned
+in <i>ppfont.</i> The <i>client</i> is optional state
+information for use with blocking renderers. If the
+<i>fontname</i> <br>
+resolves to an alias, it is returned in <i>alias</i> with a
+<i>FontNameAlias</i> error. This tells the calling code to
+start searching again, using <i>alias</i> as the font name.
+The renderer is expected to fill in any information
+specified by the <i>flags.</i></p>
+
+<p style="margin-left:10%; margin-top: 1em">Possible flags
+values are:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>#define FontLoadInfo    0x0001            /* font header info */
+#define FontLoadProps   0x0002            /* font properties */
+#define FontLoadMetrics 0x0004            /* font extents */
+#define FontLoadBitmaps 0x0008            /* glyph bitmaps */
+#define FontLoadAll     0x000f
+#define FontOpenSync    0x0010            /* force synchronous loading */</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Once a font has
+been opened, the server may place it and the pattern it
+matched into a name cache, to avoid lengthy searching if the
+font is reopened. If the renderer does not wish the font to
+be in this cache (for licensing reasons), it should set the
+font&rsquo;s <i>restricted_access</i> flag.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   close_font(FontPtr pfont);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Frees up all the
+data associated with the font.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   list_fonts(pointer client, FontPathElementPtr fpe,
+            char *pattern, int pattern_length, int maxnames,
+            FontNamesPtr *paths);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns in
+<i>paths</i> up to <i>maxnames</i> font names the fpe
+recognizes as matching the given pattern.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   start_list_fonts_with_info(pointer client,
+            FontPathElementPtr fpe, char *pattern, int pattern_length,
+            int maxnames, pointer fpe_data);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Initiates a
+<b>ListFontsWithXInfo.</b> Typically, a disk-based renderer
+will do the equivalent of ListFonts to gather all the font
+names matching the pattern. A font server renderer will send
+the request. <i>fpe_data</i> provides a handle for any
+FPE-private data that needs to be passed in later via
+<b>list_next_font_with_info(),</b> eg, the list of font
+names for a disk-based renderer.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   list_next_font_with_info(pointer client, FontPathElementPtr fpe,
+            char **name, int *namelen, FontInfoPtr &amp;pinfo,
+            int &amp;num_fonts, pointer fpe_data);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the next
+font&rsquo;s information. The renderer should keep any state
+it requires in the <i>fpe_data</i> field. <i>num_fonts</i>
+contains the number of replies remaining.</p>
+
+<p style="margin-top: 1em" valign="top">These two routines
+are split for because of the way both disk-based renderers
+and font server renderers handle this request. The first
+function initiates the action, the second is used to gather
+the results. For a disk-based renderer, a list of font names
+matching the pattern is first built up when
+<b>start_list_fonts_with_info()</b> is called, and the
+results are gathered with each call to
+<b>list_next_font_with_info.</b> In a font server renderer,
+the first function sends the <b>ListFontsWithXInfo</b>
+request, and the second processes the replies.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   wakeup_fpe(FontPathElementPtr fpe, unsigned long *mask)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Optional function
+which can be used for blocking renderers. Typical usage is
+for a font server renderer, where it is called when a reply
+is received, allowing the data to be read and the client to
+be signaled and unblocked.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   client_died(pointer client, FontPathElementPtr fpe)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+called when a client dies in the middle of a blocked
+request, allowing the renderer to clean up.</p>
+
+<a name="9. Font specific functions"></a>
+<h2>9. Font specific functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">These functions are
+contained in each <b>Font.</b> For many renderers, every
+font will use the same functions, but some renderers may
+wish to use different interfaces for different fonts.</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct {
+      INT16 left B16,
+            right B16;
+      INT16 width B16;
+      INT16 ascent B16,
+            descent B16;
+      CARD16      attributes B16;
+}     fsCharInfo;
+
+typedef struct {
+    CARD8   low,
+            high;
+}           fsChar2b;
+
+typedef struct {
+    fsChar2b      min_char,
+            max_char;
+}           fsRange;
+
+
+int   get_extents(pointer client,
+            FontPtr pfont, Mask flags, int num_ranges, fsRange *ranges,
+            int *num_extents, fsCharInfo **extents);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Possible flags:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>LoadAll           /* ignore the ranges and get everything */
+FinishRange /* magic for range completion as specified by protocol */</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Builds up the
+requested array of extents. The extent data (which the
+renderer allocates) is returned, as well as the number of
+extents. <i>closure</i> contains any blocking state
+information.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   get_bitmaps(pointer client,
+            FontPtr pfont, fsBitmapFormat format, Mask flags,
+            int num_ranges, fsRange *ranges,
+            unsigned long *size, unsigned long *num_glyphs,
+            unsigned long **offsets, pointer *glyph_data);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Possible flags:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>LoadAll
+FinishRange /* magic for range completion as specified by protocol */</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Builds up the
+requested array of bitmaps. The glyph and offset data (which
+the renderer allocates) is returned, as well as the number
+of glyphs. The <i>closure</i> contains any blocking state
+information. This function will build up the bitmap data in
+the format specified by <i>format</i> so that the
+interpreter can return it without any additional
+modification. This should minimize data massaging, since
+outline renderers will hopefully be able to produce the
+bitmaps in the proper format.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  unload_font(FontPtr pfont)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">The render will
+free any allocated data. Note that the <b>FPE</b> function
+<b>close_font()</b> will also be called, and should handle
+any <b>FPE</b> data allocated for the font.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   get_glyphs()
+int   get_metrics()</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">These two functions
+are used by the X server for loading glyphs and metrics.
+They expect the results in a considerably different form.
+The <i>get_bitmaps()</i> and <i>get_extents()</i> routines
+both allow for better cache control by the renderer.</p>
+
+<a name="10. Font directories and aliases"></a>
+<h2>10. Font directories and aliases</h2>
+
+
+<p style="margin-top: 1em" valign="top">Existing bitmap
+renderers already have their own concept of font
+organization. In the X sample server, the files
+<b>fonts.dir</b> and <b>fonts.alias</b> are used to list the
+known fonts. <b>fonts.dir</b> maps file names to font names,
+while <b>fonts.alias</b> maps font names to other font
+names.</p>
+
+<p style="margin-top: 1em" valign="top">These concepts will
+also be needed by other forms of fonts which the sample X
+server does not currently use, but the font server will,
+like Bitstream outlines.</p>
+
+<a name="11. Handling scalable fonts"></a>
+<h2>11. Handling scalable fonts</h2>
+
+
+<p style="margin-top: 1em" valign="top">For those renderers
+that support scalable fonts, several issues must be
+addressed:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">Name Parsing. An
+XLFD name must be parsed to determine the requested
+resolutions and/or sizes.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">Property scaling.
+Many of the standard font properties have values that depend
+on scaling (eg, <i>RESOLUTION_X. POINT_SIZE)</i></p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">Default values. If
+resolution information is wildcarded, the proper default
+resolution should be supplied.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Name Parsing</p>
+
+<p style="margin-top: 1em" valign="top">The font name
+pattern supplied to <b>OpenBitmapFont</b> or
+<b>ListFonts</b> may require some parsing to be recognized
+as a scalable font known to the renderer. The <b>PIXEL_SIZE,
+POINT_SIZE, RESOLUTION_X, RESOLUTION_Y</b> and
+<b>AVERAGE_WIDTH</b> all need to determined from the font
+name pattern. The master font must then be found, and scaled
+appropriately. Any unspecified values that cannot be
+determined should be replaced by the proper defaults. For
+size fields, this is whatever the configuration specifies.
+For resolution fields, these should be taken from the
+client&rsquo;s resolution list, if set, or from the
+server&rsquo;s configuration.</p>
+
+<p style="margin-top: 1em" valign="top">Property
+scaling</p>
+
+<p style="margin-top: 1em" valign="top">Part of scaling a
+font is scaling its properties. Many scalable fonts will
+have a very large number of scalable properties. One way to
+deal with these is for the
+&lsquo;&lsquo;master&rsquo;&rsquo; outline to keep track of
+the property names, and supply new values for each instance
+of the font. If the property names are stored as Atoms,
+memory usage is kept to a minimum.</p>
+
+<p style="margin-top: 1em" valign="top">Using defaults</p>
+
+<p style="margin-top: 1em" valign="top">Using default
+values as substitutions for missing values was covered
+above. These defaults will also be useful in handling
+<b>ListFonts</b> requests. Returning a scalable font with an
+instance using the default values will provide the most
+user-friendly environment.</p>
+
+<a name="12. Access control"></a>
+<h2>12. Access control</h2>
+
+
+<p style="margin-top: 1em" valign="top">The font server
+will also support large grain security. It will have both a
+limit of the number of users, and on the hosts which it will
+support.</p>
+
+<p style="margin-top: 1em" valign="top">Limiting the number
+of users is as much a server loading issue as a security
+issue. The limitation will be typically be set via
+configuration options or OS limitations. To change it,
+use:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  AccessSetConnectionLimit(int limit)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">A <i>limit</i> of 0
+will set it to a compiled constant based on OS resources
+(eg, number of file descriptors).</p>
+
+<p style="margin-top: 1em" valign="top">Client-host based
+access control can be used to supplement licensing, and
+support font server load balancing by restricting access. As
+with licensing, this is OS-specific code. To manipulate
+these functions, use:</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct _host_address {
+      int   type;
+      pointer     address;
+      struct _host_address *next;
+} HostAddress;
+
+typedef HostAddress     *HostList;
+
+
+int   AddHost(HostList list, HostAddress *address)
+int   RemoveHost(HostList list, HostAddress *address)
+Bool  ValidHost(HostList list, HostAddress *address)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top"><b>AddHost()</b>
+adds a host to the <i>list.</i> <b>RemoveHost()</b> removes
+it, and <b>ValidHost()</b> checks to see if its on the
+<i>list.</i> In all functions, the <i>address</i> has will
+ignore any value in the <i>next</i> field.</p>
+
+<p style="margin-top: 1em" valign="top">Network addresses
+are used here to avoid issues with host name aliases. The
+caller fills in the desired type, and an address of that
+form is returned. This is highly OS-specific, but values for
+the <i>type</i> and <i>address</i> fields could include:</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>#define     HOST_AF_INET      1
+struct in_addr    *address;
+
+
+#define     HOST_AF_DECnet    2
+struct      dn_addr     *address;</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">The server will use
+a global host list, but having the list as an argument will
+allow licensing schemes to have their own host lists.</p>
+
+<a name="13. Licensing"></a>
+<h2>13. Licensing</h2>
+
+
+<p style="margin-top: 1em" valign="top">Licensing is a
+tricky issue, which each renderer will support in a
+different way. The sample font server will attempt to
+provide some guidelines, and present a possible
+implementation of some simple licensing schemes.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Host Address
+licensing</b></p>
+
+<p style="margin-top: 1em" valign="top">This is simplistic
+licensing based on the client&rsquo;s host. With this form
+of licensing, a font may be accessible to some host but not
+others. To get the current client&rsquo;s host, the
+following is used:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  GetHostAddress(HostAddress *address);</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">A renderer can also
+use the host access functions to keep a list of the licensed
+hosts, and <b>ValidHost()</b> to check a client.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Simultaneous use
+license</b></p>
+
+<p style="margin-top: 1em" valign="top">This licensing
+allows for a limited number of copies of the font to be open
+at once. Since this should be a simple per-font counter, no
+support should be required outside of the renderer.</p>
+
+<a name="14. DIFS contents"></a>
+<h2>14. DIFS contents</h2>
+
+
+<p style="margin-top: 1em" valign="top">This contains the
+protocol dispatcher, interpreter and reply encoding
+routines.</p>
+
+<p style="margin-top: 1em" valign="top">The interpreter is
+table driven off the request code. The dispatcher gets a
+request from the os layer from <b>WaitForSomething(),</b>
+and uses the request code to determine which function to
+call. eg, a <i>CloseFont</i> request would call
+<b>ProcCloseFont().</b></p>
+
+<p style="margin-top: 1em" valign="top">Each
+request&rsquo;s routine handles any applicable error
+checking, and then does as much work as it can. For font
+related requests, this means converting the request to the
+proper arguments for the renderers.</p>
+
+<p style="margin-top: 1em" valign="top">If any replies are
+generated, the reply data is gathered into the bytestream
+format, and sent via <i>os</i> write functions to the
+client.</p>
+
+<p style="margin-top: 1em" valign="top">If the byte order
+of the client and server differ, the above is modified by
+having the dispatcher call an intermediate function which
+re-orders the request to the proper byte order. Replies go
+through similar swapping.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Client
+blocking</b></p>
+
+<p style="margin-top: 1em" valign="top">To minimize delay
+caused by font server request, clients can be blocked while
+they wait for data to be produced. This is primarily
+intended for <b>FPEs</b> using a remote font server, but can
+be used anywhere where the font server can pause to handle
+other client requests while data needed to satisfy another
+is produced (possibly via multiple processes).</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>Bool  ClientSleep(ClientPtr client, Bool (*function)(), pointer closure)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Puts a client to
+&rsquo;sleep&rsquo;. This means the client will no longer be
+considered while the server is dispatching requests.
+<i>function</i> will be called when the client is signaled,
+with the <i>client</i> and <i>closure</i> as its
+arguments.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>Bool  ClientSignal(ClientPtr client)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">This should be
+called when the client is ready to do more work. At this
+point, the function given to <b>ClientSleep()</b> will be
+called.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>void ClientWakeup(ClientPtr client)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Puts the client
+back to its normal state processing requests.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>Bool ClientIsAsleep(ClientPtr client)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Can be used to
+check if a client is asleep. This is useful for handling
+client termination, so that any requests the client is
+waiting upon can be properply cleaned up.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Sample
+Usage</b></p>
+
+<p style="margin-top: 1em" valign="top">For handling a font
+server renderer request for <b>OpenBitmapFont</b> the
+renderer will send the request to the remote font server,
+and the call <b>ClientSleep().</b> The font server will then
+continue processing requests from other clients, while the
+one making the request is blocked. When the reply returns,
+the renderer will notice when its <b>wakeup_fpe()</b>
+function is called. At this point the font server renderer
+will read and process the reply. <b>ClientSignal()</b> will
+be called, and the <i>closure</i> function will be called.
+It will request the data from the renderer, completing the
+request, and call <b>ClientWakeup()</b> to return the client
+to normal status.</p>
+
+<p style="margin-top: 1em" valign="top">This layer also
+contains the resource database, which associates fonts with
+IDs, extension interface functions and the server
+initialization and reset control.</p>
+
+<a name="15. OS contents"></a>
+<h2>15. OS contents</h2>
+
+
+<p style="margin-top: 1em" valign="top">This layer contains
+OS specific routines for configuration, command line
+parsing, client/server communications, and various
+OS-dependent utilities such as memory management and error
+handling.</p>
+
+
+<p style="margin-top: 1em" valign="top"><b>ReadRequestFromClient()</b>
+returns a full request to the dispatcher.
+<b>WaitForSomething()</b> is where the server spends its
+idle time, waiting for any action from a client or
+processing any work left from a blocked client.</p>
+
+<p style="margin-top: 1em" valign="top">When a client
+attempts to connect, the server will call</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   CheckClientAuthorization(ClientPtr client, AuthPtr client_auth,
+            int *accept, int *index, int *size, char **authdata)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">to see if the
+server is set to allow the client to connect. It may use
+licensing or configuration information to determine if the
+client can connect.</p>
+
+<p style="margin-top: 1em" valign="top">When then
+connection is established, the server will use the</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef struct _alt_server {
+    char        subset;
+    char        namelen;
+    char       *name;
+}           AlternateServerRec, *AlternateServerPtr;
+
+
+int ListAlternateServers(AlternateServerPtr *servers)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">to return any
+alternate server information it may have.</p>
+
+<p style="margin-top: 1em" valign="top">When the client
+limit is reached, the font server may attempt to copy
+itself, by calling</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int CloneMyself()</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">This function will
+(if the configuartion options allow) start a new font server
+process. This is done in such a way that no pending
+connections should be lost, and that the original server
+will accept no new connections. Once the original server has
+no more clients, it will exit.</p>
+
+<p style="margin-top: 1em" valign="top">Catalogue
+manipulation</p>
+
+<p style="margin-top: 1em" valign="top">Catalogues are
+configuration dependent, and hence sent by OS-dependent
+methods. In order for the <i>difs</i> layer to get them, it
+uses</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   ListCatalogues(char *pattern, int pattern_length,
+            int maxnames, char **catalogues, int *len)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">which returns the
+list of all catalogues it supports which match the pattern.
+This function will be used by the catalogue manipulation
+requests, as well as by renderers when they give their
+<b>ListFonts</b> results.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>int ValidateCatalogues(int number, char *catalogues)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Can be used to
+validate a list of catalogues, returning True if the list is
+acceptable.</p>
+
+<a name="16. Utility functions"></a>
+<h2>16. Utility functions</h2>
+
+
+<p style="margin-top: 1em" valign="top">Client data
+functions</p>
+
+<p style="margin-top: 1em" valign="top">These provide
+access to the current client&rsquo;s resolution and
+authorization data. This form of interface is supplied
+rather than passing it to all renderers in the <b>FPE</b>
+functions because the data may be complex and/or
+uninteresting to all renderers.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>AuthContextPtr    GetClientAuthorization()</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the
+authorization data for the current client.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>fsResolution      *GetClientResolutions(int  *num_resolutions)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the list of
+resolutions that the current client has set.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Caching
+functions</b></p>
+
+<p style="margin-top: 1em" valign="top">These are functions
+that simplify caching of renderer data. These are for use by
+renderers that take significant resources to produce data.
+The data must be re-creatable -- the cache is not meant for
+general storage. The data may also be moved by the cache, so
+it should only be accessed by CacheID.</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef void (*CacheFree)();
+typedef unsigned long   CacheID;
+typedef unsigned long   Cache;
+
+
+Cache CacheInit(int renderer_id)</small></b></pre>
+
+<p style="margin-top: 1em" valign="top">Initializes a cache
+object for the renderer. the returned ID should be passed to
+<b>CacheStoreMemory()</b> when adding an object to the
+cache.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void CacheStats(Cache cid, unsigned long *num_entries,
+      unsigned long *max_storage, unsigned long *current_storage,
+      unsigned long *num_lookups, unsigned long *hit_ratio)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns statistics
+on the cache. Useful if the renderer wants some hints about
+whether to place an object in the cache. If the cache is
+nearly full, and the priority low, it may want to take
+different action.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>CacheID     CacheStoreMemory(Cache cacheid, pointer data, unsigned long size,
+                  CacheFree free_func)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">The renderer hands
+the cache some chunk of contiguous memory, which the cache
+timestamps and stores. When it needs to remove them, it
+calls the <i>free_func,</i> which must take responsibility
+for properly freeing the data. <i>size</i> is primarily a
+hint to the cache, so that cache limits can be properly
+calculated. A return value of zero means the store failed,
+probably because the given size was over the cache limit. If
+the given data is too large for the current cache, it will
+attempt to free old data to make room. The returned ID is a
+unique value that refers both to the object and the cache in
+which it was placed.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>pointer CacheFetchMemory(CacheID cid, Bool update)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the memory
+attached to the id. If <i>update</i> is set, the timestamp
+is updated. (some accesses may wish to be
+&rsquo;silent&rsquo;, which allows some control over the
+freeing scheduling.) If the cid is invalid, <i>NULL</i> is
+returned.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>int   CacheFreeMemory(CacheID cid, Bool notify)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Allows the cache to
+flush the data. If <i>notify</i> is set, the CacheFree
+function passed in when the data was cached will also be
+called.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  MemoryFreed(CacheID cid, pointer data, int reason)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Callback function
+from the cache to the renderer notifying it that its data
+has been flushed. This function then has the responsibility
+to free that data. <i>reason</i> may be one of:</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>CacheReset  /* all cache freed because of server reset */
+CacheEntryFreed   /* explicit request via free_memory() */
+CacheEntryOld     /* cache hit limit, and memory being freed because its old */</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">and is supplied so
+that the renderer may choose how to deal with the free
+request. (It will probably be ignored by most, but some may
+want to keep the memory around by bypassing the cache, or
+re-inserting it.) Note that the cache will consider the data
+gone, so it <b>must</b> be re-inserted to keep it alive.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  CacheSimpleFree(CacheID cid, pointer data, int reason)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Just calls
+<b>free()</b> on the data. Simple CacheFree defined here to
+prevent it being redefined in each renderer.</p>
+
+<p style="margin-top: 1em" valign="top">Typical usage of
+the cache is for the renderer to store a CacheID rather than
+a pointer to the cacheable data. The renderer is responsible
+for both allocating and freeing the data, as well as keeping
+track of just what it is. When the renderer needs the cached
+data, it will request it from the cache. If it fails, it
+must rebuild it.</p>
+
+<p style="margin-top: 1em" valign="top">A possible
+configuration parameter is the size of the cache. when the
+cache is filled (with the calculation based on the given
+size), it sweeps the cache and frees old data. The amount of
+memory actually freed may wish to be tunable: some systems
+may want to keep the cache as full as possible, others may
+want to free some percentage such that sweeps occur less
+frequently.</p>
+
+<p style="margin-top: 1em" valign="top">Cache statistics
+may want to be available for administrators. They could be
+dumped to a file when a signal is received. (SNMP seems like
+a perfect match, but apparently the technology isn&rsquo;t
+there yet.</p>
+
+<p style="margin-top: 1em" valign="top">Cached data could
+also be compressed, if the memory/CPU tradeoffs make it
+worthwhile.</p>
+
+<p style="margin-top: 1em" valign="top">ISSUE: Is a
+time-based freeing schedule sufficient? Should priorities or
+size also be taken into account? [ No. Anything that the
+renderer thinks should have a higher priority should
+probably not be placed into the cache. ]</p>
+
+<p style="margin-top: 1em" valign="top"><b>Byte
+swapping</b></p>
+
+<p style="margin-top: 1em" valign="top">Functions for
+swapping a 4-byte quantity, a 2-byte quantity and inverting
+a byte.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>void  BitOrderInvert(pointer buffer, unsigned long num_bytes)
+void  TwoByteSwap(pointer buffer, unsigned long num_shorts)
+void  FourByteSwap(pointer buffer, unsigned long num_longs)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top"><b>Bitmap
+padding</b></p>
+
+<p style="margin-top: 1em" valign="top">Functions taking a
+desired extents and a bitmap that will return the bitmap
+properly padded.</p>
+
+<pre style="margin-top: 1em" valign="top"><b><small>int   RepadBitmap(pointer src, pointer dst, fsFormat src_format,
+             fsFormat dst_format, int width, int height)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Takes a bitmap in
+<i>src_format</i> and converts it to one in
+<i>dst_format.</i></p>
+
+<p style="margin-top: 1em" valign="top"><b>Atoms</b></p>
+
+<p style="margin-top: 1em" valign="top">Existing
+bitmap-based renderers use atoms to store strings for
+property information. Rather than duplicate this code in
+each renderer, it lives in the <i>util</i> directory.</p>
+
+<p style="margin-top: 1em" valign="top">Atoms will be
+especially useful for property information, to prevent many
+copies of the same strings from being saved. Using atoms for
+comparison when modifying properties after scaling is also
+more efficient. Since <i>atoms</i> will will exist until the
+server is reset, they may want to be used sparingly for
+property values to avoid extraneous string data.</p>
+<pre style="margin-left:10%; margin-top: 1em"><b><small>typedef unsigned long   Atom;
+
+
+Atom  MakeAtom(char *string, unsigned int length, Bool create)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the atom
+associated with <i>string.</i> If <i>create</i> is true, a
+new atom will be created.</p>
+
+<pre style="margin-left:10%; margin-top: 1em"><b><small>char  *NameForAtom(Atom atom)</small></b></pre>
+
+
+<p style="margin-top: 1em" valign="top">Returns the string
+associated with <i>atom.</i></p>
+
+<a name="17. Server request details"></a>
+<h2>17. Server request details</h2>
+
+
+<p style="margin-top: 1em" valign="top">This section
+describes in-depth the action of each protocol request. In
+all cases, the request is first error checked for simple
+length or value errors, with the server immediately
+returning an error if one is encountered.</p>
+
+<a name="17.1. Connection"></a>
+<h3>17.1. Connection</h3>
+
+
+<p style="margin-top: 1em" valign="top">When a new client
+attempts to connect, the server first checks its initial
+authorization information to see if the server is willing to
+talk to it. This will be handled in some OS-specific form
+using <b>CheckClientAuthorization().</b> If it passes this
+test, and the server has sufficient to resources to talk to
+it, the server sends accepts the connection and returns its
+connection block. If the connection fails, the server
+returns the proper status and a list of any alternate
+servers it may know of (gathered from
+<b>ListAlternateServers().)</b></p>
+
+<a name="17.2. ListExtension"></a>
+<h3>17.2. ListExtension</h3>
+
+
+<p style="margin-top: 1em" valign="top">Returns the list of
+extensions the server knows about. Any extensions will be
+initialized when the server is first started.</p>
+
+<a name="17.3. QueryExtension"></a>
+<h3>17.3. QueryExtension</h3>
+
+
+<p style="margin-top: 1em" valign="top">Returns the
+information about the requested extension, which was set
+when the extension was initialized.</p>
+
+<a name="17.4. ListCatalogues"></a>
+<h3>17.4. ListCatalogues</h3>
+
+
+<p style="margin-top: 1em" valign="top">Returns the
+catalogues the server recognizes (the results of
+<b>ListCatalogues().)</b></p>
+
+<a name="17.5. SetCatalogues"></a>
+<h3>17.5. SetCatalogues</h3>
+
+
+<p style="margin-top: 1em" valign="top">Sets the requesting
+client&rsquo;s catalogues after verifying them with the
+supported catalogues.</p>
+
+<a name="17.6. GetCatalogues"></a>
+<h3>17.6. GetCatalogues</h3>
+
+
+<p style="margin-top: 1em" valign="top">Returns the
+requesting client&rsquo;s catalogues.</p>
+
+<a name="17.7. CreateAC"></a>
+<h3>17.7. CreateAC</h3>
+
+
+<p style="margin-top: 1em" valign="top">Creates a new
+authorization context and fills it in. The list of
+authorization protocols is then checked by the server with
+<b>CheckClientAuthorization().</b> If any are accepted, the
+<b>AC</b> is placed in the resource database and
+<i>Success</i> is returned with the name of the accepted
+protocol. If more than one is accepted, <i>Continue</i> is
+returned with each of the accepted protocols, until the last
+one which has status <i>Success</i> Otherwise <i>Denied</i>
+is returned.</p>
+
+<a name="17.8. FreeAC"></a>
+<h3>17.8. FreeAC</h3>
+
+
+<p style="margin-top: 1em" valign="top">Looks up the
+<b>AC</b> in the resource database, and frees it if it finds
+it. Otherwise an <i>Access</i> error is returned.</p>
+
+<a name="17.9. SetAuthorization"></a>
+<h3>17.9. SetAuthorization</h3>
+
+
+<p style="margin-top: 1em" valign="top">Looks up the
+<b>AC</b> in the resource database, and set the
+client&rsquo;s AuthContextPtr to its value if it is found.
+Otherwise it sends an <i>Access</i> error.</p>
+
+<a name="17.10. SetResolution"></a>
+<h3>17.10. SetResolution</h3>
+
+
+<p style="margin-top: 1em" valign="top">Sets the requesting
+client&rsquo;s resolution list to the supplied list.</p>
+
+<a name="17.11. GetResolution"></a>
+<h3>17.11. GetResolution</h3>
+
+
+<p style="margin-top: 1em" valign="top">Returns the
+requesting client&rsquo;s list of resolutions.</p>
+
+<a name="17.12. ListFonts"></a>
+<h3>17.12. ListFonts</h3>
+
+
+<p style="margin-top: 1em" valign="top">Iterates over each
+open FPE, calling the FPE&rsquo;s <b>list_fonts()</b>
+routine passing it the pattern. When all FPE&rsquo;s have
+been processed, the list that has been built up is returned.
+Note that the same <b>FontNamesPtr</b> is sent to each FPE
+in turn, so that one list is built up. An FPE may restrict
+the fonts it returns based on the client&rsquo;s
+catalogue.</p>
+
+<a name="17.13. ListFontsWithXInfo"></a>
+<h3>17.13. ListFontsWithXInfo</h3>
+
+
+<p style="margin-top: 1em" valign="top">Iterates over each
+FPE, calling its <b>start_list_fonts_with_info()</b>
+function to prime the FPE&rsquo;s renderer. It then calls
+the FPE&rsquo;s <b>list_next_font_with_info(),</b> sending
+each font&rsquo;s data to the client until no more fonts
+remain. When all FPEs have been processed, the final reply
+with a zero-length name is then sent to mark the end of the
+replies. An FPE may restrict the fonts it returns based on
+the client&rsquo;s catalogue. Note: an issue exists with
+font aliases which may require this to change, since an FPE
+may contain an alias pointing to another FPE, and cannot
+therefore return the font&rsquo;s info.</p>
+
+<a name="17.14. OpenBitmapFont"></a>
+<h3>17.14. OpenBitmapFont</h3>
+
+
+<p style="margin-top: 1em" valign="top">The pattern is
+first searched for in the font server&rsquo;s name cache. If
+it doesn&rsquo;t find it, the server iterates over each FPE,
+calling its <b>open_font</b> function with the supplied
+pattern. This will return one of the following values:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">an <b>Access</b>
+error, which means the renderer has the font but the client
+does not have access to it because of some form of licensing
+restriction</p> </td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">a <b>Font</b> error
+and a NULL <i>alias</i> parameter, which will cause the next
+FPE to be tried</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top">a <b>Font</b> error
+but a non-NULL <i>alias,</i> which will cause the search to
+start over with the first FPE using <i>alias</i> as the new
+font pattern</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="4%"></td>
+<td width="94%">
+
+
+<p style="margin-top: 1em" valign="top"><b>Success,</b> in
+which case a valid font has been found.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">If the end of the
+FPE list is reached without having found the font, an error
+is returned to the client. If an <b>Access</b> error was
+encountered, it is returned, otherwise a <b>Font</b> error
+is returned. If a valid font is found, its reference count
+will be incremented and it will be checked to see if the
+client has already opened it before. If so, the previous ID
+will be returned. Otherwise the font will be placed in the
+resource database.</p>
+
+<p style="margin-top: 1em" valign="top">The renderer will
+fill in the font&rsquo;s header and property information,
+and may also choose to load or create the font&rsquo;s
+metrics or glyphs. If the glyphs are built, they will use
+any supplied <i>format hint</i>.</p>
+
+<p style="margin-top: 1em" valign="top">Whenever a new font
+is successfuly opened, the font and its name pattern will be
+placed in a name cache. This cache exists to minimize the
+amount of work spent searching for a font. It will be
+flushed when the font catalogue is modified. Client&rsquo;s
+with private font catalogues will require private name
+caches.</p>
+
+<a name="17.15. QueryXInfo"></a>
+<h3>17.15. QueryXInfo</h3>
+
+
+<p style="margin-top: 1em" valign="top">The <i>fontid</i>
+is looked up in the resource database, and the font&rsquo;s
+header and property info is returned.</p>
+
+<a name="17.16. QueryXExtents8 QueryXExtents16"></a>
+<h3>17.16. QueryXExtents8 QueryXExtents16</h3>
+
+
+<p style="margin-top: 1em" valign="top">The <i>fontid</i>
+is looked up in the resource database. The supplied list of
+characters (interpreted according to request type) is then
+translated into a list of ranges. The font&rsquo;s
+<b>get_extents()</b> function is then called. It builds the
+requested list of extents, and returns them along with the
+number of extents. The results are properly swapped and sent
+to the client.</p>
+
+<a name="17.17. QueryXBitmaps8 QueryXBitmaps16"></a>
+<h3>17.17. QueryXBitmaps8 QueryXBitmaps16</h3>
+
+
+<p style="margin-top: 1em" valign="top">The <i>fontid</i>
+is looked up in the resource database. The supplied list of
+characters (interpreted according to request type) is then
+translated into a list of ranges. The font&rsquo;s
+<b>get_bitmaps()</b> function is called, and the renderer
+will build up the requested bitmaps, using the specified
+<i>format,</i> and returns the bitmaps, the number of glyphs
+and the offsets. The offsets are properly swapped and the
+offsets and bitmaps are sent to the clients.</p>
+
+<a name="17.18. CloseFont"></a>
+<h3>17.18. CloseFont</h3>
+
+
+<p style="margin-top: 1em" valign="top">The font&rsquo;s
+reference count is decremented. If this was the last
+reference, the font&rsquo;s <b>unload_font()</b> function is
+called to free the renderer&rsquo;s data, and the
+font&rsquo;s FPE <b>close_font()</b> function is called to
+free up any FPE specific data.</p>
+
+<a name="18. Configuration"></a>
+<h2>18. Configuration</h2>
+
+
+<p style="margin-top: 1em" valign="top">The configuration
+mechanism is a simple keyword-value pair, separated by an
+&rsquo;=&rsquo;.</p>
+
+<p style="margin-top: 1em" valign="top">Configuration
+types:</p>
+
+<p style="margin-top: 1em" valign="top">cardinal
+non-negative number</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="30%">
+
+
+<p valign="top">boolean</p></td>
+<td width="58%">
+
+
+<p valign="top">&quot;[Yy]es&quot;, &quot;[Yy]&quot;
+&quot;on&quot;, &quot;1&quot;, &quot;[Nn]o&quot;,
+&quot;[Nn]&quot;, &quot;off&quot;, &quot;0&quot;</p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="30%">
+
+
+<p valign="top">resolution</p></td>
+<td width="58%">
+
+
+<p valign="top"><i>cardinal,cardinal</i></p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="30%">
+
+
+<p valign="top">list of foo</p></td>
+<td width="58%">
+
+
+<p valign="top">1 or more of foo, separated by commas</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Here is an
+incomplete list of the supported keywords:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%">
+
+
+<p valign="top">#</p></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">in the first column, a comment
+character</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">catalogue (list of
+string)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Ordered list of font path element
+names.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">alternate-servers
+(list of string)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">List of alternate servers for this FS.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">client-limit
+(cardinal)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Number of clients this FS will support
+before refusing</p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">service.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">clone-self
+(boolean)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Whether this FS should attempt to clone
+itself or</p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">use delegates when it reachs the
+client-limit.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">default-point-size
+(cardinal)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">The default pointsize (in decipoints) for
+fonts that</p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">don&rsquo;t specify.</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top">default-resolutions
+(list of resolutions)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Resolutions the server supports by
+default.</p> </td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">This information may be used as a hint for
+pre-rendering.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">error-file
+(string)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Filename of the error file. All warnings
+and errors</p></td>
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">will be logged here.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">port (cardinal)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">The TCP port on which the server will
+listen for connections.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">use-syslog
+(boolean)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="12%"></td>
+<td width="18%">
+</td>
+<td width="70%">
+
+
+<p valign="top">Whether syslog(3) is to be used for
+errors.</p> </td>
+</table>
+
+<p style="margin-left:10%; margin-top: 1em">Each renderer
+may also want private configuration options. The names
+should be prefixed by the renderer name, ie <i>pcf-,
+atm-.</i></p>
+
+<p style="margin-top: 1em" valign="top">Examples:</p>
+
+<p style="margin-top: 1em" valign="top"># allow a ~a
+megabyte of memory to be reserved for cache data <br>
+cache-size = 1000000</p>
+
+<p style="margin-top: 1em" valign="top">catalogue =
+pcf:/usr/lib/X11/fonts/misc,speedo:/usr/lib/fonts/speedo</p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729821" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

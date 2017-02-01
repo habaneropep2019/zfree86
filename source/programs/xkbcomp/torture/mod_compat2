@@ -1,0 +1,5 @@
+// $XFree86: xc/programs/xkbcomp/torture/mod_compat2,v 1.2 2006/01/09 15:01:31 dawes Exp $
+xkb_compatibility "torture2" 
+
+modifier Control { groups= 0x4; mods= Mod1; };
+replace modifier Mod1 { mods= None; groups= 0x40; };

@@ -1,0 +1,8 @@
+XCOMM $XFree86: xc/programs/xsetroot/Imakefile,v 1.5 2006/01/09 15:01:48 dawes Exp $
+
+        DEPLIBS = $(DEPXMUULIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XMUULIB) $(XONLYLIB)
+           SRCS = xsetroot.c
+           OBJS = xsetroot.o
+
+ComplexProgramTarget(xsetroot)

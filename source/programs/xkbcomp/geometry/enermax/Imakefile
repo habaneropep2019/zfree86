@@ -1,0 +1,7 @@
+XCOMM $XFree86: xc/programs/xkbcomp/geometry/enermax/Imakefile,v 1.2 2007/02/21 15:57:24 tsi Exp $
+
+    DATAFILES = aurora
+
+all::
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/geometry/enermax)

@@ -1,0 +1,1412 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:23:20 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Initializing Extension Devices">1. Initializing Extension Devices</a><br>
+<a href="#1.1. Summary of Calling Sequence">1.1. Summary of Calling Sequence</a><br>
+<a href="#1.2. Initialization Called From InitInput">1.2. Initialization Called From InitInput</a><br>
+<a href="#1.3. Initialization Called From InitAndStartDevices">1.3. Initialization Called From InitAndStartDevices</a><br>
+<a href="#1.4. DIX Input Class Initialization Routines">1.4. DIX Input Class Initialization Routines</a><br>
+<a href="#1.4.1. InitKeyClassDeviceStruct">1.4.1. InitKeyClassDeviceStruct</a><br>
+<a href="#1.4.2. InitButtonClassDeviceStruct">1.4.2. InitButtonClassDeviceStruct</a><br>
+<a href="#1.4.3. InitValuatorClassDeviceStruct">1.4.3. InitValuatorClassDeviceStruct</a><br>
+<a href="#1.4.4. InitValuatorAxisStruct">1.4.4. InitValuatorAxisStruct</a><br>
+<a href="#1.4.5. InitFocusClassDeviceStruct">1.4.5. InitFocusClassDeviceStruct</a><br>
+<a href="#1.4.6. InitProximityClassDeviceStruct">1.4.6. InitProximityClassDeviceStruct</a><br>
+<a href="#1.4.7. Initializing Feedbacks">1.4.7. Initializing Feedbacks</a><br>
+<a href="#1.4.7.1. InitKbdFeedbackClassDeviceStruct">1.4.7.1. InitKbdFeedbackClassDeviceStruct</a><br>
+<a href="#1.4.7.2. InitPtrFeedbackClassDeviceStruct">1.4.7.2. InitPtrFeedbackClassDeviceStruct</a><br>
+<a href="#1.4.7.3. InitLedFeedbackClassDeviceStruct">1.4.7.3. InitLedFeedbackClassDeviceStruct</a><br>
+<a href="#1.4.7.4. InitBellFeedbackClassDeviceStruct">1.4.7.4. InitBellFeedbackClassDeviceStruct</a><br>
+<a href="#1.4.7.5. InitStringFeedbackClassDeviceStruct">1.4.7.5. InitStringFeedbackClassDeviceStruct</a><br>
+<a href="#1.4.7.6. InitIntegerFeedbackClassDeviceStruct">1.4.7.6. InitIntegerFeedbackClassDeviceStruct</a><br>
+<a href="#1.5. Initializing The Device Name And Type">1.5. Initializing The Device Name And Type</a><br>
+<a href="#2. Closing Extension Devices">2. Closing Extension Devices</a><br>
+<a href="#3. Implementation-Dependent Routines">3. Implementation-Dependent Routines</a><br>
+<a href="#3.1. AddOtherInputDevices">3.1. AddOtherInputDevices</a><br>
+<a href="#3.2. OpenInputDevice">3.2. OpenInputDevice</a><br>
+<a href="#3.3. CloseInputDevice">3.3. CloseInputDevice</a><br>
+<a href="#3.4. SetDeviceMode">3.4. SetDeviceMode</a><br>
+<a href="#3.5. SetDeviceValuators">3.5. SetDeviceValuators</a><br>
+<a href="#3.6. ChangePointerDevice">3.6. ChangePointerDevice</a><br>
+<a href="#3.7. ChangeKeyboardDevice">3.7. ChangeKeyboardDevice</a><br>
+<a href="#4. Input Extension Events">4. Input Extension Events</a><br>
+<a href="#4.1. Device Key Events">4.1. Device Key Events</a><br>
+<a href="#4.2. Device Button Events">4.2. Device Button Events</a><br>
+<a href="#4.3. Device Motion Events">4.3. Device Motion Events</a><br>
+<a href="#4.4. Device Proximity Events">4.4. Device Proximity Events</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>X11
+Input Extension Porting Document</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small><small><small><small>X
+Version 11, Release
+6.4</small></small></small></small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small><small>George
+Sachs Hewlett-Packard</small></small></b></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1989, 1990, 1991 by Hewlett-Packard Company</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, and distribute this documentation for any
+purpose and without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in
+all copies. Hewlett-Packard makes no representations about
+the suitability for any purpose of the information in this
+document. It is provided &quot;as is&quot; without express
+or implied warranty. This document is only a draft standard
+of the X Consortium and is therefore subject to change.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1989, 1990, 1991 X Consortium</p>
+
+<p style="margin-top: 1em" valign="top">Permission is
+hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</p>
+
+<p style="margin-top: 1em" valign="top">The above copyright
+notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p style="margin-top: 1em" valign="top">THE SOFTWARE IS
+PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;, WITHOUT WARRANTY
+OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Except as contained
+in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written
+authorization from the X Consortium.</p>
+
+<p style="margin-top: 1em" valign="top"><i>X Window
+System</i> is a trademark of X Consortium, Inc.</p>
+
+<p style="margin-top: 1em" valign="top">This document is
+intended to aid the process of integrating the X11 Input
+Extension into an X server.</p>
+
+<p style="margin-top: 1em" valign="top">Most of the
+functionality provided by the input extension is device- and
+implementation-independent, and should require no changes.
+The functionality is implemented by routines that typically
+reside in the server source tree directory
+extensions/server/xinput. This extension includes functions
+to enable and disable input extension devices, select input,
+grab and focus those device, query and change key and button
+mappings, and others. The only input extension requirements
+for the device-dependent part of X are that the input
+devices be correctly initialized and input events from those
+devices be correctly generated. Device-dependent X is
+responsible for reading input data from the input device
+hardware and if necessary, reformatting it into X
+events.</p>
+
+<p style="margin-top: 1em" valign="top">The process of
+initializing input extension devices is similar to that used
+for the core devices, and is described in the following
+sections. When multiple input devices are attached to X
+server, the choice of which devices to initially use as the
+core X pointer and keyboard is left
+implementation-dependent. It is also up to each
+implementation to decide whether all input devices will be
+opened by the server during its initialization and kept open
+for the life of the server. The alternative is to open only
+the X keyboard and X pointer during server initialization,
+and open other input devices only when requested by a client
+to do so. Either type of implementation is supported by the
+input extension.</p>
+
+<p style="margin-top: 1em" valign="top">Input extension
+events generated by the X server use the same 32-byte xEvent
+wire event as do core input events. However, additional
+information must be sent for input extension devices,
+requiring that multiple xEvents be generated each time data
+is received from an input extension device. These xEvents
+are combined into a single client XEvent by the input
+extension library. A later section of this document
+describes the format and generation of input extension
+events.</p>
+
+<a name="1. Initializing Extension Devices"></a>
+<h2>1. Initializing Extension Devices</h2>
+
+
+<p style="margin-top: 1em" valign="top">Extension input
+devices are initialized in the same manner as the core X
+input devices. Device-Independent X provides functions that
+can be called from DDX to initialize these devices. Which
+functions are called and when will vary by implementation,
+and will depend on whether the implementation opens all the
+input devices available to X when X is initialized, or waits
+until a client requests that a device be opened. In the
+simplest case, DDX will open all input devices as part of
+its initialization, when the InitInput routine is
+called.</p>
+
+<a name="1.1. Summary of Calling Sequence"></a>
+<h3>1.1. Summary of Calling Sequence</h3>
+
+
+
+<p style="margin-left:25%; margin-top: 1em">Device-Independent
+X | Device-Dependent X <br>
+-------------------- | ------------------- <br>
+| <br>
+InitInput --------------&gt; | - do device-specific
+initialization <br>
+| <br>
+| - call AddInputDevice (deviceProc,AutoStart) <br>
+AddInputDevice | <br>
+- creates DeviceIntRec | <br>
+- records deviceProc | <br>
+- adds new device to | <br>
+list of off_devices. | <br>
+sets dev-&gt;startup=AutoStart| <br>
+| - call one of: <br>
+| - RegisterPointerDevice (X pointer) <br>
+| - processInputProc = ProcessPointerEvents <br>
+| - RegisterKeyboardDevice (X keyboard) <br>
+| - processInputProc = ProcessKeyboardEvents <br>
+| - RegisterOtherDevice (extension device) <br>
+| - processInputProc = ProcessOtherEvents <br>
+| <br>
+| <br>
+InitAndStartDevices -----&gt; | - calls deviceProc with
+parameters <br>
+| (DEVICE_INIT, AutoStart) <br>
+sets dev-&gt;inited = return | <br>
+value from deviceProc | <br>
+| <br>
+| - in deviceProc, do one of: <br>
+| - call InitPointerDeviceStruct (X pointer) <br>
+| - call InitKeyboardDeviceStruct (X keybd) <br>
+| - init extension device by calling some of: <br>
+| - InitKeyClassDeviceStruct <br>
+| - InitButtonClassDeviceStruct <br>
+| - InitValuatorClassDeviceStruct <br>
+| - InitValuatorAxisStruct <br>
+| - InitFocusClassDeviceStruct <br>
+| - InitProximityClassDeviceStruct <br>
+| - InitKbdFeedbackClassDeviceStruct <br>
+| - InitPtrFeedbackClassDeviceStruct <br>
+| - InitLedFeedbackClassDeviceStruct <br>
+| - InitStringFeedbackClassDeviceStruct <br>
+| - InitIntegerFeedbackClassDeviceStruct <br>
+| - InitBellFeedbackClassDeviceStruct <br>
+| - init device name and type by: <br>
+| - calling MakeAtom with one of the <br>
+| predefined names <br>
+| - calling AssignTypeAndName <br>
+| <br>
+| <br>
+for each device added | <br>
+by AddInputDevice, | <br>
+InitAndStartDevices | <br>
+calls EnableDevice if | - EnableDevice calls deviceProc with
+<br>
+dev-&gt;startup &amp; | (DEVICE_ON, AutoStart) <br>
+dev-&gt;inited | <br>
+| <br>
+If deviceProc returns | - core devices are now enabled,
+extension <br>
+Success, EnableDevice | devices are now available to be
+accessed <br>
+move the device from | through the input extension protocol
+<br>
+inputInfo.off_devices | requests. <br>
+to inputInfo.devices |</p>
+
+<a name="1.2. Initialization Called From InitInput"></a>
+<h3>1.2. Initialization Called From InitInput</h3>
+
+
+<p style="margin-top: 1em" valign="top">InitInput is the
+first DDX input entry point called during X server startup.
+This routine is responsible for device- and implementation-
+specific initialization, and for calling AddInputDevice to
+create and initialize the DeviceIntRec structure for each
+input device. AddInputDevice is passed the address of a
+procedure to be called by the DIX routine
+InitAndStartDevices when input devices are enabled. This
+procedure is expected to perform X initialization for the
+input device.</p>
+
+<p style="margin-top: 1em" valign="top">If the device is to
+be used as the X pointer, DDX should then call
+RegisterPointerDevice, passing the DeviceIntRec pointer, to
+initialize the device as the X pointer.</p>
+
+<p style="margin-top: 1em" valign="top">If the device is to
+be used as the X keyboard, DDX should instead call
+RegisterKeyboardDevice to initialize the device as the X
+keyboard.</p>
+
+<p style="margin-top: 1em" valign="top">If the device is to
+be used as an extension device, DDX should instead call
+RegisterOtherDevice, passing the DeviceIntPtr returned by
+AddInputDevice.</p>
+
+<p style="margin-top: 1em" valign="top">A sample InitInput
+implementation is shown below.</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">InitInput(argc,argv)
+<br>
+{ <br>
+int i, numdevs, ReadInput(); <br>
+DeviceIntPtr dev; <br>
+LocalDevice localdevs[LOCAL_MAX_DEVS]; <br>
+DeviceProc kbdproc, ptrproc, extproc;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/**************************************************************
+<br>
+* Open the appropriate input devices, determine which are
+<br>
+* available, and choose an X pointer and X keyboard device
+<br>
+* in some implementation-dependent manner. <br>
+
+***************************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">open_input_devices
+(&amp;numdevs, localdevs);</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/**************************************************************
+<br>
+* Register a WakeupHandler to handle input when it is
+generated. <br>
+
+***************************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">RegisterBlockAndWakeupHandlers
+(NoopDDA, ReadInput, NULL);</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/**************************************************************
+<br>
+* Register the input devices with DIX. <br>
+
+***************************************************************/</p>
+
+<p style="margin-left:25%; margin-top: 1em">for (i=0;
+i&lt;numdevs; i++) <br>
+{ <br>
+if (localdevs[i].use == IsXKeyboard) <br>
+{ <br>
+dev = AddInputDevice (kbdproc, TRUE); <br>
+RegisterKeyboardDevice (dev); <br>
+} <br>
+else if (localdevs[i].use == IsXPointer) <br>
+{ <br>
+dev = AddInputDevice (ptrproc, TRUE); <br>
+RegisterPointerDevice (dev); <br>
+} <br>
+else <br>
+{ <br>
+dev = AddInputDevice (extproc, FALSE); <br>
+RegisterOtherDevice (dev); <br>
+} <br>
+if (dev == NULL) <br>
+FatalError (&quot;Too many input devices.&quot;); <br>
+dev-&gt;devicePrivate = (pointer) &amp;localdevs[i]; <br>
+}</p>
+
+<a name="1.3. Initialization Called From InitAndStartDevices"></a>
+<h3>1.3. Initialization Called From InitAndStartDevices</h3>
+
+
+<p style="margin-top: 1em" valign="top">After InitInput has
+returned, InitAndStartDevices is the DIX routine that is
+called to enable input devices. It calls the device control
+routine that was passed to AddInputDevice, with a mode value
+of DEVICE_INIT. The action taken by the device control
+routine depends on how the device is to be used. If the
+device is to be the X pointer, the device control routine
+should call InitPointerDeviceStruct to initialize it. If the
+device is to be the X keyboard, the device control routine
+should call InitKeyboardDeviceStruct. Since input extension
+devices may support various combinations of keys, buttons,
+valuators, and feedbacks, each class of input that it
+supports must be initialized. Entry points are defined by
+DIX to initialize each of the supported classes of input,
+and are described in the following sections.</p>
+
+<p style="margin-top: 1em" valign="top">A sample device
+control routine called from InitAndStartDevices is shown
+below.</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool extproc
+(dev, mode) <br>
+DeviceIntPtr dev; <br>
+int mode; <br>
+{ <br>
+LocalDevice *localdev = (LocalDevice *)
+dev-&gt;devicePrivate;</p>
+
+<p style="margin-left:25%; margin-top: 1em">switch (mode)
+<br>
+{ <br>
+case DEVICE_INIT: <br>
+if (strcmp(localdev-&gt;name, XI_TABLET) == 0) <br>
+{ <br>
+/**************************************************** <br>
+* This device reports proximity, has buttons, <br>
+* reports two axes of motion, and can be focused. <br>
+* It also supports the same feedbacks as the X pointer <br>
+* (acceleration and threshold can be set). <br>
+****************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">InitButtonClassDeviceStruct
+(dev, button_count, button_map); <br>
+InitValuatorClassDeviceStruct (dev, localdev-&gt;n_axes,);
+<br>
+motionproc, MOTION_BUF_SIZE, Absolute); <br>
+for (i=0; i&lt;localdev-&gt;n_axes; i++) <br>
+InitValuatorAxisStruct (dev, i, min_val, max_val, <br>
+resolution); <br>
+InitFocusClassDeviceStruct (dev); <br>
+InitProximityClassDeviceStruct (dev); <br>
+InitPtrFeedbackClassDeviceStruct (dev, p_controlproc); <br>
+} <br>
+else if (strcmp(localdev-&gt;name, XI_BUTTONBOX) == 0) <br>
+{ <br>
+/**************************************************** <br>
+* This device has keys and LEDs, and can be focused. <br>
+****************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">InitKeyClassDeviceStruct
+(dev, syms, modmap); <br>
+InitFocusClassDeviceStruct (dev); <br>
+InitLedFeedbackClassDeviceStruct (dev, ledcontrol); <br>
+} <br>
+else if (strcmp(localdev-&gt;name, XI_KNOBBOX) == 0) <br>
+{ <br>
+/**************************************************** <br>
+* This device reports motion. <br>
+* It can be focused. <br>
+****************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">InitValuatorClassDeviceStruct
+(dev, localdev-&gt;n_axes,); <br>
+motionproc, MOTION_BUF_SIZE, Absolute); <br>
+for (i=0; i&lt;localdev-&gt;n_axes; i++) <br>
+InitValuatorAxisStruct (dev, i, min_val, max_val, <br>
+resolution); <br>
+InitFocusClassDeviceStruct (dev); <br>
+} <br>
+localdev-&gt;atom = <br>
+MakeAtom(localdev-&gt;name, strlen(localdev-&gt;name),
+FALSE); <br>
+AssignTypeAndName (dev, localdev-&gt;atom,
+localdev-&gt;name); <br>
+break; <br>
+case DEVICE_ON: <br>
+AddEnabledDevice (localdev-&gt;file_ds); <br>
+dev-&gt;on = TRUE; <br>
+break; <br>
+case DEVICE_OFF: <br>
+dev-&gt;on = FALSE; <br>
+RemoveEnabledDevice (localdev-&gt;file_ds); <br>
+break; <br>
+case DEVICE_CLOSE: <br>
+break; <br>
+} <br>
+}</p>
+
+<p style="margin-top: 1em" valign="top">The device control
+routine is called with a mode value of DEVICE_ON by the DIX
+routine EnableDevice, which is called from
+InitAndStartDevices. When called with this mode, it should
+call AddEnabledDevice to cause the server to begin checking
+for available input from this device.</p>
+
+<p style="margin-top: 1em" valign="top">&gt;From
+InitAndStartDevices, EnableDevice is called for all devices
+that have the &quot;inited&quot; and &quot;startup&quot;
+fields in the DeviceIntRec set to TRUE. The
+&quot;inited&quot; field is set by InitAndStartDevices to
+the value returned by the deviceproc when called with a mode
+value of DEVICE_INIT. The &quot;startup&quot; field is set
+by AddInputDevice to value of the second parameter
+(autoStart).</p>
+
+<p style="margin-top: 1em" valign="top">When the server is
+first initialized, it should only be checking for input from
+the core X keyboard and pointer. One way to accomplish this
+is to call AddInputDevice for the core X keyboard and
+pointer with an autoStart value equal to TRUE, while calling
+AddInputDevice for input extension devices with an autoStart
+value equal to FALSE. If this is done, EnableDevice will
+skip all input extension devices during server
+initialization. In this case, the OpenInputDevice routine
+should set the &quot;startup&quot; field to TRUE when called
+for input extension devices. This will cause
+ProcXOpenInputDevice to call EnableDevice for those devices
+when a client first does an XOpenDevice request.</p>
+
+<a name="1.4. DIX Input Class Initialization Routines"></a>
+<h3>1.4. DIX Input Class Initialization Routines</h3>
+
+
+<p style="margin-top: 1em" valign="top">DIX routines are
+defined to initialize each of the defined input classes. The
+defined classes are:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">KeyClass - the
+device has keys.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">ButtonClass - the
+device has buttons.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">ValuatorClass - the
+device reports motion data or positional data.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">Proximitylass - the
+device reports proximity information.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">FocusClass - the
+device can be focused.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">FeedbackClass - the
+device supports some kind of feedback</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">DIX routines are
+provided to initialize the X pointer and keyboard, as in
+previous releases of X. During X initialization,
+InitPointerDeviceStruct is called to initialize the X
+pointer, and InitKeyboardDeviceStruct is called to
+initialize the X keyboard. There is no corresponding routine
+for extension input devices, since they do not all support
+the same classes of input. Instead, DDX is responsible for
+the initialization of the input classes supported by
+extension devices. A description of the routines provided by
+DIX to perform that initialization follows.</p>
+
+<a name="1.4.1. InitKeyClassDeviceStruct"></a>
+<h4>1.4.1. InitKeyClassDeviceStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a KeyClassRec, and
+should be called for extension devices that have keys. It is
+passed a pointer to the device, and pointers to arrays of
+keysyms and modifiers reported by the device. It returns
+FALSE if the KeyClassRec could not be allocated, or if the
+maps for the keysyms and and modifiers could not be
+allocated. Its parameters are:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitKeyClassDeviceStruct(dev, pKeySyms, pModifiers) <br>
+DeviceIntPtr dev; <br>
+KeySymsPtr pKeySyms; <br>
+CARD8 pModifiers[];</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitKeyboardDeviceStruct calls this routine for the core X
+keyboard. It must be called explicitly for extension devices
+that have keys.</p>
+
+<a name="1.4.2. InitButtonClassDeviceStruct"></a>
+<h4>1.4.2. InitButtonClassDeviceStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a ButtonClassRec, and
+should be called for extension devices that have buttons. It
+is passed a pointer to the device, the number of buttons
+supported, and a map of the reported button codes. It
+returns FALSE if the ButtonClassRec could not be allocated.
+Its parameters are:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitButtonClassDeviceStruct(dev, numButtons, map) <br>
+register DeviceIntPtr dev; <br>
+int numButtons; <br>
+CARD8 *map;</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitPointerDeviceStruct calls this routine for the core X
+pointer. It must be called explicitly for extension devices
+that have buttons.</p>
+
+<a name="1.4.3. InitValuatorClassDeviceStruct"></a>
+<h4>1.4.3. InitValuatorClassDeviceStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a ValuatorClassRec, and
+should be called for extension devices that have valuators.
+It is passed the number of axes of motion reported by the
+device, the address of the motion history procedure for the
+device, the size of the motion history buffer, and the mode
+(Absolute or Relative) of the device. It returns FALSE if
+the ValuatorClassRec could not be allocated. Its parameters
+are:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitValuatorClassDeviceStruct(dev, numAxes, motionProc,
+numMotionEvents, mode) <br>
+DeviceIntPtr dev; <br>
+int (*motionProc)(); <br>
+int numAxes; <br>
+int numMotionEvents; <br>
+int mode;</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitPointerDeviceStruct calls this routine for the core X
+pointer. It must be called explicitly for extension devices
+that report motion.</p>
+
+<a name="1.4.4. InitValuatorAxisStruct"></a>
+<h4>1.4.4. InitValuatorAxisStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to initialize an XAxisInfoRec, and should be called
+for core and extension devices that have valuators. The
+space for the XAxisInfoRec is allocated by the
+InitValuatorClassDeviceStruct function, but is not
+initialized.</p>
+
+
+<p style="margin-top: 1em" valign="top">InitValuatorAxisStruct
+should be called once for each axis of motion reported by
+the device. Each invocation should be passed the axis number
+(starting with 0), the minimum value for that axis, the
+maximum value for that axis, and the resolution of the
+device in counts per meter. If the device reports relative
+motion, 0 should be reported as the minimum and maximum
+values. InitValuatorAxisStruct has the following
+parameters:</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">InitValuatorAxisStruct(dev,
+axnum, minval, maxval, resolution) <br>
+DeviceIntPtr dev; <br>
+int axnum; <br>
+int minval; <br>
+int maxval; <br>
+int resolution;</p>
+
+<p style="margin-top: 1em" valign="top">This routine is not
+called by InitPointerDeviceStruct for the core X pointer. It
+must be called explicitly for core and extension devices
+that report motion.</p>
+
+<a name="1.4.5. InitFocusClassDeviceStruct"></a>
+<h4>1.4.5. InitFocusClassDeviceStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a FocusClassRec, and
+should be called for extension devices that can be focused.
+It is passed a pointer to the device, and returns FALSE if
+the allocation fails. It has the following parameter:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitFocusClassDeviceStruct(dev) <br>
+DeviceIntPtr dev;</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitKeyboardDeviceStruct calls this routine for the core X
+keyboard. It must be called explicitly for extension devices
+that can be focused. Whether or not a particular device can
+be focused is left implementation-dependent.</p>
+
+<a name="1.4.6. InitProximityClassDeviceStruct"></a>
+<h4>1.4.6. InitProximityClassDeviceStruct</h4>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a ProximityClassRec, and
+should be called for extension absolute pointing devices
+that report proximity. It is passed a pointer to the device,
+and returns FALSE if the allocation fails. It has the
+following parameter:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitProximityClassDeviceStruct(dev) <br>
+DeviceIntPtr dev;</p>
+
+<a name="1.4.7. Initializing Feedbacks"></a>
+<h4>1.4.7. Initializing Feedbacks</h4>
+
+
+<a name="1.4.7.1. InitKbdFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.1. InitKbdFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a KbdFeedbackClassRec,
+and may be called for extension devices that support some or
+all of the feedbacks that the core keyboard supports. It is
+passed a pointer to the device, a pointer to the procedure
+that sounds the bell, and a pointer to the device control
+procedure. It returns FALSE if the allocation fails, and has
+the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitKbdFeedbackClassDeviceStruct(dev, bellProc, controlProc)
+<br>
+DeviceIntPtr dev; <br>
+void (*bellProc)(); <br>
+void (*controlProc)();</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitKeyboardDeviceStruct calls this routine for the core X
+keyboard. It must be called explicitly for extension devices
+that have the same feedbacks as a keyboard. Some feedbacks,
+such as LEDs and bell, can be supported either with a
+KbdFeedbackClass or with BellFeedbackClass and
+LedFeedbackClass feedbacks.</p>
+
+<a name="1.4.7.2. InitPtrFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.2. InitPtrFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a PtrFeedbackClassRec,
+and should be called for extension devices that allow the
+setting of acceleration and threshold. It is passed a
+pointer to the device, and a pointer to the device control
+procedure. It returns FALSE if the allocation fails, and has
+the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitPtrFeedbackClassDeviceStruct(dev, controlProc) <br>
+DeviceIntPtr dev; <br>
+void (*controlProc)();</p>
+
+<p style="margin-top: 1em" valign="top">The DIX entry point
+InitPointerDeviceStruct calls this routine for the core X
+pointer. It must be called explicitly for extension devices
+that support the setting of acceleration and threshold.</p>
+
+<a name="1.4.7.3. InitLedFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.3. InitLedFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a LedFeedbackClassRec,
+and should be called for extension devices that have LEDs.
+It is passed a pointer to the device, and a pointer to the
+device control procedure. It returns FALSE if the allocation
+fails, and has the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitLedFeedbackClassDeviceStruct(dev, controlProc) <br>
+DeviceIntPtr dev; <br>
+void (*controlProc)();</p>
+
+<p style="margin-top: 1em" valign="top">Up to 32 LEDs per
+feedback can be supported, and a device may have multiple
+feedbacks of the same type.</p>
+
+<a name="1.4.7.4. InitBellFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.4. InitBellFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a BellFeedbackClassRec,
+and should be called for extension devices that have a bell.
+It is passed a pointer to the device, and a pointer to the
+device control procedure. It returns FALSE if the allocation
+fails, and has the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitBellFeedbackClassDeviceStruct(dev, bellProc,
+controlProc) <br>
+DeviceIntPtr dev; <br>
+void (*bellProc)(); <br>
+void (*controlProc)();</p>
+
+<a name="1.4.7.5. InitStringFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.5. InitStringFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize a
+StringFeedbackClassRec, and should be called for extension
+devices that have a display upon which a string can be
+displayed. It is passed a pointer to the device, and a
+pointer to the device control procedure. It returns FALSE if
+the allocation fails, and has the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitStringFeedbackClassDeviceStruct(dev, controlProc,
+max_symbols,</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">num_symbols_supported, symbols)</p></td>
+</table>
+
+<p style="margin-left:25%;">DeviceIntPtr dev; <br>
+void (*controlProc)(); <br>
+int max_symbols: <br>
+int num_symbols_supported; <br>
+KeySym *symbols;</p>
+
+<a name="1.4.7.6. InitIntegerFeedbackClassDeviceStruct"></a>
+<h5>1.4.7.6. InitIntegerFeedbackClassDeviceStruct</h5>
+
+
+<p style="margin-top: 1em" valign="top">This function is
+provided to allocate and initialize an
+IntegerFeedbackClassRec, and should be called for extension
+devices that have a display upon which an integer can be
+displayed. It is passed a pointer to the device, and a
+pointer to the device control procedure. It returns FALSE if
+the allocation fails, and has the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Bool <br>
+InitIntegerFeedbackClassDeviceStruct(dev, controlProc) <br>
+DeviceIntPtr dev; <br>
+void (*controlProc)();</p>
+
+<a name="1.5. Initializing The Device Name And Type"></a>
+<h3>1.5. Initializing The Device Name And Type</h3>
+
+
+<p style="margin-top: 1em" valign="top">The device name and
+type can be initialized by calling AssignTypeAndName with
+the following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">void <br>
+AssignTypeAndName(dev, type, name) <br>
+DeviceIntPtr dev; <br>
+Atom type; <br>
+char *name;</p>
+
+<p style="margin-top: 1em" valign="top">This will allocate
+space for the device name and copy the name that was passed.
+The device type can be obtained by calling MakeAtom with one
+of the names defined for input devices. MakeAtom has the
+following parameters:</p>
+
+<p style="margin-left:25%; margin-top: 1em">Atom <br>
+MakeAtom(name, len, makeit) <br>
+char *name; <br>
+int len; <br>
+Bool makeit;</p>
+
+<p style="margin-top: 1em" valign="top">Since the atom was
+already made when the input extension was initialized, the
+value of makeit should be FALSE;</p>
+
+<a name="2. Closing Extension Devices"></a>
+<h2>2. Closing Extension Devices</h2>
+
+
+<p style="margin-top: 1em" valign="top">The DisableDevice
+entry point is provided by DIX to disable input devices. It
+calls the device control routine for the specified device
+with a mode value of DEVICE_OFF. The device control routine
+should call RemoveEnabledDevice to stop the server from
+checking for input from that device.</p>
+
+<p style="margin-top: 1em" valign="top">DisableDevice is
+not called by any input extension routines. It can be called
+from the CloseInputDevice routine, which is called by
+ProcXCloseDevice when a client makes an XCloseDevice
+request. If DisableDevice is called, it should only be
+called when the last client using the extension device has
+terminated or called XCloseDevice.</p>
+
+<a name="3. Implementation-Dependent Routines"></a>
+<h2>3. Implementation-Dependent Routines</h2>
+
+
+<p style="margin-top: 1em" valign="top">Several input
+extension protocol requests have implementation-dependent
+entry points. Default routines are defined for these entry
+points and contained in the source file
+extensions/server/xinput/xstubs.c. Some implementations may
+be able to use the default routines without change. The
+following sections describe each of these routines.</p>
+
+<a name="3.1. AddOtherInputDevices"></a>
+<h3>3.1. AddOtherInputDevices</h3>
+
+
+
+<p style="margin-top: 1em" valign="top">AddOtherInputDevice
+is called from ProcXListInputDevices as a result of an
+XListInputDevices protocol request. It may be needed by
+implementations that do not open extension input devices
+until requested to do so by some client. These
+implementations may not initialize all devices when the X
+server starts up, because some of those devices may be in
+use. Since the XListInputDevices function only lists those
+devices that have been initialized, AddOtherInputDevices is
+called to give DDX a chance to initialize any previously
+unavailable input devices.</p>
+
+<p style="margin-top: 1em" valign="top">A sample
+AddOtherInputDevices routine might look like the
+following:</p>
+
+<p style="margin-left:25%; margin-top: 1em">void <br>
+AddOtherInputDevices () <br>
+{ <br>
+DeviceIntPtr dev; <br>
+int i;</p>
+
+<p style="margin-left:25%; margin-top: 1em">for (i=0;
+i&lt;MAX_DEVICES; i++) <br>
+{ <br>
+if (!local_dev[i].initialized &amp;&amp;
+available(local_dev[i])) <br>
+{ <br>
+dev = (DeviceIntPtr) AddInputDevice
+(local_dev[i].deviceProc, TRUE); <br>
+dev-&gt;public.devicePrivate = local_dev[i]; <br>
+RegisterOtherDevice (dev); <br>
+dev-&gt;inited = ((*dev-&gt;deviceProc)(dev, DEVICE_INIT) ==
+Success); <br>
+} <br>
+} <br>
+}</p>
+
+<p style="margin-top: 1em" valign="top">The default
+AddOtherInputDevices routine in xstubs.c does nothing. If
+all input extension devices are initialized when the server
+starts up, it can be left as a null routine.</p>
+
+<a name="3.2. OpenInputDevice"></a>
+<h3>3.2. OpenInputDevice</h3>
+
+
+<p style="margin-top: 1em" valign="top">Some X server
+implementations open all input devices when the server is
+initialized and never close them. Other implementations may
+open only the X pointer and keyboard devices during server
+initialization, and open other input devices only when some
+client makes an XOpenDevice request. This entry point is for
+the latter type of implementation.</p>
+
+<p style="margin-top: 1em" valign="top">If the physical
+device is not already open, it can be done in this routine.
+In this case, the server must keep track of the fact that
+one or more clients have the device open, and physically
+close it when the last client that has it open makes an
+XCloseDevice request.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to do nothing (assume all input devices
+are opened during X server initialization and kept
+open).</p>
+
+<a name="3.3. CloseInputDevice"></a>
+<h3>3.3. CloseInputDevice</h3>
+
+
+<p style="margin-top: 1em" valign="top">Some
+implementations may close an input device when the last
+client using that device requests that it be closed, or
+terminates. CloseInputDevice is called from ProcXCloseDevice
+when a client makes an XCloseDevice protocol request.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to do nothing (assume all input devices
+are opened during X server initialization and kept
+open).</p>
+
+<a name="3.4. SetDeviceMode"></a>
+<h3>3.4. SetDeviceMode</h3>
+
+
+<p style="margin-top: 1em" valign="top">Some
+implementations support input devices that can report either
+absolute positional data or relative motion. The
+XSetDeviceMode protocol request is provided to allow DDX to
+change the current mode of such a device.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to always return a BadMatch error. If the
+implementation does not support any input devices that are
+capable of reporting both relative motion and absolute
+position information, the default implementation may be left
+unchanged.</p>
+
+<a name="3.5. SetDeviceValuators"></a>
+<h3>3.5. SetDeviceValuators</h3>
+
+
+<p style="margin-top: 1em" valign="top">Some
+implementations support input devices that allow their
+valuators to be set to an initial value. The
+XSetDeviceValuators protocol request is provided to allow
+DDX to set the valuators of such a device.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to always return a BadMatch error. If the
+implementation does not support any input devices that are
+allow their valuators to be set, the default implementation
+may be left unchanged.</p>
+
+<a name="3.6. ChangePointerDevice"></a>
+<h3>3.6. ChangePointerDevice</h3>
+
+
+<p style="margin-top: 1em" valign="top">The
+XChangePointerDevice protocol request is provided to change
+which device is used as the X pointer. Some implementations
+may maintain information specific to the X pointer in the
+private data structure pointed to by the DeviceIntRec.
+ChangePointerDevice is called to allow such implementations
+to move that information to the new pointer device. The
+current location of the X cursor is an example of the type
+of information that might be affected.</p>
+
+<p style="margin-top: 1em" valign="top">The DeviceIntRec
+structure that describes the X pointer device does not
+contain a FocusRec. If the device that has been made into
+the new X pointer was previously a device that could be
+focused, ProcXChangePointerDevice will free the FocusRec
+associated with that device.</p>
+
+<p style="margin-top: 1em" valign="top">If the server
+implementation desires to allow clients to focus the old
+pointer device (which is now accessible through the input
+extension), it should call InitFocusClassDeviceStruct for
+the old pointer device.</p>
+
+<p style="margin-top: 1em" valign="top">The
+XChangePointerDevice protocol request also allows the client
+to choose which axes of the new pointer device are used to
+move the X cursor in the X- and Y- directions. If the axes
+are different than the default ones, the server
+implementation should record that fact.</p>
+
+<p style="margin-top: 1em" valign="top">If the server
+implementation supports input devices with valuators that
+are not allowed to be used as the X pointer, they should be
+screened out by this routine and a BadDevice error
+returned.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to do nothing.</p>
+
+<a name="3.7. ChangeKeyboardDevice"></a>
+<h3>3.7. ChangeKeyboardDevice</h3>
+
+
+<p style="margin-top: 1em" valign="top">The
+XChangeKeyboardDevice protocol request is provided to change
+which device is used as the X keyboard. Some implementations
+may maintain information specific to the X keyboard in the
+private data structure pointed to by the DeviceIntRec.
+ChangeKeyboardDevice is called to allow such implementations
+to move that information to the new keyboard device.</p>
+
+<p style="margin-top: 1em" valign="top">The X keyboard
+device can be focused, and the DeviceIntRec that describes
+that device has a FocusRec. If the device that has been made
+into the new X keyboard did not previously have a FocusRec,
+ProcXChangeKeyboardDevice will allocate one for it.</p>
+
+<p style="margin-top: 1em" valign="top">If the
+implementation does not want clients to be able to focus the
+old X keyboard (which has now become available as an input
+extension device) it should call
+DeleteFocusClassDeviceStruct to free the FocusRec.</p>
+
+<p style="margin-top: 1em" valign="top">If the
+implementation supports input devices with keys that are not
+allowed to be used as the X keyboard, they should be checked
+for here, and a BadDevice error returned.</p>
+
+<p style="margin-top: 1em" valign="top">The default
+implementation is to do nothing.</p>
+
+<a name="4. Input Extension Events"></a>
+<h2>4. Input Extension Events</h2>
+
+
+<p style="margin-top: 1em" valign="top">Events accessed
+through the input extension are analogous to the core input
+events, but have different event types. They are of types
+<b>DeviceKeyPress</b>, <b>DeviceKeyRelease</b>,
+<b>DeviceButtonPress</b>, <b>DeviceButtonRelease</b>,
+<b>DeviceDeviceMotionNotify</b>, <b>DeviceProximityIn</b>,
+<b>DeviceProximityOut</b>, and <b>DeviceValuator</b>. These
+event types are not constants. Instead, they are external
+integers defined by the input extension. Their actual values
+will depend on which extensions are supported by a server,
+and the order in which they are initialized.</p>
+
+<p style="margin-top: 1em" valign="top">The data structures
+that define these events are defined in the file
+<b>extensions/include/XIproto.h</b>. Other input extension
+constants needed by DDX are defined in the file
+<b>extensions/include/XI.h</b>.</p>
+
+<p style="margin-top: 1em" valign="top">Some events defined
+by the input extension contain more information than can be
+contained in the 32-byte xEvent data structure. To send this
+information to clients, DDX must generate two or more
+32-byte wire events. The following sections describe the
+contents of these events.</p>
+
+<a name="4.1. Device Key Events"></a>
+<h3>4.1. Device Key Events</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><b>DeviceKeyPresss</b>
+events contain all the information that is contained in a
+core <b>KeyPress</b> event, and also the following
+additional information:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">deviceid - the
+identifier of the device that generated the event.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">device_state - the
+state of any modifiers on the device that generated the
+event</p> </td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">num_valuators - the
+number of valuators reported in this event.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">first_valuator -
+the first valuator reported in this event.</p></td>
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">-</p></td>
+<td width="4%"></td>
+<td width="84%">
+
+
+<p style="margin-top: 1em" valign="top">valuator0 through
+valuator5 - the values of the valuators.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">In order to pass
+this information to the input extension library, two 32-byte
+wire events must be generated by DDX. The first has an event
+type of <b>DeviceKeyPress</b>, and the second has an event
+type of <b>DeviceValuator</b>.</p>
+
+<p style="margin-top: 1em" valign="top">The following code
+fragment shows how the two wire events could be
+initialized:</p>
+
+<p style="margin-left:25%; margin-top: 1em">extern int
+DeviceKeyPress; <br>
+DeviceIntPtr dev; <br>
+xEvent xE[2]; <br>
+CARD8 id, num_valuators; <br>
+INT16 x, y, pointerx, pointery; <br>
+Time timestamp; <br>
+deviceKeyButtonPointer *xev = (deviceKeyButtonPointer *) xE;
+<br>
+deviceValuator *xv;</p>
+
+<p style="margin-left:25%; margin-top: 1em">xev-&gt;type =
+DeviceKeyPress; /* defined by input extension */ <br>
+xev-&gt;detail = keycode; /* key pressed on this device */
+<br>
+xev-&gt;time = timestamp; /* same as for core events */ <br>
+xev-&gt;rootX = pointerx; /* x location of core pointer */
+<br>
+xev-&gt;rootY = pointery; /* y location of core pointer
+*/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/******************************************************************/
+<br>
+/* */ <br>
+/* The following field does not exist for core input events.
+*/ <br>
+/* It contains the device id for the device that generated
+the */ <br>
+/* event, and also indicates whether more than one 32-byte
+wire */ <br>
+/* event is being sent. */ <br>
+/* */ <br>
+
+/******************************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">xev-&gt;deviceid
+= dev-&gt;id | MORE_EVENTS; /* sending more than 1*/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/******************************************************************/
+<br>
+/* Fields in the second 32-byte wire event: */ <br>
+
+/******************************************************************/</p>
+
+<p style="margin-left:25%; margin-top: 1em">xv =
+(deviceValuator *) ++xev; <br>
+xv-&gt;type = DeviceValuator; /* event type of second event
+*/ <br>
+xv-&gt;deviceid = dev-&gt;id; /* id of this device */ <br>
+xv-&gt;num_valuators = 0; /* no valuators being sent */ <br>
+xv-&gt;device_state = 0; /* will be filled in by DIX */</p>
+
+<a name="4.2. Device Button Events"></a>
+<h3>4.2. Device Button Events</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><b>DeviceButton</b>
+events contain all the information that is contained in a
+core button event, and also the same additional information
+that a <b>DeviceKey</b> event contains.</p>
+
+<a name="4.3. Device Motion Events"></a>
+<h3>4.3. Device Motion Events</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><b>DeviceMotion</b>
+events contain all the information that is contained in a
+core motion event, and also additional valuator information.
+At least two wire events are required to contain this
+information. The following code fragment shows how the two
+wire events could be initialized:</p>
+
+<p style="margin-left:25%; margin-top: 1em">extern int
+DeviceMotionNotify; <br>
+DeviceIntPtr dev; <br>
+xEvent xE[2]; <br>
+CARD8 id, num_valuators; <br>
+INT16 x, y, pointerx, pointery; <br>
+Time timestamp; <br>
+deviceKeyButtonPointer *xev = (deviceKeyButtonPointer *) xE;
+<br>
+deviceValuator *xv;</p>
+
+<p style="margin-left:25%; margin-top: 1em">xev-&gt;type =
+DeviceMotionNotify; /* defined by input extension */ <br>
+xev-&gt;detail = keycode; /* key pressed on this device */
+<br>
+xev-&gt;time = timestamp; /* same as for core events */ <br>
+xev-&gt;rootX = pointerx; /* x location of core pointer */
+<br>
+xev-&gt;rootY = pointery; /* y location of core pointer
+*/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/******************************************************************/
+<br>
+/* */ <br>
+/* The following field does not exist for core input events.
+*/ <br>
+/* It contains the device id for the device that generated
+the */ <br>
+/* event, and also indicates whether more than one 32-byte
+wire */ <br>
+/* event is being sent. */ <br>
+/* */ <br>
+
+/******************************************************************/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">xev-&gt;deviceid
+= dev-&gt;id | MORE_EVENTS; /* sending more than 1*/</p>
+
+
+<p style="margin-left:25%; margin-top: 1em">/******************************************************************/
+<br>
+/* Fields in the second 32-byte wire event: */ <br>
+
+/******************************************************************/</p>
+
+<p style="margin-left:25%; margin-top: 1em">xv =
+(deviceValuator *) ++xev; <br>
+xv-&gt;type = DeviceValuator; /* event type of second event
+*/ <br>
+xv-&gt;deviceid = dev-&gt;id; /* id of this device */ <br>
+xv-&gt;num_valuators = 2; /* 2 valuators being sent */ <br>
+xv-&gt;first_valuator = 0; /* first valuator being sent */
+<br>
+xv-&gt;device_state = 0; /* will be filled in by DIX */ <br>
+xv-&gt;valuator0 = x; /* first axis of this device */ <br>
+xv-&gt;valuator1 = y; /* second axis of this device */</p>
+
+<p style="margin-top: 1em" valign="top">Up to six axes can
+be reported in the deviceValuator event. If the device is
+reporting more than 6 axes, additional pairs of
+DeviceMotionNotify and DeviceValuator events should be sent,
+with the first_valuator field set correctly.</p>
+
+<a name="4.4. Device Proximity Events"></a>
+<h3>4.4. Device Proximity Events</h3>
+
+
+<p style="margin-top: 1em" valign="top">Some input devices
+that report absolute positional information, such as
+graphics tablets and touchscreens, may report proximity
+events. <b>ProximityIn</b> events are generated when a
+pointing device like a stylus, or in the case of a
+touchscreen, the user&rsquo;s finger, comes into close
+proximity with the surface of the input device.
+<b>ProximityOut</b> events are generated when the stylus or
+finger leaves the proximity of the input devices
+surface.</p>
+
+<p style="margin-top: 1em" valign="top"><b>Proximity</b>
+events contain almost the same information as button events.
+The event type is <b>ProximityIn</b> or <b>ProximityOut</b>,
+and there is no detail information.</p>
+
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+
+<p style="margin-top: 1em" valign="top"><b>X Input
+Extension Porting Document X11, Release 6.4</b></p>
+ 
+<p style="margin-top: 1em" valign="top"><b>2</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729528" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

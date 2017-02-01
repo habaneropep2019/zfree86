@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Selecting XKB Configuration </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="XKB-Config.html"><EM>The XKB Configuration Guide </EM></A>
+ <b>:</b> <EM>Selecting XKB Configuration </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Config1.html"><EM>Overview </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Config3.html"><EM>Direct XKB Configuration </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="2"></A>2. Selecting XKB Configuration </H2>
+<p>The easiest and the most natural way how to specify a keyboard mapping is
+to use <code>rules</code> component. As its name suggests it describes a number of general
+rules how to combine all bits and pieces into a valid and useful keyboard 
+mapping. All you need to do is to select a suitable rules file and then to
+feed it with a few parameters that will adjust the keyboard behaviour to
+fulfill your needs.</p>
+<p>The parameters are:
+<ul>
+<li><code>XkbRules </code>- files of rules to be used for keyboard mapping 
+composition</li>
+<li><code>XkbModel </code>- name of model of your keyboard type</li>
+<li><code>XkbLayout </code>- layout(s) you intend to use</li>
+<li><code>XkbVariant </code>- variant(s) of layout you intend to use</li>
+<li><code>XkbOptions </code>- extra xkb configuration options</li>
+</ul>
+</p>
+<p>The proper rules file depends on your vendor. In reality, the commonest
+file of rules is <code>xfree86</code>. For each rules file there is a description
+file named <code>&lt;vendor-rules&gt;.lst</code>, for instance <code>xfree86.lst</code> 
+which is located in xkb configuration subdirectory <code>rules</code> (for example 
+<code>/etc/X11/xkb/rules</code>).</p>
+
+<H3><A NAME="3"></A>2.1. Basic Configuration </H3>
+<p>Let's say you want to configure a PC style America keyboard with 104
+keys as described in <code>xfree86.lst</code>. It can be done by simply writing
+several lines from below to you XFree86 configuration file (often
+found as <code>/etc/X11/XF86Config-4</code> or <code>/etc/X11/XF86Config</code>):
+<blockquote><code>
+<pre>
+Section "InputDevice"
+    Identifier "Keyboard1"
+    Driver "Keyboard"
+
+    Option "XkbModel" "pc104"
+    Option "XkbLayout" "us"
+    Option "XKbOptions" ""
+EndSection
+</pre>
+</code></blockquote>
+
+The values of parameters <code>XkbModel</code> and <code>XkbLayout</code> are really 
+not surprising. The parameters <code>XkbOptions</code> has been explicitly set to 
+empty set of parameters. The parameter <code>XkbVariant</code> has been left out. 
+That means the default variant named <code>basic</code> is loaded.</p>
+<p>Of course, this can be also done at runtime using utility setxkbmap.
+Shell command loading the same keyboard mapping would look like:
+<blockquote><code>
+<pre>
+setxkbmap -rules xfree86 -model pc104 -layout us -option ""
+</pre>
+</code></blockquote>
+
+The configuration and the shell command would be very analogical
+for most other layouts (internationalized mappings). </p>
+
+<H3><A NAME="4"></A>2.2. Advanced Configuration </H3>
+<p>Since XFree86 4.3.x you can use multi-layouts xkb configuration.
+What does it mean? Basically it allows to load up to four different
+keyboard layouts at a time. Each such layout would reside in its
+own group. The groups (unlike complete keyboard remapping) can be
+switched very fast from one to another by a combination of keys.</p>
+<p>Let's say you want to configure your new Logitech cordless desktop
+keyboard, you intend to use three different layouts at the same
+time - us, czech and german (in this order), and that you are used
+to <code>Alt-Shift</code> combination for switching among them.</p>
+<p>Then the configuration snippet could look like this:
+<blockquote><code>
+<pre>
+Section "InputDevice"
+    Identifier "Keyboard1"
+    Driver "Keyboard"
+
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XKbOptions" "grp:alt_shift_toggle"
+EndSection
+</pre>
+</code></blockquote>
+
+Of course, this can be also done at runtime using utility setxkbmap.
+Shell command loading the same keyboard mapping would look like:
+<blockquote><code>
+<pre>
+setxkbmap -rules xfree86 -model logicordless -layout "us,cz,de" \
+         -option "grp:alt_shift_toggle"
+</pre>
+</code></blockquote>
+</p>
+
+
+<H3><A NAME="5"></A>2.3. Even More Advanced Configuration </H3>
+<p>Okay, let's say you are more demanding. You do like the example
+above but you want it to change a bit. Let's imagine you want
+the czech keyboard mapping to use another variant but basic.
+The configuration snippet then changes into:
+<blockquote><code>
+<pre>
+Section "InputDevice"
+    Identifier "Keyboard1"
+    Driver "Keyboard"
+
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XkbVariant" ",bksl,"
+    Option "XKbOptions" "grp:alt_shift_toggle"
+EndSection
+</pre>
+</code></blockquote>
+
+That's seems tricky but it is not. The logic for settings of variants
+is the same as for layouts, that means the first and the third variant
+settings are left out (set to <code>basic</code>), the second is set to 
+<code>bksl</code> (a special variant with an enhanced definition of the backslash 
+key).</p>
+<p>Analogically, the loading runtime will change to:
+<blockquote><code>
+<pre>
+setxkmap -rules xfree86 -model logicordless -layout "us,cz,de" \
+         -variant ",bksl," -option "grp:alt_shift_toggle"
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="6"></A>2.4. Basic Global Options </H3>
+<p>See rules/*.lst files.</p>
+
+
+ <HR NOSHADE>
+<A HREF="XKB-Config.html"><EM>The XKB Configuration Guide </EM></A>
+ <b>:</b> <EM>Selecting XKB Configuration </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Config1.html"><EM>Overview </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Config3.html"><EM>Direct XKB Configuration </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728790" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

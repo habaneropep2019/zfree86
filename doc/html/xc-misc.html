@@ -1,0 +1,764 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:17:07 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Requests">2. Requests</a><br>
+<a href="#3. Events and Errors">3. Events and Errors</a><br>
+<a href="#4. Encoding">4. Encoding</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>XC-MISC
+Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+1.1 X Consortium Standard X Version 11, Release
+6.4</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Bob
+Scheifler David P. Wiggins <br>
+X Consortium, Inc.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Copyright
+&copy; 1994 X Consortium</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>The
+above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the
+Software.</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>THE
+SOFTWARE IS PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;,
+WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Except
+as contained in this notice, the name of the X Consortium
+shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without prior
+written authorization from the X
+Consortium.</small></small></p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">When an X client
+connects to an X server, it receives a fixed range of
+resource IDs to use to identify the client&rsquo;s resources
+inside the X server. Xlib hands these out sequentially as
+needed. When it overruns the end of the range, an IDChoice
+protocol error results. Long running clients, or clients
+that use resource IDs at a rapid rate, may encounter this
+circumstance. When it happens, there are usually many
+resource IDs available, but Xlib doesn&rsquo;t know about
+them.</p>
+
+<p style="margin-top: 1em" valign="top">One approach to
+solving this problem would be to have Xlib notice when a
+resource is freed and recycle its ID for future use. This
+strategy runs into difficulties because sometimes freeing
+one resource causes others to be freed (for example, when a
+window is destroyed, so are its children). To do a complete
+job, Xlib would have to maintain a large amount of state
+that currently resides only in the server (the entire window
+tree in the above example). Even if a less comprehensive
+strategy was adopted, such as recycling only those IDs that
+Xlib can identify without maintaining additional state, the
+additional bookkeeping at resource creation and destruction
+time would likely introduce unacceptable overhead.</p>
+
+<p style="margin-top: 1em" valign="top">To avoid the
+problems listed above, the server&rsquo;s complete knowledge
+of all resource IDs in use by a client is leveraged. This
+extension provides two ways for Xlib to query the server for
+available resource IDs. Xlib can use these extension
+requests behind the scenes when it has exhausted its current
+pool of resource IDs.</p>
+
+<a name="2. Requests"></a>
+<h2>2. Requests</h2>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetVersion</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>client_major_version</i>:
+CARD16 <i><br>
+client_minor_version</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>server_major_version</i>:
+CARD16 <i><br>
+server_minor_version</i>: CARD16</p>
+
+<p style="margin-top: 1em" valign="top">If supplied, the
+<i>client_major_version</i> and <i>client_minor_version</i>
+indicate what version of the protocol the client wants the
+server to implement. The server version numbers returned
+indicate the protocol this extension actually supports. This
+might not equal the version sent by the client. An
+implementation can (but need not) support more than one
+version simultaneously. The <i>server_major_version</i> and
+the <i>server_minor_version</i> are a mechanism to support
+future revisions of the XC-MISC protocol which may be
+necessary. In general, the major version would increment for
+incompatible changes, and the minor version would increment
+for small, upward-compatible changes. Servers that support
+the protocol defined in this document will return a
+<i>server_major_version</i> of one (1), and a
+<i>server_minor_version</i> of one (1).</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetXIDRange</i></p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>start_id</i>:
+XID <i><br>
+count</i>: CARD32</p>
+
+<p style="margin-top: 1em" valign="top">This request
+returns a range of available resource IDs for the client
+issuing the request. <i>start_id</i> is the first ID in the
+range. <i>count</i> is the number of IDs in the range. The
+returned range may or may not be the largest possible
+range.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetXIDList</i></p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>count</i>:
+CARD32</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<p style="margin-left:25%; margin-top: 1em"><i>ids</i>:
+LISTofXID</p>
+
+<p style="margin-top: 1em" valign="top">This request
+returns the a list of individual resource IDs in <i>ids</i>.
+<i>count</i> is the number of resource IDs requested. The
+number returned may be smaller than the number
+requested.</p>
+
+<a name="3. Events and Errors"></a>
+<h2>3. Events and Errors</h2>
+
+
+<p style="margin-top: 1em" valign="top">No new events or
+errors are defined by this extension.</p>
+
+<a name="4. Encoding"></a>
+<h2>4. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">Please refer to the
+X11 Protocol Encoding document as this document uses
+conventions established there.</p>
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &lsquo;&lsquo;XC-MISC&rsquo;&rsquo;.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">XC-MISC opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_minor_version</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_minor_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetXIDRange</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">XC-MISC opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">XID</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">start_id</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">count</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">16</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>XCMiscGetXIDList</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">XC-MISC opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">count</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">number of XIDs in ids</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofXID</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">ids</p></td>
+</table>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729469" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

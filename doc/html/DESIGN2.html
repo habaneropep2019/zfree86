@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>The XF86Config File </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The XF86Config File </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN1.html"><EM>Preface </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN3.html"><EM>Driver Interface </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="2"></A>2. The XF86Config File </H2>
+
+<p>The XF86Config file format is similar to the old format, with the following
+changes:</p>
+
+<H3><A NAME="3"></A>2.1. <b>Device</b> section </H3>
+
+<p>The <b>Device</b> sections are similar to what they used to be, and
+describe hardware-specific information for a single video card.
+<b>Device</b>
+Some new keywords are added:</p>
+
+<p>
+<dl>
+<dt><b>Driver "drivername"</b><dd><p>Specifies the name of the driver to be used for the card.  This
+is mandatory.</p>
+<dt><b>BusID "busslot"</b><dd><p>Specifies uniquely the location of the card on the bus.  The
+purpose is to identify particular cards in a multi-headed
+configuration.  The format of the argument is intentionally
+vague, and may be architecture dependent.  For a PCI bus, it
+is something like "bus:slot:func".</p>
+</dl>
+</p>
+<p>A <b>Device</b> section is considered ``active'' if there is a reference
+to it in an active <b>Screen</b> section.</p>
+
+<H3><A NAME="4"></A>2.2. <b>Screen</b> section </H3>
+
+<p>The <b>Screen</b> sections are similar to what they used to be.  They
+no longer have a <b>Driver</b> keyword, but an <b>Identifier</b> keyword
+is added.  (The <b>Driver</b> keyword may be accepted in place of the
+<b>Identifier</b> keyword for compatibility purposes.)  The identifier
+can be used to identify which screen is to be active when multiple
+<b>Screen</b> sections are present.  It is possible to specify the active
+screen from the command line.  A default is chosen in the absence
+of one being specified.  A <b>Screen</b> section is considered ``active''
+if there is a reference to it either from the command line, or from
+an active <b>ServerLayout</b> section.</p>
+
+<H3><A NAME="5"></A>2.3. <b>InputDevice</b> section </H3>
+
+<p>The <b>InputDevice</b> section is a new section that describes
+configuration information for input devices.  It replaces the old
+<b>Keyboard</b>, <b>Pointer</b> and <b>XInput</b>
+sections.  Like the <b>Device</b> section, it has two mandatory keywords:
+<b>Identifier</b> and <b>Driver</b>.  For compatibility purposes the old
+<b>Keyboard</b> and <b>Pointer</b> sections are
+converted by the parser into <b>InputDevice</b> sections as follows:</p>
+<p>
+<dl>
+<dt><b><b>Keyboard</b></b><dd><p><b>Identifier</b> "Implicit Core Keyboard"<br>
+<b>Driver</b> "keyboard"</p>
+<dt><b><b>Pointer</b></b><dd><p><b>Identifier</b> "Implicit Core Pointer"<br>
+<b>Driver</b> "mouse"</p>
+</dl>
+</p>
+<p>An <b>InputDevice</b> section is considered active if there is a
+reference to it in an active <b>ServerLayout</b> section.  An
+<b>InputDevice</b> section may also be referenced implicitly if there
+is no <b>ServerLayout</b> section, if the <code>-screen</code> command
+line options is used, or if the <b>ServerLayout</b> section doesn't
+reference any <b>InputDevice</b> sections.  In this case, the first
+sections with drivers "keyboard" and "mouse" are used as the core
+keyboard and pointer respectively.</p>
+
+<H3><A NAME="6"></A>2.4. <b>ServerLayout</b> section </H3>
+
+<p>The <b>ServerLayout</b> section is a new section that is used to identify
+which <b>Screen</b> sections are to be used in a multi-headed configuration,
+and the relative layout of those screens.  It also identifies which
+<b>InputDevice</b> sections are to be used.  Each <b>ServerLayout</b> section
+has an identifier, a list of <b>Screen</b> section identifiers, and a list of
+<b>InputDevice</b> section identifiers.  <b>ServerFlags</b> options may also be
+included in a <b>ServerLayout</b> section, making it possible to override
+the global values in the <b>ServerFlags</b> section.</p>
+<p>A <b>ServerLayout</b> section can be made active by being referenced on
+the command line.  In the absence of this, a default will be chosen
+(the first one found).  The screen names may optionally be followed
+by a number specifying the preferred screen number, and optionally
+by information specifying the physical positioning of the screen,
+either in absolute terms or relative to another screen (or screens).
+When no screen number is specified, they are numbered according to
+the order in which they are listed.  The old (now obsolete) method
+of providing the positioning information is to give the names of
+the four adjacent screens.  The order of these is top, bottom, left,
+right.  Here is an example of a <b>ServerLayout</b> section for two
+screens using the old method, with the second located to the right
+of the first:</p>
+<p>
+<hr>
+<pre>
+      Section "ServerLayout"
+        Identifier "Main Layout"
+        Screen     0 "Screen 1" ""  ""  ""  "Screen 2"
+        Screen     1 "Screen 2"
+        Screen     "Screen 3"
+      EndSection
+    
+</pre>
+<hr>
+</p>
+<p>The preferred way of specifying the layout is to explicitly specify
+the screen's location in absolute terms or relative to another
+screen.</p>
+<p>In the absolute case, the upper left corner's coordinates are given
+after the <b>Absolute</b> keyword.  If the coordinates are
+omitted, a value of <code>(0,0)</code> is assumed.  An example
+of absolute positioning follows:</p>
+<p>
+<hr>
+<pre>
+      Section "ServerLayout"
+        Identifier "Main Layout"
+        Screen     0 "Screen 1" Absolute 0 0
+        Screen     1 "Screen 2" Absolute 1024 0
+        Screen     "Screen 3" Absolute 2048 0
+      EndSection
+    
+</pre>
+<hr>
+</p>
+<p>In the relative case, the position is specified by either using one of
+the following keywords followed by the name of the reference screen:</p>
+<p>
+<blockquote>
+<b>RightOf<br>
+LeftOf<br>
+Above<br>
+Below<br>
+Relative</b>
+</blockquote>
+</p>
+<p>When the <b>Relative</b> keyword is used, the reference screen
+name is followed by the coordinates of the new screen's origin
+relative to reference screen.  The following example shows how to use
+some of the relative positioning options.</p>
+<p>
+<hr>
+<pre>
+      Section "ServerLayout"
+        Identifier "Main Layout"
+        Screen     0 "Screen 1"
+        Screen     1 "Screen 2" RightOf "Screen 1"
+        Screen     "Screen 3" Relative "Screen 1" 2048 0
+      EndSection
+    
+</pre>
+<hr>
+</p>
+
+<H3><A NAME="7"></A>2.5. Options </H3>
+
+<p>Options are used more extensively.  They may appear in most sections
+now.  Options related to drivers can be present in the <b>Screen</b>,
+<b>Device</b> and <b>Monitor</b> sections and the <b>Display</b> subsections.
+The order of precedence is <b>Display</b>, <b>Screen</b>, <b>Monitor</b>,
+<b>Device</b>.  Options have been extended to allow an optional value
+to be specified in addition to the option name.  For more details
+about options, see the 
+<A HREF="DESIGN10.html#options">Options</A> section
+for details.</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The XF86Config File </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN1.html"><EM>Preface </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN3.html"><EM>Driver Interface </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728753" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

@@ -1,0 +1,7 @@
+XCOMM $XFree86: xc/programs/xkbcomp/symbols/sharp/Imakefile,v 1.2 2006/12/29 19:19:58 tsi Exp $
+
+    DATAFILES = jp
+
+all::
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/symbols/sharp)

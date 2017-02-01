@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Using 3D Acceleration </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>Using 3D Acceleration </EM><BR>
+<b>Previous:</b> <A HREF="DRI7.html"><EM>Memory usage </EM></A><BR>
+<b>Next:</b> <A HREF="DRI9.html"><EM>General Trouble Shooting </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="12"></A>8. Using 3D Acceleration </H2>
+<p>This section describes how to link your application with libGL.so
+and verify that you are in fact using 3D acceleration.</p>
+
+<H3><A NAME="13"></A>8.1. libGL.so </H3>
+<p>Your OpenGL program must link with the libGL.so.1.2 library provided
+by XFree86.
+The libGL.so.1.2 library contains a GLX protocol encoder for
+indirect/remote rendering and DRI code for accessing hardware
+drivers.
+In particular, be sure you're not using libGL.so from another
+source such as Mesa or the Utah GLX project.</p>
+<p>Unless it was built in a special way, the libGL.so library does
+not contain any 3D hardware driver code.
+Instead, libGL.so dynamically loads the appropriate 3D driver
+during initialization.</p>
+<p>Most simple OpenGL programs also use the GLUT and GLU libraries.
+A source for these libraries is listed in the Resources
+section below.</p>
+
+<H3><A NAME="14"></A>8.2. Compiling and linking an OpenGL program </H3>
+<p>A simple GLUT/OpenGL program may be compiled and linked as follows:
+<pre>
+        gcc program.c -I/usr/local/include -L/usr/local/lib -L/usr/X11R6/lib -lglut -lGLU -lGL -o program
+        
+</pre>
+</p>
+<p>The <code>-I</code> option is used to specify where the GL/glut.h (and
+possibly the GL/gl.h and GL/glu.h) header file may be found.</p>
+<p>The <code>-L</code> options specify where the libglut.so and the X
+libraries are located.
+libGL.so and libGLU.so should be in /usr/lib, as specified by
+the Linux/OpenGL ABI standard.</p>
+<p>The <code>-lglut -lGLU -lGL</code> arguments specify that the application
+should link with the GLUT, GLU and GL libraries, in that order.</p>
+
+<H3><A NAME="15"></A>8.3. Running your OpenGL program </H3>
+<p>Simply typing ./program in your shell should execute the program.</p>
+<p>If you get an error message such as
+<pre>
+        gears: error in loading shared libraries: libGL.so.1: cannot
+        open shared object file: No such file or directory
+        
+</pre>
+
+if means that the libGL.so.1 file is not the right location.
+Proceed to the trouble shooting section.          </p>
+
+<H3><A NAME="16"></A>8.4. libOSMesa.so </H3>
+<p>OSMesa (Off-Screen Mesa) is an interface and driver for rendering
+3D images into a user-allocated block of memory rather than an
+on-screen window.
+It was originally developed for Mesa before Mesa became part of
+the XFree86/DRI project.
+It can now be used with the XFree86/DRI libGL.so as well.</p>
+<p>libOSMesa.so implements the OSMesa interface and it must be linked
+with your application if you want to use the OSMesa functions.
+You must also link with libGL.so.  For example:
+<pre>
+        gcc osdemo.c -lOSMesa -lGLU -lGL -o osdemo
+        
+</pre>
+</p>
+<p>In stand-alone Mesa this interface was compiled into the monolithic
+libGL.so (formerly libMesaGL.so) library.
+In XFree86 4.0.1 and later this interface is implemented in a
+separate library.</p>
+
+
+<H3><A NAME="17"></A>8.5. glxinfo </H3>
+<p>glxinfo is a useful program for checking which version of
+libGL you're using as well as which DRI-based driver.
+Simply type <code>glxinfo</code> and examine the OpenGL vendor, renderer,
+and version lines.
+Among the output you should see something like this:</p>
+<p>
+<pre>
+          OpenGL vendor string: VA Linux Systems, Inc.
+          OpenGL renderer string: Mesa DRI Voodoo3 20000224
+          OpenGL version string: 1.2 Mesa 3.4
+        
+</pre>
+</p>
+<p>or this:</p>
+<p>
+<pre>
+          OpenGL vendor string: VA Linux Systems, Inc.
+          OpenGL renderer string: Mesa GLX Indirect
+          OpenGL version string: 1.2 Mesa 3.4
+        
+</pre>
+</p>
+<p>The first example indicates that the 3dfx driver is using
+Voodoo3 hardware.
+The second example indicates that no hardware driver was
+found and indirect, unaccelerated rendering is being used.</p>
+<p>If you see that indirect rendering is being used when direct
+rendering was expected, proceed to the troubleshooting section.</p>
+<p><code>glxinfo</code> also lists all of the GLX-enhanced visuals available
+so you can determine which visuals are double-buffered, have depth (Z)
+buffers, stencil buffers, accumulation buffers, etc.</p>
+
+<H3><A NAME="18"></A>8.6. Environment Variables </H3>
+<p>The libGL.so library recognizes three environment variables.
+Normally, none of them need to be defined.
+If you're using the csh or tcsh shells, type
+<code>setenv VARNAME value</code> to set the variable.
+Otherwise, if you're using sh or bash, type
+<code>export VARNAME=value</code>.
+<ol>
+<li><code>LIBGL_DEBUG</code>, if defined will cause libGL.so to print error
+and diagnostic messages.
+This can help to solve problems.
+Setting <code>LIBGL_DEBUG</code> to <code>verbose</code> may provide additional
+information.</li>
+<li><code>LIBGL_ALWAYS_INDIRECT</code>, if defined this will force libGL.so
+to always use indirect rendering instead of hardware
+acceleration.
+This can be useful to isolate rendering errors.</li>
+<li><code>LIBGL_DRIVERS_PATH</code> can be used to override the default
+directories which are searched for 3D drivers.
+The value is one or more paths separated by colons.
+In a typical XFree86 installation, the 3D drivers should be in
+/usr/X11R6/lib/modules/dri/ and <code>LIBGL_DRIVERS_PATH</code> need
+not be defined.
+Note that this feature is disabled for set-uid programs.
+This variable replaces the <code>LIBGL_DRIVERS_DIR</code> env var used
+in XFree86 4.0.</li>
+<li><code>MESA_DEBUG</code>, if defined, will cause Mesa-based 3D drivers
+to print user error messages to stderr.
+These are errors that you'd otherwise detect by calling
+<code>glGetError</code>.</li>
+</ol>
+</p>
+<p>Mesa-based drivers (this includes most of the drivers listed
+above) also observe many of the existing Mesa environment variables.
+These include the <code>MESA_DEBUG</code> and <code>MESA_INFO</code> variables.</p>
+
+
+ <HR NOSHADE>
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>Using 3D Acceleration </EM><BR>
+<b>Previous:</b> <A HREF="DRI7.html"><EM>Memory usage </EM></A><BR>
+<b>Next:</b> <A HREF="DRI9.html"><EM>General Trouble Shooting </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728784" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

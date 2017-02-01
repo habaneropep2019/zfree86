@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/Xaw/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(widg.idx,widg.idx.PS.gz)
+InstallHardcopyDoc(widgets,widgets.PS.gz)
+

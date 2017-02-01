@@ -1,0 +1,24 @@
+XCOMM $XFree86: xc/lib/font/fontcache/Imakefile,v 1.4 2005/10/14 15:16:06 tsi Exp $
+
+#include <Server.tmpl>
+
+#if BuildFontCache
+FONTCACHE_DEFINES = FontCacheExtensionDefines
+#endif
+        INCLUDES = -I../include
+            SRCS = fontcache.c
+            OBJS = fontcache.o
+
+#define DoNormalLib NormalLibFont
+#define DoSharedLib SharedLibFont
+#define DoDebugLib DebugLibFont
+#define DoProfileLib ProfileLibFont
+#include <Library.tmpl>
+LibraryObjectRule()
+
+SpecialCLibObjectRule(fontcache,$(ICONFIGFILES),$(FONTCACHE_DEFINES))
+
+SubdirLibraryRule($(OBJS))
+NormalLintTarget($(SRCS))
+
+DependTarget()

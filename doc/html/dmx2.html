@@ -1,0 +1,492 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Development plan </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Development plan </EM><BR>
+<b>Previous:</b> <A HREF="dmx1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="dmx3.html"><EM>Current issues </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="4"></A>2. Development plan </H2>
+<p>This section describes the development plan from approximately June
+2001 through July 2003.</p>
+
+<H3><A NAME="5"></A>2.1. Bootstrap code </H3>
+<p>To allow for rapid development of the DMX server by multiple
+developers during the first development stage, the problem will be
+broken down into three tasks: the overall DMX framework, back-end
+rendering services and input device handling services.  However, before
+the work begins on these tasks, a simple framework that each developer
+could use was implemented to bootstrap the development effort.  This
+framework renders to a single back-end server and provides dummy input
+devices (i.e., the keyboard and mouse).  The simple back-end rendering
+service was implemented using the shadow framebuffer support currently
+available in the XFree86 environment.</p>
+
+<p>Using this bootstrapping framework, each developer has been able to
+work on each of the tasks listed above independently as follows: the
+framework will be extended to handle arbitrary back-end server
+configurations; the back-end rendering services will be transitioned to
+the more efficient Xnest-style implementation; and, an input device
+framework to handle various input devices via the input extension will
+be developed.</p>
+
+<p>Status: The boot strap code is complete.  </p>
+
+
+<H3><A NAME="6"></A>2.2. Input device handling </H3>
+<p>An X server (including the front-end X server) requires two core
+input devices -- a keyboard and a pointer (mouse).  These core devices
+are handled and required by the core X11 protocol.  Additional types of
+input devices may be attached and utilized via the XInput extension.
+These are usually referred to as ``XInput extension devices'',</p>
+
+<p>There are some options as to how the front-end X server gets its core
+input devices:</p>
+<p>
+<ol>
+<li>Local Input. The physical input devices (e.g., keyboard and
+mouse) can be attached directly to the front-end X server.  In this
+case, the keyboard and mouse on the machine running the front-end X
+server will be used.  The front-end will have drivers to read the
+raw input from those devices and convert it into the required X
+input events (e.g., key press/release, pointer button press/release,
+pointer motion).  The front-end keyboard driver will keep track of
+keyboard properties such as key and modifier mappings, autorepeat
+state, keyboard sound and led state.  Similarly the front-end
+pointer driver will keep track if pointer properties such as the
+button mapping and movement acceleration parameters.  With this
+option, input is handled fully in the front-end X server, and the
+back-end X servers are used in a display-only mode.  This option was
+implemented and works for a limited number of Linux-specific
+devices.  Adding additional local input devices for other
+architectures is expected to be relatively simple.
+
+<p>The following options are available for implementing local input
+devices:</p>
+<p>
+<ol>
+<li>The XFree86 X server has modular input drivers that could
+be adapted for this purpose.  The mouse driver supports a wide
+range of mouse types and interfaces, as well as a range of
+Operating System platforms.  The keyboard driver in XFree86 is
+not currently as modular as the mouse driver, but could be made
+so.  The XFree86 X server also has a range of other input
+drivers for extended input devices such as tablets and touch
+screens.  Unfortunately, the XFree86 drivers are generally
+complex, often simultaneously providing support for multiple
+devices across multiple architectures; and rely so heavily on
+XFree86-specific helper-functions, that this option was not
+pursued.
+
+</li>
+<li>The <code>TinyX</code> X server in XFree86 has built-in drivers that
+support PS/2 mice and keyboard under Linux.  The mouse driver
+can indirectly handle other mouse types if the Linux utility
+<code>gpm</code> is used as to translate the native mouse protocol into
+PS/2 mouse format.  These drivers could be adapted and built in
+to the front-end X server if this range of hardware and OS
+support is sufficient.  While much simpler than the XFree86
+drivers, the <code>TinyX</code> drivers were not used for the DMX
+implementation.
+</li>
+<li>Reimplementation of keyboard and mouse drivers from
+scratch for the DMX framework.  Because keyboard and mouse
+drivers are relatively trivial to implement, this pathway was
+selected.  Other drivers in the X source tree were referenced,
+and significant contributions from other drivers are noted in
+the DMX source code.</li>
+</ol>
+</p>
+
+</li>
+<li>Backend Input.  The front-end can make use of the core input
+devices attached to one or more of the back-end X servers.  Core
+input events from multiple back-ends are merged into a single input
+event stream.  This can work sanely when only a single set of input
+devices is used at any given time.  The keyboard and pointer state
+will be handled in the front-end, with changes propagated to the
+back-end servers as needed.  This option was implemented and works
+well.  Because the core pointer on a back-end controls the hardware
+mouse on that back-end, core pointers cannot be treated as XInput
+extension devices.  However, all back-end XInput extensions devices
+can be mapped to either DMX core or DMX XInput extension devices.
+</li>
+<li>Console Input.  The front-end server could create a console
+window that is displayed on an X server independent of the back-end
+X servers.  This console window could display things like the
+physical screen layout, and the front-end could get its core input
+events from events delivered to the console window.  This option was
+implemented and works well.  To help the human navigate, window
+outlines are also displayed in the console window.  Further, console
+windows can be used as either core or XInput extension devices.
+</li>
+<li>Other options were initially explored, but they were all
+partial subsets of the options listed above and, hence, are
+irrelevant.
+</li>
+</ol>
+</p>
+
+<p>Although extended input devices are not specifically mentioned in the
+Distributed X requirements, the options above were all implemented so
+that XInput extension devices were supported.</p>
+
+<p>The bootstrap code (Xdmx) had dummy input devices, and these are
+still supported in the final version.  These do the necessary
+initialization to satisfy the X server's requirements for core pointer
+and keyboard devices, but no input events are ever generated.</p>
+
+<p>Status: The input code is complete.  Because of the complexity of the
+XFree86 input device drivers (and their heavy reliance on XFree86
+infrastructure), separate low-level device drivers were implemented for
+Xdmx.  The following kinds of drivers are supported (in general, the
+devices can be treated arbitrarily as "core" input devices or as XInput
+"extension" devices; and multiple instances of different kinds of
+devices can be simultaneously available):
+<ol>
+<li> A "dummy" device drive that never generates events.
+</li>
+<li> "Local" input is from the low-level hardware on which the
+Xdmx binary is running.  This is the only area where using the
+XFree86 driver infrastructure would have been helpful, and then
+only partially, since good support for generic USB devices does
+not yet exist in XFree86 (in any case, XFree86 and TinyX driver
+code was used where possible).  Currently, the following local
+devices are supported under Linux (porting to other operating
+systems should be fairly straightforward):
+<ul>
+<li>Linux keyboard</li>
+<li>Linux serial mouse (MS)</li>
+<li>Linux PS/2 mouse</li>
+<li>USB keyboard</li>
+<li>USB mouse</li>
+<li>USB generic device (e.g., joystick, gamepad, etc.)</li>
+</ul>
+
+</li>
+<li> "Backend" input is taken from one or more of the back-end
+displays.  In this case, events are taken from the back-end X
+server and are converted to Xdmx events.  Care must be taken so
+that the sprite moves properly on the display from which input
+is being taken.
+</li>
+<li> "Console" input is taken from an X window that Xdmx
+creates on the operator's display (i.e., on the machine running
+the Xdmx binary).  When the operator's mouse is inside the
+console window, then those events are converted to Xdmx events.
+Several special features are available: the console can display
+outlines of windows that are on the Xdmx display (to facilitate
+navigation), the cursor can be confined to the console, and a
+"fine" mode can be activated to allow very precise cursor
+positioning.</li>
+</ol>
+</p>
+
+
+
+<H3><A NAME="7"></A>2.3. Output device handling </H3>
+<p>The output of the DMX system displays rendering and windowing
+requests across multiple screens.  The screens are typically arranged in
+a grid such that together they represent a single large display.</p>
+
+<p>The output section of the DMX code consists of two parts.  The first
+is in the front-end proxy X server (Xdmx), which accepts client
+connections, manages the windows, and potentially renders primitives but
+does not actually display any of the drawing primitives.  The second
+part is the back-end X server(s), which accept commands from the
+front-end server and display the results on their screens.</p>
+
+<H4><A NAME="8"></A>2.3.1. Initialization </H4>
+<p>The DMX front-end must first initialize its screens by connecting to
+each of the back-end X servers and collecting information about each of
+these screens.  However, the information collected from the back-end X
+servers might be inconsistent.  Handling these cases can be difficult
+and/or inefficient.  For example, a two screen system has one back-end X
+server running at 16bpp while the second is running at 32bpp.
+Converting rendering requests (e.g., XPutImage() or XGetImage()
+requests) to the appropriate bit depth can be very time consuming.
+Analyzing these cases to determine how or even if it is possible to
+handle them is required.  The current Xinerama code handles many of
+these cases (e.g., in PanoramiXConsolidate()) and will be used as a
+starting point.  In general, the best solution is to use homogeneous X
+servers and display devices.  Using back-end servers with the same depth
+is a requirement of the final DMX implementation.</p>
+
+<p>Once this screen consolidation is finished, the relative position of
+each back-end X server's screen in the unified screen is initialized.  A
+full-screen window is opened on each of the back-end X servers, and the
+cursor on each screen is turned off.  The final DMX implementation can
+also make use of a partial-screen window, or multiple windows per
+back-end screen.</p>
+
+<H4><A NAME="9"></A>2.3.2. Handling rendering requests </H4>
+<p>After initialization, X applications connect to the front-end server.
+There are two possible implementations of how rendering and windowing
+requests are handled in the DMX system:</p>
+<p>
+<ol>
+<li>A shadow framebuffer is used in the front-end server as the
+render target.  In this option, all protocol requests are completely
+handled in the front-end server.  All state and resources are
+maintained in the front-end including a shadow copy of the entire
+framebuffer.  The framebuffers attached to the back-end servers are
+updated by XPutImage() calls with data taken directly from the
+shadow framebuffer.
+
+<p>This solution suffers from two main problems.  First, it does not
+take advantage of any accelerated hardware available in the system.
+Second, the size of the XPutImage() calls can be quite large and
+thus will be limited by the bandwidth available.</p>
+
+<p>The initial DMX implementation used a shadow framebuffer by
+default.</p>
+
+</li>
+<li>Rendering requests are sent to each back-end server for
+handling (as is done in the Xnest server described above).  In this
+option, certain protocol requests are handled in the front-end
+server and certain requests are repackaged and then sent to the
+back-end servers.  The framebuffer is distributed across the
+multiple back-end servers.  Rendering to the framebuffer is handled
+on each back-end and can take advantage of any acceleration
+available on the back-end servers' graphics display device.  State
+is maintained both in the front and back-end servers.
+
+<p>This solution suffers from two main drawbacks.  First, protocol
+requests are sent to all back-end servers -- even those that will
+completely clip the rendering primitive -- which wastes bandwidth
+and processing time.  Second, state is maintained both in the front-
+and back-end servers.  These drawbacks are not as severe as in
+option 1 (above) and can either be overcome through optimizations or
+are acceptable.  Therefore, this option will be used in the final
+implementation.</p>
+
+<p>The final DMX implementation defaults to this mechanism, but also
+supports the shadow framebuffer mechanism.  Several optimizations
+were implemented to eliminate the drawbacks of the default
+mechanism.  These optimizations are described the section below and
+in Phase II of the Development Results (see appendix).</p>
+
+</li>
+</ol>
+</p>
+
+<p>Status: Both the shadow framebuffer and Xnest-style code is complete.</p>
+
+
+<H3><A NAME="10"></A>2.4. Optimizing DMX </H3>
+<p>Initially, the Xnest-style solution's performance will be measured
+and analyzed to determine where the performance bottlenecks exist.
+There are four main areas that will be addressed.</p>
+
+<p>First, to obtain reasonable interactivity with the first development
+phase, XSync() was called after each protocol request.  The XSync()
+function flushes any pending protocol requests.  It then waits for the
+back-end to process the request and send a reply that the request has
+completed.  This happens with each back-end server and performance
+greatly suffers.  As a result of the way XSync() is called in the first
+development phase, the batching that the X11 library performs is
+effectively defeated.  The XSync() call usage will be analyzed and
+optimized by batching calls and performing them at regular intervals,
+except where interactivity will suffer (e.g., on cursor movements).</p>
+
+<p>Second, the initial Xnest-style solution described above sends the
+repackaged protocol requests to all back-end servers regardless of
+whether or not they would be completely clipped out.  The requests that
+are trivially rejected on the back-end server wastes the limited
+bandwidth available.  By tracking clipping changes in the DMX X server's
+windowing code (e.g., by opening, closing, moving or resizing windows),
+we can determine whether or not back-end windows are visible so that
+trivial tests in the front-end server's GC ops drawing functions can
+eliminate these unnecessary protocol requests.</p>
+
+<p>Third, each protocol request will be analyzed to determine if it is
+possible to break the request into smaller pieces at display boundaries.
+The initial ones to be analyzed are put and get image requests since
+they will require the greatest bandwidth to transmit data between the
+front and back-end servers.  Other protocol requests will be analyzed
+and those that will benefit from breaking them into smaller requests
+will be implemented.</p>
+
+<p>Fourth, an extension is being considered that will allow font glyphs to
+be transferred from the front-end DMX X server to each back-end server.
+This extension will permit the front-end to handle all font requests and
+eliminate the requirement that all back-end X servers share the exact
+same fonts as the front-end server.  We are investigating the
+feasibility of this extension during this development phase.</p>
+
+<p>Other potential optimizations will be determined from the performance
+analysis.</p>
+
+<p>Please note that in our initial design, we proposed optimizing BLT
+operations (e.g., XCopyArea() and window moves) by developing an
+extension that would allow individual back-end servers to directly copy
+pixel data to other back-end servers.  This potential optimization was
+in response to the simple image movement implementation that required
+potentially many calls to GetImage() and PutImage().  However, the
+current Xinerama implementation handles these BLT operations
+differently.  Instead of copying data to and from screens, they generate
+expose events -- just as happens in the case when a window is moved from
+off a screen to on screen.  This approach saves the limited bandwidth
+available between front and back-end servers and is being standardized
+with Xinerama.  It also eliminates the potential setup problems and
+security issues resulting from having each back-end server open
+connections to all other back-end servers.  Therefore, we suggest
+accepting Xinerama's expose event solution.</p>
+
+<p>Also note that the approach proposed in the second and third
+optimizations might cause backing store algorithms in the back-end to be
+defeated, so a DMX X server configuration flag will be added to disable
+these optimizations.</p>
+
+<p>Status: The optimizations proposed above are complete.  It was
+determined that the using the xfs font server was sufficient and
+creating a new mechanism to pass glyphs was redundant; therefore, the
+fourth optimization proposed above was not included in DMX.</p>
+
+
+<H3><A NAME="11"></A>2.5. DMX X extension support </H3>
+<p>The DMX X server keeps track of all the windowing information on the
+back-end X servers, but does not currently export this information to
+any client applications.  An extension will be developed to pass the
+screen information and back-end window IDs to DMX-aware clients.  These
+clients can then use this information to directly connect to and render
+to the back-end windows.  Bypassing the DMX X server allows DMX-aware
+clients to break up complex rendering requests on their own and send
+them directly to the windows on the back-end server's screens.  An
+example of a client that can make effective use of this extension is
+Chromium.</p>
+
+<p>Status: The extension, as implemented, is fully documented in
+"Client-to-Server DMX Extension to the X Protocol".  Future changes
+might be required based on feedback and other proposed enhancements to
+DMX.  Currently, the following facilities are supported:
+<ol>
+<li>Screen information (clipping rectangle for each screen relative
+to the virtual screen)</li>
+<li>Window information (window IDs and clipping information for each
+back-end window that corresponds to each DMX window)</li>
+<li>Input device information (mappings from DMX device IDs to
+back-end device IDs)</li>
+<li>Force window creation (so that a client can override the
+server-side lazy window creation optimization)</li>
+<li>Reconfiguration (so that a client can request that a screen
+position be changed)</li>
+<li>Addition and removal of back-end servers and back-end and
+console inputs.</li>
+</ol>
+</p>
+
+
+<H3><A NAME="12"></A>2.6. Common X extension support </H3>
+<p>The XInput, XKeyboard and Shape extensions are commonly used
+extensions to the base X11 protocol.  XInput allows multiple and
+non-standard input devices to be accessed simultaneously.  These input
+devices can be connected to either the front-end or back-end servers.
+XKeyboard allows much better keyboard mappings control.  Shape adds
+support for arbitrarily shaped windows and is used by various window
+managers.  Nearly all potential back-end X servers make these extensions
+available, and support for each one will be added to the DMX system.</p>
+
+<p>In addition to the extensions listed above, support for the X
+Rendering extension (Render) is being developed.  Render adds digital
+image composition to the rendering model used by the X Window System.
+While this extension is still under development by Keith Packard of HP,
+support for the current version will be added to the DMX system.</p>
+
+<p>Support for the XTest extension was added during the first
+development phase.</p>
+
+<p>Status: The following extensions are supported and are discussed in
+more detail in Phase IV of the Development Results (see appendix):
+BIG-REQUESTS,
+DEC-XTRAP,
+DMX,
+DPMS,
+Extended-Visual-Information,
+GLX,
+LBX,
+RECORD,
+RENDER,
+SECURITY,
+SHAPE,
+SYNC,
+X-Resource,
+XC-APPGROUP,
+XC-MISC,
+XFree86-Bigfont,
+XINERAMA,
+XInputExtension,
+XKEYBOARD, and
+XTEST.</p>
+
+<H3><A NAME="13"></A>2.7. OpenGL support </H3>
+<p>OpenGL support using the Mesa code base exists in XFree86 release 4
+and later.  Currently, the direct rendering infrastructure (DRI)
+provides accelerated OpenGL support for local clients and unaccelerated
+OpenGL support (i.e., software rendering) is provided for non-local
+clients.</p>
+
+<p>The single head OpenGL support in XFree86 4.x will be extended to use
+the DMX system.  When the front and back-end servers are on the same
+physical hardware, it is possible to use the DRI to directly render to
+the back-end servers.  First, the existing DRI will be extended to
+support multiple display heads, and then to support the DMX system.
+OpenGL rendering requests will be direct rendering to each back-end X
+server.  The DRI will request the screen layout (either from the
+existing Xinerama extension or a DMX-specific extension).  Support for
+synchronized swap buffers will also be added (on hardware that supports
+it).  Note that a single front-end server with a single back-end server
+on the same physical machine can emulate accelerated indirect rendering.</p>
+
+<p>When the front and back-end servers are on different physical
+hardware or are using non-XFree86 4.x X servers, a mechanism to render
+primitives across the back-end servers will be provided.  There are
+several options as to how this can be implemented.</p>
+<p>
+<ol>
+<li>The existing OpenGL support in each back-end server can be
+used by repackaging rendering primitives and sending them to each
+back-end server.  This option is similar to the unoptimized
+Xnest-style approach mentioned above.  Optimization of this solution
+is beyond the scope of this project and is better suited to other
+distributed rendering systems.
+</li>
+<li>Rendering to a pixmap in the front-end server using the
+current XFree86 4.x code, and then displaying to the back-ends via
+calls to XPutImage() is another option.  This option is similar to
+the shadow frame buffer approach mentioned above.  It is slower and
+bandwidth intensive, but has the advantage that the back-end servers
+are not required to have OpenGL support.</li>
+</ol>
+</p>
+
+<p>These, and other, options will be investigated in this phase of the
+work.</p>
+
+<p>Work by others have made Chromium DMX-aware.  Chromium will use the
+DMX X protocol extension to obtain information about the back-end
+servers and will render directly to those servers, bypassing DMX.</p>
+
+<p>Status: OpenGL support by the glxProxy extension was implemented by
+SGI and has been integrated into the DMX code base.</p>
+
+
+ <HR NOSHADE>
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Development plan </EM><BR>
+<b>Previous:</b> <A HREF="dmx1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="dmx3.html"><EM>Current issues </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728813" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

@@ -1,0 +1,23 @@
+XCOMM $XFree86: xc/fonts/Imakefile,v 3.12 2006/01/09 14:57:01 dawes Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags CDEBUGFLAGS="$(CDEBUGFLAGS)"
+
+#if BuildSpeedoFonts || BuildType1Fonts || BuildCIDFonts || BuildTrueTypeFonts
+SCALEDDIR = scaled
+#endif
+
+ENCODINGDIR = encodings
+
+FONTDIRS = bdf $(SCALEDDIR)
+
+SUBDIRS = $(ENCODINGDIR) util bdf $(SCALEDDIR)
+
+#if MakeLocalFontDir
+MakeDirectories(install,$(FONTDIR)/local)
+	if [ ! -f $(DESTDIR)$(FONTDIR)/local/fonts.dir ]; then \
+	  echo "0" > $(DESTDIR)$(FONTDIR)/local/fonts.dir; fi
+#endif
+
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))

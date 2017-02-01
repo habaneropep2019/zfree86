@@ -1,0 +1,22 @@
+XCOMM $XFree86: xc/programs/xhost/Imakefile,v 1.8 2006/01/09 15:01:14 dawes Exp $
+
+#if HasSecureRPC
+RPC_DEFINES = -DSECURE_RPC
+#else
+RPC_DEFINES = 
+#endif
+KRB5_DEFINES = Krb5Defines
+KRB5_INCLUDE = Krb5Includes
+#if HasBSD44Sockets
+SOCK_DEFINES = -DBSD44SOCKETS
+#endif
+
+       INCLUDES = $(KRB5_INCLUDE)
+        DEPLIBS = $(DEPXMUULIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XMUULIB) $(XONLYLIB)
+           SRCS = xhost.c
+           OBJS = xhost.o
+        DEFINES = $(CONNECTION_FLAGS) $(SIGNAL_DEFINES) $(RPC_DEFINES) \
+		  $(KRB5_DEFINES) $(SOCK_DEFINES)
+
+ComplexProgramTarget(xhost)

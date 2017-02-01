@@ -1,0 +1,2310 @@
+
+
+
+
+
+
+
+
+
+
+	    1mInter-Client Exchange (ICE) Protocol0m
+
+			1mVersion 1.10m
+
+		   1mX Consortium Standard0m
+
+		 1mX Version 11, Release 6.40m
+
+
+
+
+
+		      4mRobert24m 4mScheifler0m
+		     X Consortium, Inc.
+
+			4mJordan24m 4mBrown0m
+		 Quarterdeck Office Systems
+
+
+
+
+
+			  4mABSTRACT0m
+
+     There are numerous possible protocols that can be
+     used for communication among clients.  They have
+     many similarities and common needs, including
+     authentication, version negotiation, data typing,
+     and connection management.	 The 4mInter-Client0m
+     4mExchange24m (ICE) protocol is intended to provide a
+     framework for building such protocols.  Using ICE
+     reduces the complexity of designing new protocols
+     and allows the sharing of many aspects of the
+     implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	   Copyright (c) 1993, 1994 X Consortium
+
+
+
+
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated
+documentation files (the ``Software''), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X
+CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X
+Consortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+X Window System is a trademark of X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Purpose and Goals0m
+
+In discussing a variety of protocols -- existing, under
+development, and hypothetical -- it was noted that they have
+many elements in common.  Most protocols need mechanisms for
+authentication, for version negotiation, and for setting up
+and taking down connections.  There are also cases where the
+same two parties need to talk to each other using multiple
+protocols.  For example, an embedding relationship between
+two parties is likely to require the simultaneous use of
+session management, data transfer, focus negotiation, and
+command notification protocols.	 While these are logically
+separate protocols, it is desirable for them to share as
+many pieces of implementation as possible.
+
+The 4mInter-Client24m 4mExchange24m (ICE) protocol provides a generic
+framework for building protocols on top of reliable, byte-
+stream transport connections.  It provides basic mechanisms
+for setting up and shutting down connections, for performing
+authentication, for negotiating versions, and for reporting
+errors.	 The protocols running within an ICE connection are
+referred to here as 4msubprotocols.24m	ICE provides facilities
+for each subprotocol to do its own version negotiation,
+authentication, and error reporting.  In addition, if two
+parties are communicating using several different
+subprotocols, ICE will allow them to share the same
+transport layer connection.
+
+1m2.  Overview of the protocol0m
+
+Through some mechanism outside ICE, two parties make
+themselves known to each other and agree that they would
+like to communicate using an ICE subprotocol.  ICE assumes
+that this negotation includes some notion by which the
+parties will decide which is the "originating" party and
+which is the "answering" party.	 The negotiation will also
+need to provide the originating party with a name or address
+of the answering party.	 Examples of mechanisms by which
+parties can make themselves known to each other are the X
+selection mechanism, environment variables, and shared
+files.
+
+The originating party first determines whether there is an
+existing ICE connection between the two parties.  If there
+is, it can re-use the existing connection and move directly
+to the setup of the subprotocol.  If no ICE connection
+exists, the originating party will open a transport
+connection to the answering party and will start ICE
+connection setup.
+
+The ICE connection setup dialog consists of three major
+parts: byte order exchange, authentication, and connection
+information exchange.  The first message in each direction
+is a 4mByteOrder24m message telling which byte order will be used
+
+
+
+			      1m10m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+by the sending party in messages that it sends.	 After that,
+the originating party sends a 4mConnectionSetup24m message giving
+information about itself (vendor name and release number)
+and giving a list of ICE version numbers it is capable of
+supporting and a list of authentication schemes it is
+willing to accept.  Authentication is optional.	 If no
+authentication is required, the answering party responds
+with a 4mConnectionReply24m message giving information about
+itself, and the connection setup is complete.
+
+If the connection setup is to be authenticated, the
+answering party will respond with an 4mAuthenticationRequired0m
+message instead of a 4mConnectionReply24m message.  The parties
+then exchange 4mAuthenticationReply24m and
+4mAuthenticationNextPhase24m messages until authentication is
+complete, at which time the answering party finally sends
+its 4mConnectionReply24m message.
+
+Once an ICE connection is established (or an existing
+connection reused), the originating party starts subprotocol
+negotiation by sending a 4mProtocolSetup24m message.  This
+message gives the name of the subprotocol that the parties
+have agreed to use, along with the ICE major opcode that the
+originating party has assigned to that subprotocol.
+Authentication can also occur for the subprotocol,
+independently of authentication for the connection.
+Subprotocol authentication is optional.	 If there is no
+subprotocol authentication, the answering party responds
+with a 4mProtocolReply24m message, giving the ICE major opcode
+that it has assigned for the subprotocol.
+
+Subprotocols are authenticated independently of each other,
+because they may have differing security requirements.	If
+there is authentication for this particular subprotocol, it
+takes place before the answering party emits the
+4mProtocolReply24m message, and it uses the
+4mAuthenticationRequired24m, 4mAuthenticationReply24m, and
+4mAuthenticationNextPhase24m messages, just as for the connection
+authentication.	 Only when subprotocol authentication is
+complete does the answering party send its 4mProtocolReply0m
+message.
+
+When a subprotocol has been set up and authenticated, the
+two parties can communicate using messages defined by the
+subprotocol.  Each message has two opcodes: a major opcode
+and a minor opcode.  Each party will send messages using the
+major opcode it has assigned in its 4mProtocolSetup24m or
+4mProtocolReply24m message.  These opcodes will, in general, not
+be the same.  For a particular subprotocol, each party will
+need to keep track of two major opcodes: the major opcode it
+uses when it sends messages, and the major opcode it expects
+to see in messages it receives.	 The minor opcode values and
+semantics are defined by each individual subprotocol.
+
+
+
+
+			      1m20m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+Each subprotocol will have one or more messages whose
+semantics are that the subprotocol is to be shut down.
+Whether this is done unilaterally or is performed through
+negotiation is defined by each subprotocol.  Once a
+subprotocol is shut down, its major opcodes are removed from
+use; no further messages on this subprotocol should be sent
+until the opcode is reestablished with 4mProtocolSetup24m.
+
+ICE has a facility to negotiate the closing of the
+connection when there are no longer any active subprotocols.
+When either party decides that no subprotocols are active,
+it can send a 4mWantToClose24m message.	 If the other party
+agrees to close the connection, it can simply do so.  If the
+other party wants to keep the connection open, it can
+indicate its desire by replying with a 4mNoClose24m message.
+
+It should be noted that the party that initiates the
+connection isn't necessarily the same as the one that
+initiates setting up a subprotocol.  For example, suppose
+party A connects to party B.  Party A will issue the
+4mConnectionSetup24m message and party B will respond with a
+4mConnectionReply24m message.  (The authentication steps are
+omitted here for brevity.)  Typically, party A will also
+issue the 4mProtocolSetup24m message and expect a 4mProtocolReply0m
+from party B.  Once the connection is established, however,
+either party may initiate the negotiation of a subprotocol.
+Continuing this example, party B may decide that it needs to
+set up a subprotocol for communication with party A.  Party
+B would issue the 4mProtocolSetup24m message and expect a
+4mProtocolReply24m from party A.
+
+1m3.  Data Types0m
+
+ICE messages contain several types of data.  Byte order is
+negotiated in the initial connection messages; in general
+data is sent in the sender's byte order and the receiver is
+required to swap it appropriately.  In order to support
+64-bit machines, ICE messages are padded to multiples of 8
+bytes.	All messages are designed so that fields are
+"naturally" aligned on 16-, 32-, and 64-bit boundaries.	 The
+following formula gives the number of bytes necessary to pad
+4mE24m bytes to the next multiple of 4mb24m:
+
+     pad(4mE24m, 4mb24m) = (4mb24m - (4mE24m mod 4mb24m)) mod 4mb0m
+
+
+1m3.1.	Primitive Types0m
+
+
+-------------------------------------------------------------
+1mType Name		   Description0m
+-------------------------------------------------------------
+CARD8			 8-bit unsigned integer
+
+
+
+
+			      1m30m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+-------------------------------------------------------------
+1mType Name		   Description0m
+-------------------------------------------------------------
+CARD16			 16-bit unsigned integer
+CARD32			 32-bit unsigned integer
+BOOL			 4mFalse24m or 4mTrue0m
+LPCE			 A character from the X Portable
+			 Character Set in Latin Portable
+			 Character Encoding
+-------------------------------------------------------------
+
+
+1m3.2.	Complex Types0m
+
+
+-------------------------------------------------------------
+1mType Name		   Type0m
+-------------------------------------------------------------
+VERSION			 [Major, minor: CARD16]
+STRING			 LISTofLPCE
+-------------------------------------------------------------
+
+LISTof<type> denotes a counted collection of <type>.  The
+exact encoding varies depending on the context; see the
+encoding section.
+
+1m4.  Message Format0m
+
+All ICE messages include the following information:
+
+-------------------------------------------------------------
+1mField Type	      Description0m
+-------------------------------------------------------------
+CARD8		    protocol major opcode
+CARD8		    protocol minor opcode
+CARD32		    length of remaining data in 8-byte units
+-------------------------------------------------------------
+
+
+The fields are as follows:
+
+Protocol major opcode
+     This specifies what subprotocol the message is intended
+     for.  Major opcode 0 is reserved for ICE control
+     messages.	The major opcodes of other subprotocols are
+     dynamically assigned and exchanged at protocol
+     negotiation time.
+
+Protocol minor opcode
+     This specifies what protocol-specific operation is to
+     be performed.  Minor opcode 0 is reserved for Errors;
+     other values are protocol-specific.
+
+
+
+
+
+			      1m40m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+Length of data in 8-byte units
+     This specifies the length of the information following
+     the first 8 bytes.	 Each message-type has a different
+     format, and will need to be separately length-checked
+     against this value.  As every data item has either an
+     explicit length, or an implicit length, this can be
+     easily accomplished.  Messages that have too little or
+     too much data indicate a serious protocol failure, and
+     should result in a 4mBadLength24m error.
+
+1m5.  Overall Protocol Description0m
+
+Every message sent in a given direction has an implicit
+sequence number, starting with 1.  Sequence numbers are
+global to the connection; independent sequence numbers are
+4mnot24m maintained for each protocol.
+
+Messages of a given major-opcode (i.e., of a given protocol)
+must be responded to (if a response is called for) in order
+by the receiving party.	 Messages from different protocols
+can be responded to in arbitrary order.
+
+Minor opcode 0 in every protocol is for reporting errors.
+At most one error is generated per request.  If more than
+one error condition is encountered in processing a request,
+the choice of which error is returned is implementation-
+dependent.
+__
+|    4mError0m
+
+     4moffending-minor-opcode24m: CARD8
+
+     4mseverity24m: {4mCanContinue24m, 4mFatalToProtocol24m,
+	       4mFatalToConnection24m}
+
+     4msequence-number24m: CARD32
+
+     4mclass24m: CARD16
+
+     4mvalue(s)24m: <dependent on major/minor opcode and class>
+|__
+
+This message is sent to report an error in response to a
+message from any protocol.  The 4mError24m message exists in all
+protocol major-opcode spaces; it is minor-opcode zero in
+every protocol.	 The minor opcode of the message that caused
+the error is reported, as well as the sequence number of
+that message.  The severity indicates the sender's behavior
+following the identification of the error.  4mCanContinue0m
+indicates the sender is willing to accept additional
+messages for this protocol.  4mFatalToProcotol24m indicates the
+sender is unwilling to accept further messages for this
+protocol but that messages for other protocols may be
+accepted.  4mFatalToConnection24m indicates the sender is
+
+
+
+			      1m50m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+unwilling to accept any further messages for any protocols
+on the connection.  The sender is required to conform to
+specified severity conditions for generic and ICE (major
+opcode 0) errors; see Sections 6.1 and 6.2.  The class
+defines the generic class of error.  Classes are specified
+separately for each protocol (numeric values can mean
+different things in different protocols).  The error values,
+if any, and their types vary with the specific error class
+for the protocol.
+
+
+1m6.  ICE Control Subprotocol -- Major Opcode 00m
+
+Each of the ICE control opcodes is described below.  Most of
+the messages have additional information included beyond the
+description above.  The additional information is appended
+to the message header and the length field is computed
+accordingly.
+
+In the following message descriptions, "Expected errors"
+indicates errors that may occur in the normal course of
+events.	 Other errors (in particular 4mBadMajor24m, 4mBadMinor24m,
+4mBadState24m, 4mBadLength24m, 4mBadValue24m, 4mProtocolDuplicate24m, and
+4mMajorOpcodeDuplicate24m) might occur, but generally indicate a
+serious implementation failure on the part of the errant
+peer.
+__
+|    4mByteOrder0m
+
+     4mbyte-order24m: {4mMSBfirst24m, 4mLSBfirst24m}
+|__
+
+Both parties must send this message before sending any
+other, including errors.  This message specifies the byte
+order that will be used on subsequent messages sent by this
+party.
+
+Note:  If the receiver detects an error in this message, it
+must be sure to send its own 4mByteOrder24m message before
+sending the 4mError24m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m60m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mConnectionSetup0m
+
+     4mversions24m: LISTofVERSION
+
+     4mmust-authenticate24m: BOOL
+
+     4mauthentication-protocol-names24m: LISTofSTRING
+
+     4mvendor24m: STRING
+
+     4mrelease24m: STRING
+
+
+     Responses: 4mConnectionReply24m, 4mAuthenticationRequired24m.
+		(See note)
+
+     Expected errors: 4mNoVersion24m, 4mSetupFailed24m,
+		      4mNoAuthentication24m,
+		      4mAuthenticationRejected24m,
+		      4mAuthenticationFailed24m.
+|__
+
+The party that initiates the connection (the one that does
+the "connect()") must send this message as the second
+message (after 4mByteOrder24m) on startup.
+
+Versions gives a list, in decreasing order of preference, of
+the protocol versions this party is capable of speaking.
+This document specifies major version 1, minor version 0.
+
+If must-authenticate is 4mTrue24m, the initiating party demands
+authentication; the accepting party 4mmust24m pick an
+authentication scheme and use it.  In this case, the only
+valid response is 4mAuthenticationRequired24m.
+
+If must-authenticate is 4mFalse24m, the accepting party may
+choose an authentication mechanism, use a host-address-based
+authentication scheme, or skip authentication.	When must-
+authenticate is 4mFalse24m, 4mConnectionReply24m and
+4mAuthenticationRequired24m are both valid responses.  If a host-
+address-based authentication scheme is used,
+4mAuthenticationRejected24m and 4mAuthenticationFailed24m errors are
+possible.
+
+Authentication-protocol-names  specifies a (possibly null,
+if must-authenticate is 4mFalse24m) list of authentication
+protocols the party is willing to perform.  If must-
+authenticate is 4mTrue24m, presumably the party will offer only
+authentication mechanisms allowing mutual authentication.
+
+Vendor gives the name of the vendor of this ICE
+implementation.
+
+
+
+
+
+			      1m70m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+Release gives the release identifier of this ICE
+implementation.
+
+__
+|    4mAuthenticationRequired0m
+
+     4mauthentication-protocol-index24m: CARD8
+
+     4mdata24m: <specific to authentication protocol>
+
+
+     Response: 4mAuthenticationReply24m.
+
+     Expected errors: 4mAuthenticationRejected24m,
+		      4mAuthenticationFailed24m.
+|__
+
+This message is sent in response to a 4mConnectionSetup24m or
+4mProtocolSetup24m message to specify that authentication is to
+be done and what authentication mechanism is to be used.
+
+The authentication protocol is specified by a 0-based index
+into the list of names given in the 4mConnectionSetup24m or
+4mProtocolSetup24m.  Any protocol-specific data that might be
+required is also sent.
+__
+|    4mAuthenticationReply0m
+
+     4mdata24m: <specific to authentication protocol>
+
+
+     Responses: 4mAuthenticationNextPhase24m, 4mConnectionReply24m,
+		4mProtocolReply24m.
+
+     Expected errors: 4mAuthenticationRejected24m,
+		      4mAuthenticationFailed24m, 4mSetupFailed24m.
+|__
+
+This message is sent in response to an
+4mAuthenticationRequired24m or 4mAuthenticationNextPhase24m message,
+to supply authentication data as defined by the
+authentication protocol being used.
+
+Note that this message is sent by the party that initiated
+the current negotiation -- the party that sent the
+4mConnectionSetup24m or 4mProtocolSetup24m message.
+
+4mAuthenticationNextPhase24m indicates that more is to be done to
+complete the authentication.  If the authentication is
+complete, 4mConnectionReply24m is appropriate if the current
+authentication handshake is the result of a 4mConnectionSetup24m,
+and a 4mProtocolReply24m is appropriate if it is the result of a
+4mProtocolSetup24m.
+
+
+
+
+			      1m80m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mAuthenticationNextPhase0m
+
+     4mdata24m: <specific to authentication protocol>
+
+
+     Response: 4mAuthenticationReply24m.
+
+     Expected errors: 4mAuthenticationRejected24m,
+		      4mAuthenticationFailed24m.
+|__
+
+This message is sent in response to an 4mAuthenticationReply0m
+message, to supply authentication data as defined by the
+authentication protocol being used.
+__
+|    4mConnectionReply0m
+
+     4mversion-index24m: CARD8
+
+     4mvendor24m: STRING
+
+     4mrelease24m: STRING
+|__
+
+This message is sent in response to a 4mConnectionSetup24m or
+4mAuthenticationReply24m message to indicate that the
+authentication handshake is complete.
+
+Version-index gives a 0-based index into the list of
+versions offered in the 4mConnectionSetup24m message; it
+specifies the version of the ICE protocol that both parties
+should speak for the duration of the connection.
+
+Vendor gives the name of the vendor of this ICE
+implementation.
+
+Release gives the release identifier of this ICE
+implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m90m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mProtocolSetup0m
+
+     4mprotocol-name24m: STRING
+
+     4mmajor-opcode24m: CARD8
+
+     4mversions24m: LISTofVERSION
+
+     4mvendor24m: STRING
+
+     4mrelease24m: STRING
+
+     4mmust-authenticate24m: BOOL
+
+     4mauthentication-protocol-names24m: LISTofSTRING
+
+
+     Responses: 4mAuthenticationRequired24m, 4mProtocolReply24m.
+
+     Expected errors: 4mUnknownProtocol24m, 4mNoVersion24m,
+		      4mSetupFailed24m, 4mNoAuthentication24m,
+		      4mAuthenticationRejected24m,
+		      4mAuthenticationFailed24m.
+|__
+
+This message is used to initiate negotiation of a protocol
+and establish any authentication specific to it.
+
+Protocol-name gives the name of the protocol the party
+wishes to speak.
+
+Major-opcode gives the opcode that the party will use in
+messages it sends.
+
+Versions gives a list of version numbers, in decreasing
+order of preference, that the party is willing to speak.
+
+Vendor and release are identification strings with semantics
+defined by the specific protocol being negotiated.
+
+If must-authenticate is 4mTrue24m, the initiating party demands
+authentication; the accepting party 4mmust24m pick an
+authentication scheme and use it.  In this case, the only
+valid response is 4mAuthenticationRequired24m.
+
+If must-authenticate is 4mFalse24m, the accepting party may
+choose an authentication mechanism, use a host-address-based
+authentication scheme, or skip authentication.	When must-
+authenticate is 4mFalse24m, 4mProtocolReply24m and
+4mAuthenticationRequired24m are both valid responses.  If a host-
+address-based authentication scheme is used,
+4mAuthenticationRejected24m and 4mAuthenticationFailed24m errors are
+possible.
+
+
+
+
+			     1m100m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+Authentication-protocol-names  specifies a (possibly null,
+if must-authenticate is 4mFalse24m) list of authentication
+protocols the party is willing to perform.  If must-
+authenticate is 4mTrue24m, presumably the party will offer only
+authentication mechanisms allowing mutual authentication.
+__
+|    4mProtocolReply0m
+
+     4mmajor-opcode24m: CARD8
+
+     4mversion-index24m: CARD8
+
+     4mvendor24m: STRING
+
+     4mrelease24m: STRING
+|__
+
+This message is sent in response to a 4mProtocolSetup24m or
+4mAuthenticationReply24m message to indicate that the
+authentication handshake is complete.
+
+Major-opcode gives the opcode that this party will use in
+messages that it sends.
+
+Version-index gives a 0-based index into the list of
+versions offered in the 4mProtocolSetup24m message; it specifies
+the version of the protocol that both parties should speak
+for the duration of the connection.
+
+Vendor and release are identification strings with semantics
+defined by the specific protocol being negotiated.
+
+__
+|    4mPing0m
+
+     Response: 4mPingReply24m.
+|__
+
+This message is used to test if the connection is still
+functioning.
+__
+|    4mPingReply0m
+|__
+
+This message is sent in response to a 4mPing24m message,
+indicating that the connection is still functioning.
+__
+|    4mWantToClose0m
+
+     Responses: 4mWantToClose24m, 4mNoClose24m, 4mProtocolSetup24m.
+|__
+
+This message is used to initiate a possible close of the
+connection.  The sending party has noticed that, as a result
+
+
+
+			     1m110m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+of mechanisms specific to each protocol, there are no active
+protocols left.	 There are four possible scenarios arising
+from this request:
+
+(1)  The receiving side noticed too, and has already sent a
+     4mWantToClose24m.	On receiving a 4mWantToClose24m while already
+     attempting to shut down, each party should simply close
+     the connection.
+
+(2)  The receiving side hasn't noticed, but agrees.  It
+     closes the connection.
+
+(3)  The receiving side has a 4mProtocolSetup24m "in flight," in
+     which case it is to ignore 4mWantToClose24m and the party
+     sending 4mWantToClose24m is to abandon the shutdown attempt
+     when it receives the 4mProtocolSetup24m.
+
+(4)  The receiving side wants the connection kept open for
+     some reason not specified by the ICE protocol, in which
+     case it sends 4mNoClose24m.
+
+See the state transition diagram for additional information.
+__
+|    4mNoClose0m
+|__
+
+This message is sent in response to a 4mWantToClose24m message to
+indicate that the responding party does not want the
+connection closed at this time.	 The receiving party should
+not close the connection.  Either party may again initiate
+4mWantToClose24m at some future time.
+
+1m6.1.	Generic Error Classes0m
+
+These errors should be used by all protocols, as applicable.
+For ICE (major opcode 0), 4mFatalToProtocol24m should be
+interpreted as 4mFatalToConnection.0m
+__
+|    4mBadMinor0m
+
+     4moffending-minor-opcode24m: <any>
+
+     4mseverity24m: 4mFatalToProtocol24m or 4mCanContinue24m (protocol's
+	       discretion)
+
+     4mvalues24m: (none)
+|__
+
+Received a message with an unknown minor opcode.
+
+
+
+
+
+
+
+
+			     1m120m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mBadState0m
+
+     4moffending-minor-opcode24m: <any>
+
+     4mseverity24m: 4mFatalToProtocol24m or 4mCanContinue24m (protocol's
+	       discretion)
+
+     4mvalues24m: (none)
+|__
+
+Received a message with a valid minor opcode which is not
+appropriate for the current state of the protocol.
+__
+|    4mBadLength0m
+
+     4moffending-minor-opcode24m: <any>
+
+     4mseverity24m: 4mFatalToProtocol24m or 4mCanContinue24m (protocol's
+	       discretion)
+
+     4mvalues24m: (none)
+|__
+
+Received a message with a bad length.  The length of the
+message is longer or shorter than required to contain the
+data.
+__
+|    4mBadValue0m
+
+     4moffending-minor-opcode24m: <any>
+
+     4mseverity24m: 4mCanContinue0m
+
+     4mvalues24m: CARD32 Byte offset to offending value in
+	     offending message
+	     CARD32 Length of offending value
+	     <varies> Offending value
+|__
+
+Received a message with a bad value specified.
+
+1m6.2.	ICE Error Classes0m
+
+These errors are all major opcode 0 errors.
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m130m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mBadMajor0m
+
+     4moffending-minor-opcode24m: <any>
+
+     4mseverity24m: 4mCanContinue0m
+
+     4mvalues24m: CARD8 Opcode
+|__
+
+The opcode given is not one that has been registered.
+__
+|    4mNoAuthentication0m
+
+     4moffending-minor-opcode24m: 4mConnectionSetup24m, 4mProtocolSetup0m
+
+     4mseverity24m: 4mConnectionSetup24m -> 4mFatalToConnection0m
+	       4mProtocolSetup24m -> 4mFatalToProtocol0m
+
+     4mvalues24m: (none)
+|__
+
+None of the authentication protocols offered are available.
+__
+|    4mNoVersion0m
+
+     4moffending-minor-opcode24m: 4mConnectionSetup24m, 4mProtocolSetup0m
+
+     4mseverity24m: 4mConnectionSetup24m -> 4mFatalToConnection0m
+	       4mProtocolSetup24m -> 4mFatalToProtocol0m
+
+     4mvalues24m: (none)
+|__
+
+None of the protocol versions offered are available.
+__
+|    4mSetupFailed0m
+
+     4moffending-minor-opcode24m: 4mConnectionSetup24m, 4mProtocolSetup24m,
+			     4mAuthenticationReply0m
+
+     4mseverity24m: 4mConnectionSetup24m -> 4mFatalToConnection0m
+	       4mProtocolSetup24m -> 4mFatalToProtocol0m
+	       4mAuthenticationReply24m -> 4mFatalToConnection24m if
+	       authenticating a connection, otherwise
+	       4mFatalToProtocol0m
+
+     4mvalues24m: STRING reason
+|__
+
+The sending side is unable to accept the new connection or
+new protocol for a reason other than authentication failure.
+Typically this error will be a result of inability to
+allocate additional resources on the sending side.  The
+reason field will give a human-interpretable message
+
+
+
+			     1m140m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+providing further detail on the type of failure.
+__
+|    4mAuthenticationRejected0m
+
+     4moffending-minor-opcode24m: 4mAuthenticationReply24m,
+			     4mAuthenticationRequired24m,
+			     4mAuthenticationNextPhase0m
+
+     4mseverity24m: 4mFatalToProtocol0m
+
+     4mvalues24m: STRING reason
+|__
+
+Authentication rejected.  The peer has failed to properly
+authenticate itself.  The reason field will give a human-
+interpretable message providing further detail.
+__
+|    4mAuthenticationFailed0m
+
+     4moffending-minor-opcode24m: 4mAuthenticationReply24m,
+			     4mAuthenticationRequired24m,
+			     4mAuthenticationNextPhase0m
+
+     4mseverity24m: 4mFatalToProtocol0m
+
+     4mvalues24m: STRING reason
+|__
+
+Authentication failed.	4mAuthenticationFailed24m does not imply
+that the authentication was rejected, as
+4mAuthenticationRejected24m does.  Instead it means that the
+sender was unable to complete the authentication for some
+other reason.  (For instance, it may have been unable to
+contact an authentication server.)  The reason field will
+give a human-interpretable message providing further detail.
+__
+|    4mProtocolDuplicate0m
+
+     4moffending-minor-opcode24m: 4mProtocolSetup0m
+
+     4mseverity24m: 4mFatalToProtocol24m (but see note)
+
+     4mvalues24m: STRING protocol name
+|__
+
+The protocol name was already registered.  This is fatal to
+the "new" protocol being set up by 4mProtocolSetup24m, but it
+does not affect the existing registration.
+
+
+
+
+
+
+
+
+
+			     1m150m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+__
+|    4mMajorOpcodeDuplicate0m
+
+     4moffending-minor-opcode24m: 4mProtocolSetup0m
+
+     4mseverity24m: 4mFatalToProtocol24m (but see note)
+
+     4mvalues24m: CARD8 opcode
+|__
+
+The major opcode specified was already registered.  This is
+fatal to the "new" protocol being set up by 4mProtocolSetup24m,
+but it does not affect the existing registration.
+__
+|    4mUnknownProtocol0m
+
+     4moffending-minor-opcode24m: 4mProtocolSetup0m
+
+     4mseverity24m: 4mFatalToProtocol0m
+
+     4mvalues24m: STRING protocol name
+|__
+
+The protocol specified is not supported.
+
+1m7.  State Diagrams0m
+
+Here are the state diagrams for the party that initiates the
+connection:
+
+start:
+     connect to other end, send 4mByteOrder24m, 4mConnectionSetup0m
+     -> conn_wait
+
+
+conn_wait:
+     receive 4mConnectionReply24m -> stasis
+     receive 4mAuthenticationRequired24m -> conn_auth1
+     receive 4mError24m -> quit
+     receive <other>, send 4mError24m -> quit
+
+
+conn_auth1:
+     if good auth data, send 4mAuthenticationReply24m ->
+     conn_auth2
+     if bad auth data, send 4mError24m -> quit
+
+
+conn_auth2:
+     receive 4mConnectionReply24m -> stasis
+     receive 4mAuthenticationNextPhase24m -> conn_auth1
+     receive 4mError24m -> quit
+     receive <other>, send 4mError24m -> quit
+
+
+
+
+
+			     1m160m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+Here are top-level state transitions for the party that
+accepts connections.
+
+listener:
+     accept connection -> init_wait
+
+
+init_wait:
+     receive 4mByteOrder24m, 4mConnectionSetup24m -> auth_ask
+     receive <other>, send 4mError24m -> quit
+
+
+auth_ask:
+     send 4mByteOrder24m, 4mConnectionReply24m -> stasis
+     send 4mAuthenticationRequired24m -> auth_wait
+     send 4mError24m -> quit
+
+
+auth_wait:
+     receive 4mAuthenticationReply24m -> auth_check
+     receive <other>, send 4mError24m -> quit
+
+
+auth_check:
+     if no more auth needed, send 4mConnectionReply24m -> stasis
+     if good auth data, send 4mAuthenticationNextPhase24m ->
+     auth_wait
+     if bad auth data, send 4mError24m -> quit
+
+
+Here are the top-level state transitions for all parties
+after the initial connection establishment subprotocol.
+
+Note:  this is not quite the truth for branches out from
+stasis, in that multiple conversations can be interleaved on
+the connection.
+
+stasis:
+     send 4mProtocolSetup24m -> proto_wait
+     receive 4mProtocolSetup24m -> proto_reply
+     send 4mPing24m -> ping_wait
+     receive 4mPing24m, send 4mPingReply24m -> stasis
+     receive 4mWantToClose24m -> shutdown_attempt
+     receive <other>, send 4mError24m -> stasis
+     all protocols shut down, send 4mWantToClose24m -> close_wait
+
+
+proto_wait:
+     receive 4mProtocolReply24m -> stasis
+     receive 4mAuthenticationRequired24m -> give_auth1
+     receive 4mError24m, give up on this protocol -> stasis
+     receive 4mWantToClose24m -> proto_wait
+
+
+
+
+
+			     1m170m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+give_auth1:
+     if good auth data, send 4mAuthenticationReply24m ->
+     give_auth2
+     if bad auth data, send 4mError24m, give up on this protocol
+     -> stasis
+     receive 4mWantToClose24m -> give_auth1
+
+
+give_auth2:
+     receive 4mProtocolReply24m -> stasis
+     receive 4mAuthenticationNextPhase24m -> give_auth1
+     receive 4mError24m, give up on this protocol -> stasis
+     receive 4mWantToClose24m -> give_auth2
+
+
+proto_reply:
+     send 4mProtocolReply24m -> stasis
+     send 4mAuthenticationRequired24m -> take_auth1
+     send 4mError24m, give up on this protocol -> stasis
+
+
+take_auth1:
+     receive 4mAuthenticationReply24m -> take_auth2
+     receive 4mError24m, give up on this protocol -> stasis
+
+
+take_auth2:
+     if good auth data -> take_auth3
+     if bad auth data, send 4mError24m, give up on this protocol
+     -> stasis
+
+
+take_auth3:
+     if no more auth needed, send 4mProtocolReply24m -> stasis
+     if good auth data, send 4mAuthenticationNextPhase24m ->
+     take_auth1
+     if bad auth data, send 4mError24m, give up on this protocol
+     -> stasis
+
+
+ping_wait:
+     receive 4mPingReply24m -> stasis
+
+
+quit:
+     -> close connection
+
+
+Here are the state transitions for shutting down the
+connection:
+
+
+
+
+
+
+
+			     1m180m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+shutdown_attempt:
+     if want to stay alive anyway, send 4mNoClose24m -> stasis
+     else -> quit
+
+
+close_wait:
+     receive 4mProtocolSetup24m -> proto_reply
+     receive 4mNoClose24m -> stasis
+     receive 4mWantToClose24m -> quit
+     connection close -> quit
+
+
+1m8.  Protocol Encoding0m
+
+In the encodings below, the first column is the number of
+bytes occupied.	 The second column is either the type (if
+the value is variable) or the actual value.  The third
+column is the description of the value (e.g., the parameter
+name).	Receivers must ignore bytes that are designated as
+unused or pad bytes.
+
+This document describes major version 1, minor version 0 of
+the ICE protocol.
+
+LISTof<type> indicates some number of repetitions of <type>,
+with no additional padding.  The number of repetitions must
+be specified elsewhere in the message.
+
+1m8.1.	Primitive Types0m
+
+
+-------------------------------------------------------------
+1mType Name Length (bytes) Description0m
+-------------------------------------------------------------
+CARD8	  1		 8-bit unsigned integer
+CARD16	  2		 16-bit unsigned integer
+CARD32	  4		 32-bit unsigned integer
+LPCE	  1		 A character from the X Portable
+			 Character Set in Latin Portable
+			 Character Encoding
+-------------------------------------------------------------
+
+
+1m8.2.	Enumerations0m
+
+
+-------------------------------------------------------------
+1mType Name	Value	   Description0m
+-------------------------------------------------------------
+BOOL	      0		 4mFalse0m
+	      1		 4mTrue0m
+-------------------------------------------------------------
+
+
+
+
+
+			     1m190m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+1m8.3.	Compound Types0m
+
+
+---------------------------------------------------------------------
+1mType NameLength (bytes)Type	   Description0m
+---------------------------------------------------------------------
+VERSION
+	 2	       CARD16	 Major version number
+	 2	       CARD16	 Minor version number
+STRING
+	 2	       CARD16	 length of string in bytes
+	 n	       LISTofLPCEstring
+	 p			 unused, p = pad(n+2, 4)
+---------------------------------------------------------------------
+
+
+1m8.4.	ICE Minor opcodes0m
+
+
+     -----------------------------------
+     1mMessage Name		 Encoding0m
+     -----------------------------------
+     Error			   0
+     ByteOrder			   1
+     ConnectionSetup		   2
+     AuthenticationRequired	   3
+     AuthenticationReply	   4
+     AuthenticationNextPhase	   5
+     ConnectionReply		   6
+     ProtocolSetup		   7
+     ProtocolReply		   8
+     Ping			   9
+     PingReply			  10
+     WantToClose		  11
+     NoClose			  12
+     -----------------------------------
+
+
+1m8.5.	Message Encoding0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m200m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+4mError0m
+  1  CARD8	    major-opcode
+  1  0		    Error
+  2  CARD16	    class
+  4  (n+p)/8+1	    length
+  1  CARD8	    offending-minor-opcode
+  1		    severity:
+     0		       CanContinue
+     1		       FatalToProtocol
+     2		       FatalToConnection
+  2		    unused
+  4  CARD32	    sequence number of erroneous message
+  n  <varies>	    value(s)
+  p		    pad, p = pad(n,8)
+
+
+4mByteOrder0m
+  1  0		    ICE
+  1  1		    ByteOrder
+  1		    byte-order:
+     0		       LSBfirst
+     1		       MSBfirst
+  1		    unused
+  4  0		    length
+
+
+4mConnectionSetup0m
+  1  0		    ICE
+  1  2		    ConnectionSetup
+  1  CARD8	    Number of versions offered
+  1  CARD8	    Number of authentication protocol names offered
+  4  (i+j+k+m+p)/8+1length
+  1  BOOL	    must-authenticate
+  7		    unused
+  i  STRING	    vendor
+  j  STRING	    release
+  k  LISTofSTRING   authentication-protocol-names
+  m  LISTofVERSION  version-list
+  p		    unused, p = pad(i+j+k+m,8)
+
+
+4mAuthenticationRequired0m
+  1  0		    ICE
+  1  3		    AuthenticationRequired
+  1  CARD8	    authentication-protocol-index
+  1		    unused
+  4  (n+p)/8+1	    length
+  2  n		    length of authentication data
+  6		    unused
+  n  <varies>	    data
+  p		    unused, p = pad(n,8)
+
+
+
+
+
+
+			     1m210m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+4mAuthenticationReply0m
+  1  0		    ICE
+  1  4		    AuthenticationReply
+  2		    unused
+  4  (n+p)/8+1	    length
+  2  n		    length of authentication data
+  6		    unused
+  n  <varies>	    data
+  p		    unused, p = pad(n,8)
+
+
+4mAuthenticationNextPhase0m
+  1  0		    ICE
+  1  5		    AuthenticationNextPhase
+  2		    unused
+  4  (n+p)/8+1	    length
+  2  n		    length of authentication data
+  6		    unused
+  n  <varies>	    data
+  p		    unused, p = pad(n,8)
+
+
+4mConnectionReply0m
+  1  0		    ICE
+  1  6		    ConnectionReply
+  1  CARD8	    version-index
+  1		    unused
+  4  (i+j+p)/8	    length
+  i  STRING	    vendor
+  j  STRING	    release
+  p		    unused, p = pad(i+j,8)
+
+
+4mProtocolSetup0m
+  1  0		    ICE
+  1  7		    ProtocolSetup
+  1  CARD8	    major-opcode
+  1  BOOL	    must-authenticate
+  4  (i+j+k+m+n+p)/8+1length
+  1  CARD8	    Number of versions offered
+  1  CARD8	    Number of authentication protocol names offered
+  6		    unused
+  i  STRING	    protocol-name
+  j  STRING	    vendor
+  k  STRING	    release
+  m  LISTofSTRING   authentication-protocol-names
+  n  LISTofVERSION  version-list
+  p		    unused, p = pad(i+j+k+m+n,8)
+
+
+
+
+
+
+
+
+
+			     1m220m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+4mProtocolReply0m
+  1  0		    ICE
+  1  8		    ProtocolReply
+  1  CARD8	    version-index
+  1  CARD8	    major-opcode
+  4  (i+j+p)/8	    length
+  i  STRING	    vendor
+  j  STRING	    release
+  p		    unused, p = pad(i+j, 8)
+
+
+4mPing0m
+  1  0		    ICE
+  1  9		    Ping
+  2  0		    unused
+  4  0		    length
+
+
+4mPingReply0m
+  1  0		    ICE
+  1  10		    PingReply
+  2  0		    unused
+  4  0		    length
+
+
+4mWantToClose0m
+  1  0		    ICE
+  1  11		    WantToClose
+  2  0		    unused
+  4  0		    length
+
+
+4mNoClose0m
+  1  0		    ICE
+  1  12		    NoClose
+  2  0		    unused
+  4  0		    length
+
+
+1m8.6.	Error Class Encoding0m
+
+Generic errors have classes in the range 0x8000-0xFFFF, and
+subprotocol-specific errors are in the range 0x0000-0x7FFF.
+
+1m8.6.1.  Generic Error Class Encoding0m
+
+
+---------------------
+1mClass	      Encoding0m
+---------------------
+BadMinor     0x8000
+BadState     0x8001
+BadLength    0x8002
+
+
+
+
+			     1m230m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+BadValue     0x8003
+---------------------
+
+
+1m8.6.2.  ICE-specific Error Class Encoding0m
+
+
+----------------------------------
+1mClass			   Encoding0m
+----------------------------------
+BadMajor		    0
+NoAuthentication	    1
+NoVersion		    2
+SetupFailed		    3
+AuthenticationRejected	    4
+AuthenticationFailed	    5
+ProtocolDuplicate	    6
+MajorOpcodeDuplicate	    7
+UnknownProtocol		    8
+----------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m240m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+
+
+			 1mAppendix A0m
+
+
+1mA.  Modification History0m
+
+1mA.1.	Release 6 to Release 6.10m
+
+Release 6.1 added the ICE X rendezvous protocol (Appendix B)
+and updated the document version to 1.1.
+
+1mA.2.	Release 6.1 to Release 6.30m
+
+Release 6.3 added the listen on well known ports feature.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m250m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+
+
+			 1mAppendix B0m
+
+
+1mB.  ICE X Rendezvous Protocol0m
+
+1mB.1.	Introduction0m
+
+The ICE X rendezvous protocol is designed to answer the need
+posed in Section 2 for one mechanism by which two clients
+interested in communicating via ICE are able to exchange the
+necessary information.	This protocol is appropriate for any
+two ICE clients who also have X connections to the same X
+server.
+
+1mB.2.	Overview of ICE X Rendezvous0m
+
+The ICE X Rendezvous Mechanism requires clients willing to
+act as ICE originating parties to pre-register the ICE
+subprotocols they support in an ICE_PROTOCOLS property on
+their top-level window.	 Clients willing to act as ICE
+answering parties then send an ICE_PROTOCOLS X 4mClientMessage0m
+event to the ICE originating parties.  This 4mClientMessage0m
+event identifies the ICE network IDs of the ICE answering
+party as well as the ICE subprotocol it wishes to speak.
+Upon receipt of this message the ICE originating party uses
+the information to establish an ICE connection with the ICE
+answering party.
+
+1mB.3.	Registering Known Protocols0m
+
+Clients willing to act as ICE originating parties
+preregister the ICE subprotocols they support in a list of
+atoms held by an ICE_PROTOCOLS property on their top-level
+window.	 The name of each atom listed in ICE_PROTOCOLS must
+be of the form ICE_INITIATE_4mpname24m where 4mpname24m is the name of
+the ICE subprotocol the ICE originating party is willing to
+speak, as would be specified in an ICE 4mProtocolSetup0m
+message.
+
+Clients with an ICE_INITIATE_4mpname24m atom in the ICE_PROTOCOLS
+property on their top-level windows must respond to
+4mClientMessage24m events of type ICE_PROTOCOLS specifying
+ICE_INITIATE_4mpname24m.  If a client does not want to respond to
+these client message events, it should remove the
+ICE_INITIATE_4mpname24m atom from its ICE_PROTOCOLS property or
+remove the ICE_PROTOCOLS property entirely.
+
+1mB.4.	Initiating the Rendezvous0m
+
+To initiate the rendezvous a client acting as an ICE
+answering party sends an X 4mClientMessage24m event of type
+ICE_PROTOCOLS to an ICE originating party.  This
+
+
+
+			     1m260m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+ICE_PROTOCOLS client message contains the information the
+ICE originating party needs to identify the ICE subprotocol
+the two parties will use as well as the ICE network
+identification string of the ICE answering party.
+
+Before the ICE answering party sends the client message
+event it must define a text property on one of its windows.
+This text property contains the ICE answering party's ICE
+network identification string and will be used by ICE
+originating parties to determine the ICE answering party's
+list of ICE network IDs.
+
+The property name will normally be ICE_NETWORK_IDS, but may
+be any name of the ICE answering party's choosing.  The
+format for this text property is as follows:
+
+--------------------------------------------------------
+1mField		 Value0m
+--------------------------------------------------------
+type	       XA_STRING
+format	       8
+value	       comma-separated list of ICE network IDs
+--------------------------------------------------------
+
+
+Once the ICE answering party has established this text
+property on one of its windows, it initiates the rendezvous
+by sending an ICE_PROTOCOLS 4mClientMessage24m event to an ICE
+originating party's top-level window.  This event has the
+following format and must only be sent to windows that have
+pre-registered the ICE subprotocol in an ICE_PROTOCOLS
+property on their top-level window.
+
+-------------------------------------------------------------
+1mField		 Value0m
+-------------------------------------------------------------
+message_type   Atom = "ICE_PROTOCOLS"
+format	       32
+data.l[0]      Atom identifying the ICE subprotocol to speak
+data.l[1]      Timestamp
+data.l[2]      ICE answering party's window ID with ICE
+	       network IDs text property
+data.l[3]      Atom naming text property containing the ICE
+	       answering party's ICE network IDs
+data.l[4]      Reserved.  Must be 0.
+-------------------------------------------------------------
+
+The name of the atom in data.l[0] must be of the form
+ICE_INITIATE_4mpname24m, where 4mpname24m is the name of the ICE
+subprotocol the ICE answering party wishes to speak.
+
+When an ICE originating party receives a 4mClientMessage24m event
+of type ICE_PROTOCOLS specifying ICE_INITIATE_4mpname24m it can
+initiate an ICE connection with the ICE answering party.  To
+
+
+
+			     1m270m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+open this connection the client retrieves the ICE answering
+party's ICE network IDs from the window specified in
+data.l[2] using the text property specified in data.l[3].
+
+If the connection attempt fails for any reason, the client
+must respond to the client message event by sending a return
+4mClientMessage24m event to the window specified in data.l[2].
+This return event has the following format:
+
+--------------------------------------------------------------
+1mField		 Value0m
+--------------------------------------------------------------
+message_type   Atom = "ICE_INITIATE_FAILED"
+format	       32
+data.l[0]      Atom identifying the ICE subprotocol requested
+data.l[1]      Timestamp
+data.l[2]      Initiating party's window ID (holding
+	       ICE_PROTOCOLS)
+data.l[3]      int: reason for failure
+data.l[4]      Reserved, must be 0
+--------------------------------------------------------------
+
+The values of data.l[0] and data.l[1] are copied directly
+from the client message event the client received.
+
+The value in data.l[2] is the id of the window to which the
+ICE_PROTOCOLS.ICE_INITIATE_4mpname24m client message event was
+sent.
+
+Data.l[3] has one of the following values:
+
+
+---------------------------------------------------------------------------
+1mValue			 Encoding   Description0m
+---------------------------------------------------------------------------
+4mOpenFailed24m		       1       The client was unable to open the
+				  connection (e.g. a call to
+				  IceOpenConnection() failed).	If the
+				  client is able to distinguish
+				  authentication or authorization errors
+				  from general errors, then the preferred
+				  reply is 4mAuthenticationFailed24m for
+				  authorization errors.
+4mAuthenticationFailed24m      2       Authentication or authorization of the
+				  connection or protocol setup was
+				  refused.  This reply will be given only
+				  if the client is able to distinguish it
+				  from 4mOpenFailed24m; otherwise 4mOpenFailed0m
+				  will be returned.
+4mSetupFailed24m	       3       The client was unable to initiate the
+				  specified protocol on the connection
+				  (e.g. a call to IceProtocolSetup()
+				  failed).
+
+
+
+
+			     1m280m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+4mUnknownProtocol24m	       4       The client does not recognize the
+				  requested protocol.  (This represents a
+				  semantic error on the part of the
+				  answering party.)
+4mRefused24m		       5       The client was in the process of
+				  removing ICE_INITIATE_4mpname24m from its
+				  ICE_PROTOCOLS list when the client
+				  message was sent; the client no longer
+				  is willing to establish the specified
+				  ICE communication.
+---------------------------------------------------------------------------
+
+
+
+		   Advice to Implementors
+
+     Clients willing to act as ICE originating parties
+     must update the ICE_PROTOCOLS property on their
+     top-level windows to include the
+     ICE_INITIATE_4mpname24m atom(s) identifying the ICE
+     subprotocols they speak.  The method a client uses
+     to update the ICE_PROTOCOLS property to include
+     ICE_INITIATE_4mpname24m atoms is implementation
+     dependent, but the client must ensure the
+     integrity of the list to prevent the accidental
+     omission of any atoms previously in the list.
+
+     When setting up the ICE network IDs text property
+     on one of its windows, the ICE answering party can
+     determine its comma-separated list of ICE network
+     IDs by calling IceComposeNetworkIdList() after
+     making a call to IceListenForConnections().  The
+     method an ICE answering party uses to find the
+     top-level windows of clients willing to act as ICE
+     originating parties is dependent upon the nature
+     of the answering party.  Some may wish to use the
+     approach of requiring the user to click on a
+     client's window.  Others wishing to find existing
+     clients without requiring user interaction might
+     use something similar to the XQueryTree() method
+     used by several freely-available applications.  In
+     order for the ICE answering party to become
+     automatically aware of new clients willing to
+     originate ICE connections, the ICE answering party
+     might register for SubstructureNotify events on
+     the root window of the display.  When it receives
+     a SubstructureNotify event, the ICE answering
+     party can check to see if it was the result of the
+     creation of a new client top-level window with an
+     ICE_PROTOCOLS property.
+
+     In any case, before attempting to use this ICE X
+     Rendezvous Mechanism ICE answering parties wishing
+     to speak ICE subprotocol 4mpname24m should check for
+
+
+
+			     1m290m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+     the ICE_INITIATE_4mpname24m atom in the ICE_PROTOCOLS
+     property on a client's top-level window.  A client
+     that does not include an ICE_INITIATE_4mpname24m atom
+     in a ICE_PROTOCOLS property on some top-level
+     window should be assumed to ignore 4mClientMessage0m
+     events of type ICE_PROTOCOLS specifying
+     ICE_INITIATE_4mpname24m for ICE subprotocol 4mpname24m.
+
+
+1mB.5.	ICE Subprotocol Versioning0m
+
+Although the version of the ICE subprotocol could be passed
+in the client message event, ICE provides more a flexible
+version negotiation mechanism than will fit within a single
+4mClientMessage24m event.  Because of this, ICE subprotocol
+versioning is handled within the ICE protocol setup phase.
+
+			  Example
+
+     Clients wish to communicate with each other via an
+     ICE subprotocol known as "RAP V1.0".  In RAP
+     terminology one party, the "agent", communicates
+     with other RAP-enabled applications on demand.
+     The user may direct the agent to establish
+     communication with a specific application by
+     clicking on the application's window, or the agent
+     may watch for new application windows to be
+     created and automatically establish communication.
+
+     During startup the ICE answering party (the agent)
+     first calls IceRegisterForProtocolReply() with a
+     list of the versions (i.e., 1.0) of RAP the agent
+     can speak.	 The answering party then calls
+     IceListenForConnections() followed by
+     IceComposeNetworkIdList() and stores the resulting
+     ICE network IDs string in a text property on one
+     of its windows.
+
+     When the answering party (agent) finds a client
+     with which it wishes to speak, it checks to see if
+     the ICE_INITIATE_RAP atom is in the ICE_PROTOCOLS
+     property on the client's top-level window.	 If it
+     is present the agent sends the client's top-level
+     window an ICE_PROTOCOLS client message event as
+     described above.  When the client receives the
+     client message event and is willing to originate
+     an ICE connection using RAP, it performs an
+     IceRegisterForProtocolSetup() with a list of the
+     versions of RAP the client can speak.  The client
+     then retrieves the agent's ICE network ID from the
+     property and window specified by the agent in the
+     client message event and calls
+     IceOpenConnection().  After this call succeeds the
+     client calls IceProtocolSetup() specifying the RAP
+
+
+
+			     1m300m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+     protocol.	During this process, ICE calls the RAP
+     protocol routines that handle the version
+     negotiation.
+
+     Note that it is not necessary for purposes of this
+     rendezvous that the client application call any
+     ICElib functions prior to receipt of the client
+     message event.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m310m
+
+
+
+
+
+1mInter-Client Exchange Protocol	      X11, Release 6.40m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m320m
+
+
+
+
+
+
+
+
+
+		     1mTable of Contents0m
+
+
+1. Purpose and Goals . . . . . . . . . . . . . . . . . .   1
+2. Overview of the protocol  . . . . . . . . . . . . . .   1
+3. Data Types  . . . . . . . . . . . . . . . . . . . . .   3
+3.1. Primitive Types . . . . . . . . . . . . . . . . . .   3
+3.2. Complex Types . . . . . . . . . . . . . . . . . . .   4
+4. Message Format  . . . . . . . . . . . . . . . . . . .   4
+5. Overall Protocol Description	 . . . . . . . . . . . .   5
+6. ICE Control Subprotocol -- Major Opcode 0 . . . . . .   6
+6.1. Generic Error Classes . . . . . . . . . . . . . . .  12
+6.2. ICE Error Classes . . . . . . . . . . . . . . . . .  13
+7. State Diagrams  . . . . . . . . . . . . . . . . . . .  16
+8. Protocol Encoding . . . . . . . . . . . . . . . . . .  19
+8.1. Primitive Types . . . . . . . . . . . . . . . . . .  19
+8.2. Enumerations  . . . . . . . . . . . . . . . . . . .  19
+8.3. Compound Types  . . . . . . . . . . . . . . . . . .  19
+8.4. ICE Minor opcodes . . . . . . . . . . . . . . . . .  20
+8.5. Message Encoding  . . . . . . . . . . . . . . . . .  20
+8.6. Error Class Encoding  . . . . . . . . . . . . . . .  23
+8.6.1. Generic Error Class Encoding  . . . . . . . . . .  23
+8.6.2. ICE-specific Error Class Encoding . . . . . . . .  24
+A. Modification History	 . . . . . . . . . . . . . . . .  25
+A.1. Release 6 to Release 6.1  . . . . . . . . . . . . .  25
+A.2. Release 6.1 to Release 6.3	 . . . . . . . . . . . .  25
+B. ICE X Rendezvous Protocol . . . . . . . . . . . . . .  26
+B.1. Introduction  . . . . . . . . . . . . . . . . . . .  26
+B.2. Overview of ICE X Rendezvous  . . . . . . . . . . .  26
+B.3. Registering Known Protocols . . . . . . . . . . . .  26
+B.4. Initiating the Rendezvous . . . . . . . . . . . . .  26
+B.5. ICE Subprotocol Versioning	 . . . . . . . . . . . .  30
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      i
+
+

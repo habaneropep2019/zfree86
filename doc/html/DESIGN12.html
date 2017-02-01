@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Offscreen Memory Manager </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Offscreen Memory Manager </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN11.html"><EM>Modules, Drivers, Include Files and Interface Issues </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN13.html"><EM>Colormap Handling</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="60"></A>12. Offscreen Memory Manager </H2>
+
+<p>Management of offscreen video memory may be handled by the XFree86
+framebuffer manager.  Once the offscreen memory manager is running,
+drivers or extensions may allocate, free or resize areas of offscreen
+video memory using the following functions (definitions taken from
+<code>xf86fbman.h</code>):</p>
+<p>
+<hr>
+<pre>
+    typedef struct _FBArea {
+        ScreenPtr    pScreen;
+        BoxRec       box;
+        int          granularity;
+        void         (*MoveAreaCallback)(struct _FBArea*, struct _FBArea*)
+        void         (*RemoveAreaCallback)(struct _FBArea*)
+        DevUnion     devPrivate;
+    } FBArea, *FBAreaPtr;
+
+    typedef void (*MoveAreaCallbackProcPtr)(FBAreaPtr from, FBAreaPtr to)
+    typedef void (*RemoveAreaCallbackProcPtr)(FBAreaPtr)
+
+    FBAreaPtr xf86AllocateOffscreenArea (
+        ScreenPtr pScreen,
+        int width, int height,
+        int granularity,
+        MoveAreaCallbackProcPtr MoveAreaCallback,
+        RemoveAreaCallbackProcPtr RemoveAreaCallback,
+        pointer privData
+    )
+
+    void xf86FreeOffscreenArea (FBAreaPtr area)
+
+    Bool xf86ResizeOffscreenArea (
+	FBAreaPtr area
+	int w, int h
+    )
+</pre>
+<hr>
+</p>
+<p>The function:
+<blockquote>
+<code>Bool xf86FBManagerRunning(ScreenPtr pScreen)</code>
+</blockquote>
+</p>
+<p>can be used by an extension to check if the driver has initialized
+the memory manager.  The manager is not available if this returns
+<code>FALSE</code> and the functions above will all fail.</p>
+
+<p><code>xf86AllocateOffscreenArea()</code> can be used to request a
+rectangle of dimensions <code>width</code> x <code>height</code>
+(in pixels) from unused offscreen memory.  <code>granularity</code>
+specifies that the leftmost edge of the rectangle must lie on some
+multiple of <code>granularity</code> pixels.  A granularity of zero
+means the same thing as a granularity of one - no alignment preference.
+A <code>MoveAreaCallback</code> can be provided to notify the requester
+when the offscreen area is moved.  If no <code>MoveAreaCallback</code>
+is supplied then the area is considered to be immovable.  The
+<code>privData</code> field will be stored in the manager's internal
+structure for that allocated area and will be returned to the requester
+in the <code>FBArea</code> passed via the
+<code>MoveAreaCallback</code>.  An optional
+<code>RemoveAreaCallback</code> is provided.  If the driver provides
+this it indicates that the area should be allocated with a lower priority.
+Such an area may be removed when a higher priority request (one that
+doesn't have a <code>RemoveAreaCallback</code>) is made.  When this
+function is called, the driver will have an opportunity to do whatever
+cleanup it needs to do to deal with the loss of the area, but it must
+finish its cleanup before the function exits since the offscreen memory
+manager will free the area immediately after.</p>
+<p><code>xf86AllocateOffscreenArea()</code> returns <code>NULL</code>
+if it was unable to allocate the requested area.  When no longer needed,
+areas should be freed with <code>xf86FreeOffscreenArea()</code>.</p>
+<p><code>xf86ResizeOffscreenArea()</code> resizes an existing
+<code>FBArea</code>.  <code>xf86ResizeOffscreenArea()</code>
+returns <code>TRUE</code> if the resize was successful.  If
+<code>xf86ResizeOffscreenArea()</code> returns <code>FALSE</code>,
+the original <code>FBArea</code> is left unmodified.  Resizing an
+area maintains the area's original <code>granularity</code>,
+<code>devPrivate</code>, and <code>MoveAreaCallback</code>.
+<code>xf86ResizeOffscreenArea()</code> has considerably less overhead
+than freeing the old area then reallocating the new size, so it should
+be used whenever possible.</p>
+<p>The function:
+<blockquote>
+<code>Bool xf86QueryLargestOffscreenArea(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ScreenPtr pScreen,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *width, int *height,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int granularity,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int preferences,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int priority<br>
+)</code>
+</blockquote>
+</p>
+<p>is provided to query the width and height of the largest single
+<code>FBArea</code> allocatable given a particular priority.
+<code>preferences</code> can be one of the following to indicate
+whether width, height or area should be considered when determining
+which is the largest single <code>FBArea</code> available.</p>
+<p>
+<blockquote>
+<code>FAVOR_AREA_THEN_WIDTH<br>
+FAVOR_AREA_THEN_HEIGHT<br>
+FAVOR_WIDTH_THEN_AREA<br>
+FAVOR_HEIGHT_THEN_AREA</code>
+</blockquote>
+</p>
+<p><code>priority</code> is one of the following:</p>
+<p>
+<blockquote>
+<p><code>PRIORITY_LOW</code>
+<blockquote>
+<p>Return the largest block available without stealing anyone else's
+space.  This corresponds to the priority of allocating a
+<code>FBArea</code> when a <code>RemoveAreaCallback</code>
+is provided.</p>
+
+</blockquote>
+
+<code>PRIORITY_NORMAL</code>
+<blockquote>
+<p>Return the largest block available if it is acceptable to steal a
+lower priority area from someone.  This corresponds to the priority
+of allocating a <code>FBArea</code> without providing a
+<code>RemoveAreaCallback</code>.</p>
+
+</blockquote>
+
+<code>PRIORITY_EXTREME</code>
+<blockquote>
+<p>Return the largest block available if all <code>FBAreas</code>
+that aren't locked down were expunged from memory first.  This
+corresponds to any allocation made directly after a call to
+<code>xf86PurgeUnlockedOffscreenAreas()</code>.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<p>The function:</p>
+<p>
+<blockquote>
+<code>Bool xf86PurgeUnlockedOffscreenAreas(ScreenPtr pScreen)</code>
+</blockquote>
+</p>
+<p>is provided as an extreme method to free up offscreen memory.  This
+will remove all removable <code>FBArea</code> allocations.</p>
+
+<p>Initialization of the XFree86 framebuffer manager is done via</p>
+<p>
+<blockquote>
+<code>Bool xf86InitFBManager(ScreenPtr pScreen, BoxPtr FullBox)</code>
+</blockquote>
+</p>
+<p><code>FullBox</code> represents the area of the framebuffer that the
+manager is allowed to manage.  This is typically a box with a width of
+<code>pScrn-&gt;displayWidth</code> and a height of as many lines as
+can be fit within the total video memory, however, the driver can reserve
+areas at the extremities by passing a smaller area to the manager.</p>
+<p><code>xf86InitFBManager()</code> must be called before XAA is
+initialized since XAA uses the manager for it's pixmap cache.</p>
+<p>An alternative function is provided to allow the driver to initialize
+the framebuffer manager with a Region rather than a box.</p>
+<p>
+<blockquote>
+<code>Bool xf86InitFBManagerRegion(ScreenPtr pScreen,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RegionPtr FullRegion)</code>
+</blockquote>
+</p>
+<p><code>xf86InitFBManagerRegion()</code>, unlike
+<code>xf86InitFBManager()</code>, does not remove the area used for
+the visible screen so that area should not be included in the region
+passed to the function.  <code>xf86InitFBManagerRegion()</code> is
+useful when non-contiguous areas are available to be managed, and is
+required when multiple framebuffers are stored in video memory (as in
+the case where an overlay of a different depth is stored as a second
+framebuffer in offscreen memory).</p>
+
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Offscreen Memory Manager </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN11.html"><EM>Modules, Drivers, Include Files and Interface Issues </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN13.html"><EM>Colormap Handling</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728763" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

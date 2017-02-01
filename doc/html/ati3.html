@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Current implementation for ATI adapters</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="ati.html"><EM>ATI Adapters README file </EM></A>
+ <b>:</b> <EM>Current implementation for ATI adapters</EM><BR>
+<b>Previous:</b> <A HREF="ati2.html"><EM>A note on acceleration</EM></A><BR>
+<b>Next:</b> <A HREF="ati4.html"><EM>Current implementation of generic VGA support for non-ATI adapters</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>3. Current implementation for ATI adapters</H2>
+<p>The driver currently supports the SuperVGA capabilities of all ATI adapters
+except some early Mach8 and Mach32 adapters that do not provide the required
+functionality.</p>
+<p>This support works for monochrome, 16-colour and 256-colour video modes, if one
+of the following ATI graphics controller chips is present:
+<pre>
+VGAWonder series:  18800, 18800-1, 28800-2, 28800-4, 28800-5, 28800-6
+   Mach32 series:  68800-3, 68800-6, 68800AX, 68800LX
+   Mach64 series:  88800GX-C, 88800GX-D, 88800GX-E, 88800GX-F, 88800CX,
+                   264CT, 264ET, 264VT, 264GT (3D Rage), 264VT-B, 264VT3,
+                   264VT4, 264GT-B (3D Rage II), 3D Rage IIc, 3D Rage Pro,
+                   3D Rage LT, 3D Rage LT Pro, 3D Rage XL, 3D Rage XC,
+                   3D Rage Mobility (including the -M and -P variants)
+</pre>
+</p>
+<p>The driver also supports 32K, 64K and 16M-colour modes on the 264xT and 3D Rage
+series of adapters using the accelerator CRTC (but not the VGA CRTC).</p>
+<p>The newer Rage 128 and Radeon chips are not yet supported by this driver.
+Rage 128's and Radeon's are, however, supported by separate drivers, and
+owners of such adapters should consult the documentation provided with these
+drivers.
+This driver will also invoke the appropriate driver if it finds Rage 128 and/or
+Radeon adapter(s) in the system.</p>
+
+<p>Adapters based on the above chips have been marketed under a rather large
+number of names over the years.
+Among them are:
+<pre>
+VGAWonder series:  VGAWonder V3, VGAWonder V4, VGAWonder V5, VGAWonder+,
+                   VGAWonder XL, VGAWonder XL24, VGAWonder VLB, VGA Basic,
+                   VGA Basic 16, VGA Edge, VGA Edge 16, VGA Integra,
+                   VGA Charger, VGAStereo F/X, VGA 640, VGA 800, VGA 1024,
+                   VGA 1024D, VGA 1024 XL, VGA 1024 DXL, VGA 1024 VLB
+    Mach8 series:  Graphics Ultra, Graphics Vantage, VGAWonder GT
+                   (None of the 8514/Ultra and 8514 Vantage series is
+                    supported at this time)
+   Mach32 series:  Graphics Ultra+, Graphics Ultra Pro, Graphics Wonder,
+                   Graphics Ultra XLR, Graphics Ultra AXO, VLB mach32-D,
+                   PCI mach32-D, ISA mach32
+   Mach64 series:  Graphics Xpression, Graphics Pro Turbo, WinBoost,
+                   WinTurbo, Graphics Pro Turbo 1600, Video Xpression,
+                   3D Xpression, Video Xpression+, 3D Xpression+,
+                   3D Charger, Video Charger, WinCharger, All-In-Wonder,
+                   All-In-Wonder PRO, 3D Pro Turbo, XPERT@Play,
+                   XPERT@Play 98, XPERT@Work, XPERT 98, XPERT LCD,
+                   XPERT XL
+</pre>
+</p>
+<p>There are also a number of mainboards, laptops and notebooks that harbour a
+Mach32 or Mach64 controller.</p>
+<p>VGAWonder, Mach8 and Mach32 ISA adapters are available with or without a
+mouse.</p>
+<p>These adapters are available with a variety of clock generators and RAMDACs.
+The 264xT and 3D Rage series of chips are integrated controllers, meaning that
+they include a programmable clock generator and a RAMDAC.</p>
+<p>For all but Mach64 adapters, this driver still does not provide support for
+accelerated drawing to the screen.
+This means that all drawing is done by the CPU, rather than by any accelerator
+present in the system and this can make opaque moves, for example, quite
+``jerky''.</p>
+<p>Given that IBM 8514/A and ATI Mach8 do not allow CPU access to their frame
+buffer, the driver will currently ignore these accelerators.
+Most Mach32 adapters provide both accelerated function and SuperVGA
+functionality, but the driver currently only uses the VGA.</p>
+<p>The driver <i>does</i> however support the accelerator CRTC present in all
+ATI Mach64 adapters.
+For 256-colour, and higher depth modes, this support will be used by default,
+although an XF86Config option can be specified to use the SuperVGA CRTC
+instead.
+A linear video memory aperture is also available in 256-colour and higher depth
+modes and enabled by default if a 264xT or 3D Rage controller is detected or,
+on 88800 controllers, if the accelerator CRTC is used.
+XF86Config options are available to disable this aperture, or (for non-PCI
+adapters) enable it or move it to some other address.</p>
+<p>By default, the driver provides some acceleration for Mach64 if the accelerator
+CRTC is used, and modes whose colour depth greater than or equal to 8 are to be
+used.
+This support is as yet incomplete and can be disabled entirely with an
+XF86Config option.</p>
+
+ <HR NOSHADE>
+<A HREF="ati.html"><EM>ATI Adapters README file </EM></A>
+ <b>:</b> <EM>Current implementation for ATI adapters</EM><BR>
+<b>Previous:</b> <A HREF="ati2.html"><EM>A note on acceleration</EM></A><BR>
+<b>Next:</b> <A HREF="ati4.html"><EM>Current implementation of generic VGA support for non-ATI adapters</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728819" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

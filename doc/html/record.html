@@ -1,0 +1,1996 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:18:10 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. IntroductionSeveral proposals have been written over the past few years thataddress some of the issues surrounding the recording and playbackof user actions in the X Window System1:&bull; Some Proposals for a Minimal X11 Testing Extension, KieronDrake, UniSoft Ltd., April 1991&bull; X11 Input Synthesis Extension Proposal, Larry Woestman,Hewlett Packard, November 1991&bull; XTrap Architecture, Dick Annicchiario, et al, DigitalEquipment Corporation, July 1991&bull; XTest Extension Recording Specification, Yochanan Slonim,Mercury Interactive, December 1992This document both unifies and extends the previous diverseapproaches to generate a proposal for an X extension thatprovides support for the recording of all core X protocol andarbitrary extension protocol. Input synthesis, or playback, hasalready been implemented in the XTest extension, an X Consortiumstandard. Therefore, this extension is limited to recording.In order to provide both record and playback functionality, ahypothetical record application could use this extension tocapture both user actions and their consequences. For example, abutton press (a user action) may cause a window to be mapped anda corresponding MapNotify event to be sent (a consequence). Thisinformation could be stored for later use by a playbackapplication.The playback application could use the recorded actions as inputfor the XTest extension&rsquo;s XTestFakeInput operation to synthesizethe appropriate input events. The &quot;consequence&quot; orsynchronization information is then used as a synchronizationpoint during playback. That is, the playback application doesnot generate specific synthesized events until their matchingsynchronization condition occurs. When the condition occurs theprocessing of synthesized events continues. Determination thatthe condition has occurred may be made by capturing theconsequences of the synthesized events and comparing them to thepreviously recorded synchronization information. For example, ifa button press was followed by a MapNotify event on a particularwindow in the recorded data, the playback application mightsynthesize the button press then wait for the MapNotify event onthe appropriate window before proceeding with subsequentsynthesized input.Because it is impossible to predict what synchronizationinformation will be required by a particular application, theextension provides facilities to record any subset of core Xprotocol and arbitrary extension protocol. As such, thisextension does not enforce a specific synchronizationmethodology; any method based on information in the X protocolstream (e.g., watching for window mapping/unmapping, cursorchanges, drawing of certain text strings, etc.) can capture theinformation it needs using RECORD facilities.1.1. AcknowledgementsThe document represents the culmination of two years of debateand experiments done under the auspices of the X Consortium xtestworking group. Although this was a group effort, the authorremains responsible for any errors or omissions. Two years ago,Robert Chesler of Absol-puter, Kieron Drake of UniSoft Ltd., MarcEvans of Synergytics and Ken Miller of Digitial shared the visionof a standard extension for recording and were all instrumentalin the early protocol development. During the last two years,Bob Scheifler of the X Consortium and Jim Fulton of NCDcontinuously provided input to the protocol design, as well asencouragement to the author. In the last few months, StephenGildea and Dave Wiggins, both X Consortium staff, have spentconsiderable time fine tuning the protocol design and reviewingthe protocol specifications. Most recently, Amnon Cohen ofMercury Interactive has assisted in clarification of the recordedevent policy, and Kent Siefkes of Performance Awareness hasassisted in clarification of the timestamp policy.1.2. Goals&bull; To provide a standard for recording, whereby both deviceevents and synchronization information in the form ofdevice event consequences are recorded.&bull; To record contextual information used in synchronizedplayback without prior knowledge of the application thatis being recorded.&bull; To provide the ability to record arbitrary X protocolextensions.1.3. RequirementsThe extension should function as follows:&bull; It should not be dependent on other clients or extensionsfor its operation.&bull; It should not significantly impact performance.&bull; It should support the recording of all device input (coredevices and XInput devices).&bull; It should be extendible.&bull; It should support the recording of synchronizationinformation for user events.2. DesignThis section gives an overview of the RECORD extension anddiscusses its overall operation and data types.2.1. OverviewThe mechanism used by this extension for recording is tointercept core X protocol and arbitrary X extension protocolentirely within the X server itself. When the extension has beenrequested to intercept specific protocol by one or more clients,the protocol data are formatted and returned to the recordingclients.The extension provides a mechanism for capturing all events,including input device events that go to no clients, that isanalogous to a client expressing &quot;interest&quot; in all events in allwindows, including the root window. Event filtering in theextension provides a mechanism for feeding device events torecording clients; it does not provide a mechanism for in-place,synchronous event substitution, modification, or withholding. Inaddition, the extension does not provide data compression beforeintercepted protocol is returned to the recording clients.2.1.1. Data DeliveryBecause events are limited in size to 32 bytes, using events toreturn intercepted protocol data to recording clients isprohibitive in terms of performance. Therefore, interceptedprotocol data are returned to recording clients through multiplereplies to the extension request to begin protocol interceptionand reporting. This utilization is consistent withListFontsWithInfo, for example, where a single request hasmultiple replies.Individual requests, replies, events or errors intercepted by theextension on behalf of recording clients cannot be split acrossreply packets. In order to reduce overhead, multiple interceptedrequests, replies, events and errors might be collected into asingle reply. Nevertheless, all data are returned to the clientin a timely manner.2.1.2. Record ContextThe extension adds a record context resource (RC) to the set ofresources managed by the server. All the extension operationstake an RC as an argument. Although the protocol permits sharingof RCs between clients, it is expected that clients will usetheir own RCs. The attributes used in extension operations arestored in the RCs, and these attributes include the protocol andclients to intercept.The terms &quot;register&quot; and &quot;unregister&quot; are used to describe therelationship between clients to intercept and the RC. Toregister a client with an RC means the client is added to thelist of clients to intercept; to unregister a client means theclient is deleted from the list of clients to intercept. Whenthe server is requested to register or unregister clients from anRC, it is required to do so immediately. That is, it is notpermissible for the server to wait until recording is enabled toregister clients or recording is disabled to unregister clients.2.1.3. Record Client ConnectionsThe typical communication model for a recording client is to opentwo connections to the server and use one for RC control and theother for reading protocol data.The &quot;control&quot; connection can execute requests to obtaininformation about the supported protocol version, create anddestroy RCs, specify protocol types to intercept and clients tobe recorded, query the current state of an RC, and to stopinterception and reporting of protocol data. The &quot;data&quot;connection can execute a request to enable interception andreporting of specified protocol for a particular RC. When the&quot;enable&quot; request is issued, intercepted protocol is sent back onthe same connection, generally in more than one reply packet.Until the last reply to the &quot;enable&quot; request is sent by theserver, signifying that the request execution is complete, noother requests will be executed by the server on that connection.That is, the connection that data are being reported on cannotissue the &quot;disable&quot; request until the last reply to the &quot;enable&quot;request is sent by the server. Therefore, unless a recordingclient never has the need to disable the interception andreporting of protocol data, two client connections are necessary.2.1.4. EventsThe terms &quot;delivered events&quot; and &quot;device events&quot; are used todescribe the two event classes recording clients may select forinterception. These event classes are handled differently by theextension. Delivered events are core X events or X extensionevents the server actually delivers to one or more clients.Device events are events generated by core X devices or extensioninput devices that the server may or may not deliver to anyclients. When device events are selected for interception by arecording client, the extension guarantees each device event isrecorded and will be forwarded to the recording client in thesame order it is generated by the device.The recording of selected device events is not affected by servergrabs. Delivered events, on the other hand, can be affected byserver grabs. If a recording client selects both a device eventand delivered events that result from that device event, thedelivered events are recorded after the device event. In theabsence of grabs, the delivered events for a device event precedelater device events.Requests that have side effects on devices, such as WarpPointerand GrabPointer with a confine-to window, will cause RECORD torecord an associated device event. The XTEST extension requestXTestFakeInput causes a device event to be recorded; the deviceevents are recorded in the same order that the XTestFakeInputrequests are received by the server.If a key autorepeats, multiple KeyPress and KeyRelease deviceevents are reported.2.1.5. TimingRequests are recorded just before they are executed; the timeassociated with a request is the server time when it is recorded.2.2. TypesThe following new types are used in the request definitions thatappear in section 3.The RC type is a resource identifier for a server record context.The RECORDRANGE structure contains the protocol values tointercept. Typically, this structure is sent by recordingclients over the control connection when creating or modifying anRC.core-requestsSpecifies core X protocol requests with an opcode fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no core requests are specified bythis RECORDRANGE. If first is greater than last, a Valueerror results.core-repliesSpecifies replies resulting from core X protocol requestswith an opcode field between first and last inclusive. Iffirst is equal to 0 and last is equal to 0, no core repliesare specified by this RECORDRANGE. If first is greater thanlast, a Value error results.ext-requestsSpecifies extension protocol requests with a major opcodefield between major.first and major.last and a minor opcodefield between minor.first and minor.last inclusive. Ifmajor.first and major.last are equal to 0, no extensionprotocol requests are specified by this RECORDRANGE. Ifmajor.first or major.last is less than 128 and greater than0, if major.first is greater than major.last, or ifminor.first is greater than minor.last, a Value errorresults.ext-repliesSpecifies replies resulting from extension protocol requestswith a major opcode field between major.first and major.lastand a minor opcode field between minor.first and minor.lastinclusive. If major.first and major.last are equal to 0, noextension protocol replies are specified by thisRECORDRANGE. If major.first or major.last is less than 128and greater than 0, if major.first is greater thanmajor.last, or if minor.first is greater than minor.last, aValue error results.delivered-eventsThis is used for both core X protocol events and arbitraryextension events. Specifies events that are delivered to atleast one client that have a code field between first andlast inclusive. If first is equal to 0 and last is equal to0, no events are specified by this RECORDRANGE. Otherwise,if first is less than 2 or last is less than 2, or if firstis greater than last, a Value error results.device-eventsThis is used for both core X device events and X extensiondevice events that may or may not be delivered to a client.Specifies device events that have a code field between firstand last inclusive. If first is equal to 0 and last isequal to 0, no device events are specified by thisRECORDRANGE. Otherwise, if first is less than 2 or last isless than 2, or if first is greater than last, a Value errorresults.Because the generated device event may or may not beassociated with a client, unlike other RECORDRANGEcomponents, which select protocol for a specific client,selecting for device events in any RECORDRANGE in an RCcauses the recording client to receive one instance for eachdevice event generated that is in the range specified.errorsThis is used for both core X protocol errors and arbitraryextension errors. Specifies errors that have a code fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no errors are specified by thisRECORDRANGE. If first is greater than last, a Value errorresults.client-startedSpecifies the connection setup reply. If False, theconnection setup reply is not specified by this RECORDRANGE.client-diedSpecifies notification when a client disconnects. If False,notification when a client disconnects is not specified bythis RECORDRANGE.The ELEMENT_HEADER structure specifies additional data thatprecedes each protocol element in the data field of aRecordEnableContext reply.&bull; If from-server-time is True, each intercepted protocol elementwith category FromServer is preceded by the server time whenthe protocol was recorded.&bull; If from-client-time is True, each intercepted protocol elementwith category FromClient is preceded by the server time whenthe protocol was recorded.&bull; If from-client-sequence is True, each intercepted protocolelement with category FromClient or ClientDied is preceded bythe 32-bit sequence number of the recorded client&rsquo;s mostrecent request processed by the server at that time. ForFromClient, this will be one less than the sequence number ofthe following request. For ClientDied, the sequence numberwill be the only data, because no protocol is recorded.Note that a reply containing device events is treated the same asother replies with category FromServer for purposes of theseflags. Protocol with category FromServer is never preceded by asequence number because almost all such protocol has a sequencenumber in it anyway.If both a server time and a sequence number have been requestedfor a reply, each protocol request is preceded first by the timeand second by the sequence number.The XIDBASE type is used to identify a particular client. Validvalues are any existing resource identifier of any connectedclient, in which case the client that created the resource isspecified, or the resource identifier base sent to the targetclient from the server in the connection setup reply. A value of0 (zero) is valid when the XIDBASE is associated with deviceevents that may not have been delivered to a client.The CLIENTSPEC type defines the set of clients the RC attributesare associated with. This type is used by recording clients whencreating an RC or when changing RC attributes. XIDBASE specifiesthat the RC attributes apply to a single client only.CurrentClients specifies that the RC attributes apply to currentclient connections; FutureClients specifies future clientconnections; AllClients specifies all client connections, whichincludes current and future.The numeric values for CurrentClients, FutureClients andAllClients are defined such that there will be no intersectionwith valid XIDBASEs.When the context is enabled, the data connection is unregisteredif it was registered. If the context is enabled, CurrentClientsand AllClients silently exclude the recording data connection.It is an error to explicitly register the data connection.This structure specifies an intercepted client and the protocolto be intercepted for the client. The client-resource field is aresource base that identifies the intercepted client. Theintercepted-protocol field specifies the protocol to interceptfor the client-resource.2.3. Errors">1. IntroductionSeveral proposals have been written over the past few years thataddress some of the issues surrounding the recording and playbackof user actions in the X Window System1:&bull; Some Proposals for a Minimal X11 Testing Extension, KieronDrake, UniSoft Ltd., April 1991&bull; X11 Input Synthesis Extension Proposal, Larry Woestman,Hewlett Packard, November 1991&bull; XTrap Architecture, Dick Annicchiario, et al, DigitalEquipment Corporation, July 1991&bull; XTest Extension Recording Specification, Yochanan Slonim,Mercury Interactive, December 1992This document both unifies and extends the previous diverseapproaches to generate a proposal for an X extension thatprovides support for the recording of all core X protocol andarbitrary extension protocol. Input synthesis, or playback, hasalready been implemented in the XTest extension, an X Consortiumstandard. Therefore, this extension is limited to recording.In order to provide both record and playback functionality, ahypothetical record application could use this extension tocapture both user actions and their consequences. For example, abutton press (a user action) may cause a window to be mapped anda corresponding MapNotify event to be sent (a consequence). Thisinformation could be stored for later use by a playbackapplication.The playback application could use the recorded actions as inputfor the XTest extension&rsquo;s XTestFakeInput operation to synthesizethe appropriate input events. The &quot;consequence&quot; orsynchronization information is then used as a synchronizationpoint during playback. That is, the playback application doesnot generate specific synthesized events until their matchingsynchronization condition occurs. When the condition occurs theprocessing of synthesized events continues. Determination thatthe condition has occurred may be made by capturing theconsequences of the synthesized events and comparing them to thepreviously recorded synchronization information. For example, ifa button press was followed by a MapNotify event on a particularwindow in the recorded data, the playback application mightsynthesize the button press then wait for the MapNotify event onthe appropriate window before proceeding with subsequentsynthesized input.Because it is impossible to predict what synchronizationinformation will be required by a particular application, theextension provides facilities to record any subset of core Xprotocol and arbitrary extension protocol. As such, thisextension does not enforce a specific synchronizationmethodology; any method based on information in the X protocolstream (e.g., watching for window mapping/unmapping, cursorchanges, drawing of certain text strings, etc.) can capture theinformation it needs using RECORD facilities.1.1. AcknowledgementsThe document represents the culmination of two years of debateand experiments done under the auspices of the X Consortium xtestworking group. Although this was a group effort, the authorremains responsible for any errors or omissions. Two years ago,Robert Chesler of Absol-puter, Kieron Drake of UniSoft Ltd., MarcEvans of Synergytics and Ken Miller of Digitial shared the visionof a standard extension for recording and were all instrumentalin the early protocol development. During the last two years,Bob Scheifler of the X Consortium and Jim Fulton of NCDcontinuously provided input to the protocol design, as well asencouragement to the author. In the last few months, StephenGildea and Dave Wiggins, both X Consortium staff, have spentconsiderable time fine tuning the protocol design and reviewingthe protocol specifications. Most recently, Amnon Cohen ofMercury Interactive has assisted in clarification of the recordedevent policy, and Kent Siefkes of Performance Awareness hasassisted in clarification of the timestamp policy.1.2. Goals&bull; To provide a standard for recording, whereby both deviceevents and synchronization information in the form ofdevice event consequences are recorded.&bull; To record contextual information used in synchronizedplayback without prior knowledge of the application thatis being recorded.&bull; To provide the ability to record arbitrary X protocolextensions.1.3. RequirementsThe extension should function as follows:&bull; It should not be dependent on other clients or extensionsfor its operation.&bull; It should not significantly impact performance.&bull; It should support the recording of all device input (coredevices and XInput devices).&bull; It should be extendible.&bull; It should support the recording of synchronizationinformation for user events.2. DesignThis section gives an overview of the RECORD extension anddiscusses its overall operation and data types.2.1. OverviewThe mechanism used by this extension for recording is tointercept core X protocol and arbitrary X extension protocolentirely within the X server itself. When the extension has beenrequested to intercept specific protocol by one or more clients,the protocol data are formatted and returned to the recordingclients.The extension provides a mechanism for capturing all events,including input device events that go to no clients, that isanalogous to a client expressing &quot;interest&quot; in all events in allwindows, including the root window. Event filtering in theextension provides a mechanism for feeding device events torecording clients; it does not provide a mechanism for in-place,synchronous event substitution, modification, or withholding. Inaddition, the extension does not provide data compression beforeintercepted protocol is returned to the recording clients.2.1.1. Data DeliveryBecause events are limited in size to 32 bytes, using events toreturn intercepted protocol data to recording clients isprohibitive in terms of performance. Therefore, interceptedprotocol data are returned to recording clients through multiplereplies to the extension request to begin protocol interceptionand reporting. This utilization is consistent withListFontsWithInfo, for example, where a single request hasmultiple replies.Individual requests, replies, events or errors intercepted by theextension on behalf of recording clients cannot be split acrossreply packets. In order to reduce overhead, multiple interceptedrequests, replies, events and errors might be collected into asingle reply. Nevertheless, all data are returned to the clientin a timely manner.2.1.2. Record ContextThe extension adds a record context resource (RC) to the set ofresources managed by the server. All the extension operationstake an RC as an argument. Although the protocol permits sharingof RCs between clients, it is expected that clients will usetheir own RCs. The attributes used in extension operations arestored in the RCs, and these attributes include the protocol andclients to intercept.The terms &quot;register&quot; and &quot;unregister&quot; are used to describe therelationship between clients to intercept and the RC. Toregister a client with an RC means the client is added to thelist of clients to intercept; to unregister a client means theclient is deleted from the list of clients to intercept. Whenthe server is requested to register or unregister clients from anRC, it is required to do so immediately. That is, it is notpermissible for the server to wait until recording is enabled toregister clients or recording is disabled to unregister clients.2.1.3. Record Client ConnectionsThe typical communication model for a recording client is to opentwo connections to the server and use one for RC control and theother for reading protocol data.The &quot;control&quot; connection can execute requests to obtaininformation about the supported protocol version, create anddestroy RCs, specify protocol types to intercept and clients tobe recorded, query the current state of an RC, and to stopinterception and reporting of protocol data. The &quot;data&quot;connection can execute a request to enable interception andreporting of specified protocol for a particular RC. When the&quot;enable&quot; request is issued, intercepted protocol is sent back onthe same connection, generally in more than one reply packet.Until the last reply to the &quot;enable&quot; request is sent by theserver, signifying that the request execution is complete, noother requests will be executed by the server on that connection.That is, the connection that data are being reported on cannotissue the &quot;disable&quot; request until the last reply to the &quot;enable&quot;request is sent by the server. Therefore, unless a recordingclient never has the need to disable the interception andreporting of protocol data, two client connections are necessary.2.1.4. EventsThe terms &quot;delivered events&quot; and &quot;device events&quot; are used todescribe the two event classes recording clients may select forinterception. These event classes are handled differently by theextension. Delivered events are core X events or X extensionevents the server actually delivers to one or more clients.Device events are events generated by core X devices or extensioninput devices that the server may or may not deliver to anyclients. When device events are selected for interception by arecording client, the extension guarantees each device event isrecorded and will be forwarded to the recording client in thesame order it is generated by the device.The recording of selected device events is not affected by servergrabs. Delivered events, on the other hand, can be affected byserver grabs. If a recording client selects both a device eventand delivered events that result from that device event, thedelivered events are recorded after the device event. In theabsence of grabs, the delivered events for a device event precedelater device events.Requests that have side effects on devices, such as WarpPointerand GrabPointer with a confine-to window, will cause RECORD torecord an associated device event. The XTEST extension requestXTestFakeInput causes a device event to be recorded; the deviceevents are recorded in the same order that the XTestFakeInputrequests are received by the server.If a key autorepeats, multiple KeyPress and KeyRelease deviceevents are reported.2.1.5. TimingRequests are recorded just before they are executed; the timeassociated with a request is the server time when it is recorded.2.2. TypesThe following new types are used in the request definitions thatappear in section 3.The RC type is a resource identifier for a server record context.The RECORDRANGE structure contains the protocol values tointercept. Typically, this structure is sent by recordingclients over the control connection when creating or modifying anRC.core-requestsSpecifies core X protocol requests with an opcode fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no core requests are specified bythis RECORDRANGE. If first is greater than last, a Valueerror results.core-repliesSpecifies replies resulting from core X protocol requestswith an opcode field between first and last inclusive. Iffirst is equal to 0 and last is equal to 0, no core repliesare specified by this RECORDRANGE. If first is greater thanlast, a Value error results.ext-requestsSpecifies extension protocol requests with a major opcodefield between major.first and major.last and a minor opcodefield between minor.first and minor.last inclusive. Ifmajor.first and major.last are equal to 0, no extensionprotocol requests are specified by this RECORDRANGE. Ifmajor.first or major.last is less than 128 and greater than0, if major.first is greater than major.last, or ifminor.first is greater than minor.last, a Value errorresults.ext-repliesSpecifies replies resulting from extension protocol requestswith a major opcode field between major.first and major.lastand a minor opcode field between minor.first and minor.lastinclusive. If major.first and major.last are equal to 0, noextension protocol replies are specified by thisRECORDRANGE. If major.first or major.last is less than 128and greater than 0, if major.first is greater thanmajor.last, or if minor.first is greater than minor.last, aValue error results.delivered-eventsThis is used for both core X protocol events and arbitraryextension events. Specifies events that are delivered to atleast one client that have a code field between first andlast inclusive. If first is equal to 0 and last is equal to0, no events are specified by this RECORDRANGE. Otherwise,if first is less than 2 or last is less than 2, or if firstis greater than last, a Value error results.device-eventsThis is used for both core X device events and X extensiondevice events that may or may not be delivered to a client.Specifies device events that have a code field between firstand last inclusive. If first is equal to 0 and last isequal to 0, no device events are specified by thisRECORDRANGE. Otherwise, if first is less than 2 or last isless than 2, or if first is greater than last, a Value errorresults.Because the generated device event may or may not beassociated with a client, unlike other RECORDRANGEcomponents, which select protocol for a specific client,selecting for device events in any RECORDRANGE in an RCcauses the recording client to receive one instance for eachdevice event generated that is in the range specified.errorsThis is used for both core X protocol errors and arbitraryextension errors. Specifies errors that have a code fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no errors are specified by thisRECORDRANGE. If first is greater than last, a Value errorresults.client-startedSpecifies the connection setup reply. If False, theconnection setup reply is not specified by this RECORDRANGE.client-diedSpecifies notification when a client disconnects. If False,notification when a client disconnects is not specified bythis RECORDRANGE.The ELEMENT_HEADER structure specifies additional data thatprecedes each protocol element in the data field of aRecordEnableContext reply.&bull; If from-server-time is True, each intercepted protocol elementwith category FromServer is preceded by the server time whenthe protocol was recorded.&bull; If from-client-time is True, each intercepted protocol elementwith category FromClient is preceded by the server time whenthe protocol was recorded.&bull; If from-client-sequence is True, each intercepted protocolelement with category FromClient or ClientDied is preceded bythe 32-bit sequence number of the recorded client&rsquo;s mostrecent request processed by the server at that time. ForFromClient, this will be one less than the sequence number ofthe following request. For ClientDied, the sequence numberwill be the only data, because no protocol is recorded.Note that a reply containing device events is treated the same asother replies with category FromServer for purposes of theseflags. Protocol with category FromServer is never preceded by asequence number because almost all such protocol has a sequencenumber in it anyway.If both a server time and a sequence number have been requestedfor a reply, each protocol request is preceded first by the timeand second by the sequence number.The XIDBASE type is used to identify a particular client. Validvalues are any existing resource identifier of any connectedclient, in which case the client that created the resource isspecified, or the resource identifier base sent to the targetclient from the server in the connection setup reply. A value of0 (zero) is valid when the XIDBASE is associated with deviceevents that may not have been delivered to a client.The CLIENTSPEC type defines the set of clients the RC attributesare associated with. This type is used by recording clients whencreating an RC or when changing RC attributes. XIDBASE specifiesthat the RC attributes apply to a single client only.CurrentClients specifies that the RC attributes apply to currentclient connections; FutureClients specifies future clientconnections; AllClients specifies all client connections, whichincludes current and future.The numeric values for CurrentClients, FutureClients andAllClients are defined such that there will be no intersectionwith valid XIDBASEs.When the context is enabled, the data connection is unregisteredif it was registered. If the context is enabled, CurrentClientsand AllClients silently exclude the recording data connection.It is an error to explicitly register the data connection.This structure specifies an intercepted client and the protocolto be intercepted for the client. The client-resource field is aresource base that identifies the intercepted client. Theintercepted-protocol field specifies the protocol to interceptfor the client-resource.2.3. Errors</a><br>
+<a href="#3. Protocol RequestsRecordQueryVersionmajor-version, minor-version: CARD16&rarr; major-version, minor-version: CARD16This request specifies the RECORD extension protocol version theclient would like to use. When the specified protocol version issupported by the extension, the protocol version the serverexpects from the client is returned. Clients must use thisrequest before other RECORD extension requests.This request also determines whether or not the RECORD extensionprotocol version specified by the client is supported by theextension. If the extension supports the version specified bythe client, this version number should be returned. If theclient has requested a higher version than is supported by theserver, the server&rsquo;s highest version should be returned.Otherwise, if the client has requested a lower version than issupported by the server, the server&rsquo;s lowest version should bereturned. This document defines major version one (1), minorversion thirteen (13).RecordCreateContextcontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, IDChoice, AllocThis request creates a new record context within the server andassigns the identifier context to it. After the context iscreated, this request registers the set of clients inclient-specifiers with the context and specifies the protocol tointercept for those clients. The recorded protocol elements willbe preceded by data as specified by element-header. Typically,this request is used by a recording client over the controlconnection. Multiple RC objects can exist simultaneously,containing overlapping sets of protocol and clients to intercept.If any of the values in element-header or ranges is invalid, aValue error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in theclient-specifiers list is not a valid CLIENTSPEC, a Match errorresults. Otherwise, each item in the client-specifiers list isprocessed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context and theprotocol to intercept for the client is then set to ranges.&bull; If the item is CurrentClients, all existing clients areregistered with the context at this time. The protocol tointercept for all clients registered with the context is thenset to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordRegisterClientscontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, RecordContext, AllocThis request registers the set of clients in client-specifierswith the given context and specifies the protocol to interceptfor those clients. The header preceding each recorded protocolelement is set as specified by element-header. These flagsaffect the entire context; their effect is not limited to theclients registered by this request. Typically, this request isused by a recording client over the control connection.If context does not name a valid RC, a RecordContext errorresults. If any of the values in element-header or ranges isinvalid, a Value error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in the list ofclient-specifiers is not a valid CLIENTSPEC, a Match errorresults. If the context is enabled and the XID of the enablingconnection is specified, a Match error results. Otherwise, eachitem in the client-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context if it is notalready registered. The protocol to intercept for the clientis then set to ranges.&bull; If the item is CurrentClients, all existing clients that arenot already registered with the specified context, except theenabling connection if the context is enabled, are registeredat this time. The protocol to intercept for all clientsregistered with the context is then set to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context. The set ofclients that are registered with the context and theircorresponding sets of protocol to intercept are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordUnregisterClientscontext: RCclient-specifiers: LISTofCLIENTSPECErrors: Match, RecordContextThis request removes the set of clients in client-specifiers fromthe given context&rsquo;s set of registered clients. Typically, thisrequest is used by a recording client over the controlconnection.If context does not name a valid RC, a RecordContext errorresults. Duplicate items in the list of client-specifiers areignored. If any item in the list is not a valid CLIENTSPEC, aMatch error results. Otherwise, each item in theclient-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, andthe specified client is currently registered with the context,it is unregistered, and the set of protocol to intercept forthe client is deleted from the context. If the specifiedclient is not registered with the context, the item has noeffect.&bull; If the item is CurrentClients, all clients currentlyregistered with the context are unregistered from it, andtheir corresponding sets of protocol to intercept are deletedfrom the context.&bull; If the item is FutureClients, clients that connect to theserver after this request executes will not automatically beregistered with the context. The set of clients that areregistered with this context and their corresponding sets ofprotocol that will be intercepted are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.A client is unregistered automatically when it disconnects.RecordGetContextcontext: RC&rarr; enabled: BOOLelement-header: ELEMENT_HEADERintercepted-clients: LISTofCLIENT_INFOErrors: RecordContextThis request queries the current state of the specified contextand is typically used by a recording client over the controlconnection. The enabled field specifies the state of datatransfer between the extension and the recording client, and iseither enabled (True) or disabled (False). The initial state isdisabled. When enabled, all core X protocol and extensionprotocol received from (requests) or sent to (replies, errors,events) a particular client, and requested to be intercepted bythe recording client, is reported to the recording client overthe data connection. The element-header specifies the headerthat precedes each recorded protocol element. Theintercepted-clients field specifies the list of clients currentlybeing recorded and the protocol associated with each client. Iffuture clients will be automatically registered with the context,one of the returned CLIENT_INFO structures has a client-resourcevalue of FutureClients and an intercepted-protocol giving theprotocol to intercept for future clients. Protocol ranges may bedecomposed, coalesced, or otherwise modified by the server fromhow they were specified by the client. All CLIENTSPECsregistered with the server are returned, even if theRECORDRANGE(s) associated with them specify no protocol torecord.When the context argument is not valid, a RecordContext errorresults.RecordEnableContextcontext: RC&rarr;+ category: {FromServer, FromClient, ClientStarted,ClientDied, StartOfData, EndOfData}element-header: ELEMENT_HEADERclient-swapped: BOOLid-base: XIDBASEserver-time: TIMESTAMPrecorded-sequence-number: CARD32data: LISTofBYTEErrors: Match, RecordContextThis request enables data transfer between the recording clientand the extension and returns the protocol data the recordingclient has previously expressed interest in. Typically, thisrequest is executed by the recording client over the dataconnection.If the client is registered on the context, it is unregisteredbefore any recording begins.Once the server receives this request, it begins intercepting andreporting to the recording client all core and extension protocolreceived from or sent to clients registered with the RC that therecording client has expressed interest in. All interceptedprotocol data is returned in the byte-order of the recordedclient. Therefore, recording clients are responsible for allbyte swapping, if required. More than one recording clientcannot enable data transfer on the same RC at the same time.Multiple intercepted requests, replies, events and errors mightbe packaged into a single reply before being returned to therecording clients.The category field determines the possible types of the data.When a context is enabled, the server will immediately send areply of category StartOfData to notify the client that recordingis enabled. A category of FromClient means the data are from theclient (requests); FromServer means data are from the server(replies, errors, events, or device events). For a new client,the category is ClientStarted and the data are the connectionsetup reply. When the recorded client connection is closed,category is set to the value ClientDied and no protocol isincluded in this reply. When the disable request is made overthe control connection, a final reply is sent over the dataconnection with category EndOfData and no protocol.The element-header field returns the value currently set for thecontext, which tells what header information precedes eachrecorded protocol element in this reply.The client-swapped field is True if the byte order of theprotocol being recorded is swapped relative to the recordingclient; otherwise, client-swapped is False. The recordedprotocol is in the byte order of the client being recorded;device events are in the byte order of the recording client. Forreplies of category StartOfData and EndOfData the client-swappedbit is set according to the byte order of the server relative tothe recording client. The id-base field is the resourceidentifier base sent to the client from the server in theconnection setup reply, and hence, identifies the client beingrecorded. The id-base field is 0 (zero) when the protocol databeing returned are device events. The server-time field is setto the time of the server when the first protocol element in thisreply was intercepted. The server-time of reply N+1 is greaterthan or equal to the server-time of reply N, and is greater thanor equal to the time of the last protocol element in reply N.The recorded-sequence-number field is set to the sequence numberof the recorded client&rsquo;s most recent request processed by theserver.The data field contains the raw protocol data being returned tothe recording client. If requested by the element-header of thisrecord context, each protocol element may be preceded by a 32-bittimestamp and/or a 32-bit sequence number. If present, both thetimestamp and sequence number are always in the byte order of therecording client.For the core X events KeyPress, KeyRelease, ButtonPress, andButtonRelease, the fields of a device event that contain validinformation are time and detail. For the core X eventMotionNotify, the fields of a device event that contain validinformation are time, root, root-x and root-y. The time fieldrefers to the time the event was generated by the device.For the extension input device events DeviceKeyPress,DeviceKeyRelease, DeviceButtonPress, and DeviceButtonRelease, thefields of a device event that contain valid information aredevice, time and detail. For DeviceMotionNotify, the validdevice event fields are device and time. For the extension inputdevice events ProximityIn and ProximityOut, the fields of adevice event that contain valid information are device and time.For the extension input device event DeviceValuator, the fieldsof a device event that contain valid information are device,num_valuators, first_valuator, and valuators. The time fieldrefers to the time the event was generated by the device.The error Match is returned when data transfer is alreadyenabled. When the context argument is not valid, a RecordContexterror results.RecordDisableContextcontext: RCErrors: RecordContextThis request is typically executed by the recording client overthe control connection. This request directs the extension toimmediately send any complete protocol elements currentlybuffered, to send a final reply with category EndOfData, and todiscontinue data transfer between the extension and the recordingclient. Protocol reporting is disabled on the data connectionthat is currently enabled for the given context. Once theextension completes processing this request, no additionalrecorded protocol will be reported to the recording client. If adata connection is not currently enabled when this request isexecuted, then this request has no affect on the state of datatransfer. An RC is disabled automatically when the connection tothe enabling client is closed down.When the context argument is not valid, a RecordContext errorresults.RecordFreeContextcontext : RCErrors: RecordContextThis request deletes the association between the resource ID andthe RC and destroys the RC. If a client has enabled datatransfer on this context, the actions described inRecordDisableContext are performed before the context is freed.An RC is destroyed automatically when the connection to thecreating client is closed down and the close-down mode isDestroyAll. When the context argument is not valid, aRecordContext error results.4. EncodingPlease refer to the X11 Protocol Encoding document as thisdocument uses conventions established there.The name of this extension is &quot;RECORD&quot;.4.1. Types">3. Protocol RequestsRecordQueryVersionmajor-version, minor-version: CARD16&rarr; major-version, minor-version: CARD16This request specifies the RECORD extension protocol version theclient would like to use. When the specified protocol version issupported by the extension, the protocol version the serverexpects from the client is returned. Clients must use thisrequest before other RECORD extension requests.This request also determines whether or not the RECORD extensionprotocol version specified by the client is supported by theextension. If the extension supports the version specified bythe client, this version number should be returned. If theclient has requested a higher version than is supported by theserver, the server&rsquo;s highest version should be returned.Otherwise, if the client has requested a lower version than issupported by the server, the server&rsquo;s lowest version should bereturned. This document defines major version one (1), minorversion thirteen (13).RecordCreateContextcontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, IDChoice, AllocThis request creates a new record context within the server andassigns the identifier context to it. After the context iscreated, this request registers the set of clients inclient-specifiers with the context and specifies the protocol tointercept for those clients. The recorded protocol elements willbe preceded by data as specified by element-header. Typically,this request is used by a recording client over the controlconnection. Multiple RC objects can exist simultaneously,containing overlapping sets of protocol and clients to intercept.If any of the values in element-header or ranges is invalid, aValue error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in theclient-specifiers list is not a valid CLIENTSPEC, a Match errorresults. Otherwise, each item in the client-specifiers list isprocessed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context and theprotocol to intercept for the client is then set to ranges.&bull; If the item is CurrentClients, all existing clients areregistered with the context at this time. The protocol tointercept for all clients registered with the context is thenset to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordRegisterClientscontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, RecordContext, AllocThis request registers the set of clients in client-specifierswith the given context and specifies the protocol to interceptfor those clients. The header preceding each recorded protocolelement is set as specified by element-header. These flagsaffect the entire context; their effect is not limited to theclients registered by this request. Typically, this request isused by a recording client over the control connection.If context does not name a valid RC, a RecordContext errorresults. If any of the values in element-header or ranges isinvalid, a Value error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in the list ofclient-specifiers is not a valid CLIENTSPEC, a Match errorresults. If the context is enabled and the XID of the enablingconnection is specified, a Match error results. Otherwise, eachitem in the client-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context if it is notalready registered. The protocol to intercept for the clientis then set to ranges.&bull; If the item is CurrentClients, all existing clients that arenot already registered with the specified context, except theenabling connection if the context is enabled, are registeredat this time. The protocol to intercept for all clientsregistered with the context is then set to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context. The set ofclients that are registered with the context and theircorresponding sets of protocol to intercept are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordUnregisterClientscontext: RCclient-specifiers: LISTofCLIENTSPECErrors: Match, RecordContextThis request removes the set of clients in client-specifiers fromthe given context&rsquo;s set of registered clients. Typically, thisrequest is used by a recording client over the controlconnection.If context does not name a valid RC, a RecordContext errorresults. Duplicate items in the list of client-specifiers areignored. If any item in the list is not a valid CLIENTSPEC, aMatch error results. Otherwise, each item in theclient-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, andthe specified client is currently registered with the context,it is unregistered, and the set of protocol to intercept forthe client is deleted from the context. If the specifiedclient is not registered with the context, the item has noeffect.&bull; If the item is CurrentClients, all clients currentlyregistered with the context are unregistered from it, andtheir corresponding sets of protocol to intercept are deletedfrom the context.&bull; If the item is FutureClients, clients that connect to theserver after this request executes will not automatically beregistered with the context. The set of clients that areregistered with this context and their corresponding sets ofprotocol that will be intercepted are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.A client is unregistered automatically when it disconnects.RecordGetContextcontext: RC&rarr; enabled: BOOLelement-header: ELEMENT_HEADERintercepted-clients: LISTofCLIENT_INFOErrors: RecordContextThis request queries the current state of the specified contextand is typically used by a recording client over the controlconnection. The enabled field specifies the state of datatransfer between the extension and the recording client, and iseither enabled (True) or disabled (False). The initial state isdisabled. When enabled, all core X protocol and extensionprotocol received from (requests) or sent to (replies, errors,events) a particular client, and requested to be intercepted bythe recording client, is reported to the recording client overthe data connection. The element-header specifies the headerthat precedes each recorded protocol element. Theintercepted-clients field specifies the list of clients currentlybeing recorded and the protocol associated with each client. Iffuture clients will be automatically registered with the context,one of the returned CLIENT_INFO structures has a client-resourcevalue of FutureClients and an intercepted-protocol giving theprotocol to intercept for future clients. Protocol ranges may bedecomposed, coalesced, or otherwise modified by the server fromhow they were specified by the client. All CLIENTSPECsregistered with the server are returned, even if theRECORDRANGE(s) associated with them specify no protocol torecord.When the context argument is not valid, a RecordContext errorresults.RecordEnableContextcontext: RC&rarr;+ category: {FromServer, FromClient, ClientStarted,ClientDied, StartOfData, EndOfData}element-header: ELEMENT_HEADERclient-swapped: BOOLid-base: XIDBASEserver-time: TIMESTAMPrecorded-sequence-number: CARD32data: LISTofBYTEErrors: Match, RecordContextThis request enables data transfer between the recording clientand the extension and returns the protocol data the recordingclient has previously expressed interest in. Typically, thisrequest is executed by the recording client over the dataconnection.If the client is registered on the context, it is unregisteredbefore any recording begins.Once the server receives this request, it begins intercepting andreporting to the recording client all core and extension protocolreceived from or sent to clients registered with the RC that therecording client has expressed interest in. All interceptedprotocol data is returned in the byte-order of the recordedclient. Therefore, recording clients are responsible for allbyte swapping, if required. More than one recording clientcannot enable data transfer on the same RC at the same time.Multiple intercepted requests, replies, events and errors mightbe packaged into a single reply before being returned to therecording clients.The category field determines the possible types of the data.When a context is enabled, the server will immediately send areply of category StartOfData to notify the client that recordingis enabled. A category of FromClient means the data are from theclient (requests); FromServer means data are from the server(replies, errors, events, or device events). For a new client,the category is ClientStarted and the data are the connectionsetup reply. When the recorded client connection is closed,category is set to the value ClientDied and no protocol isincluded in this reply. When the disable request is made overthe control connection, a final reply is sent over the dataconnection with category EndOfData and no protocol.The element-header field returns the value currently set for thecontext, which tells what header information precedes eachrecorded protocol element in this reply.The client-swapped field is True if the byte order of theprotocol being recorded is swapped relative to the recordingclient; otherwise, client-swapped is False. The recordedprotocol is in the byte order of the client being recorded;device events are in the byte order of the recording client. Forreplies of category StartOfData and EndOfData the client-swappedbit is set according to the byte order of the server relative tothe recording client. The id-base field is the resourceidentifier base sent to the client from the server in theconnection setup reply, and hence, identifies the client beingrecorded. The id-base field is 0 (zero) when the protocol databeing returned are device events. The server-time field is setto the time of the server when the first protocol element in thisreply was intercepted. The server-time of reply N+1 is greaterthan or equal to the server-time of reply N, and is greater thanor equal to the time of the last protocol element in reply N.The recorded-sequence-number field is set to the sequence numberof the recorded client&rsquo;s most recent request processed by theserver.The data field contains the raw protocol data being returned tothe recording client. If requested by the element-header of thisrecord context, each protocol element may be preceded by a 32-bittimestamp and/or a 32-bit sequence number. If present, both thetimestamp and sequence number are always in the byte order of therecording client.For the core X events KeyPress, KeyRelease, ButtonPress, andButtonRelease, the fields of a device event that contain validinformation are time and detail. For the core X eventMotionNotify, the fields of a device event that contain validinformation are time, root, root-x and root-y. The time fieldrefers to the time the event was generated by the device.For the extension input device events DeviceKeyPress,DeviceKeyRelease, DeviceButtonPress, and DeviceButtonRelease, thefields of a device event that contain valid information aredevice, time and detail. For DeviceMotionNotify, the validdevice event fields are device and time. For the extension inputdevice events ProximityIn and ProximityOut, the fields of adevice event that contain valid information are device and time.For the extension input device event DeviceValuator, the fieldsof a device event that contain valid information are device,num_valuators, first_valuator, and valuators. The time fieldrefers to the time the event was generated by the device.The error Match is returned when data transfer is alreadyenabled. When the context argument is not valid, a RecordContexterror results.RecordDisableContextcontext: RCErrors: RecordContextThis request is typically executed by the recording client overthe control connection. This request directs the extension toimmediately send any complete protocol elements currentlybuffered, to send a final reply with category EndOfData, and todiscontinue data transfer between the extension and the recordingclient. Protocol reporting is disabled on the data connectionthat is currently enabled for the given context. Once theextension completes processing this request, no additionalrecorded protocol will be reported to the recording client. If adata connection is not currently enabled when this request isexecuted, then this request has no affect on the state of datatransfer. An RC is disabled automatically when the connection tothe enabling client is closed down.When the context argument is not valid, a RecordContext errorresults.RecordFreeContextcontext : RCErrors: RecordContextThis request deletes the association between the resource ID andthe RC and destroys the RC. If a client has enabled datatransfer on this context, the actions described inRecordDisableContext are performed before the context is freed.An RC is destroyed automatically when the connection to thecreating client is closed down and the close-down mode isDestroyAll. When the context argument is not valid, aRecordContext error results.4. EncodingPlease refer to the X11 Protocol Encoding document as thisdocument uses conventions established there.The name of this extension is &quot;RECORD&quot;.4.1. Types</a><br>
+<a href="#4.2. Errors">4.2. Errors</a><br>
+<a href="#4.3. Requests">4.3. Requests</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Record
+Extension Protocol Specification</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small><small>Version
+1.13</small></small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small><small>X
+Consortium Standard</small></small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small><small>X
+Version 11, Release 6.4</small></small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Martha
+Zimet Network Computing Devices, Inc.</small></small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>edited
+by Stephen Gildea X Consortium</small></small></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1994 Network Computing Devices, Inc.</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, distribute, and sell this documentation for
+any purpose is hereby granted without fee, provided that the
+above copyright notice and this permission notice appear in
+all copies. Network Computing Devices, Inc. makes no
+representations about the suitability for any purpose of the
+information in this document. This documentation is provided
+&quot;as is&quot; without express or implied warranty.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+1994, 1995 X Consortium</p>
+
+<p style="margin-top: 1em" valign="top">Permission is
+hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &quot;Software&quot;), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom
+the Software is furnished to do so, subject to the following
+conditions:</p>
+
+<p style="margin-top: 1em" valign="top">The above copyright
+notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p style="margin-top: 1em" valign="top">THE SOFTWARE IS
+PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE X
+CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Except as contained
+in this notice, the name of the X Consortium and shall not
+be used in advertising or otherwise to promote the sale, use
+or other dealings in this Software without prior written
+authorization from the X Consortium.</p>
+
+<p style="margin-top: 1em" valign="top"><b>X11, Release 6.4
+Record Extension Protocol, Version 1.13</b></p>
+
+<a name="1. IntroductionSeveral proposals have been written over the past few years thataddress some of the issues surrounding the recording and playbackof user actions in the X Window System1:&bull; Some Proposals for a Minimal X11 Testing Extension, KieronDrake, UniSoft Ltd., April 1991&bull; X11 Input Synthesis Extension Proposal, Larry Woestman,Hewlett Packard, November 1991&bull; XTrap Architecture, Dick Annicchiario, et al, DigitalEquipment Corporation, July 1991&bull; XTest Extension Recording Specification, Yochanan Slonim,Mercury Interactive, December 1992This document both unifies and extends the previous diverseapproaches to generate a proposal for an X extension thatprovides support for the recording of all core X protocol andarbitrary extension protocol. Input synthesis, or playback, hasalready been implemented in the XTest extension, an X Consortiumstandard. Therefore, this extension is limited to recording.In order to provide both record and playback functionality, ahypothetical record application could use this extension tocapture both user actions and their consequences. For example, abutton press (a user action) may cause a window to be mapped anda corresponding MapNotify event to be sent (a consequence). Thisinformation could be stored for later use by a playbackapplication.The playback application could use the recorded actions as inputfor the XTest extension&rsquo;s XTestFakeInput operation to synthesizethe appropriate input events. The &quot;consequence&quot; orsynchronization information is then used as a synchronizationpoint during playback. That is, the playback application doesnot generate specific synthesized events until their matchingsynchronization condition occurs. When the condition occurs theprocessing of synthesized events continues. Determination thatthe condition has occurred may be made by capturing theconsequences of the synthesized events and comparing them to thepreviously recorded synchronization information. For example, ifa button press was followed by a MapNotify event on a particularwindow in the recorded data, the playback application mightsynthesize the button press then wait for the MapNotify event onthe appropriate window before proceeding with subsequentsynthesized input.Because it is impossible to predict what synchronizationinformation will be required by a particular application, theextension provides facilities to record any subset of core Xprotocol and arbitrary extension protocol. As such, thisextension does not enforce a specific synchronizationmethodology; any method based on information in the X protocolstream (e.g., watching for window mapping/unmapping, cursorchanges, drawing of certain text strings, etc.) can capture theinformation it needs using RECORD facilities.1.1. AcknowledgementsThe document represents the culmination of two years of debateand experiments done under the auspices of the X Consortium xtestworking group. Although this was a group effort, the authorremains responsible for any errors or omissions. Two years ago,Robert Chesler of Absol-puter, Kieron Drake of UniSoft Ltd., MarcEvans of Synergytics and Ken Miller of Digitial shared the visionof a standard extension for recording and were all instrumentalin the early protocol development. During the last two years,Bob Scheifler of the X Consortium and Jim Fulton of NCDcontinuously provided input to the protocol design, as well asencouragement to the author. In the last few months, StephenGildea and Dave Wiggins, both X Consortium staff, have spentconsiderable time fine tuning the protocol design and reviewingthe protocol specifications. Most recently, Amnon Cohen ofMercury Interactive has assisted in clarification of the recordedevent policy, and Kent Siefkes of Performance Awareness hasassisted in clarification of the timestamp policy.1.2. Goals&bull; To provide a standard for recording, whereby both deviceevents and synchronization information in the form ofdevice event consequences are recorded.&bull; To record contextual information used in synchronizedplayback without prior knowledge of the application thatis being recorded.&bull; To provide the ability to record arbitrary X protocolextensions.1.3. RequirementsThe extension should function as follows:&bull; It should not be dependent on other clients or extensionsfor its operation.&bull; It should not significantly impact performance.&bull; It should support the recording of all device input (coredevices and XInput devices).&bull; It should be extendible.&bull; It should support the recording of synchronizationinformation for user events.2. DesignThis section gives an overview of the RECORD extension anddiscusses its overall operation and data types.2.1. OverviewThe mechanism used by this extension for recording is tointercept core X protocol and arbitrary X extension protocolentirely within the X server itself. When the extension has beenrequested to intercept specific protocol by one or more clients,the protocol data are formatted and returned to the recordingclients.The extension provides a mechanism for capturing all events,including input device events that go to no clients, that isanalogous to a client expressing &quot;interest&quot; in all events in allwindows, including the root window. Event filtering in theextension provides a mechanism for feeding device events torecording clients; it does not provide a mechanism for in-place,synchronous event substitution, modification, or withholding. Inaddition, the extension does not provide data compression beforeintercepted protocol is returned to the recording clients.2.1.1. Data DeliveryBecause events are limited in size to 32 bytes, using events toreturn intercepted protocol data to recording clients isprohibitive in terms of performance. Therefore, interceptedprotocol data are returned to recording clients through multiplereplies to the extension request to begin protocol interceptionand reporting. This utilization is consistent withListFontsWithInfo, for example, where a single request hasmultiple replies.Individual requests, replies, events or errors intercepted by theextension on behalf of recording clients cannot be split acrossreply packets. In order to reduce overhead, multiple interceptedrequests, replies, events and errors might be collected into asingle reply. Nevertheless, all data are returned to the clientin a timely manner.2.1.2. Record ContextThe extension adds a record context resource (RC) to the set ofresources managed by the server. All the extension operationstake an RC as an argument. Although the protocol permits sharingof RCs between clients, it is expected that clients will usetheir own RCs. The attributes used in extension operations arestored in the RCs, and these attributes include the protocol andclients to intercept.The terms &quot;register&quot; and &quot;unregister&quot; are used to describe therelationship between clients to intercept and the RC. Toregister a client with an RC means the client is added to thelist of clients to intercept; to unregister a client means theclient is deleted from the list of clients to intercept. Whenthe server is requested to register or unregister clients from anRC, it is required to do so immediately. That is, it is notpermissible for the server to wait until recording is enabled toregister clients or recording is disabled to unregister clients.2.1.3. Record Client ConnectionsThe typical communication model for a recording client is to opentwo connections to the server and use one for RC control and theother for reading protocol data.The &quot;control&quot; connection can execute requests to obtaininformation about the supported protocol version, create anddestroy RCs, specify protocol types to intercept and clients tobe recorded, query the current state of an RC, and to stopinterception and reporting of protocol data. The &quot;data&quot;connection can execute a request to enable interception andreporting of specified protocol for a particular RC. When the&quot;enable&quot; request is issued, intercepted protocol is sent back onthe same connection, generally in more than one reply packet.Until the last reply to the &quot;enable&quot; request is sent by theserver, signifying that the request execution is complete, noother requests will be executed by the server on that connection.That is, the connection that data are being reported on cannotissue the &quot;disable&quot; request until the last reply to the &quot;enable&quot;request is sent by the server. Therefore, unless a recordingclient never has the need to disable the interception andreporting of protocol data, two client connections are necessary.2.1.4. EventsThe terms &quot;delivered events&quot; and &quot;device events&quot; are used todescribe the two event classes recording clients may select forinterception. These event classes are handled differently by theextension. Delivered events are core X events or X extensionevents the server actually delivers to one or more clients.Device events are events generated by core X devices or extensioninput devices that the server may or may not deliver to anyclients. When device events are selected for interception by arecording client, the extension guarantees each device event isrecorded and will be forwarded to the recording client in thesame order it is generated by the device.The recording of selected device events is not affected by servergrabs. Delivered events, on the other hand, can be affected byserver grabs. If a recording client selects both a device eventand delivered events that result from that device event, thedelivered events are recorded after the device event. In theabsence of grabs, the delivered events for a device event precedelater device events.Requests that have side effects on devices, such as WarpPointerand GrabPointer with a confine-to window, will cause RECORD torecord an associated device event. The XTEST extension requestXTestFakeInput causes a device event to be recorded; the deviceevents are recorded in the same order that the XTestFakeInputrequests are received by the server.If a key autorepeats, multiple KeyPress and KeyRelease deviceevents are reported.2.1.5. TimingRequests are recorded just before they are executed; the timeassociated with a request is the server time when it is recorded.2.2. TypesThe following new types are used in the request definitions thatappear in section 3.The RC type is a resource identifier for a server record context.The RECORDRANGE structure contains the protocol values tointercept. Typically, this structure is sent by recordingclients over the control connection when creating or modifying anRC.core-requestsSpecifies core X protocol requests with an opcode fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no core requests are specified bythis RECORDRANGE. If first is greater than last, a Valueerror results.core-repliesSpecifies replies resulting from core X protocol requestswith an opcode field between first and last inclusive. Iffirst is equal to 0 and last is equal to 0, no core repliesare specified by this RECORDRANGE. If first is greater thanlast, a Value error results.ext-requestsSpecifies extension protocol requests with a major opcodefield between major.first and major.last and a minor opcodefield between minor.first and minor.last inclusive. Ifmajor.first and major.last are equal to 0, no extensionprotocol requests are specified by this RECORDRANGE. Ifmajor.first or major.last is less than 128 and greater than0, if major.first is greater than major.last, or ifminor.first is greater than minor.last, a Value errorresults.ext-repliesSpecifies replies resulting from extension protocol requestswith a major opcode field between major.first and major.lastand a minor opcode field between minor.first and minor.lastinclusive. If major.first and major.last are equal to 0, noextension protocol replies are specified by thisRECORDRANGE. If major.first or major.last is less than 128and greater than 0, if major.first is greater thanmajor.last, or if minor.first is greater than minor.last, aValue error results.delivered-eventsThis is used for both core X protocol events and arbitraryextension events. Specifies events that are delivered to atleast one client that have a code field between first andlast inclusive. If first is equal to 0 and last is equal to0, no events are specified by this RECORDRANGE. Otherwise,if first is less than 2 or last is less than 2, or if firstis greater than last, a Value error results.device-eventsThis is used for both core X device events and X extensiondevice events that may or may not be delivered to a client.Specifies device events that have a code field between firstand last inclusive. If first is equal to 0 and last isequal to 0, no device events are specified by thisRECORDRANGE. Otherwise, if first is less than 2 or last isless than 2, or if first is greater than last, a Value errorresults.Because the generated device event may or may not beassociated with a client, unlike other RECORDRANGEcomponents, which select protocol for a specific client,selecting for device events in any RECORDRANGE in an RCcauses the recording client to receive one instance for eachdevice event generated that is in the range specified.errorsThis is used for both core X protocol errors and arbitraryextension errors. Specifies errors that have a code fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no errors are specified by thisRECORDRANGE. If first is greater than last, a Value errorresults.client-startedSpecifies the connection setup reply. If False, theconnection setup reply is not specified by this RECORDRANGE.client-diedSpecifies notification when a client disconnects. If False,notification when a client disconnects is not specified bythis RECORDRANGE.The ELEMENT_HEADER structure specifies additional data thatprecedes each protocol element in the data field of aRecordEnableContext reply.&bull; If from-server-time is True, each intercepted protocol elementwith category FromServer is preceded by the server time whenthe protocol was recorded.&bull; If from-client-time is True, each intercepted protocol elementwith category FromClient is preceded by the server time whenthe protocol was recorded.&bull; If from-client-sequence is True, each intercepted protocolelement with category FromClient or ClientDied is preceded bythe 32-bit sequence number of the recorded client&rsquo;s mostrecent request processed by the server at that time. ForFromClient, this will be one less than the sequence number ofthe following request. For ClientDied, the sequence numberwill be the only data, because no protocol is recorded.Note that a reply containing device events is treated the same asother replies with category FromServer for purposes of theseflags. Protocol with category FromServer is never preceded by asequence number because almost all such protocol has a sequencenumber in it anyway.If both a server time and a sequence number have been requestedfor a reply, each protocol request is preceded first by the timeand second by the sequence number.The XIDBASE type is used to identify a particular client. Validvalues are any existing resource identifier of any connectedclient, in which case the client that created the resource isspecified, or the resource identifier base sent to the targetclient from the server in the connection setup reply. A value of0 (zero) is valid when the XIDBASE is associated with deviceevents that may not have been delivered to a client.The CLIENTSPEC type defines the set of clients the RC attributesare associated with. This type is used by recording clients whencreating an RC or when changing RC attributes. XIDBASE specifiesthat the RC attributes apply to a single client only.CurrentClients specifies that the RC attributes apply to currentclient connections; FutureClients specifies future clientconnections; AllClients specifies all client connections, whichincludes current and future.The numeric values for CurrentClients, FutureClients andAllClients are defined such that there will be no intersectionwith valid XIDBASEs.When the context is enabled, the data connection is unregisteredif it was registered. If the context is enabled, CurrentClientsand AllClients silently exclude the recording data connection.It is an error to explicitly register the data connection.This structure specifies an intercepted client and the protocolto be intercepted for the client. The client-resource field is aresource base that identifies the intercepted client. Theintercepted-protocol field specifies the protocol to interceptfor the client-resource.2.3. Errors"></a>
+<h2>1. IntroductionSeveral proposals have been written over the past few years thataddress some of the issues surrounding the recording and playbackof user actions in the X Window System1:&bull; Some Proposals for a Minimal X11 Testing Extension, KieronDrake, UniSoft Ltd., April 1991&bull; X11 Input Synthesis Extension Proposal, Larry Woestman,Hewlett Packard, November 1991&bull; XTrap Architecture, Dick Annicchiario, et al, DigitalEquipment Corporation, July 1991&bull; XTest Extension Recording Specification, Yochanan Slonim,Mercury Interactive, December 1992This document both unifies and extends the previous diverseapproaches to generate a proposal for an X extension thatprovides support for the recording of all core X protocol andarbitrary extension protocol. Input synthesis, or playback, hasalready been implemented in the XTest extension, an X Consortiumstandard. Therefore, this extension is limited to recording.In order to provide both record and playback functionality, ahypothetical record application could use this extension tocapture both user actions and their consequences. For example, abutton press (a user action) may cause a window to be mapped anda corresponding MapNotify event to be sent (a consequence). Thisinformation could be stored for later use by a playbackapplication.The playback application could use the recorded actions as inputfor the XTest extension&rsquo;s XTestFakeInput operation to synthesizethe appropriate input events. The &quot;consequence&quot; orsynchronization information is then used as a synchronizationpoint during playback. That is, the playback application doesnot generate specific synthesized events until their matchingsynchronization condition occurs. When the condition occurs theprocessing of synthesized events continues. Determination thatthe condition has occurred may be made by capturing theconsequences of the synthesized events and comparing them to thepreviously recorded synchronization information. For example, ifa button press was followed by a MapNotify event on a particularwindow in the recorded data, the playback application mightsynthesize the button press then wait for the MapNotify event onthe appropriate window before proceeding with subsequentsynthesized input.Because it is impossible to predict what synchronizationinformation will be required by a particular application, theextension provides facilities to record any subset of core Xprotocol and arbitrary extension protocol. As such, thisextension does not enforce a specific synchronizationmethodology; any method based on information in the X protocolstream (e.g., watching for window mapping/unmapping, cursorchanges, drawing of certain text strings, etc.) can capture theinformation it needs using RECORD facilities.1.1. AcknowledgementsThe document represents the culmination of two years of debateand experiments done under the auspices of the X Consortium xtestworking group. Although this was a group effort, the authorremains responsible for any errors or omissions. Two years ago,Robert Chesler of Absol-puter, Kieron Drake of UniSoft Ltd., MarcEvans of Synergytics and Ken Miller of Digitial shared the visionof a standard extension for recording and were all instrumentalin the early protocol development. During the last two years,Bob Scheifler of the X Consortium and Jim Fulton of NCDcontinuously provided input to the protocol design, as well asencouragement to the author. In the last few months, StephenGildea and Dave Wiggins, both X Consortium staff, have spentconsiderable time fine tuning the protocol design and reviewingthe protocol specifications. Most recently, Amnon Cohen ofMercury Interactive has assisted in clarification of the recordedevent policy, and Kent Siefkes of Performance Awareness hasassisted in clarification of the timestamp policy.1.2. Goals&bull; To provide a standard for recording, whereby both deviceevents and synchronization information in the form ofdevice event consequences are recorded.&bull; To record contextual information used in synchronizedplayback without prior knowledge of the application thatis being recorded.&bull; To provide the ability to record arbitrary X protocolextensions.1.3. RequirementsThe extension should function as follows:&bull; It should not be dependent on other clients or extensionsfor its operation.&bull; It should not significantly impact performance.&bull; It should support the recording of all device input (coredevices and XInput devices).&bull; It should be extendible.&bull; It should support the recording of synchronizationinformation for user events.2. DesignThis section gives an overview of the RECORD extension anddiscusses its overall operation and data types.2.1. OverviewThe mechanism used by this extension for recording is tointercept core X protocol and arbitrary X extension protocolentirely within the X server itself. When the extension has beenrequested to intercept specific protocol by one or more clients,the protocol data are formatted and returned to the recordingclients.The extension provides a mechanism for capturing all events,including input device events that go to no clients, that isanalogous to a client expressing &quot;interest&quot; in all events in allwindows, including the root window. Event filtering in theextension provides a mechanism for feeding device events torecording clients; it does not provide a mechanism for in-place,synchronous event substitution, modification, or withholding. Inaddition, the extension does not provide data compression beforeintercepted protocol is returned to the recording clients.2.1.1. Data DeliveryBecause events are limited in size to 32 bytes, using events toreturn intercepted protocol data to recording clients isprohibitive in terms of performance. Therefore, interceptedprotocol data are returned to recording clients through multiplereplies to the extension request to begin protocol interceptionand reporting. This utilization is consistent withListFontsWithInfo, for example, where a single request hasmultiple replies.Individual requests, replies, events or errors intercepted by theextension on behalf of recording clients cannot be split acrossreply packets. In order to reduce overhead, multiple interceptedrequests, replies, events and errors might be collected into asingle reply. Nevertheless, all data are returned to the clientin a timely manner.2.1.2. Record ContextThe extension adds a record context resource (RC) to the set ofresources managed by the server. All the extension operationstake an RC as an argument. Although the protocol permits sharingof RCs between clients, it is expected that clients will usetheir own RCs. The attributes used in extension operations arestored in the RCs, and these attributes include the protocol andclients to intercept.The terms &quot;register&quot; and &quot;unregister&quot; are used to describe therelationship between clients to intercept and the RC. Toregister a client with an RC means the client is added to thelist of clients to intercept; to unregister a client means theclient is deleted from the list of clients to intercept. Whenthe server is requested to register or unregister clients from anRC, it is required to do so immediately. That is, it is notpermissible for the server to wait until recording is enabled toregister clients or recording is disabled to unregister clients.2.1.3. Record Client ConnectionsThe typical communication model for a recording client is to opentwo connections to the server and use one for RC control and theother for reading protocol data.The &quot;control&quot; connection can execute requests to obtaininformation about the supported protocol version, create anddestroy RCs, specify protocol types to intercept and clients tobe recorded, query the current state of an RC, and to stopinterception and reporting of protocol data. The &quot;data&quot;connection can execute a request to enable interception andreporting of specified protocol for a particular RC. When the&quot;enable&quot; request is issued, intercepted protocol is sent back onthe same connection, generally in more than one reply packet.Until the last reply to the &quot;enable&quot; request is sent by theserver, signifying that the request execution is complete, noother requests will be executed by the server on that connection.That is, the connection that data are being reported on cannotissue the &quot;disable&quot; request until the last reply to the &quot;enable&quot;request is sent by the server. Therefore, unless a recordingclient never has the need to disable the interception andreporting of protocol data, two client connections are necessary.2.1.4. EventsThe terms &quot;delivered events&quot; and &quot;device events&quot; are used todescribe the two event classes recording clients may select forinterception. These event classes are handled differently by theextension. Delivered events are core X events or X extensionevents the server actually delivers to one or more clients.Device events are events generated by core X devices or extensioninput devices that the server may or may not deliver to anyclients. When device events are selected for interception by arecording client, the extension guarantees each device event isrecorded and will be forwarded to the recording client in thesame order it is generated by the device.The recording of selected device events is not affected by servergrabs. Delivered events, on the other hand, can be affected byserver grabs. If a recording client selects both a device eventand delivered events that result from that device event, thedelivered events are recorded after the device event. In theabsence of grabs, the delivered events for a device event precedelater device events.Requests that have side effects on devices, such as WarpPointerand GrabPointer with a confine-to window, will cause RECORD torecord an associated device event. The XTEST extension requestXTestFakeInput causes a device event to be recorded; the deviceevents are recorded in the same order that the XTestFakeInputrequests are received by the server.If a key autorepeats, multiple KeyPress and KeyRelease deviceevents are reported.2.1.5. TimingRequests are recorded just before they are executed; the timeassociated with a request is the server time when it is recorded.2.2. TypesThe following new types are used in the request definitions thatappear in section 3.The RC type is a resource identifier for a server record context.The RECORDRANGE structure contains the protocol values tointercept. Typically, this structure is sent by recordingclients over the control connection when creating or modifying anRC.core-requestsSpecifies core X protocol requests with an opcode fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no core requests are specified bythis RECORDRANGE. If first is greater than last, a Valueerror results.core-repliesSpecifies replies resulting from core X protocol requestswith an opcode field between first and last inclusive. Iffirst is equal to 0 and last is equal to 0, no core repliesare specified by this RECORDRANGE. If first is greater thanlast, a Value error results.ext-requestsSpecifies extension protocol requests with a major opcodefield between major.first and major.last and a minor opcodefield between minor.first and minor.last inclusive. Ifmajor.first and major.last are equal to 0, no extensionprotocol requests are specified by this RECORDRANGE. Ifmajor.first or major.last is less than 128 and greater than0, if major.first is greater than major.last, or ifminor.first is greater than minor.last, a Value errorresults.ext-repliesSpecifies replies resulting from extension protocol requestswith a major opcode field between major.first and major.lastand a minor opcode field between minor.first and minor.lastinclusive. If major.first and major.last are equal to 0, noextension protocol replies are specified by thisRECORDRANGE. If major.first or major.last is less than 128and greater than 0, if major.first is greater thanmajor.last, or if minor.first is greater than minor.last, aValue error results.delivered-eventsThis is used for both core X protocol events and arbitraryextension events. Specifies events that are delivered to atleast one client that have a code field between first andlast inclusive. If first is equal to 0 and last is equal to0, no events are specified by this RECORDRANGE. Otherwise,if first is less than 2 or last is less than 2, or if firstis greater than last, a Value error results.device-eventsThis is used for both core X device events and X extensiondevice events that may or may not be delivered to a client.Specifies device events that have a code field between firstand last inclusive. If first is equal to 0 and last isequal to 0, no device events are specified by thisRECORDRANGE. Otherwise, if first is less than 2 or last isless than 2, or if first is greater than last, a Value errorresults.Because the generated device event may or may not beassociated with a client, unlike other RECORDRANGEcomponents, which select protocol for a specific client,selecting for device events in any RECORDRANGE in an RCcauses the recording client to receive one instance for eachdevice event generated that is in the range specified.errorsThis is used for both core X protocol errors and arbitraryextension errors. Specifies errors that have a code fieldbetween first and last inclusive. If first is equal to 0and last is equal to 0, no errors are specified by thisRECORDRANGE. If first is greater than last, a Value errorresults.client-startedSpecifies the connection setup reply. If False, theconnection setup reply is not specified by this RECORDRANGE.client-diedSpecifies notification when a client disconnects. If False,notification when a client disconnects is not specified bythis RECORDRANGE.The ELEMENT_HEADER structure specifies additional data thatprecedes each protocol element in the data field of aRecordEnableContext reply.&bull; If from-server-time is True, each intercepted protocol elementwith category FromServer is preceded by the server time whenthe protocol was recorded.&bull; If from-client-time is True, each intercepted protocol elementwith category FromClient is preceded by the server time whenthe protocol was recorded.&bull; If from-client-sequence is True, each intercepted protocolelement with category FromClient or ClientDied is preceded bythe 32-bit sequence number of the recorded client&rsquo;s mostrecent request processed by the server at that time. ForFromClient, this will be one less than the sequence number ofthe following request. For ClientDied, the sequence numberwill be the only data, because no protocol is recorded.Note that a reply containing device events is treated the same asother replies with category FromServer for purposes of theseflags. Protocol with category FromServer is never preceded by asequence number because almost all such protocol has a sequencenumber in it anyway.If both a server time and a sequence number have been requestedfor a reply, each protocol request is preceded first by the timeand second by the sequence number.The XIDBASE type is used to identify a particular client. Validvalues are any existing resource identifier of any connectedclient, in which case the client that created the resource isspecified, or the resource identifier base sent to the targetclient from the server in the connection setup reply. A value of0 (zero) is valid when the XIDBASE is associated with deviceevents that may not have been delivered to a client.The CLIENTSPEC type defines the set of clients the RC attributesare associated with. This type is used by recording clients whencreating an RC or when changing RC attributes. XIDBASE specifiesthat the RC attributes apply to a single client only.CurrentClients specifies that the RC attributes apply to currentclient connections; FutureClients specifies future clientconnections; AllClients specifies all client connections, whichincludes current and future.The numeric values for CurrentClients, FutureClients andAllClients are defined such that there will be no intersectionwith valid XIDBASEs.When the context is enabled, the data connection is unregisteredif it was registered. If the context is enabled, CurrentClientsand AllClients silently exclude the recording data connection.It is an error to explicitly register the data connection.This structure specifies an intercepted client and the protocolto be intercepted for the client. The client-resource field is aresource base that identifies the intercepted client. Theintercepted-protocol field specifies the protocol to interceptfor the client-resource.2.3. Errors</h2>
+
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="26%">
+
+
+
+<p style="margin-top: 1em" valign="top"><b>RecordContext</b></p> </td>
+<td width="74%">
+</td>
+</table>
+
+<p style="margin-left:25%;">This error is returned if the
+value for an RC argument in a request does not name a
+defined record context.</p>
+
+<a name="3. Protocol RequestsRecordQueryVersionmajor-version, minor-version: CARD16&rarr; major-version, minor-version: CARD16This request specifies the RECORD extension protocol version theclient would like to use. When the specified protocol version issupported by the extension, the protocol version the serverexpects from the client is returned. Clients must use thisrequest before other RECORD extension requests.This request also determines whether or not the RECORD extensionprotocol version specified by the client is supported by theextension. If the extension supports the version specified bythe client, this version number should be returned. If theclient has requested a higher version than is supported by theserver, the server&rsquo;s highest version should be returned.Otherwise, if the client has requested a lower version than issupported by the server, the server&rsquo;s lowest version should bereturned. This document defines major version one (1), minorversion thirteen (13).RecordCreateContextcontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, IDChoice, AllocThis request creates a new record context within the server andassigns the identifier context to it. After the context iscreated, this request registers the set of clients inclient-specifiers with the context and specifies the protocol tointercept for those clients. The recorded protocol elements willbe preceded by data as specified by element-header. Typically,this request is used by a recording client over the controlconnection. Multiple RC objects can exist simultaneously,containing overlapping sets of protocol and clients to intercept.If any of the values in element-header or ranges is invalid, aValue error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in theclient-specifiers list is not a valid CLIENTSPEC, a Match errorresults. Otherwise, each item in the client-specifiers list isprocessed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context and theprotocol to intercept for the client is then set to ranges.&bull; If the item is CurrentClients, all existing clients areregistered with the context at this time. The protocol tointercept for all clients registered with the context is thenset to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordRegisterClientscontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, RecordContext, AllocThis request registers the set of clients in client-specifierswith the given context and specifies the protocol to interceptfor those clients. The header preceding each recorded protocolelement is set as specified by element-header. These flagsaffect the entire context; their effect is not limited to theclients registered by this request. Typically, this request isused by a recording client over the control connection.If context does not name a valid RC, a RecordContext errorresults. If any of the values in element-header or ranges isinvalid, a Value error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in the list ofclient-specifiers is not a valid CLIENTSPEC, a Match errorresults. If the context is enabled and the XID of the enablingconnection is specified, a Match error results. Otherwise, eachitem in the client-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context if it is notalready registered. The protocol to intercept for the clientis then set to ranges.&bull; If the item is CurrentClients, all existing clients that arenot already registered with the specified context, except theenabling connection if the context is enabled, are registeredat this time. The protocol to intercept for all clientsregistered with the context is then set to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context. The set ofclients that are registered with the context and theircorresponding sets of protocol to intercept are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordUnregisterClientscontext: RCclient-specifiers: LISTofCLIENTSPECErrors: Match, RecordContextThis request removes the set of clients in client-specifiers fromthe given context&rsquo;s set of registered clients. Typically, thisrequest is used by a recording client over the controlconnection.If context does not name a valid RC, a RecordContext errorresults. Duplicate items in the list of client-specifiers areignored. If any item in the list is not a valid CLIENTSPEC, aMatch error results. Otherwise, each item in theclient-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, andthe specified client is currently registered with the context,it is unregistered, and the set of protocol to intercept forthe client is deleted from the context. If the specifiedclient is not registered with the context, the item has noeffect.&bull; If the item is CurrentClients, all clients currentlyregistered with the context are unregistered from it, andtheir corresponding sets of protocol to intercept are deletedfrom the context.&bull; If the item is FutureClients, clients that connect to theserver after this request executes will not automatically beregistered with the context. The set of clients that areregistered with this context and their corresponding sets ofprotocol that will be intercepted are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.A client is unregistered automatically when it disconnects.RecordGetContextcontext: RC&rarr; enabled: BOOLelement-header: ELEMENT_HEADERintercepted-clients: LISTofCLIENT_INFOErrors: RecordContextThis request queries the current state of the specified contextand is typically used by a recording client over the controlconnection. The enabled field specifies the state of datatransfer between the extension and the recording client, and iseither enabled (True) or disabled (False). The initial state isdisabled. When enabled, all core X protocol and extensionprotocol received from (requests) or sent to (replies, errors,events) a particular client, and requested to be intercepted bythe recording client, is reported to the recording client overthe data connection. The element-header specifies the headerthat precedes each recorded protocol element. Theintercepted-clients field specifies the list of clients currentlybeing recorded and the protocol associated with each client. Iffuture clients will be automatically registered with the context,one of the returned CLIENT_INFO structures has a client-resourcevalue of FutureClients and an intercepted-protocol giving theprotocol to intercept for future clients. Protocol ranges may bedecomposed, coalesced, or otherwise modified by the server fromhow they were specified by the client. All CLIENTSPECsregistered with the server are returned, even if theRECORDRANGE(s) associated with them specify no protocol torecord.When the context argument is not valid, a RecordContext errorresults.RecordEnableContextcontext: RC&rarr;+ category: {FromServer, FromClient, ClientStarted,ClientDied, StartOfData, EndOfData}element-header: ELEMENT_HEADERclient-swapped: BOOLid-base: XIDBASEserver-time: TIMESTAMPrecorded-sequence-number: CARD32data: LISTofBYTEErrors: Match, RecordContextThis request enables data transfer between the recording clientand the extension and returns the protocol data the recordingclient has previously expressed interest in. Typically, thisrequest is executed by the recording client over the dataconnection.If the client is registered on the context, it is unregisteredbefore any recording begins.Once the server receives this request, it begins intercepting andreporting to the recording client all core and extension protocolreceived from or sent to clients registered with the RC that therecording client has expressed interest in. All interceptedprotocol data is returned in the byte-order of the recordedclient. Therefore, recording clients are responsible for allbyte swapping, if required. More than one recording clientcannot enable data transfer on the same RC at the same time.Multiple intercepted requests, replies, events and errors mightbe packaged into a single reply before being returned to therecording clients.The category field determines the possible types of the data.When a context is enabled, the server will immediately send areply of category StartOfData to notify the client that recordingis enabled. A category of FromClient means the data are from theclient (requests); FromServer means data are from the server(replies, errors, events, or device events). For a new client,the category is ClientStarted and the data are the connectionsetup reply. When the recorded client connection is closed,category is set to the value ClientDied and no protocol isincluded in this reply. When the disable request is made overthe control connection, a final reply is sent over the dataconnection with category EndOfData and no protocol.The element-header field returns the value currently set for thecontext, which tells what header information precedes eachrecorded protocol element in this reply.The client-swapped field is True if the byte order of theprotocol being recorded is swapped relative to the recordingclient; otherwise, client-swapped is False. The recordedprotocol is in the byte order of the client being recorded;device events are in the byte order of the recording client. Forreplies of category StartOfData and EndOfData the client-swappedbit is set according to the byte order of the server relative tothe recording client. The id-base field is the resourceidentifier base sent to the client from the server in theconnection setup reply, and hence, identifies the client beingrecorded. The id-base field is 0 (zero) when the protocol databeing returned are device events. The server-time field is setto the time of the server when the first protocol element in thisreply was intercepted. The server-time of reply N+1 is greaterthan or equal to the server-time of reply N, and is greater thanor equal to the time of the last protocol element in reply N.The recorded-sequence-number field is set to the sequence numberof the recorded client&rsquo;s most recent request processed by theserver.The data field contains the raw protocol data being returned tothe recording client. If requested by the element-header of thisrecord context, each protocol element may be preceded by a 32-bittimestamp and/or a 32-bit sequence number. If present, both thetimestamp and sequence number are always in the byte order of therecording client.For the core X events KeyPress, KeyRelease, ButtonPress, andButtonRelease, the fields of a device event that contain validinformation are time and detail. For the core X eventMotionNotify, the fields of a device event that contain validinformation are time, root, root-x and root-y. The time fieldrefers to the time the event was generated by the device.For the extension input device events DeviceKeyPress,DeviceKeyRelease, DeviceButtonPress, and DeviceButtonRelease, thefields of a device event that contain valid information aredevice, time and detail. For DeviceMotionNotify, the validdevice event fields are device and time. For the extension inputdevice events ProximityIn and ProximityOut, the fields of adevice event that contain valid information are device and time.For the extension input device event DeviceValuator, the fieldsof a device event that contain valid information are device,num_valuators, first_valuator, and valuators. The time fieldrefers to the time the event was generated by the device.The error Match is returned when data transfer is alreadyenabled. When the context argument is not valid, a RecordContexterror results.RecordDisableContextcontext: RCErrors: RecordContextThis request is typically executed by the recording client overthe control connection. This request directs the extension toimmediately send any complete protocol elements currentlybuffered, to send a final reply with category EndOfData, and todiscontinue data transfer between the extension and the recordingclient. Protocol reporting is disabled on the data connectionthat is currently enabled for the given context. Once theextension completes processing this request, no additionalrecorded protocol will be reported to the recording client. If adata connection is not currently enabled when this request isexecuted, then this request has no affect on the state of datatransfer. An RC is disabled automatically when the connection tothe enabling client is closed down.When the context argument is not valid, a RecordContext errorresults.RecordFreeContextcontext : RCErrors: RecordContextThis request deletes the association between the resource ID andthe RC and destroys the RC. If a client has enabled datatransfer on this context, the actions described inRecordDisableContext are performed before the context is freed.An RC is destroyed automatically when the connection to thecreating client is closed down and the close-down mode isDestroyAll. When the context argument is not valid, aRecordContext error results.4. EncodingPlease refer to the X11 Protocol Encoding document as thisdocument uses conventions established there.The name of this extension is &quot;RECORD&quot;.4.1. Types"></a>
+<h2>3. Protocol RequestsRecordQueryVersionmajor-version, minor-version: CARD16&rarr; major-version, minor-version: CARD16This request specifies the RECORD extension protocol version theclient would like to use. When the specified protocol version issupported by the extension, the protocol version the serverexpects from the client is returned. Clients must use thisrequest before other RECORD extension requests.This request also determines whether or not the RECORD extensionprotocol version specified by the client is supported by theextension. If the extension supports the version specified bythe client, this version number should be returned. If theclient has requested a higher version than is supported by theserver, the server&rsquo;s highest version should be returned.Otherwise, if the client has requested a lower version than issupported by the server, the server&rsquo;s lowest version should bereturned. This document defines major version one (1), minorversion thirteen (13).RecordCreateContextcontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, IDChoice, AllocThis request creates a new record context within the server andassigns the identifier context to it. After the context iscreated, this request registers the set of clients inclient-specifiers with the context and specifies the protocol tointercept for those clients. The recorded protocol elements willbe preceded by data as specified by element-header. Typically,this request is used by a recording client over the controlconnection. Multiple RC objects can exist simultaneously,containing overlapping sets of protocol and clients to intercept.If any of the values in element-header or ranges is invalid, aValue error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in theclient-specifiers list is not a valid CLIENTSPEC, a Match errorresults. Otherwise, each item in the client-specifiers list isprocessed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context and theprotocol to intercept for the client is then set to ranges.&bull; If the item is CurrentClients, all existing clients areregistered with the context at this time. The protocol tointercept for all clients registered with the context is thenset to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordRegisterClientscontext: RCelement-header: ELEMENT_HEADERclient-specifiers: LISTofCLIENTSPECranges: LISTofRECORDRANGEErrors: Match, Value, RecordContext, AllocThis request registers the set of clients in client-specifierswith the given context and specifies the protocol to interceptfor those clients. The header preceding each recorded protocolelement is set as specified by element-header. These flagsaffect the entire context; their effect is not limited to theclients registered by this request. Typically, this request isused by a recording client over the control connection.If context does not name a valid RC, a RecordContext errorresults. If any of the values in element-header or ranges isinvalid, a Value error results. Duplicate items in the list ofclient-specifiers are ignored. If any item in the list ofclient-specifiers is not a valid CLIENTSPEC, a Match errorresults. If the context is enabled and the XID of the enablingconnection is specified, a Match error results. Otherwise, eachitem in the client-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, thespecified client is registered with the context if it is notalready registered. The protocol to intercept for the clientis then set to ranges.&bull; If the item is CurrentClients, all existing clients that arenot already registered with the specified context, except theenabling connection if the context is enabled, are registeredat this time. The protocol to intercept for all clientsregistered with the context is then set to ranges.&bull; If the item is FutureClients, all clients that connect to theserver after this request executes will be automaticallyregistered with the context. The protocol to intercept forsuch clients will be set to ranges in the context. The set ofclients that are registered with the context and theircorresponding sets of protocol to intercept are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.The Alloc error results when the server is unable to allocate thenecessary resources.RecordUnregisterClientscontext: RCclient-specifiers: LISTofCLIENTSPECErrors: Match, RecordContextThis request removes the set of clients in client-specifiers fromthe given context&rsquo;s set of registered clients. Typically, thisrequest is used by a recording client over the controlconnection.If context does not name a valid RC, a RecordContext errorresults. Duplicate items in the list of client-specifiers areignored. If any item in the list is not a valid CLIENTSPEC, aMatch error results. Otherwise, each item in theclient-specifiers list is processed as follows:&bull; If the item is an XIDBASE identifying a particular client, andthe specified client is currently registered with the context,it is unregistered, and the set of protocol to intercept forthe client is deleted from the context. If the specifiedclient is not registered with the context, the item has noeffect.&bull; If the item is CurrentClients, all clients currentlyregistered with the context are unregistered from it, andtheir corresponding sets of protocol to intercept are deletedfrom the context.&bull; If the item is FutureClients, clients that connect to theserver after this request executes will not automatically beregistered with the context. The set of clients that areregistered with this context and their corresponding sets ofprotocol that will be intercepted are left intact.&bull; If the item is AllClients, the effect is as if the actionsdescribed for FutureClients are performed, followed by theactions for CurrentClients.A client is unregistered automatically when it disconnects.RecordGetContextcontext: RC&rarr; enabled: BOOLelement-header: ELEMENT_HEADERintercepted-clients: LISTofCLIENT_INFOErrors: RecordContextThis request queries the current state of the specified contextand is typically used by a recording client over the controlconnection. The enabled field specifies the state of datatransfer between the extension and the recording client, and iseither enabled (True) or disabled (False). The initial state isdisabled. When enabled, all core X protocol and extensionprotocol received from (requests) or sent to (replies, errors,events) a particular client, and requested to be intercepted bythe recording client, is reported to the recording client overthe data connection. The element-header specifies the headerthat precedes each recorded protocol element. Theintercepted-clients field specifies the list of clients currentlybeing recorded and the protocol associated with each client. Iffuture clients will be automatically registered with the context,one of the returned CLIENT_INFO structures has a client-resourcevalue of FutureClients and an intercepted-protocol giving theprotocol to intercept for future clients. Protocol ranges may bedecomposed, coalesced, or otherwise modified by the server fromhow they were specified by the client. All CLIENTSPECsregistered with the server are returned, even if theRECORDRANGE(s) associated with them specify no protocol torecord.When the context argument is not valid, a RecordContext errorresults.RecordEnableContextcontext: RC&rarr;+ category: {FromServer, FromClient, ClientStarted,ClientDied, StartOfData, EndOfData}element-header: ELEMENT_HEADERclient-swapped: BOOLid-base: XIDBASEserver-time: TIMESTAMPrecorded-sequence-number: CARD32data: LISTofBYTEErrors: Match, RecordContextThis request enables data transfer between the recording clientand the extension and returns the protocol data the recordingclient has previously expressed interest in. Typically, thisrequest is executed by the recording client over the dataconnection.If the client is registered on the context, it is unregisteredbefore any recording begins.Once the server receives this request, it begins intercepting andreporting to the recording client all core and extension protocolreceived from or sent to clients registered with the RC that therecording client has expressed interest in. All interceptedprotocol data is returned in the byte-order of the recordedclient. Therefore, recording clients are responsible for allbyte swapping, if required. More than one recording clientcannot enable data transfer on the same RC at the same time.Multiple intercepted requests, replies, events and errors mightbe packaged into a single reply before being returned to therecording clients.The category field determines the possible types of the data.When a context is enabled, the server will immediately send areply of category StartOfData to notify the client that recordingis enabled. A category of FromClient means the data are from theclient (requests); FromServer means data are from the server(replies, errors, events, or device events). For a new client,the category is ClientStarted and the data are the connectionsetup reply. When the recorded client connection is closed,category is set to the value ClientDied and no protocol isincluded in this reply. When the disable request is made overthe control connection, a final reply is sent over the dataconnection with category EndOfData and no protocol.The element-header field returns the value currently set for thecontext, which tells what header information precedes eachrecorded protocol element in this reply.The client-swapped field is True if the byte order of theprotocol being recorded is swapped relative to the recordingclient; otherwise, client-swapped is False. The recordedprotocol is in the byte order of the client being recorded;device events are in the byte order of the recording client. Forreplies of category StartOfData and EndOfData the client-swappedbit is set according to the byte order of the server relative tothe recording client. The id-base field is the resourceidentifier base sent to the client from the server in theconnection setup reply, and hence, identifies the client beingrecorded. The id-base field is 0 (zero) when the protocol databeing returned are device events. The server-time field is setto the time of the server when the first protocol element in thisreply was intercepted. The server-time of reply N+1 is greaterthan or equal to the server-time of reply N, and is greater thanor equal to the time of the last protocol element in reply N.The recorded-sequence-number field is set to the sequence numberof the recorded client&rsquo;s most recent request processed by theserver.The data field contains the raw protocol data being returned tothe recording client. If requested by the element-header of thisrecord context, each protocol element may be preceded by a 32-bittimestamp and/or a 32-bit sequence number. If present, both thetimestamp and sequence number are always in the byte order of therecording client.For the core X events KeyPress, KeyRelease, ButtonPress, andButtonRelease, the fields of a device event that contain validinformation are time and detail. For the core X eventMotionNotify, the fields of a device event that contain validinformation are time, root, root-x and root-y. The time fieldrefers to the time the event was generated by the device.For the extension input device events DeviceKeyPress,DeviceKeyRelease, DeviceButtonPress, and DeviceButtonRelease, thefields of a device event that contain valid information aredevice, time and detail. For DeviceMotionNotify, the validdevice event fields are device and time. For the extension inputdevice events ProximityIn and ProximityOut, the fields of adevice event that contain valid information are device and time.For the extension input device event DeviceValuator, the fieldsof a device event that contain valid information are device,num_valuators, first_valuator, and valuators. The time fieldrefers to the time the event was generated by the device.The error Match is returned when data transfer is alreadyenabled. When the context argument is not valid, a RecordContexterror results.RecordDisableContextcontext: RCErrors: RecordContextThis request is typically executed by the recording client overthe control connection. This request directs the extension toimmediately send any complete protocol elements currentlybuffered, to send a final reply with category EndOfData, and todiscontinue data transfer between the extension and the recordingclient. Protocol reporting is disabled on the data connectionthat is currently enabled for the given context. Once theextension completes processing this request, no additionalrecorded protocol will be reported to the recording client. If adata connection is not currently enabled when this request isexecuted, then this request has no affect on the state of datatransfer. An RC is disabled automatically when the connection tothe enabling client is closed down.When the context argument is not valid, a RecordContext errorresults.RecordFreeContextcontext : RCErrors: RecordContextThis request deletes the association between the resource ID andthe RC and destroys the RC. If a client has enabled datatransfer on this context, the actions described inRecordDisableContext are performed before the context is freed.An RC is destroyed automatically when the connection to thecreating client is closed down and the close-down mode isDestroyAll. When the context argument is not valid, aRecordContext error results.4. EncodingPlease refer to the X11 Protocol Encoding document as thisdocument uses conventions established there.The name of this extension is &quot;RECORD&quot;.4.1. Types</h2>
+
+
+<p style="margin-top: 1em" valign="top">RC: CARD32</p>
+
+<p style="margin-top: 1em" valign="top">RANGE8</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">first</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">last</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">RANGE16</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">first</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">last</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">EXTRANGE</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">RECORDRANGE</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">core-requests</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">core-replies</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">6</p></td>
+<td width="20%">
+
+
+<p valign="top">EXTRANGE</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">ext-requests</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">6</p></td>
+<td width="20%">
+
+
+<p valign="top">EXTRANGE</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">ext-replies</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">delivered-events</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">device-events</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">RANGE8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">errors</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">client-started</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">client-died</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">ELEMENT_HEADER</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%"></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0x01</p></td>
+<td width="20%">
+
+
+<p valign="top">from-server-time</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0x02</p></td>
+<td width="20%">
+
+
+<p valign="top">from-client-time</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0x04</p></td>
+<td width="20%">
+
+
+<p valign="top">from-client-sequence</p></td>
+<td width="40%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">XIDBASE: CARD32</p>
+
+<p style="margin-top: 1em" valign="top">CLIENTSPEC</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">XIDBASE</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">client-id-base</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CurrentClients</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">FutureClients</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">AllClients</p></td>
+<td width="40%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">CLIENT_INFO</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CLIENTSPEC</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">client-resource</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">n, number of record ranges in
+intercepted-protocol</p> </td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">24n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofRECORDRANGE</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">intercepted-protocol</p></td>
+</table>
+
+<a name="4.2. Errors"></a>
+<h3>4.2. Errors</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">Error</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">extension&rsquo;s base error code + 0</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">invalid record context</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">24</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<a name="4.3. Requests"></a>
+<h3>4.3. Requests</h3>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordQueryVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor version</p></td>
+</table>
+
+<p valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">reply length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordCreateContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">5+m+6n</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">ELEMENT_HEADER</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">element-header</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">m, number of client-specifiers</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">n, number of ranges</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4m</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCLIENTSPEC</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">client-specifiers</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">24n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofRECORDRANGE</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">ranges</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordRegisterClients</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">5+m+6n</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">ELEMENT_HEADER</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">element-header</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">m, number of client-specifiers</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">n, number of ranges</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4m</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCLIENTSPEC</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">client-specifiers</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">24n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofRECORDRANGE</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">ranges</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordUnregisterClients</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">3+m</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">m, number of client-specifiers</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4m</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCLIENTSPEC</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">client-specifiers</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordGetContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+</table>
+
+<p valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">enabled</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">j</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">reply length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">ELEMENT_HEADER</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">element-header</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">n, number of intercepted-clients</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">16</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4j</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofCLIENT_INFO</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">intercepted-clients</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordEnableContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">5</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+</table>
+
+<p valign="top">=&gt;+</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">category</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">FromServer</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">FromClient</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">ClientStarted</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">ClientDied</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">StartOfData</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+</td>
+<td width="20%">
+
+
+<p valign="top">5</p></td>
+<td width="20%">
+
+
+<p valign="top">EndOfData</p></td>
+<td width="40%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">n</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">reply length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">ELEMENT_HEADER</p></td>
+<td width="20%"></td>
+<td width="40%">
+
+
+<p valign="top">element-header</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">BOOL</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">client-swapped</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">XIDBASE</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">id-base</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">TIMESTAMP</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">server-time</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">recorded-sequence-number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">8</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4n</p></td>
+<td width="20%">
+
+
+<p valign="top">BYTE</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">data</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordDisableContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">6</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>RecordFreeContext</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">major opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">7</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">minor opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="16%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">RC</p></td>
+<td width="20%">
+</td>
+<td width="40%">
+
+
+<p valign="top">context</p></td>
+</table>
+ 
+<p valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729535" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

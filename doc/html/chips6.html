@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>The Full Story on Clock Limitations </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>The Full Story on Clock Limitations </EM><BR>
+<b>Previous:</b> <A HREF="chips5.html"><EM>Dual Display Channel</EM></A><BR>
+<b>Next:</b> <A HREF="chips7.html"><EM>Troubleshooting </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="9"></A>6. The Full Story on Clock Limitations </H2>
+
+<p>There has been much confusion about exactly what the clock limitations
+of the Chips and Technologies chipsets are. Hence I hope that this
+section will clear up the misunderstandings. </p>
+<p>In general there are two factors determining the maximum dotclock.
+There is the limit of the maximum dotclock the video processor can handle, 
+and there is another limitation of the available memory bandwidth. The 
+memory bandwidth is determined by the clock used for the video memory.
+For chipsets incapable of colour depths greater that 8bpp like the 65535,
+the dotclock limit is solely determined by the highest dotclock the video
+processor is capable of handling. So this limit will be either 56MHz or
+68MHz for the 655xx chipsets, depending on what voltage they are driven
+with, or 80MHz for the 64200 WinGine machines.</p>
+<p>The 6554x and 64300 WinGine chipsets are capable of colour depths of 16
+or 24bpp. However there is no reliable way of probing the memory clock
+used in these chipsets, and so a conservative limit must be taken for
+the dotclock limit. In this case the driver divides the video processors
+dotclock limitation by the number of bytes per pixel, so that the
+limitations for the various colour depths are</p>
+<p>
+<pre>
+                        8bpp    16bpp   24bpp
+64300                   85      42.5    28.33
+65540/65545 3.3v        56      28      18.67
+65540/65545 5v          68      34      22.67
+65546/65548             80      40      26.67
+</pre>
+</p>
+<p>For a CRT or TFT screen these limitations are conservative and the user
+might safely override them with the "<code>DacSpeed</code>" option to some
+extent. However these numbers take no account of the extra bandwidth 
+needed for DSTN screens. </p>
+<p>For the HiQV series of chips, the memory clock can be successfully probed.
+Hence you will see a line like</p>
+<p>
+<pre>
+(--) CHIPS(0): Probed memory clock of  40.090 MHz
+</pre>
+</p>
+<p>in your startx log file. Note that many chips are capable of higher
+memory clocks than actually set by BIOS. You can use the "<code>SetMClk</code>"
+option in your XF86Config file to get a higher MClk. However some
+video ram, particularly EDO, might not be fast enough to handle this,
+resulting in drawing errors on the screen. The formula to determine the
+maximum usable dotclock on the HiQV series of chips is</p>
+<p>
+<pre>
+Max dotclock = min(MaxDClk,  0.70  * 8 * MemoryClk / (BytesPerPixel + 
+                (isDSTN == TRUE ? 1 : 0)))
+</pre>
+</p>
+<p>if you chips is a 69030 or 69000 or</p>
+<p>
+<pre>
+Max dotclock = min(MaxDClk,  0.70  * 4 * MemoryClk / (BytesPerPixel + 
+                (isDSTN == TRUE ? 1 : 0)))
+</pre>
+</p>
+
+<p>otherwise. This effectively means that there are two limits on the
+dotclock. One the overall maximum, and another due to the available
+memory bandwidth of the chip.  The 69030 and 69000 have a 64bit memory
+bus and thus transfer 8 bytes every clock thus (hence the 8), while
+the other HiQV chipsets are 32bit and transfer 4 bytes per clock cycle
+(hence the 4). However, after accounting for the RAS/CAS signaling
+only about 70% of the bandwidth is available. The whole thing is
+divided by the bytes per pixel, plus an extra byte if you are using a
+DSTN. The extra byte with DSTN screens is used for the frame
+buffering/acceleration in these screens. So for the various Chips and
+Technologies chips the maximum specifications are</p>
+<p>
+<pre>
+                    Max DClk MHz      Max Mem Clk MHz
+65550 rev A 3.3v          80                38 
+65550 rev A 5v           110                38
+65550 rev B               95                50
+65554                     94.5              55
+65555                    110                55
+68554                    110                55
+69000                    135                83
+69030                    170               100
+</pre>
+</p>
+<p>Note that all of the chips except the 65550 rev A are 3.3v only. Which
+is the reason for the drop in the dot clock. Now the maximum memory clock
+is just the maximum supported by the video processor, not the maximum
+supported by the video memory. So the value actually used for the memory
+clock might be significantly less than this maximum value. But assuming your
+memory clock is programmed to these maximum values the various maximum dot
+clocks for the chips are</p>
+<p>
+<pre>
+                        ------CRT/TFT-------    --------DSTN--------
+                        8bpp    16bpp   24bpp   8bpp    16bpp   24bpp
+65550 rev A 3.3v        80      53.2    35.47   53.2    35.47   26.6
+65550 rev A 5v          106.2   53.2    35.47   53.2    35.47   26.6
+65550 rev B             95      70      46.67   70      46.67   35.0
+65554                   94.5    77      51.33   77      51.33   38.5
+65555                   110     77      51.33   77      51.33   38.5
+68554                   110     77      51.33   77      51.33   38.5
+69000                   135    135     135     135     135     116.2
+69030                   170    170     170     170     170     140
+</pre>
+</p>
+<p>If you exceed the maximum set by the memory clock, you'll get corruption
+on the screen during graphics operations, as you will be starving the
+HW BitBlt engine of clock cycles. If you are driving the video memory
+too fast (too high a MemClk) you'll get pixel corruption as the data
+actually written to the video memory is corrupted by driving the memory
+too fast. You can probably get away with exceeding the Max DClk at 8bpp
+on TFT's or CRT's by up to 10% or so without problems, it will just generate
+more heat, since the 8bpp clocks aren't limited by the available memory
+bandwidth.</p>
+<p>If you find you truly can't achieve the mode you are after with the default
+clock limitations, look at the options "<code>DacSpeed</code>" and 
+"<code>SetMClk</code>". Using these should give you all the capabilities
+you'll need in the server to get a particular mode to work. However use
+caution with these options, because there is no guarantee that driving the
+video processor beyond it capabilities won't cause damage.</p>
+
+ <HR NOSHADE>
+<A HREF="chips.html"><EM> Information for Chips and Technologies Users </EM></A>
+ <b>:</b> <EM>The Full Story on Clock Limitations </EM><BR>
+<b>Previous:</b> <A HREF="chips5.html"><EM>Dual Display Channel</EM></A><BR>
+<b>Next:</b> <A HREF="chips7.html"><EM>Troubleshooting </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728824" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

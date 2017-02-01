@@ -1,0 +1,18 @@
+XCOMM $XFree86: xc/programs/fc-cache/Imakefile,v 1.2 2006/03/18 01:34:23 dawes Exp $
+
+FONTCONFIGDIR = $(TOP)/extras/fontconfig
+
+INCLUDES=$(FREETYPE2INCLUDES) -I$(FONTCONFIGDIR)
+
+LOCAL_LIBRARIES=FontconfigClientLibs
+        DEPLIBS=FontconfigClientDepLibs
+
+SRCS=fc-cache.c
+OBJS=fc-cache.o
+
+ComplexProgramTarget(fc-cache)
+LinkBuildBinary(ProgramTargetName(fc-cache))
+
+LinkSourceFile(fc-cache.c,$(FONTCONFIGDIR)/fc-cache)
+LinkSourceFile(fc-cache.man,$(FONTCONFIGDIR)/fc-cache)
+

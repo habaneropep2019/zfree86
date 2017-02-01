@@ -1,0 +1,1320 @@
+
+
+
+
+
+
+
+
+
+
+	   1mX11R6 Sample Implementation Frame Work0m
+
+
+
+
+		       4mKatsuhisa24m 4mYano0m
+		    TOSHIBA Corporation
+
+		      4mYoshio24m 4mHoriuchi0m
+			 IBM Japan
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © 1994 by TOSHIBA Corporation
+Copyright © 1994 by IBM Corporation
+
+Permission to use, copy, modify, and distribute this docu-
+mentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice and this permission
+notice appear in all copies.  TOSHIBA Corporation and IBM
+Corporation make no representations about the suitability
+for any purpose of the information in this document.  This
+documentation is provided as is without express or implied
+warranty.
+
+
+
+
+
+Copyright © 1994 X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+
+
+
+
+
+
+
+
+
+
+
+
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+4mX24m 4mWindow24m 4mSystem24m is a trademark of X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Preface0m
+
+This document proposes to define the structures, methods and
+their signatures that are expected to be common to all
+locale dependent functions within the Xlib sample implemen-
+tation.	 The following illustration (Fig.1) is proposed to
+outline the separating of the components within the sample
+implementation.
+
+    ... 0.237 5.796 5.24 10.14 ... 0.000i 4.344i 5.003i
+    0.000i
+
+	      ___________________________________|
+	      _____________Application___________
+		  |	    |	    |	      |
+		  |	    |	   ||	     ||
+
+       <<  ANSI/MSE API <<  XLib API  >>  <<  ANSI/MSE API >>
+	 (X Contrib)	    (X Core)	    (X Contrib)
+       _______________	_______________	  _______________
+       |Locale Library| | Input |Output|  |C Library	 |
+       |   non-AnSI impl. Method|Method|  |	 ANSI impl.
+       _______________| ________|______|  _______________|
+	   |		| <Locl. Serv. API>	     |
+	   |		|  X Locale Object	     |
+	   |		_______________|	     |
+	   |			|		     |
+	   |	  ___________	| ___________	     |
+	   |	  |		|	      |	     |
+       ____|______|___	________|______	  ____|______|___
+       |	      | |	       |  |		 |
+       |XLC_XLOCALE   | | XLC_FONTSET  |  |localedef DB	 |
+       |- MB_CUR_MAX  | | - fonset info|  |- MB_CUR_MAX	 |
+       |- codeset info| | - charset inf|  |- codeset info|
+       |o char/charset| | - font/charse|  |o char/charset|
+       _______________| _______________|  _______________|
+
+	______________________________	   ____________
+	    XLocale Source (X Core)    System LOcale Source
+
+
+     Fig.1 : Frame Work of Locale Service API Proposal
+
+Generally speaking, the internationalized portion of Xlib
+(Locale Dependent X, LDX) consists of three objects; locale
+(LC) , input method (IM) and output method (OM).  The LC
+provides a set of information that depends on user's lan-
+guage environment.  The IM manages text inputing, and the OM
+manages text drawing.  Both IM and OM highly depend on LC
+data.
+
+In X11R5, there are two sample implementations, Ximp and
+Xsi, for Xlib internationalization.  But in both implementa-
+tions, IM and OM actually refer the private extension of LC.
+
+
+
+			      1m10m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+It breaks coexistence of these two sample implementations.
+For example, if a user creates a new OM for special purpose
+as a part of Ximp, it will not work with Xsi.
+
+As a solution of this problem, we propose to define the
+standard APIs between these three objects, and define the
+structure that are common to these objects.
+
+
+1m2.  Objective0m
+
+
+·    Explain the current X11R6 sample implementation
+
+·    Document the common set of locale dependent interfaces
+
+·    Provide more flexible pluggable layer
+
+
+1m3.  Locale Object Binding Functions0m
+
+This chapter describes functions related locale object bind-
+ing for implementing the pluggable layer.
+
+A locale loader is an entry point for locale object, which
+instantiates XLCd object and binds locale methods with spec-
+ified locale name. The behavior of loader is implementation
+dependent.  And, what kind of loaders are available is also
+implementation dependent.
+
+The loader is called in 4m_XOpenLC,24m but caller of 4m_XOpenLC0m
+does not need to care about its inside.	 For example, if the
+loader is implemented with dynamic load functions, and the
+dynamic module is expected to be unloaded when the corre-
+sponding XLCd is freed, close methods of XLCdMethods should
+handle unloading.
+
+
+1mInitializing a locale loader list0m
+
+
+void _XlcInitLoader()
+
+The 4m_XlcInitLoader24m function initializes the locale loader
+list with vendor specific manner.  Each loader is registered
+with calling 4m_XlcAddLoader.24m The number of loaders and their
+order in the loader list is implementation dependent.
+
+
+1mAdd a loader0m
+
+
+typedef XLCd (*XLCdLoadProc)(4mname24m);
+      char 4m*name24m;
+
+
+
+			      1m20m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+typedef int XlcPosition;
+
+
+#define	  XlcHead		  0
+#define	  XlcTail		 -1
+
+
+
+Bool _XlcAddLoader(4mproc,24m 4mposition24m)
+      XLCdLoadProc 4mproc24m;
+      XlcPosition 4mposition24m;
+
+
+The 4m_XlcAddLoader24m function registers the specified locale
+loader ``4mproc24m'' to the internal loader list.  The position
+specifies that the loader ``4mproc24m'' should be placed in the
+top of the loader list(XlcHead) or last(XlcTail).
+
+The object loader is called from the top of the loader list
+in order, when calling time.
+
+
+1mRemove a loader0m
+
+
+void _XlcRemoveLoader(4mproc24m)
+      XLCdLoadProc 4mproc24m;
+
+
+The 4m_XlcRemoveLoader24m function removes the locale loader
+specified by ``4mproc24m'' from the loader list.
+
+Current implementation provides following locale loaders;
+
+     4m_XlcDefaultLoader0m
+     4m_XlcGenericLoader0m
+     4m_XlcEucLoader0m
+     4m_XlcSjisLoader0m
+     4m_XlcUtfLoader0m
+     4m_XaixOsDynamicLoad0m
+
+
+
+1m4.  Locale Method Interface0m
+
+This chapter describes the locale method API, which is a set
+of accessible functions from both IM and OM parts.  The
+locale method API provides the functionalities;	 obtaining
+locale dependent information, handling charset, converting
+text, etc.
+
+As a result of using these APIs instead of accessing vender
+private extension of the locale object, we can keep locale,
+IM and OM independently each other.
+
+
+
+			      1m30m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+1m5.  Locale Method Functions0m
+
+1mOpen a Locale Method0m
+
+
+XLCd _XOpenLC(4mname24m)
+      char 4m*name24m;
+
+
+The 4m_XOpenLC24m function opens a locale method which corre-
+sponds to the specified locale name.  4m_XOpenLC24m calls a
+locale object loader, which is registered via
+4m_XlcAddLoader24minto is valid and successfully opens a locale,
+4m_XOpenLC24m returns the XLCd.	 If the loader is invalid or
+failed to open a locale, 4m_XOpenLC24m calls the next loader.  If
+all registered loaders cannot open a locale, 4m_XOpenLC0m
+returns NULL.
+
+
+XLCd _XlcCurrentLC()
+
+
+The 4m_XlcCurrentLC24m function returns an XLCd that are bound to
+current locale.
+
+
+1mClose a Locale Method0m
+
+
+void _XCloseLC(4mlcd24m)
+      XLCd 4mlcd24m;
+
+
+The 4m_XCloseLC24m function close a locale method the specified
+lcd.
+
+
+1mObtain Locale Method values0m
+
+
+char * _XGetLCValues(4mlcd24m, ...)
+      XLCd 4mlcd24m;
+
+
+The 4m_XGetLCValues24m function returns NULL if no error
+occurred; otherwise, it returns the name of the first argu-
+ment that could not be obtained.  The following values are
+defined as standard arguments. Other values are implementa-
+tion dependent.
+
+
+
+
+
+
+
+
+			      1m40m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+------------------------------------------------------------------------
+1mName			       Type    Description0m
+------------------------------------------------------------------------
+XlcNCodeset		     char*   codeset part of locale name
+XlcNDefaultString	     char*   XDefaultString()
+XlcNEncodingName	     char*   encoding name
+XlcNLanguage		     char*   language part of locale name
+XlcNMbCurMax		     int     ANSI C MB_CUR_MAX
+XlcNStateDependentEncoding   Bool    is state-dependent encoding or not
+XlcNTerritory		     char*   territory part of locale name
+------------------------------------------------------------------------
+
+
+
+1m6.  Charset functions0m
+
+The XlcCharSet is an identifier which represents a subset of
+characters (character set) in the locale object.
+
+
+typedef enum {
+      XlcUnknown, XlcC0, XlcGL, XlcC1, XlcGR, XlcGLGR, XlcOther
+} XlcSide;
+
+typedef struct _XlcCharSetRec *XlcCharSet;
+
+typedef struct {
+      char *name;
+      XPointer value;
+} XlcArg, *XlcArgList;
+
+typedef char* (*XlcGetCSValuesProc)(4mcharset24m, 4margs24m, 4mnum_args24m);
+      XlcCharSet 4mcharset24m;
+      XlcArgList 4margs24m;
+      int 4mnum_args24m;
+
+typedef struct _XlcCharSetRec {
+      char *name;
+      XrmQuark xrm_name;
+      char *encoding_name;
+      XrmQuark xrm_encoding_name;
+      XlcSide side;
+      int char_size;
+      int set_size;
+      char *ct_sequence;
+      XlcGetCSValuesProc get_values;
+} XlcCharSetRec;
+
+
+
+1mGet an XlcCharSet0m
+
+
+
+
+
+
+			      1m50m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+XlcCharSet _XlcGetCharSet(4mname24m)
+      char 4m*name24m;
+
+
+The 4m_XlcGetCharSet24m function gets an XlcCharSet which corre-
+sponds to the charset name specified by ``4mname24m''.
+4m_XlcGetCharSet24m returns NULL, if no XlcCharSet bound to spec-
+ified ``4mname24m''.
+
+The following character sets are pre-registered.
+
+
+-----------------------------------------------------------------------
+1mName		       Description0m
+-----------------------------------------------------------------------
+ISO8859-1:GL	     7-bit ASCII graphics (ANSI X3.4-1968),
+		     Left half of ISO 8859 sets
+JISX0201.1976-0:GL   Left half of JIS X0201-1976 (reaffirmed 1984),
+		     8-Bit Alphanumeric-Katakana Code
+
+ISO8859-1:GR	     Right half of ISO 8859-1, Latin alphabet No. 1
+ISO8859-2:GR	     Right half of ISO 8859-2, Latin alphabet No. 2
+ISO8859-3:GR	     Right half of ISO 8859-3, Latin alphabet No. 3
+ISO8859-4:GR	     Right half of ISO 8859-4, Latin alphabet No. 4
+ISO8859-7:GR	     Right half of ISO 8859-7, Latin/Greek alphabet
+ISO8859-6:GR	     Right half of ISO 8859-6, Latin/Arabic alphabet
+ISO8859-8:GR	     Right half of ISO 8859-8, Latin/Hebrew alphabet
+ISO8859-5:GR	     Right half of ISO 8859-5, Latin/Cyrillic alphabet
+ISO8859-9:GR	     Right half of ISO 8859-9, Latin alphabet No. 5
+JISX0201.1976-0:GR   Right half of JIS X0201-1976 (reaffirmed 1984),
+		     8-Bit Alphanumeric-Katakana Code
+
+GB2312.1980-0:GL     GB2312-1980, China (PRC) Hanzi defined as GL
+GB2312.1980-0:GR     GB2312-1980, China (PRC) Hanzi defined as GR
+JISX0208.1983-0:GL   JIS X0208-1983, Japanese Graphic Character Set
+		     defined as GL
+JISX0208.1983-0:GR   JIS X0208-1983, Japanese Graphic Character Set
+		     defined as GR
+KSC5601.1987-0:GL    KS C5601-1987, Korean Graphic Character Set
+		     defined as GL
+KSC5601.1987-0:GR    KS C5601-1987, Korean Graphic Character Set
+		     defined as GR
+JISX0212.1990-0:GL   JIS X0212-1990, Japanese Graphic Character Set
+		     defined as GL
+JISX0212.1990-0:GR   JIS X0212-1990, Japanese Graphic Character Set
+		     defined as GR
+-----------------------------------------------------------------------
+
+
+
+1mAdd an XlcCharSet0m
+
+
+
+
+
+
+			      1m60m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+Bool _XlcAddCharSet(4mcharset24m)
+      XlcCharSet 4mcharset24m;
+
+
+The 4m_XlcAddCharSet24m function registers XlcCharSet specified
+by ``4mcharset24m''.
+
+
+1mObtain Character Set values0m
+
+
+char * _XlcGetCSValues(4mcharset24m, ...)
+      XlcCharSet 4mcharset24m;
+
+
+The 4m_XlcGetCSValues24m function returns NULL if no error
+occurred; otherwise, it returns the name of the first argu-
+ment that could not be obtained.  The following values are
+defined as standard arguments.	Other values are implementa-
+tion dependent.
+
+
+-------------------------------------------------------------------
+1mName			Type	  Description0m
+-------------------------------------------------------------------
+XlcNName	      char*	charset name
+XlcNEncodingName      char*	XLFD CharSet Registry and Encoding
+XlcNSide	      XlcSide	charset side (GL, GR, ...)
+XlcNCharSize	      int	number of octets per character
+XlcNSetSize	      int	number of character sets
+XlcNControlSequence   char*	control sequence of Compound Text
+-------------------------------------------------------------------
+
+
+
+1m7.  Converter Functions0m
+
+We provide a set of the common converter APIs, that are
+independent from both of source and destination text type.
+
+
+typedef struct _XlcConvRec *XlcConv;
+
+typedef void (*XlcCloseConverterProc)(4mconv24m);
+      XlcConv 4mconv24m;
+
+typedef int (*XlcConvertProc)(4mconv24m, 4mfrom24m, 4mfrom_left24m, 4mto24m, 4mto_left24m, 4margs24m, 4mnum_args24m);
+      XlcConv 4mconv24m;
+      XPointer 4m*from24m;
+      int 4m*from_left24m;
+      XPointer 4m*to24m;
+      int 4m*to_left24m;
+      XPointer 4m*args24m;
+      int 4mnum_args24m;
+
+
+
+			      1m70m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+typedef void (*XlcResetConverterProc)(4mconv24m);
+      XlcConv 4mconv24m;
+
+typedef struct _XlcConvMethodsRec {
+      XlcCloseConverterProc close;
+      XlcConvertProc convert;
+      XlcResetConverterProc reset;
+} XlcConvMethodsRec, *XlcConvMethods;
+
+typedef struct _XlcConvRec {
+    XlcConvMethods methods;
+    XPointer state;
+} XlcConvRec;
+
+
+
+1mOpen a converter0m
+
+
+XlcConv _XlcOpenConverter(4mfrom_lcd24m, 4mfrom_type24m, 4mto_lcd24m, 4mto_type24m)
+      XLCd 4mfrom_lcd24m;
+      char 4m*from_type24m;
+      XLCd 4mto_lcd24m;
+      char 4m*to_type24m;
+
+
+4m_XlcOpenConverter24m function opens the converter which con-
+verts a text from specified ``4mfrom_type24m'' to specified
+``4mto_type24m'' encoding.  If the function cannot find proper
+converter or cannot open a corresponding converter, it
+returns NULL.  Otherwise, it returns the conversion descrip-
+tor.
+
+The following types are pre-defined. Other types are imple-
+mentation dependent.
+
+
+-----------------------------------------------------------
+1mName		     Type	 Description	  Arguments0m
+-----------------------------------------------------------
+XlcNMultiByte	   char *      multibyte	-
+XlcNWideChar	   wchar_t *   wide character	-
+XlcNCompoundText   char *      COMPOUND_TEXT	-
+XlcNString	   char *      STRING		-
+XlcNCharSet	   char *      per charset	XlcCharSet
+XlcNChar	   char *      per character	XlcCharSet
+-----------------------------------------------------------
+
+
+
+1mClose a converter0m
+
+
+
+
+
+
+			      1m80m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+void _XlcCloseConverter(4mconv24m)
+      XlcConv 4mconv24m;
+
+
+The 4m_XlcCloseConverter24m function closes the specified con-
+verter ``4mconv24m''.
+
+
+1mCode conversion0m
+
+
+int _XlcConvert(4mconv24m, 4mfrom24m, 4mfrom_left24m, 4mto24m, 4mto_left24m, 4margs24m, 4mnum_args24m)
+      XlcConv 4mconv24m;
+      XPointer 4m*from24m;
+      int 4m*from_left24m;
+      XPointer 4m*to24m;
+      int 4m*to_left24m;
+      XPointer 4m*args24m;
+      int 4mnum_args24m;
+
+
+The 4m_XlcConvert24m function converts a sequence of characters
+from one type, in the array specified by ``4mfrom24m'', into a
+sequence of corresponding characters in another type, in the
+array specified by ``4mto24m''.	 The types are those specified in
+the 4m_XlcOpenConverter()24m call that returned the conversion
+descriptor, ``4mconv24m''.  The arguments ``4mfrom24m'',
+``4mfrom_left24m'', ``4mto24m'' and ``4mto_left24m'' have the same specifi-
+cation of XPG4 iconv function.
+
+For state-dependent encodings, the conversion descriptor
+``4mconv24m'' is placed into its initial shift state by a call
+for which ``4mfrom24m'' is a NULL pointer, or for which ``4mfrom24m''
+points to a null pointer.
+
+The following 2 converters prepared by locale returns appro-
+priate charset (XlcCharSet) in an area pointed by args[0].
+
+
+---------------------------------------------------------
+1mFrom		  To		Description0m
+---------------------------------------------------------
+XlcNMultiByte	XlcNCharSet   Segmentation (Decomposing)
+XlcNWideChar	XlcNCharSet   Segmentation (Decomposing)
+---------------------------------------------------------
+
+
+The conversion, from XlcNMultiByte/XlcNWideChar to XlcN-
+CharSet, extracts a segment which has same charset encoding
+characters.  More than one segment cannot be converted in a
+call.
+
+
+1mReset a converter0m
+
+
+
+			      1m90m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+void _XlcResetConverter(4mconv24m)
+      XlcConv 4mconv24m;
+
+
+The 4m_XlcResetConverter24m function reset the specified con-
+verter ``4mconv24m''.
+
+
+1mRegister a converter0m
+
+
+typedef XlcConv (*XlcOpenConverterProc)(4mfrom_lcd24m, 4mfrom_type24m, 4mto_lcd24m, 4mto_type24m);
+      XLCd 4mfrom_lcd24m;
+      char 4m*from_type24m;
+      XLCd 4mto_lcd24m;
+      char 4m*to_type24m;
+
+
+
+Bool _XlcSetConverter(4mfrom_lcd24m, 4mfrom24m, 4mto_lcd24m, 4mto24m, 4mconverter24m)
+      XLCd 4mfrom_lcd24m;
+      char 4m*from24m;
+      XLCd 4mto_lcd24m;
+      char 4m*to24m;
+      XlcOpenConverterProc 4mconverter24m;
+
+
+The 1mXlcSetConverter 22mfunction registers a converter which
+convert from ``4mfrom_type24m'' to ``4mto_type24m'' into the converter
+list (in the specified XLCd).
+
+
+1m8.  X Locale Database functions0m
+
+X Locale Database contains the subset of user's environment
+that depends on language.  The following APIs are provided
+for accessing X Locale Database and other locale relative
+files.
+
+For more detail about  X Locale Database, please refer X
+Locale Database Definition document.
+
+
+1mGet a resource from database0m
+
+
+void _XlcGetResource(4mlcd24m, 4mcategory24m, 4mclass24m, 4mvalue24m, 4mcount24m)
+      XLCd 4mlcd24m;
+      char 4m*category24m;
+      char 4m*class24m;
+      char 4m***value24m;
+      int 4m*count24m;
+
+
+
+
+
+			     1m100m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+The 4m_XlcGetResource24m function obtains a locale dependent data
+which is associated with the locale of specified ``4mlcd24m''.
+The locale data is provided by system locale or by X Locale
+Database file, and what kind of data is available is imple-
+mentation dependent.
+
+The specified ``4mcategory24m'' and ``4mclass24m'' are used for find-
+ing out the objective locale data.
+
+The returned  value is returned in value argument in string
+list form, and the returned count shows the number of
+strings in the value.
+
+The returned value is owned by locale method, and should not
+be modified or freed by caller.
+
+
+1mGet a locale relative file name0m
+
+
+char * _XlcFileName(4mlcd24m, 4mcategory24m)
+      XLCd 4mlcd24m;
+      char 4m*category24m;
+
+
+The 4m_XlcFileName24m functions returns a file name which is
+bound to the specified ``4mlcd24m'' and ``4mcategory24m'', as a null-
+terminated string.  If no file name can be found, or there
+is no readable file for the found file name, 4m_XlcFileName0m
+returns NULL.  The returned file name should be freed by
+caller.
+
+The rule for searching a file name is implementation depen-
+dent.  In current implementation, 4m_XlcFileName24m uses ``{cate-
+gory}.dir'' file as mapping table, which has pairs of
+strings, a full locale name and a corresponding file name.
+
+
+1m9.  Utility Functions0m
+
+1mCompare Latin-1 strings0m
+
+
+int _XlcCompareISOLatin1(4mstr124m, 4mstr224m)
+      char 4m*str124m, 4m*str224m;
+
+
+int _XlcNCompareISOLatin1(4mstr124m, 4mstr224m, 4mlen24m)
+      char 4m*str124m, 4m*str224m;
+      int 4mlen24m;
+
+
+The 4m_XlcCompareIsoLatin124m function to compares two ISO-8859-1
+strings.  Bytes representing ASCII lower case letters are
+
+
+
+			     1m110m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+converted to upper case before making the comparison.  The
+value returned is an integer less than, equal to, or greater
+than zero, depending on whether ``4mstr124m'' is lexicographicly
+less than, equal to, or greater than ``4mstr224m''.
+
+The 4m_XlcNCompareIsoLatin124m function is identical to 4m_XlcCom-0m
+4mpareISOLatin1,24m except that at most ``4mlen24m'' bytes are com-
+pared.
+
+
+1mResource Utility0m
+
+
+int XlcNumber(4marray24m)
+      ArrayType 4marray24m;
+
+
+Similar to XtNumber.
+
+
+void _XlcCopyFromArg(4msrc24m, 4mdst24m, 4msize24m)
+      char 4m*src24m;
+      char 4m*dst24m;
+      int 4msize24m;
+
+
+void _XlcCopyToArg(4msrc24m, 4mdst24m, 4msize24m)
+      char 4m*src24m;
+      char 4m**dst24m;
+      int 4msize24m;
+
+
+Similar to 4m_XtCopyFromArg24m and 4m_XtCopyToArg.0m
+
+
+void _XlcCountVaList(4mvar24m, 4mcount_ret24m)
+      va_list 4mvar24m;
+      int 4m*count_ret24m;
+
+
+Similar to 4m_XtCountVaList.0m
+
+
+void _XlcVaToArgList(4mvar24m, 4mcount24m, 4margs_ret24m)
+      va_list 4mvar24m;
+      int 4mcount24m;
+      XlcArgList 4m*args_ret24m;
+
+
+Similar to 4m_XtVaToArgList.0m
+
+
+typedef struct _XlcResource {
+      char *name;
+
+
+
+			     1m120m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+      XrmQuark xrm_name;
+      int size;
+      int offset;
+      unsigned long mask;
+} XlcResource, *XlcResourceList;
+
+
+
+#define	  XlcCreateMask		 (1L<<0)
+#define	  XlcDefaultMask	 (1L<<1)
+#define	  XlcGetMask		 (1L<<2)
+#define	  XlcSetMask		 (1L<<3)
+#define	  XlcIgnoreMask		 (1L<<4)
+
+
+
+void _XlcCompileResourceList(4mresources24m, 4mnum_resources24m)
+      XlcResourceList 4mresources24m;
+      int 4mnum_resources24m;
+
+
+Similar to 4m_XtCompileResourceList.0m
+
+
+char * _XlcGetValues(4mbase24m, 4mresources24m, 4mnum_resources24m, 4margs24m, 4mnum_args24m, 4mmask24m)
+      XPointer 4mbase24m;
+      XlcResourceList 4mresources24m;
+      int 4mnum_resources24m;
+      XlcArgList 4margs24m;
+      int 4mnum_args24m;
+      unsigned long 4mmask24m;
+
+
+Similar to XtGetSubvalues.
+
+
+char * _XlcSetValues(4mbase24m, 4mresources24m, 4mnum_resources24m, 4margs24m, 4mnum_args24m, 4mmask24m)
+      XPointer 4mbase24m;
+      XlcResourceList 4mresources24m;
+      int 4mnum_resources24m;
+      XlcArgList 4margs24m;
+      int 4mnum_args24m;
+      unsigned long 4mmask24m;
+
+
+Similar to XtSetSubvalues.
+
+
+1mANSI C Compatible Functions0m
+
+The following are ANSI C/MSE Compatible Functions for non-
+ANSI C environment.
+
+
+
+
+
+			     1m130m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+int _Xmblen(4mstr24m, 4mlen24m)
+      char 4m*str24m;
+      int 4mlen24m;
+
+
+The 4m_Xmblen24m function returns the number of characters
+pointed to by ``4mstr24m''.  Only ``4mlen24m'' bytes in ``4mstr24m'' are
+used in determining the character count returned.  ``4mStr24m''
+may point at characters from any valid codeset in the cur-
+rent locale.
+
+The call 4m_Xmblen24m is equivalent to
+     _Xmbtowc(_Xmbtowc((4mwchar_t*24m)NULL, 4mstr24m, 4mlen24m))
+
+
+int _Xmbtowc(4mwstr24m, 4mstr24m, 4mlen24m)
+      wchar_t 4m*wstr24m;
+      char 4m*str24m;
+      int 4mlen24m;
+
+
+The 4m_Xmbtowc24m function converts the character(s) pointed to
+by ``4mstr24m'' to their wide character representation(s) pointed
+to by ``4mwstr24m''.  ``4mLen24m'' is the number of bytes in ``4mstr24m''
+to be converted.  The return value is the number of charac-
+ters converted.
+
+The call 4m_Xmbtowc24m is equivalent to
+     _Xlcmbtowc((XLCd)NULL, 4mwstr24m, 4mstr24m, 4mlen24m)
+
+
+int _Xlcmbtowc(4mlcd24m, 4mwstr24m, 4mstr24m, 4mlen24m)
+      XLCd 4mlcd24m;
+      wchar_t 4m*wstr24m;
+      char 4m*str24m;
+      int 4mlen24m;
+
+
+The 4m_Xlcmbtowc24m function is identical to 4m_Xmbtowc,24m except
+that it requires the ``4mlcd24m'' argument.  If ``4mlcd24m'' is (XLCd)
+NULL, 4m_Xlcmbtowc,24m calls 4m_XlcCurrentLC24m to determine the cur-
+rent locale.
+
+
+int _Xwctomb(4mstr24m, 4mwc24m)
+      char 4m*str24m;
+      wchar_t 4mwc24m;
+
+
+The 4m_Xwctomb24m function converts a single wide character
+pointed to by ``4mwc24m'' to its multibyte representation pointed
+to by ``4mstr24m''.  On success, the return value is 1.
+
+
+
+
+
+			     1m140m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+The call 4m_Xwctomb24m is equivalent to
+     _Xlcwctomb((XLCd)NULL, 4mstr24m, 4mwstr24m)
+
+
+int _Xlcwctomb(4mlcd24m, 4mstr24m, 4mwc24m)
+      XLCd 4mlcd24m;
+      char 4m*str24m;
+      wchar_t 4mwc24m;
+
+
+The 4m_Xlcwctomb24m function is identical to _Xwctomb, except
+that it requires the ``4mlcd24m'' argument.  If ``4mlcd24m'' is (XLCd)
+NULL, 4m_Xlcwctomb,24m calls 4m_XlcCurrentLC24m to determine the cur-
+rent locale.
+
+
+int _Xmbstowcs(4mwstr24m, 4mstr24m, 4mlen24m)
+      wchar_t 4m*wstr24m;
+      char 4m*str24m;
+      int 4mlen24m;
+
+
+The 4m_Xmbstowcs24m function converts the NULL-terminated string
+pointed to by ``4mstr24m'' to its wide character string represen-
+tation pointed to by ``4mwstr24m''.  ``4mLen24m'' is the number of
+characters in ``4mstr24m'' to be converted.
+
+The call 4m_Xmbstowcs24m is equivalent to
+     _Xlcmbstowcs((XLCd)NULL, 4mwstr24m, 4mstr24m, 4mlen24m)
+
+
+int _Xlcmbstowcs(4mlcd24m, 4mwstr24m, 4mstr24m, 4mlen24m)
+      XLCd 4mlcd24m;
+      wchar_t 4m*wstr24m;
+      char 4m*str24m;
+      int 4mlen24m;
+
+
+The 4m_Xlcmbstowcs24m function is identical to _Xmbstowcs, except
+that it requires the ``4mlcd24m'' argument.  If ``4mlcd24m'' is (XLCd)
+NULL, 4m_Xlcmbstowcs,24m calls 4m_XlcCurrentLC24m to determine the
+current locale.
+
+
+int _Xwcstombs(4mstr24m, 4mwstr24m, 4mlen24m)
+      char 4m*str24m;
+      wchar_t 4m*wstr24m;
+      int 4mlen24m;
+
+
+The 4m_Xwcstombs24m function converts the (wchar_t) NULL termi-
+nated wide character string pointed to by ``4mwstr24m'' to the
+NULL terminated multibyte string pointed to by ``4mstr24m''.
+
+
+
+
+			     1m150m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+The call 4m_Xwcstombs24m is equivalent to
+     _Xlcwcstombs((XLCd)NULL, 4mstr24m, 4mwstr24m, 4mlen24m)
+
+
+int _Xlcwcstombs(4mlcd24m, 4mstr24m, 4mwstr24m, 4mlen24m)
+      XLCd 4mlcd24m;
+      char 4m*str24m;
+      wchar_t 4m*wstr24m;
+      int 4mlen24m;
+
+
+The 4m_Xlcwcstombs24m function is identical to _Xwcstombs, except
+that it requires the ``4mlcd24m'' argument.  If ``4mlcd24m'' is (XLCd)
+NULL, 4m_Xlcwcstombs,24m calls 4m_XlcCurrentLC24m to determine the
+current locale.
+
+
+int _Xwcslen(4mwstr24m)
+      wchar_t 4m*wstr24m;
+
+
+The 4m_Xwcslen24m function returns the count of wide characters
+in the (wchar_t) NULL terminated wide character string
+pointed to by ``4mwstr24m''.
+
+
+wchar_t * _Xwcscpy(4mwstr124m, 4mwstr224m)
+      wchar_t 4m*wstr124m, 4m*wstr224m;
+
+
+wchar_t * _Xwcsncpy(4mwstr124m, 4mwstr224m, 4mlen24m)
+      wchar_t 4m*wstr124m, 4m*wstr224m;
+      int 4mlen24m;
+
+
+The 4m_Xwcscpy24m function copies the (wchar_t) NULL terminated
+wide character string pointed to by ``4mwstr224m'' to the object
+pointed at by ``4mwstr124m''.  ``4mWstr124m'' is (wchar_t) NULL termi-
+nated.	The return value is a pointer to ``4mwstr124m''.
+
+The 4m_Xwcsncpy24m function is identical to 4m_Xwcscpy,24m except that
+it copies ``4mlen24m'' wide characters from the object pointed to
+by ``4mwstr224m'' to the object pointed to ``4mwstr124m''.
+
+
+int _Xwcscmp(4mwstr124m, 4mwstr224m)
+      wchar_t 4m*wstr124m, 4m*wstr224m;
+
+
+int _Xwcsncmp(4mwstr124m, 4mwstr224m, 4mlen24m)
+      wchar_t 4m*wstr124m, 4m*wstr224m;
+      int 4mlen24m;
+
+
+
+
+
+			     1m160m
+
+
+
+
+
+1mSample Implementation Frame Work	      X11, Release 6.40m
+
+
+The 4m_Xwcscmp24m function  compares two (wchar_t) NULL termi-
+nated wide character strings.  The value returned is an
+integer less than, equal to, or greater than zero, depending
+on whether ``4mwstr124m'' is lexicographicly less then, equal to,
+or greater than ``4mstr224m''.
+
+The 4m_Xwcsncmp24m function is identical to 4m_XlcCompareISOLatin1,0m
+except that at most ``4mlen24m'' wide characters are compared.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     1m170m
+
+

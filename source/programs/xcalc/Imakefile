@@ -1,0 +1,12 @@
+XCOMM $XFree86: xc/programs/xcalc/Imakefile,v 1.4 2005/03/25 02:22:59 dawes Exp $
+
+        DEFINES = 
+        DEPLIBS = XawClientDepLibs
+LOCAL_LIBRARIES = XawClientLibs
+  SYS_LIBRARIES = MathLibrary
+           SRCS = actions.c math.c xcalc.c 
+           OBJS = actions.o math.o xcalc.o 
+
+ComplexProgramTarget(xcalc)
+InstallAppDefaults(XCalc)
+InstallAppDefaultsLong(XCalc-col,XCalc-color)

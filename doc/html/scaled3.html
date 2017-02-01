@@ -1,0 +1,395 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Possible Solutions </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="scaled.html"><EM>Scaled Window Support in DMX</EM></A>
+ <b>:</b> <EM>Possible Solutions </EM><BR>
+<b>Previous:</b> <A HREF="scaled2.html"><EM>Previous Work </EM></A><BR>
+<b>Next:</b> <A HREF="scaled4.html"><EM>Conclusion and Recommendations </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="9"></A>3. Possible Solutions </H2>
+<p>This section briefly discusses possible solutions, including
+major advantages and disadvantages from both the
+implementation and the end-user programmer standpoint.</p>
+<H3><A NAME="10"></A>3.1. VNC-like Scaling </H3>
+<H4><A NAME="11"></A>3.1.1. Software Scaling </H4>
+<p>The <code>vncviewer</code> application could be modified to
+provide software scaling.  This is not a general solution,
+but it does solve one of the goals of this work.</p>
+<p>A prototype of this solution was implemented and a patch
+against <code>vnc-3.3.7-unixsrc</code> is available in the
+<code>dmx/external</code> directory.  Because of limited time
+available for this work, all of the edge cases were not
+considered and the solution works well mainly for integer
+scaling.</p>
+<p>Currently, <code>vncviewer</code> writes to the X display
+with XPutImage, XCopyArea, and XFillRectangle.  All
+instances of these calls have to be aware of scaling
+and must round correctly.  In the prototype solution,
+rounding is incorrect and can cause artifacts.</p>
+<p>A better solution would be to cache all updates to the
+desktop image in <code>vncviewer</code> and only send the
+damaged area to the X display with XPutImage.  This would
+allow the damaged area to be computed so that rounding
+errors do not create artifacts.  This method is probably
+similar to what is used in the Window client.  (The whole
+VNC suite is being re-written in C++ and the forthcoming
+version 4 has not been evaluated.)</p>
+<H4><A NAME="12"></A>3.1.2. Scaling with the X Video Extension </H4>
+<p>The scaling in the Windows <code>vncviewer</code> application
+makes use of a scaled blit that is supplied by the
+underlying system library.  Several video cards currently
+provide support for a scaled blit, and some X servers
+(including XFree86) expose this capability to applications
+via the XvPutImage interface of the X Video Extension.
+The capability exposed by XvPutImage results in the scaled
+image being drawn to an overlay plane.  Most video cards
+also provide support for a scaled blit into the normal
+output planes, but this is not exposed via XvPutImage.</p>
+<p>The <code>vncviewer</code> program could be modified to use
+the X Video Extension to provide scaling under X11 that is
+similar to the scaling currently provided under Windows.
+Unfortunately, Xdmx does not currently export the X Video
+Extension, so this would not provide an immediate solution
+usable with DMX.</p>
+<p>A very early-stage proof-of-concept prototype was
+implemented and a preliminary patch against
+<code>vnc-3.3.7-unixsrc</code> is available in the
+<code>dmx/external</code> directory.  This prototype was
+implemented to better understand the problems that must be
+solved to make this solution viable:
+<ul>
+<li>As noted under the software scaling section above,
+<code>vncviewer</code> writes to the X display with
+several different calls.  These calls write to the
+normal output planes and are compatible with
+XvPutImage, which writes to an overlay plane.  To
+eliminate artifacts caused by this problem,
+<code>vncviewer</code> should be modified so that a cached
+copy of the desktop is available, either as a
+client-side image or a server-side off-screen pixmap,
+so that XvPutImage would be the only method for
+writing to the X display.</li>
+<li><p>Although several modern graphics adaptors support
+hardware scaling using an RGB format (e.g., ATI
+Radeon, nVidia, etc.), XFree86 drivers typically
+only implement YUV formats.  YUV generally compress
+the pixel information in some way.  For example, two
+commonly implemented formats, YUY2 and UYVY provide
+intensity information for every RGB pixel, but only
+provide chroma and luminance information for pairs
+of horizontal pixels.  Since VNC uses
+pixel-resolution for communicating updates on the
+wire, additional artifacts are introduced (because
+there may not be enough information from the wire to
+update a pair of pixels).</p>
+<p>Further, the well-known problem with YUV encoding
+is even more evident when the image is a desktop
+instead of a movie.  For example, consider a
+1-pixel-wide vertical window border.  If the border
+changes in color but not intensity (e.g., because a
+window manager uses color to indicate focus), there
+may or may not be a change in the YUY2 image,
+depending on the algorithm used for RGB to YUV
+conversion and on how the border pixel is ordered in
+the pair of pixels used by the algorithm.</p>
+<p>Many of these artifacts could be eliminated if
+<code>vncviewer</code> cached a complete RGB image of
+the desktop, and only did the conversion to YUV for
+properly aligned areas of damage.  The remaining artifacts
+could be eliminated if an RGB format was used with X
+Video (which may require the extension of existing
+XFree86 drivers to support RGB).</p>
+</li>
+<li>Most modern video cards support exactly one overlay
+plane that is suitable for use with X Video.
+Therefore, only one application can use X Video at any
+given time.  This is a severe limitation in a desktop
+environment.</li>
+</ul>
+</p>
+<H5><A NAME="13"></A>3.1.2.1. Implementing the X Video Extension for DMX </H5>
+<p>The user-level API for X Video is fairly simple, but the
+underlying support required for the full specification
+is large.  However, since the API provides a method to
+query supported capabilities, a usable subset of X
+Video can be implemented that would support XvPutImage
+and little else.  This would require support for the
+following:
+<ul>
+<li>X Video Extension API calls, including the
+following:
+<ul>
+<li>XvQueryExtension</li>
+<li>XvQueryAdaptors</li>
+<li>XvQueryPortAttributes</li>
+<li>XvFreeAdaptorInfo</li>
+<li>XvListImageFormats</li>
+<li>XvGrabPort</li>
+<li>XvCreateImage</li>
+<li>XvPutImage</li>
+<li>XvShmCreateImage</li>
+<li>XvShmPutImage</li>
+</ul>
+</li>
+<li>Support for querying back-end X Video Extension
+capabilities.</li>
+<li>Support for sending the image to the back-ends.
+Because X Video requires sending full images, there
+may be a trade-off between bandwidth limitations and
+additional complexity to divide the image up such
+that is scales properly.</li>
+<li>Possible support for a software fall-back.  For
+example, if all of the back-ends do not support the X
+Video Extension, software scaling can be implemented
+such that the image is sent to the back-end with
+XPutImage.  This pathway would have poor
+performance.</li>
+</ul>
+</p>
+<H5><A NAME="14"></A>3.1.2.2. Supporting RGB formats for the X Video Extension </H5>
+<p>Assuming an XFree86 driver already supports the X Video
+Extension, and assuming the target hardware supports an
+RGB format, then adding support for that format is
+relatively simple and straightforward.</p>
+<H4><A NAME="15"></A>3.1.3. Scaling with an XPutImageScaled Extension </H4>
+<p>Instead of (or in addition to) implementing the X Video
+Extension in DMX, one obvious solution would be to
+implement a new extension that provides access to
+hardware-assisted scaled blits, similar to the StretchBlt
+call available under Windows.  This call would scale RGB
+images and would not use the overlay plane (unlike the X
+Video Extension).</p>
+<p>This approach has many of the same advantages and
+disadvantages as the XCopyAreaScaled Extension, discussed
+in the next section.  Discussion of XPutImageScaled is
+deferred in favor of XCopyAreaScaled for the following
+reasons:
+<ul>
+<li>XPutImageScaled can be emulated with XCopyAreaScaled
+by first using XPutImage to copy the image to an
+off-screen pixmap, and then calling XCopyAreaScaled
+between that off-screen pixmap and the target
+drawable.</li>
+<li>Since XCopyAreaScaled would copy between two areas of
+on-screen or off-screen memory, it has additional uses
+and can be viewed as efficiently providing a superset
+of XPutImageScaled functionality.</li>
+</ul>
+</p>
+<H4><A NAME="16"></A>3.1.4. Scaling with an XCopyAreaScaled Extension </H4>
+<p>As noted in the previous section, because XCopyAreaScaled
+provides a superset of the functionality provided by
+XPutImageScaled, we will consider this extension instead.</p>
+<p>First, XCopyAreaScaled would provide for RGB scaling
+between pixmaps (i.e., on-screen or off-screen areas of
+memory that reside on the video card).  Unlike the X Video
+Extension, which writes into an overlay plane,
+XCopyAreaScaled would write into the non-overlay areas of
+the screen.  Key points to consider are as follows:
+<ul>
+<li>Because different planes are involved, the two scaling
+operations are usually implemented in hardware
+differently, so an XCopyAreaScaled extension could be
+added in a manner that would neither conflict with nor
+interact with the X Video extension in any way.</li>
+<li>The XCopyAreaScaled extension provides new
+functionality that the X Video Extension does not
+provide.  Based on anecdotal feedback, we believe that
+many people outside the DMX and VNC communities would
+be excited about this extension.</li>
+<li>The main drawback to this extension is that it is new
+and needs to be implemented at the driver level in
+XFree86 for each video card to be supported.  At the
+present time, it is more likely that the X Video
+Extension will be implemented for a particular piece
+hardware because the X Video extension has multimedia
+uses.  However, over time, we would expect the
+XCopyAreaScaled extension to be implemented along with
+the X Video extension, especially if it becomes
+popular.</li>
+<li>Another drawback is that not all modern cards provide
+support for a simple scaled blit operation.  However,
+these cards usually do provide a 3D pipeline which
+could be used to provide this functionality in a
+manner that is transparent to the client application
+that is using the XCopyAreaScaled extension.  However,
+this implementation pathway would make this extension
+somewhat more difficult to implement on certain cards.</li>
+</ul>
+</p>
+<H4><A NAME="17"></A>3.1.5. Scaling with OpenGL </H4>
+<p>Another general solution to the scaling problem is to use
+the texture scaling found in all 3D hardware.  This
+ability is already exposed through OpenGL and can be
+exploited by clients without X server modification (i.e.,
+other than the ability to support OpenGL).  An application
+using OpenGL would transmit the non-scaled image to the X
+server as a texture, and would then display a single
+non-transformed rect using that texture.  This also works
+around the single overlay problem with the X Video
+Extension as well as the need to implement additional
+scaled primitive extensions.</p>
+<p>The downside is that most OpenGL implementations require
+power of 2 texture sizes and this can be very wasteful of
+memory if, for example, the application needs to scale a
+1025x1025 image, which would require a 2048x2048 texture
+area (even a 640x480 image would require a 1024x512
+texture).  Another downside is that some OpenGL
+implementations have a limited about of texture memory and
+cannot handle textures that are very large.  For example,
+they might limit the texture size to 1024x1024.</p>
+<H3><A NAME="18"></A>3.2. Application-transparent Scaling for DMX </H3>
+<H4><A NAME="19"></A>3.2.1. Back-end Scaling Without Disconnect/Reconnect </H4>
+<p>VNC does scaling on the client side (in the
+<code>vncviewer</code> application).  Implementing a similar
+solution for DMX would require support in the back-end X
+servers and, therefore, is not a general solution.</p>
+<p>XFree86 already implements some support for "scaling" that
+could be used with DMX: if, in the XF86Config file,
+multiple Modes are listed in the Display Subsection of the
+Screen Section, then pressing Ctrl-Alt-Plus and
+Ctrl-Alt-Minus can be used to iterate through the listed
+modes.  The display dimensions will change to the
+dimensions in the Modes line, but the logical dimensions
+of the X server (i.e., the dimensions that Xdmx knows
+about) will not change.</p>
+<p>Further, the dimensions of the XFree86 display are under
+software control (via the XFree86-VidModeExtension), so
+the Xdmx server could change the screen dimensions on a
+per-display basis, thereby scaling the information on part
+of that display.</p>
+<p>However, this scaling appears to have limited use.  For
+example, assume a 4 by 4 display wall consisting of 16
+1280x1024 displays.  If all of the back-end servers were
+simultaneously configured to display 640x480, the left
+hand corner of each display would be magnified, but the
+composite result would be unreadable.  Magnifying one
+display at a time could be usable, but could have limited
+utility, since the result would still be no larger than a
+single display.</p>
+<H4><A NAME="20"></A>3.2.2. Back-end Scaling With Disconnect/Reconnect </H4>
+<p>Disconnect and reconnect features are not currently
+supported in DMX, but are scheduled to be implemented in
+the future.  These features, combined with the
+XFree86-VidModeExtension Extension, would allow an
+application to do the following:
+<ul>
+<li>Disconnect a specific back-end server (via the DMX
+Extension),</li>
+<li>reconfigure the XFree86 back-end server resolution,
+and </li>
+<li>reconnect the back-end server to DMX -- at a new
+origin with the new screen resolution.</li>
+</ul>
+</p>
+<p>For example, consider a display wall consisting of 16
+1280x1024 displays with a total resolution of 5120x4096.
+All of the screens could be disconnected, repositioned,
+and reconnected each at a resolution of 640x480.  The
+total resolution of the display wall would be 2560x1920,
+allowing a view of a selected area approximately
+one-fourth of the size of the DMX display.  This change
+would be completely application independent (except,
+perhaps, for a DMX-aware window manager).  When work at
+the increased resolution was completed, the back-end
+servers could be disconnected, reconfigured, and
+reconnected for the original 5120x4096 view.</p>
+<p>Support for this type of scaling can be implemented in a
+DMX-aware X11 client assuming the DMX server support
+arbitrary disconnect and reconnect semantics.  Because
+this application cannot be written before
+disconnect/reconnect is implemented, this solution will
+not be discussed further in this paper.</p>
+<H4><A NAME="21"></A>3.2.3. Server-side Scaling </H4>
+<p>In earlier versions of DMX, a frame buffer was maintained
+on the server side, and XPutImage was used to move the
+information from the server to the client (similar to some
+early VNC implementations).  The use of a server-side
+frame buffer would allow the server to do scaling, but is
+not a recommended solution because of overall performance
+issues and server-side memory issues (i.e., the frame
+buffer would be very large for large display walls).</p>
+<p>Exploration of this path is not recommended.</p>
+<H3><A NAME="22"></A>3.3. XCreateScaledWindow API </H3>
+<p>The implementation of X Video Extension in DMX, and the use
+of XvPutImage by applications requiring scaling requires
+significant changes in DMX Further, XvPutImage is,
+essentially a scaled blit, and it is only useful for
+applications which are already using (or can be modified to
+use) XPutImage.  Therefore, a more general API will be
+discussed as another possibility.</p>
+<p>X applications typically create windows with the
+XCreateWindow call.  A new extension could provide an
+XCreateScaledWindow call that could be used in place of the
+XCreateWindow call and be otherwise transparent to the
+application.  This would allow applications, even those that
+do not depend on XPutImage, to take advantage of window
+scaling.  In this section we describe how the call would
+work, what transparency it provides, and how to solve the
+potential problems that transparency creates.</p>
+<H4><A NAME="23"></A>3.3.1. XCreateWindow </H4>
+<p>The XCreateWindow call takes width and height as
+parameters.  An XCreateScaledWindow call could take all
+the same parameters, with the addition of a scaling factor.</p>
+<H4><A NAME="24"></A>3.3.2. XSetWindowAttributes </H4>
+<p>An X11 window has several attributes that would have to be
+scaled:
+<ul>
+<li>Background and border pixmaps</li>
+<li>Border width</li>
+<li>Cursor</li>
+</ul>
+</p>
+<H4><A NAME="25"></A>3.3.3. XGetWindowAttributes, XGetGeometry </H4>
+<p>For transparency, calls that query the window attributes
+should return unscaled information.  This suggests that
+all unscaled pixmaps and window attributes should be
+cached.</p>
+<p>Unfortunately, a window manager requires the scaled
+geometry to properly decorate the window.  The X server
+can probably determine which client is acting as the
+window manager (e.g., because that client will select
+events that are used exclusively by the window manager).
+However, other Scaled Window Extension aware clients may
+also need to determine the scaled geometry.  Therefore, at
+least two additional extension calls should be
+implemented: XGetScaledWindowAttributes and
+XGetScaledGeometry.</p>
+<H4><A NAME="26"></A>3.3.4. Popup and Child window positions </H4>
+<p>Some applications may position popup and child windows
+based on an unscaled notion of the main window geometry.
+In this case, additional modifications to the client would
+be required.</p>
+<H4><A NAME="27"></A>3.3.5. Events </H4>
+<p>Most events (e.g., for mouse motion) return information
+about the coordinates at which the even occurred.  These
+coordinates would have to be modified so that unscaled
+values were presented to the client.</p>
+<H4><A NAME="28"></A>3.3.6. Implementation </H4>
+<p>There are many implementation issues, some of which are
+similar to the issues involved in implementing the X Video
+Extension for DMX.  The window contents must be scaled,
+either by performing all operations to a frame buffer and
+then writing the image to the display (perhaps using
+hardware scaling support), or by modifying all of the
+various drawing operations to perform scaling.  Because of
+the complexity involved, the frame buffer option is
+recommended.</p>
+ <HR NOSHADE>
+<A HREF="scaled.html"><EM>Scaled Window Support in DMX</EM></A>
+ <b>:</b> <EM>Possible Solutions </EM><BR>
+<b>Previous:</b> <A HREF="scaled2.html"><EM>Previous Work </EM></A><BR>
+<b>Next:</b> <A HREF="scaled4.html"><EM>Conclusion and Recommendations </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728816" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

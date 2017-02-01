@@ -1,0 +1,36 @@
+XCOMM $XFree86: xc/lib/font/FreeType/Imakefile,v 1.33 2007/05/18 18:01:58 tsi Exp $
+
+#if BuildServer && DoLoadableServer
+#define IHaveSubdirs
+#define NoLibSubdirs
+#define PassCDebugFlags
+SUBDIRS = module
+#endif
+
+DEFINES = ServerExtraDefines StrcasecmpDefines Freetype2BuildDefines
+
+INCLUDES = $(FREETYPE2INCLUDES) -I../include -I$(SERVERSRC)/include
+
+SRCS = xttcap.c ftfuncs.c ftenc.c fttools.c
+OBJS = xttcap.o ftfuncs.o ftenc.o fttools.o
+
+#if BuildFontLib
+#define DoNormalLib NormalLibFont
+#define DoSharedLib SharedLibFont
+#define DoDebugLib DebugLibFont
+#define DoProfileLib ProfileLibFont
+#include <Library.tmpl>
+LibraryObjectRule()
+
+SubdirLibraryRule($(OBJS))
+NormalLintTarget($(SRCS))
+
+#endif
+
+#if BuildServer && DoLoadableServer
+MakeSubdirs($(SUBDIRS))
+DependSubdirs($(SUBDIRS))
+#endif
+
+DependTarget()
+

@@ -1,0 +1,13 @@
+XCOMM $XFree86: xc/programs/xwd/Imakefile,v 1.8 2006/09/04 15:57:55 tsi Exp $
+
+        DEPLIBS = XkbClientDepLibs $(DEPXMUULIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = XkbClientLibs $(XMUULIB) $(XONLYLIB)
+           SRCS = xwd.c dsimple.c list.c multiVis.c
+           OBJS = xwd.o dsimple.o list.o multiVis.o
+        DEFINES = XkbClientDefines
+
+LinkSourceFile(dsimple.c,../xlsfonts)
+LinkSourceFile(dsimple.h,../xlsfonts)
+SpecialObjectRule(xwd.o,dsimple.h dsimple.c,)
+
+ComplexProgramTarget(xwd)

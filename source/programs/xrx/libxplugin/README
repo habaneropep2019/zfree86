@@ -1,0 +1,6 @@
+$XFree86: xc/programs/xrx/libxplugin/README,v 1.2 2006/01/09 15:01:44 dawes Exp $
+
+This library exists solely to get the new extensions linked into the
+Netscape Plug-in. Once vendors start shipping R7 versions of libXext.so
+then there will be no need for this library.
+

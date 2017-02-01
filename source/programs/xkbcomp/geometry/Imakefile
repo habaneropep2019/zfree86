@@ -1,0 +1,22 @@
+XCOMM $XFree86: xc/programs/xkbcomp/geometry/Imakefile,v 3.20 2007/02/19 15:44:32 tsi Exp $
+
+#define IHaveSubdirs
+#define PassCDebugFlags /**/
+
+     TESTDATA =
+    DATAFILES = README amiga ataritt chicony dell everex fujitsu hp keytronic \
+		kinesis macintosh microsoft nec northgate pc sharp sony sun \
+		winbook $(TESTDATA)
+      SUBDIRS = digital enermax ibm sgi
+
+all::
+
+MakeXkbDir($(LIBDIR)/xkb,geometry)
+
+/* There might be a directory called "hp" from a previous installation. */
+install::
+	@if [ -d $(DESTDIR)$(LIBDIR)/xkb/geometry/hp ]; then \
+		(set -x; $(RM) -r $(DESTDIR)$(LIBDIR)/xkb/geometry/hp) \
+	fi
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/geometry)

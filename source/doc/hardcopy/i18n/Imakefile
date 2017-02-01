@@ -1,0 +1,6 @@
+XCOMM $XFree86: xc/doc/hardcopy/i18n/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(Framework,Framework.PS.gz)
+InstallHardcopyDoc(LocaleDB,LocaleDB.PS.gz)
+InstallHardcopyDoc(Trans,Trans.PS.gz)
+

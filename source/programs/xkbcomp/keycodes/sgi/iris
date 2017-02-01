@@ -1,0 +1,11 @@
+// $XFree86: xc/programs/xkbcomp/keycodes/sgi/iris,v 3.3 2006/01/09 15:01:21 dawes Exp $
+default xkb_keycodes "iris" {
+    include "sgi/indigo(pc101)"
+    indicator 1 = "L1";
+    indicator 2 = "L2";
+    indicator 3 = "L3";
+    indicator 4 = "L4";
+    indicator 5 = "Caps Lock";
+    indicator 6 = "Num Lock";
+    indicator 7 = "Scroll Lock";
+};

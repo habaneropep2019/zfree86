@@ -1,0 +1,628 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Hardware-Specific Information and Troubleshooting </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>Hardware-Specific Information and Troubleshooting </EM><BR>
+<b>Previous:</b> <A HREF="DRI9.html"><EM>General Trouble Shooting </EM></A><BR>
+<b>Next:</b> <A HREF="DRI11.html"><EM>General Limitations and Known Bugs </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="23"></A>10. Hardware-Specific Information and Troubleshooting </H2>
+<p>This section presents hardware-specific information for normal
+use and troubleshooting.</p>
+
+<H3><A NAME="24"></A>10.1. 3dfx Banshee, Voodoo3, Voodoo4 and Voodoo5 Series </H3>
+
+<H4><A NAME="25"></A>10.1.1. Requirements </H4>
+<p>The 3dfx DRI driver requires special versions of the 3dfx Glide
+library.
+Different versions of Glide are needed for Banshee/Voodoo3 than
+for Voodoo4/5.
+The Glide libraries can be downloaded from the DRI website.</p>
+
+<H4><A NAME="26"></A>10.1.2. Configuration </H4>
+<p>Your XF86Config file's device section must specify the
+<code>tdfx</code> device.  For example:
+<pre>
+        Section "Device"
+            Identifier  "Voodoo3"
+            VendorName  "3dfx"
+            Driver      "tdfx"
+        EndSection
+            
+</pre>
+</p>
+<p>Or,</p>
+<p>
+<pre>
+        Section "Device"
+            Identifier  "Voodoo5"
+            VendorName  "3dfx"
+            Driver      "tdfx"
+        EndSection
+            
+</pre>
+</p>
+<p>The Screen section should then reference the Voodoo device:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "Voodoo3"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 16
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+<p>Or,</p>
+
+<p>
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "Voodoo5"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 24
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+	    Subsection "Display"
+		Depth       24
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+
+<p>The kernel module for 3dfx hardware is named <code>tdfx.o</code> and
+should be installed in /lib/modules/2.4.x/kernel/drivers/char/drm/.
+It will be automatically loaded by the Xserver if needed.</p>
+<p>The DRI 3D driver for 3dfx hardware should be in
+<code>/usr/X11R6/lib/modules/dri/tdfx_dri.so</code>.
+This will be automatically loaded by libGL.so.</p>
+<p>The Voodoo5 supports 3D rendering in 16 and 32 bpp modes.
+When running in 32bpp mode an 8-bit stencil buffer and 24-bit
+Z (depth) buffer are offered.
+When running in 16bpp mode only a 16-bit Z (depth) buffer is
+offered and stencil is implemented in software.</p>
+<p>A software-based accumulation buffer is available in both
+16 and 32bpp modes.</p>
+
+<H4><A NAME="27"></A>10.1.3. Troubleshooting </H4>
+<p>
+<ul>
+<li>If you try to run an OpenGL application and see an error message
+similar to
+<pre>
+      gd error (glide): gd error (glide): grSstSelect:  non-existent SSTgd error (glide): grSstSelect:  non-existent SSTS
+              
+</pre>
+
+it means that you have the wrong version of the Glide library
+for your hardware.</li>
+<li>3D acceleration for Banshee and Voodoo3 is only supported in
+the 16 bit/pixel screen mode.
+Use <code>xdpyinfo</code> to verify that all your visuals are depth 16.
+Edit your XF86Config file if needed.</li>
+<li>The <code>/dev/3dfx</code> device is not used for DRI; it's only for
+Glide on older 3dfx hardware.</li>
+<li>Different versions of Glide are needed for Voodoo3 and Voodoo5.
+See the DRI website's resources page to download the right
+version of Glide.</li>
+<li>Voodoo4/5 may be run at 24bpp (instead of 32bpp, the default)
+but 3D acceleration is not supported in that mode.
+32bpp mode is fully 3D accelerated.</li>
+</ul>
+</p>
+
+<H4><A NAME="28"></A>10.1.4. Performance and Features </H4>
+<p>
+<ul>
+<li>Normally, buffer swapping in double-buffered applications is
+synchronized to your monitor's refresh rate.
+This may be overridden by setting the <code>FX_GLIDE_SWAPINTERVAL</code>
+environment variable.
+The value of this variable indicates the maximum number of
+swap buffer commands can be buffered.
+Zero allows maximum frame rate.</li>
+<li>On Voodoo4/5, rendering with 16-bits/texel textures is faster
+than using 32-bit per texel textures.
+The <code>internalFormat</code> parameter to <code>glTexImage2D</code> can be
+used to control texel size.
+Quake3 and other games let you control this as well.</li>
+<li>The <code>glTexEnv</code> mode <code>GL_BLEND</code> is not directly supported
+by the Voodoo3 hardware.
+It can be accomplished with a multi-pass algorithm but it's not
+implemented at this time.
+Applications which use that mode, such as the Performer Town
+demo, may become sluggish when falling back to software
+rendering to render in that mode.</li>
+<li>The Voodoo3/Banshee driver reverts to software rendering under
+the following conditions:
+<ul>
+<li>Setting <code>GL_LIGHT_MODEL_COLOR_CONTROL</code> to
+<code>GL_SEPARATE_SPECULAR_COLOR</code>.</li>
+<li>Enabling line stippling or polygon stippling.</li>
+<li>Enabling point smoothing or polygon smoothing.</li>
+<li>Enabling line smoothing when line width is not 1.0.
+That is, antialiased lines are done in hardware only when
+the line width is 1.0.</li>
+<li>Using 1-D or 3-D texture maps.</li>
+<li>Using the GL_BLEND texture environment.</li>
+<li>Using stencil operations.</li>
+<li>Using the accumulation buffer.</li>
+<li>Using <code>glBlendEquation(GL_LOGIC_OP)</code>.</li>
+<li>Using <code>glDrawBuffer(GL_FRONT_AND_BACK)</code>.</li>
+<li>Using <code>glPolygonMode(face, GL_POINT)</code> or
+<code>glPolygonMode(face, GL_LINE)</code>.</li>
+<li>Using point size attenuation
+(i.e. <code>GL_DISTANCE_ATTENUATION_EXT</code>).</li>
+<li>Using <code>glColorMask(r, g, b, a)</code> when r!=g or g!=b.</li>
+</ul>
+</li>
+<li>The Voodoo5 driver reverts to software rendering under the
+same conditions Voodoo3 with three exceptions.
+First, stencil operations are implemented in hardware when the
+screen is configured for 32 bits/pixel.
+Second, the <code>GL_BLEND</code> texture env mode is fully supported in
+hardware.
+Third, <code>glColorMask</code> is fully supported in hardware when
+the screen is configured for 32 bits/pixel.</li>
+<li>As of January, 2001 the second VSA-100 chip on the Voodoo5 is
+not yet operational.
+Therefore, the board isn't being used to its full capacity.
+The second VSA-100 chip will allow Scan-Line Interleave (SLI)
+mode for full-screen applications and games, potentially doubling
+the system's fill rate.
+When the second VSA-100 chip is activated
+glGetString(GL_RENDERER) will report Voodoo5 instead of Voodoo4.</li>
+<li>The lowest mipmap level is sometimes miscolored in trilinear-
+sampled polygons.</li>
+<li>The GL_EXT_texture_env_combine extension is supported on the
+Voodoo4 and Voodoo5.</li>
+</ul>
+</p>
+
+<H4><A NAME="29"></A>10.1.5. Known Problems </H4>
+<p>
+<ul>
+<li>The lowest mipmap level is sometimes miscolored in trilinear-
+sampled polygons (Voodoo3/Banshee).</li>
+<li>Fog doesn't work with orthographic projections.</li>
+<li>The accuracy of blending operations on Voodoo4/5 isn't always
+very good.
+If you run Glean, you'll find some test failures.</li>
+<li>The Glide library cannot be used directly; it's only meant to
+be used via the tdfx DRI driver.</li>
+<li>SSystem has problems because of poorly set near and far
+clipping planes.
+The office.unc Performer model also suffers from this problem.</li>
+</ul>
+</p>
+
+
+<H3><A NAME="30"></A>10.2. Intel i810 </H3>
+
+<H4><A NAME="31"></A>10.2.1. Requirements </H4>
+<p>A kernel with AGP GART support (such as Linux 2.4.x) is needed.</p>
+
+
+<H4><A NAME="32"></A>10.2.2. Configuration </H4>
+<p>Your XF86Config file's device section must specify the
+<code>i810</code> device, and specify a usable amount of video
+ram to reserve.
+<pre>
+        Section "Device"
+            Identifier  "i810"
+            VendorName  "Intel"
+            Driver      "i810"
+	    Option	"AGPMode" "1"
+	    VideoRam    10000
+        EndSection
+            
+</pre>
+
+The Screen section should then reference the i810 device:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "i810"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 16
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+<p>The kernel module for the i810 is named <code>i810.o</code> and
+should be installed in /lib/modules/2.4.x/kernel/drivers/char/drm/.
+It will be automatically loaded by the Xserver if needed.</p>
+<p>The DRI 3D driver for the i810 should be in
+<code>/usr/X11R6/lib/modules/dri/i810_dri.so</code>.
+This will be automatically loaded by libGL.so.</p>
+
+<H4><A NAME="33"></A>10.2.3. Troubleshooting </H4>
+<p>
+<ul>
+<li>3D acceleration for the i810 is only available in the 16
+bit/pixel screen mode at this time.  32bpp acceleration is
+not supported by this hardware.
+Use <code>xdpyinfo</code> to verify that all your visuals are depth 16.
+Edit your XF86Config file if needed.</li>
+<li>The i810 uses system ram for video and 3d graphics.  The X
+server will ordinarily reserve 4mb of ram for graphics,
+which is too little for an effective 3d setup.  To tell
+the driver to use a larger amount, specify a VideoRam
+option in the Device section of your XF86Config file.  A
+number between 10000 and 16384 seems adequate for most
+requirements.  If too little memory is available for DMA
+buffers, back and depth buffers and textures, direct
+rendering will be disabled.</li>
+</ul>
+</p>
+
+<H4><A NAME="34"></A>10.2.4. Performance and Features </H4>
+<p>Basically all of the i810 features which can be exposed through
+OpenGL 1.2 are implemented.
+However, the following OpenGL features are implemented in software
+and will be slow:
+<ul>
+<li>Stencil buffer and accumulation buffer operations</li>
+<li>Blend subtract, min/max and logic op blend modes</li>
+<li>glColorMask when any mask is set to false</li>
+<li>GL_SEPARATE_SPECULAR_COLOR lighting mode</li>
+<li>glDrawBuffer(GL_FRONT_AND_BACK)</li>
+<li>Using 1D or 3D textures</li>
+<li>Using texture borders</li>
+</ul>
+</p>
+
+
+<H3><A NAME="35"></A>10.3. Matrox G200 and G400 </H3>
+
+<H4><A NAME="36"></A>10.3.1. Requirements </H4>
+<p>A kernel with AGP GART support (such as Linux 2.4.x) is needed.</p>
+
+<H4><A NAME="37"></A>10.3.2. Configuration </H4>
+<p>Your XF86Config file's device section must specify the
+<code>mga</code> device:  
+<pre>
+        Section "Device"
+            Identifier  "MGA"
+            VendorName  "Matrox"
+            Driver      "mga"
+	    Option	"AGPMode" "1"
+	    VideoRam    32768
+        EndSection
+            
+</pre>
+
+The Screen section should then reference the MGA device:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "MGA"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 16
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+
+To use a 32bpp screen mode, use this <code>Screen</code> section
+instead:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "MGA"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 24
+            DefaultFbBpp 32
+	    Subsection "Display"
+		Depth       24
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+
+<p>The kernel module for the G200/G400 is named <code>mga.o</code> and
+should be installed in /lib/modules/2.4.x/kernel/drivers/char/drm/.
+It will be automatically loaded by the Xserver if needed.</p>
+<p>The DRI 3D driver for the G200/G400 should be in
+<code>/usr/X11R6/lib/modules/dri/mga_dri.so</code>.
+This will be automatically loaded by libGL.so.</p>
+
+<H4><A NAME="38"></A>10.3.3. Performance and Features </H4>
+<p>Software rendering will be used under any of the
+following conditions:
+<ul>
+<li>Using glDrawBuffer(GL_FRONT_AND_BACK).</li>
+<li>Using point, line, or triangle smoothing.</li>
+<li>Using glLogicOp.</li>
+<li>Using glPolygonStipple or glLineStipple.</li>
+<li>Using 1D or 3D textures.</li>
+<li>Using texture borders.</li>
+<li>Using glDepthFunc(GL_NEVER).</li>
+<li>Using the accumulation buffer.</li>
+</ul>
+</p>
+<p>The AGP mode may be set to 1, 2, or 4.  One is used by default.
+Higher AGP speeds may result in unreliable performance depending
+on your motherboard.</p>
+
+<p>Compaq has funded the implementation of AGP accelerated
+ReadPixels and DrawPixels in this driver.  With this
+implementation, on a G400 drawing directly from AGP memory
+(exported to the client), throughput of up to 1 GB/sec has
+been measured.</p>
+
+<p>Additionally Compaq's funding has produced several new
+extensions in Mesa, including one (packed_depth_stencil_MESA)
+which enables Read/DrawPixels functionality to operate
+directly on the packed 24/8 depth/stencil buffers of this
+hardware.</p>
+
+<p>In order to access this functionality, the application must
+ensure that all pixel processing operations are disabled.
+There are in addition a fairly complex set of rules regarding
+which packing/unpacking modes must be used, and which data
+formats are supported, and alignment constraints.  See the
+files in lib/GL/mesa/src/drv/mga/DOCS for a summary of these.
+The extension definitions are included in the Mesa 3.4 source
+distribution.</p>
+
+
+<H4><A NAME="39"></A>10.3.4. IRQ Assignment </H4>
+<p>There have been problems in the past with the MGA driver being very
+sluggish when the DRI is enabled (to the point of being unusable.)
+This is caused by the graphics card not having an interrupt assigned
+to it. 
+The current DRI trunk will attempt to detect this condition and
+bail out gracefully.</p>
+<p>The solution to the above problem is to assign an interrupt to your
+graphics card.
+This is something you must turn on in your system BIOS configuration.
+Please consult your system BIOS manual for instructions
+on how to enable an interrupt for your graphics card.</p>
+
+
+<H4><A NAME="40"></A>10.3.5. MGA HAL lib </H4>
+<p>MGAHALlib.a is a binary library Matrox has provided for use under
+Linux to expose functionality for which they can not provide
+documentation. 
+(For example TV-Out requires MacroVision be enabled on the output.) 
+This binary library also sets the pixel/memory clocks to the optimal
+settings for your Matrox card.</p>
+<p>Currently the MGAHAL library is required for the G450 to work.
+You can download this from the driver section on Matrox's website: 
+<A href="http://www.matrox.com/mga/">www.matrox.com/mga</A></p>
+<p>Here modifications to the DRI build instructions which make the
+mga ddx driver use the MGAHAL library:
+<pre>
+	  1.Put the following define in your host.def file
+		  #define UseMatroxHal YES
+	  2. Place mgaHALlib.a in the following directory
+		  xc/programs/Xserver/hw/xfree86/drivers/mga/HALlib/
+          
+</pre>
+</p>
+<p>You can use DualHead on the G400/G450 DH cards by creating two
+device sections which both point to the same BusID.
+For most AGP devices the BusID will be "PCI:1:0:0".
+Configure your screen section as you would normally configure
+XFree86 4.x Multihead.  It should be noted that currently
+the second head does not support direct rendering.</p>
+
+
+<H4><A NAME="41"></A>10.3.6. Known Problems </H4>
+<p>None.</p>
+
+
+
+<H3><A NAME="42"></A>10.4. ATI Rage 128 </H3>
+
+<H4><A NAME="43"></A>10.4.1. Requirements </H4>
+<p>A kernel with AGP GART support (such as Linux 2.4.x) is needed.</p>
+
+<H4><A NAME="44"></A>10.4.2. Configuration </H4>
+<p>Your XF86Config file's device section must specify the
+<code>ati</code> device:
+<pre>
+        Section "Device"
+            Identifier  "Rage128"
+            VendorName  "ATI"
+            Driver      "ati"
+	    Option	"AGPMode" "1"
+	    Option	"UseCCEFor2D" "false"
+        EndSection
+            
+</pre>
+
+The Screen section should then reference the Rage 128 device:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "Rage128"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 16
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+	    Subsection "Display"
+		Depth       32
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+<p>The kernel module for the Rage 128 is named <code>r128.o</code> and
+should be installed in /lib/modules/2.4.x/kernel/drivers/char/drm/.
+It will be automatically loaded by the Xserver if needed.</p>
+<p>The DRI 3D driver for the Rage 128 should be in
+<code>/usr/X11R6/lib/modules/dri/r128_dri.so</code>.
+This will be automatically loaded by libGL.so.</p>
+<p>You may also set your screen depth to 32 for 32bpp mode.</p>
+
+
+<H4><A NAME="45"></A>10.4.3. Performance and Features </H4>
+<p>While PCI Rage 128 based cards are supported, they do not yet
+support PCI GART, so they will not perform as well as their
+AGP counterparts.</p>
+<p>For AGP cards, the AGP mode may be set to 1, 2, or 4.  One is
+used by default.
+Higher AGP speeds may result in unreliable performance depending
+on your motherboard.</p>
+<p>Note that even at 32bpp there is no alpha channel.</p>
+<p>The following OpenGL features are implemented in software and
+will be slow:
+<ul>
+<li>accumulation buffer operations</li>
+<li>stencil, when using a 16bpp screen</li>
+<li>Blend subtract, min/max and logic op blend modes</li>
+<li>GL_SEPARATE_SPECULAR_COLOR lighting mode</li>
+<li>glDrawBuffer(GL_FRONT_AND_BACK)</li>
+<li>Using 1D or 3D textures</li>
+<li>Using texture borders</li>
+</ul>
+</p>
+
+<H4><A NAME="46"></A>10.4.4. Known Problems </H4>
+<p>If you experience stability problems you may try setting the
+<code>UseCCEFor2D</code> option to <code>true</code>.  This will
+effectively disable 2D hardware acceleration.  Performance will
+be degraded, of course.</p>
+
+
+
+<H3><A NAME="47"></A>10.5. ATI Radeon </H3>
+
+<H4><A NAME="48"></A>10.5.1. Requirements </H4>
+<p>A kernel with AGP GART support (such as Linux 2.4.x) is needed.</p>
+
+<H4><A NAME="49"></A>10.5.2. Configuration </H4>
+<p>Your XF86Config file's device section must specify the
+<code>ati</code> device:
+<pre>
+        Section "Device"
+            Identifier  "Radeon"
+            VendorName  "ATI"
+            Driver      "ati"
+	    Option	"AGPMode" "1"
+        EndSection
+            
+</pre>
+
+The Screen section should then reference the Radeon device:
+<pre>
+	Section "Screen"
+	    Identifier  "Screen 1"
+	    Device      "Radeon"
+	    Monitor     "High Res Monitor"
+	    DefaultDepth 16
+	    Subsection "Display"
+		Depth       16
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+	    Subsection "Display"
+		Depth       32
+		Modes       "1280x1024" "1024x768" "800x600" "640x480"
+		ViewPort    0 0
+	    EndSubsection
+        EndSection
+            
+</pre>
+</p>
+<p>The kernel module for the Radeon is named <code>radeon.o</code> and
+should be installed in /lib/modules/2.4.x/kernel/drivers/char/drm/.
+It will be automatically loaded by the Xserver if needed.</p>
+<p>The DRI 3D driver for the Radeon should be in
+<code>/usr/X11R6/lib/modules/dri/radeon_dri.so</code>.
+This will be automatically loaded by libGL.so.</p>
+<p>You may also set your screen depth to 32 for 32bpp mode.</p>
+
+
+<H4><A NAME="50"></A>10.5.3. Performance and Features </H4>
+<p>While this driver supports many of the features of ATI Radeon
+cards, we do not <em>yet</em> fully support the card's TCL
+features.  This work is progressing, but is not yet ready.</p>
+<p>The AGP mode may be set to 1, 2, or 4.  One is used by default.
+Higher AGP speeds may result in unreliable performance depending
+on your motherboard.</p>
+<p>The following OpenGL features are implemented in software and will
+be slow:
+<ul>
+<li>Blend subtract, blend min/max and blend logicops</li>
+<li>Stencil and accumulation operations</li>
+<li>1D and 3D textures</li>
+<li>Texture borders</li>
+</ul>
+</p>
+<p>The GL_EXT_texture_env_combine, GL_EXT_texture_env_add and
+GL_EXT_texture_env_dot3 extensions are supported (or will be
+soon supported in the new driver based on Mesa 3.5).</p>
+<p>We hope to implement support for the following features in the
+future:
+<ul>
+<li>Vertex transformation, clipping and lighting (TCL)</li>
+<li>Hardware stencil buffer</li>
+<li>Cube map textures</li>
+<li>3D textures</li>
+<li>Three texture units</li>
+</ul>
+</p>
+
+<H4><A NAME="51"></A>10.5.4. Known Problems </H4>
+<p>Certain (early?) revisions of the AMD Irongate chipset have
+AGPGART problems which effect Radeon, and other graphics cards.
+The card may work unreliably, or not work at all.  If the DRM
+kernel module is not loaded, the 2D Xserver may work.  There's
+hope that this can be fixed in the future.</p>
+
+
+<H3><A NAME="52"></A>10.6. 3DLabs Oxygen GMX 2000 </H3>
+<p>The driver for this hardware was experimental and is no longer being
+developed or supported.</p>
+
+
+ <HR NOSHADE>
+<A HREF="DRI.html"><EM>DRI User Guide </EM></A>
+ <b>:</b> <EM>Hardware-Specific Information and Troubleshooting </EM><BR>
+<b>Previous:</b> <A HREF="DRI9.html"><EM>General Trouble Shooting </EM></A><BR>
+<b>Next:</b> <A HREF="DRI11.html"><EM>General Limitations and Known Bugs </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728784" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

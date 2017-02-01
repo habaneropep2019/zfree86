@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Configuration Examples </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Configuration Examples </EM><BR>
+<b>Previous:</b> <A HREF="mouse6.html"><EM>Mouse Gallery </EM></A><BR>
+<b>Next:</b> <A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="39"></A>7. Configuration Examples </H2>
+
+<p>This section shows some example <code>InputDevice</code> section for 
+popular mice.  All the examples assume that the mouse is connected to 
+the PS/2 mouse port, and the OS supports the PS/2 mouse initialization.
+It is also assumed that <code>/dev/mouse</code> is
+a link to the PS/2 mouse port.</p>
+<p>Logitech MouseMan+ has 4 buttons and a wheel.  The following example
+makes the wheel movement available as the button 5 and 6.</p>
+<p>
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier	"MouseMan+"
+	Driver		"mouse"
+	Option		"Device"	"/dev/mouse"
+	Option		"Protocol"	"MouseManPlusPS/2"
+	Option		"Buttons"	"6"
+	Option		"ZAxisMapping"	"5 6"
+EndSection
+</pre>
+<hr>
+</p>
+<p>You can change button number assignment using the <code>xmodmap</code>
+command AFTER you start the X server with the above configuration.
+You may not like to use the wheel as the button 2 and rather want
+the side button (button 4) act like the button 2.  You may also
+want to map the wheel movement to the button 4 and 5.
+This can be done by the following command:</p>
+<p>
+<pre>
+	xmodmap -e "pointer = 1 6 3 2 4 5"
+</pre>
+</p>
+<p>After this command is run, the correspondence between the buttons and 
+button numbers will be as shown in the following table.</p>
+<p>
+<pre>
+Physical Buttons	Reported as:
+------------------------------------
+1 Left Button		  Button 1
+2 Wheel Button		  Button 6
+3 Right Button		  Button 3
+4 Side Button		  Button 2
+5 Wheel Negative Move	  Button 4
+6 Wheel Positive Move	  Button 5
+</pre>
+</p>
+<p>For the MS IntelliMouse Explorer which as a wheel and 5 buttons,
+you may have the following <code>InputDevice</code> section. </p>
+<p>
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier	"IntelliMouse Explorer"
+	Driver		"mouse"
+	Option		"Device"	"/dev/mouse"
+	Option		"Protocol"	"ExplorerPS/2"
+	Option		"Buttons"	"7"
+	Option		"ZAxisMapping"	"6 7"
+EndSection
+</pre>
+<hr>
+</p>
+<p>The IntelliMouse Explorer has 5 buttons, thus, you should give "7"
+to the <code>Buttons</code> option if you want to map the wheel movement
+to buttons (6 and 7).
+With this configuration, the correspondence between the buttons and
+button numbers will be as follows:</p>
+<p>
+<pre>
+Physical Buttons	Reported as:
+------------------------------------
+1 Left Button		  Button 1
+2 Wheel Button		  Button 2
+3 Right Button		  Button 3
+4 Side Button 1		  Button 4
+5 Side Button 2		  Button 5
+6 Wheel Negative Move	  Button 6
+7 Wheel Positive Move	  Button 7
+</pre>
+</p>
+<p>You can change button number assignment using <code>xmodmap</code>
+AFTER you started the X server with the above configuration.</p>
+<p>
+<pre>
+	xmodmap -e "pointer = 1 2 3 4 7 5 6"
+</pre>
+</p>
+<p>The above command will moves the side button 2 to the button 7 and
+make the wheel movement reported as the button 5 and 6.  See 
+the table below.</p>
+<p>
+<pre>
+Physical Buttons	Reported as:
+------------------------------------
+1 Left Button		  Button 1
+2 Wheel Button		  Button 2
+3 Right Button		  Button 3
+4 Side Button 1		  Button 4
+5 Side Button 2		  Button 7
+6 Wheel Negative Move	  Button 5
+7 Wheel Positive Move	  Button 6
+</pre>
+</p>
+<p>For the A4 Tech WinEasy mouse which has two wheels and 3 buttons,
+you may have the following <code>InputDevice</code> section.  </p>
+<p>
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier	"WinEasy"
+	Driver		"mouse"
+	Option		"Device"	"/dev/mouse"
+	Option		"Protocol"	"IMPS/2"
+	Option		"Buttons"	"7"
+	Option		"ZAxisMapping"	"4 5 6 7"
+EndSection
+</pre>
+<hr>
+</p>
+<p>The movement of the first wheel is mapped to the button 4 and 5.  The
+second wheel's movement will be reported as the buttons 6 and 7.</p>
+<p>The Kensington Expert mouse is really a trackball. It has 4 buttons
+arranged in a rectangle around the ball.</p>
+<p>
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier  "DLB"
+	Driver      "mouse"
+	Option      "Protocol" "ThinkingMousePS/2"
+	Option      "Buttons" "3"
+	Option      "Emulate3Buttons"
+	Option      "Device" "/dev/mouse"
+	Option      "DragLockButtons" "2 1 4 3"
+EndSection
+</pre>
+<hr>
+
+In this example, button 2 is a drag lock button for button
+number 1, and button 4 is a drag lock button for button 3.
+Since button 2 is above button 1 and button 4 is above button 3
+in the layout of this trackball, this is reasonable.</p>
+<p>Because button 2 is being used as a drag lock, it can not be
+used as an ordinary button. However, it can be activated by
+using the "Emulate3Buttons" feature. However, some people my
+be unable to press two buttons at the same time. They may
+prefer the following <code>InputDevice</code> section which
+defines button 4 as a master drag lock button, and leaves
+button 2 free for ordinary use.
+<hr>
+<pre>
+Section "InputDevice"
+	Identifier  "MasterDLB"
+	Driver      "mouse"
+	Option      "Protocol" "ThinkingMousePS/2"
+	Option      "Buttons" "3"
+	Option      "Device" "/dev/mouse"
+	Option      "DragLockButtons" "4"
+EndSection
+</pre>
+<hr>
+</p>
+
+ <HR NOSHADE>
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Configuration Examples </EM><BR>
+<b>Previous:</b> <A HREF="mouse6.html"><EM>Mouse Gallery </EM></A><BR>
+<b>Next:</b> <A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728777" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

@@ -1,0 +1,17 @@
+XCOMM $XFree86: xc/programs/setxkbmap/Imakefile,v 3.5 2006/01/09 15:00:52 dawes Exp $
+
+           SRCS = setxkbmap.c
+           OBJS = setxkbmap.o
+        DEPLIBS = $(DEPXKBFILELIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XKBFILELIB) $(XONLYLIB)
+
+        DEFINES = -DDFLT_XKB_CONFIG_ROOT=\"$(LIBDIR)/xkb\"
+
+all::
+
+clean::
+	RemoveFiles(test.h *.xkm *.xkb)
+
+#if BuildXKBlib
+ComplexProgramTarget(setxkbmap)
+#endif

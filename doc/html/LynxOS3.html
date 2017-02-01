@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Running XFree86</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="LynxOS.html"><EM>README for XFree86&reg; 4.8.0 on LynxOS </EM></A>
+ <b>:</b> <EM>Running XFree86</EM><BR>
+<b>Previous:</b> <A HREF="LynxOS2.html"><EM>Installing the Binaries </EM></A><BR>
+<b>Next:</b> <A HREF="LynxOS4.html"><EM>Compiling the XFree86 Distribution</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="4"></A>3. Running XFree86</H2>
+<p>
+<A NAME="running"></A></p>
+<p>This section describes the changes to the LynxOS environment 
+which may be necessary to successfully run XFree86.</p>
+
+
+<H3><A NAME="5"></A>3.1. System tuning</H3>
+
+<H4><A NAME="6"></A>3.1.1. Tunable parameters</H4>
+<p>To reasonably run XFree86 you may have to adjust a few system parameters.</p>
+<p>On LynxOS 2.5.x and 3.0.x include a line
+<pre>
+#define X_WINDOWS
+</pre>
+</p>
+<p>in <code>/sys/lynx.os/uparam.h</code>.</p>
+
+<H4><A NAME="7"></A>3.1.2. Adjustment for "nv" driver for NVidia graphics cards</H4>
+
+<p>If you're using the "nv" driver (Riva 128, nVidia TNT, TNT2, GeForce),
+you will have to increase the value of the SMEMS parameter in
+<code>/sys/lynx.os/uparam.h</code> from 10 to 20.</p>
+
+<H4><A NAME="8"></A>3.1.3. Increase number of ptys</H4>
+
+<p>You should also increase the number of ptys to be able run a couple
+more xterms. You may replace <code>/sys/cfg/pty.cfg</code> with
+<code>/usr/X11R6/lib/X11/etc/pty.cfg</code>.</p>
+
+<H4><A NAME="9"></A>3.1.4. MTRR device driver</H4>
+
+<p>If you're using an Intel PentiumPRO or Pentium II (or higher) class
+CPU you might want to install the MTRR device driver. This driver
+enables the XFree86 X server to manipulate the CPU memory type range
+registers which may improve performance on certain systems.</p>
+<p>To install the driver (on LynxOS x86 2.5.0 systems an higher) follow
+these steps:</p>
+<p>
+<blockquote><code>
+<pre>
+  # cd /
+  # bash /usr/X11R6/lib/X11/etc/MTRR-Lynx.shar
+  # cd sys/drivers/mtrr
+  # make install
+</pre>
+</code></blockquote>
+</p>
+<p>Then add a line
+<blockquote><code>
+<pre>
+  I:../drivers/mtrr/mtrr.cfg
+</pre>
+</code></blockquote>
+
+to <code>/sys/lynx.os/CONFIG.TBL</code> and rebuild the kernel (see next section).</p>
+
+<H4><A NAME="10"></A>3.1.5. Kernel build</H4>
+
+<p>If you plan to use a PS/2 mouse to the following sections
+before rebuilding the kernel, if not, you should rebuild the kernel
+now:</p>
+<p>
+<blockquote><code>
+<pre>
+     # cd /sys/lynx.os
+     # make install
+     # reboot -N
+  
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="11"></A>3.2. Mouse support in XFree86</H3>
+
+<p>XFree86 includes support for PnP mice (see also <A href="mouse.html">Mouse Support in XFree86</A>). The current LynxOS
+TTY device driver doesn't allow the necessary manipulation of the RTS
+line and therefore the support for PnP mice has been disabled for
+LynxOS.</p>
+
+<H3><A NAME="12"></A>3.3. PS/2 mouse drivers</H3>
+
+<p>LynxOS x86 comes with a PS/2 mouse driver. If it is not currently
+installed on your system install it with
+<code>/usr/bin/Install.ps2mouse</code>. Older versions of this driver
+contained code to translate the PS/2 mouse protocol to the format of a 
+serial mouse, thus you'll have to specify "Microsoft" as the mouse
+protocol format. The mouse driver contained in LynxOS x86 patchlevel
+015 (and higher) does no longer perform the protocol translation an
+therefore can be defined as "PS/2" protocol format.</p>
+
+
+<H3><A NAME="13"></A>3.4. ATC console driver and VT switching</H3>
+
+<p>Currently there is no support for virtual terminal switching
+once the server has started. Support for this feature may be added in
+future versions (it requires a patch to the vt100 LynxOS terminal
+driver).</p>
+<p>You will need a free console which the X server will use for keyboard
+input. You must disable login on at least one of the four virtual
+terminals in <code>/etc/ttys</code>, e.g. <code>/dev/atc3</code>:</p>
+<p>
+<blockquote><code>
+change
+<pre>
+       /dev/atc3:1:default:vt100at:/bin/login
+  
+</pre>
+
+to
+<pre>
+       /dev/atc3:0:default:vt100at:/bin/login
+                 ^
+  
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="14"></A>3.5. X Server debug diagnostics output and other VT peculiarities</H3>
+
+<p>Output made by the XFree86 X on its stdout or stderr will be lost
+after the server switches to graphics mode. The XFree86 4.8.0
+server stores its output in <code>/usr/adm/XFree86.n.log</code> (where
+<code>n</code> is the screen number).</p>
+<p>When the X server is running output made to other consoles will be
+lost. After server shutdown the screen contents of other consoles may
+be inconsistent with what one would expect (i.e. random).</p>
+
+
+
+ <HR NOSHADE>
+<A HREF="LynxOS.html"><EM>README for XFree86&reg; 4.8.0 on LynxOS </EM></A>
+ <b>:</b> <EM>Running XFree86</EM><BR>
+<b>Previous:</b> <A HREF="LynxOS2.html"><EM>Installing the Binaries </EM></A><BR>
+<b>Next:</b> <A HREF="LynxOS4.html"><EM>Compiling the XFree86 Distribution</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728802" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

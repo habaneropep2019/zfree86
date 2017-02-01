@@ -1,0 +1,12 @@
+// $XFree86: xc/programs/xkbcomp/torture/sym_interp1,v 1.2 2006/01/09 15:01:31 dawes Exp $
+xkb_compatibility "torture1" 
+
+interpret Control_L {
+	locking= False;
+	action= SetMods(mods=Control);
+};
+
+interpret Control_R {
+	locking= True;
+	action= NoAction();
+};

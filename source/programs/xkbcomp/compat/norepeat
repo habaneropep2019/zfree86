@@ -1,0 +1,11 @@
+// $XFree86: xc/programs/xkbcomp/compat/norepeat,v 1.2 2006/01/09 15:01:17 dawes Exp $
+
+// Put any otherwise normal keys that you don't want to repeat in
+// this file
+
+default partial xkb_compatibility "norepeat"  {
+    interpret Return {
+	action= NoAction();
+	repeat= False;
+    };
+};

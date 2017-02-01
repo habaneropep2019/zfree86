@@ -1,0 +1,30 @@
+XCOMM $XFree86: xc/lib/dmx/Imakefile,v 1.4 2005/10/14 15:16:00 tsi Exp $
+
+#define DoNormalLib NormalLibDmx
+#define DoExtraLib ExtraLibDmx
+#define DoSharedLib SharedLibDmx
+#define DoDebugLib DebugLibDmx
+#define DoProfileLib ProfileLibDmx
+
+#define LibName dmx
+#define SoRev SODMXREV
+#define LibHeaders NO
+
+#ifdef SharedDmxReqs
+REQUIREDLIBS = SharedDmxReqs
+#endif
+
+#include <Threads.tmpl>
+
+#if Malloc0ReturnsNull
+ALLOC_DEFINES = -DMALLOC_0_RETURNS_NULL
+#endif
+
+      DEFINES = $(ALLOC_DEFINES)
+         SRCS = dmx.c
+         OBJS = dmx.o
+     LINTLIBS = $(LINTXLIB)
+
+#include <Library.tmpl>
+
+DependTarget()

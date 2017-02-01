@@ -1,0 +1,14 @@
+XCOMM $XFree86: xc/programs/bdftopcf/Imakefile,v 3.11 2005/10/14 15:17:30 tsi Exp $
+
+#if GzipFontCompression
+ZLIB = GzipLibrary
+#endif
+LOCAL_LIBRARIES = $(FONTLIB)
+SYS_LIBRARIES = $(ZLIB) MathLibrary
+DEPLIBS = $(DEPFONTLIB)
+INCLUDES = -I$(FONTLIBSRC)/include -I$(FONTLIBSRC)/bitmap
+SRCS = bdftopcf.c
+OBJS = bdftopcf.o
+
+ComplexProgramTarget(bdftopcf)
+LinkBuildBinary(ProgramTargetName(bdftopcf))

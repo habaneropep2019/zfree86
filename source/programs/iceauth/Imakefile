@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/programs/iceauth/Imakefile,v 1.5 2006/01/09 15:00:43 dawes Exp $
+
+DEPLIBS = $(DEPICELIB)
+LOCAL_LIBRARIES = $(ICELIB)
+           SRCS = iceauth.c process.c
+           OBJS = iceauth.o process.o
+   CONN_DEFINES = $(CONNECTION_FLAGS)
+
+ComplexProgramTarget(iceauth)
+
+SpecialCObjectRule(process,$(ICONFIGFILES),$(SIGNAL_DEFINES))

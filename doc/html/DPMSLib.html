@@ -1,0 +1,724 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:17:40 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. DPMS FunctionsDPMSQueryExtension">2. DPMS FunctionsDPMSQueryExtension</a><br>
+
+<hr>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>X
+Display Power Management Signaling (DPMS) Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><b><small>Library
+Specification</small></b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Version
+1.0 X Project Team Standard X Version 11, Release
+6.4</small></small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small><small>Rob
+Lembree <i>lembree@zk3.dec.com</i> <br>
+Digital Equipment Corporation <br>
+24 April 1996</small></small></p>
+
+<p style="margin-top: 1em" valign="top">Copyright &copy;
+Digital Equipment Corporation, 1996</p>
+
+<p style="margin-top: 1em" valign="top">Permission to use,
+copy, modify, distribute, and sell this documentation for
+any purpose is hereby granted without fee, provided that the
+above copyright notice and this permission notice appear in
+all copies. Digital Equipment Corporation makes no
+representations about the suitability for any purpose of the
+information in this document. This documentation is provided
+&lsquo;&lsquo;as is&rsquo;&rsquo; without express or implied
+warranty.</p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension
+provides X Protocol control over the VESA Display Power
+Management Signaling (DPMS) characteristics of video boards
+under control of the X Window System.</p>
+
+
+<p align=center valign="top"><img src="DPMSLib1.png" alt="Image DPMSLib1.png"></p>
+
+<p style="margin-top: 1em" valign="top">Traditionally, the
+X Window System has provided for both blanking and
+non-blanking screen savers. Timeouts associated with these
+built-in screen saver mechanisms are limited to idle (dwell)
+time, and a change timeout that specifies the change
+interval for non-blanking screen savers.</p>
+
+<p style="margin-top: 1em" valign="top">The United
+States&rsquo; Environmental Protection Agency (EPA) Energy
+Star program requires that monitors power down after some
+idle time by default. While it is possible to simply
+overload the existing screen saver timeouts, this solution
+leaves the non-privileged user little to no control over the
+DPMS characteristics of his or her system. For example,
+disabling DPMS would require some unintended side effect in
+the core screen saver, such as disabling the changing of a
+non-blanking screen saver. Providing clients with this
+control requires an extension to the core X Window System
+Protocol, and this extension seeks to fill this gap.</p>
+
+<p style="margin-top: 1em" valign="top">There are four
+power levels specified by the Video Electronics Standards
+Association (VESA) Display Power Management Signaling (DPMS)
+standard. These are mapped onto the X DPMS Extension like
+this:</p>
+
+<p style="margin-top: 1em" valign="top"><i>DPMS Extension
+Power Levels</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOn</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">In use</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeStandby</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Blanked, low power</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeSuspend</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Blanked, lower power</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="26%">
+
+
+<p valign="top">3</p></td>
+<td width="20%">
+
+
+<p valign="top">DPMSModeOff</p></td>
+<td width="20%"></td>
+<td width="30%">
+
+
+<p valign="top">Shut off, awaiting activity</p></td>
+</table>
+
+<a name="2. DPMS FunctionsDPMSQueryExtension"></a>
+<h2>2. DPMS FunctionsDPMSQueryExtension</h2>
+
+
+<p style="margin-top: 1em" valign="top">Bool
+DPMSQueryExtension (<i>display, event_base,
+error_base</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+int <i>*event_base, *error_base;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="10%"></td>
+<td width="60%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>event_base</i></p></td>
+<td width="10%"></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the return location for the
+assigned base event</p></td>
+<td width="60%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>error_base</i></p></td>
+<td width="10%"></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the return location for the
+assigned base error</p></td>
+<td width="60%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The
+DPMSQueryExtension function queries the X server to
+determine the availability of the DPMS Extension. If the
+extension is available, the return value is TRUE, and
+<i>event_base</i> and <i>error_base</i> are set to the base
+event number and base error number for the extension,
+respectively. Otherwise, the return value is FALSE, and the
+values of <i>event_base</i> and <i>error_base</i> are
+undefined.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetVersion</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSGetVersion(<i>display, major_version,
+minor_version</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+int <i>*major_version, *minor_version;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="60%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>major_version</i></p></td>
+<td width="10%"></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the return location for the
+extension major version.</p></td>
+<td width="60%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>minor_version</i></p></td>
+<td width="10%"></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the return location for the
+extension minor version.</p></td>
+<td width="60%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSGetVersion
+function returns the version of the DPMS extension
+implemented by the X server. The version is returned in
+<i>major_version</i> and <i>minor_version</i>. The major
+version and minor version for this specification are
+&rsquo;1&rsquo; and &rsquo;1&rsquo;, respectively. The major
+version will be incremented for protocol incompatible
+changes, and the minor version will be incremented for
+small, upwardly compatible changes.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSCapable</i></p>
+
+<p style="margin-top: 1em" valign="top">Bool
+DPMSCapable(<i>display</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSCapable
+function returns the DPMS capability of the X server, either
+TRUE (capable of DPMS) or FALSE (incapable of DPMS). The
+capability of an X server is implementation defined. For
+example, if a multi-headed X server is capable of DPMS on
+one head, and incapable on another, the truth value of this
+function is defined by the X server implementation.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSSetTimeouts</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSSetTimeouts(<i>display, standby, suspend, off</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+CARD16 <i>standby, suspend, off;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>standby</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the new standby timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>suspend</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the new suspend timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>off</i></p></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the new off timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSSetTimeouts
+function permits applications to set the timeout values used
+by the X server for DPMS timings.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>standby</i> is the amount of time of inactivity in
+seconds before standby mode is invoked. The actual effects
+of this mode are implementation defined, but in the case of
+DPMS compliant hardware, it is implemented by shutting off
+the horizontal sync signal, and pulsing the vertical sync
+signal. Standby mode provides the quickest monitor recovery
+time. Note also that many monitors implement this mode
+identically to suspend mode. A value of zero disables this
+mode.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>suspend</i> is the amount of time of inactivity in
+seconds before the second level of power savings is invoked.
+Suspend mode&rsquo;s physical and electrical characteristics
+are implementation defined, but in DPMS compliant hardware,
+results in the pulsing of the horizontal sync signal, and
+shutting off of the vertical sync signal. Suspend mode
+recovery is considered to be slower than standby mode, but
+faster than off mode, however this is monitor dependent. As
+noted above, many monitors implement this mode identically
+to standby mode. A value of zero disables this mode.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>off</i> is the amount of time of inactivity in seconds
+before the third and final level of power savings is
+invoked. Off mode&rsquo;s physical and electrical
+characteristics are implementation defined, but in DPMS
+compliant hardware, is implemented by shutting off both
+horizontal and vertical sync signals, resulting in the
+power-down of the monitor. Recovery time is implementation
+dependant, but frequently is similar to the power-up time of
+the monitor. A value of zero disables this mode.</p>
+
+<p style="margin-top: 1em" valign="top">Chronologically,
+standby mode occurs before or simultaneously with suspend
+mode, and suspend mode must occur before or simultaneously
+with off mode. Therefore, non-zero mode timeout values must
+be greater than or equal to the timeout values of earlier
+modes. If inconsistent values are supplied, a BadValue error
+will result.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSGetTimeouts</i></p>
+
+<p style="margin-top: 1em" valign="top">Bool
+DPMSGetTimeouts(<i>display, standby, suspend, off</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+CARD16 <i>*standby, *suspend, *off;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>standby</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the current standby timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>suspend</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the current suspend timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>off</i></p></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the current off timeout in
+seconds.</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSGetTimeouts
+function retrieves the timeout values used by the X server
+for DPMS timings.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>standby</i> is the amount of time of inactivity in
+seconds before standby mode is invoked. A value of zero
+indicates that this mode has been disabled.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>suspend</i> is the amount of time of inactivity in
+seconds before the second level of power savings is invoked.
+A value of zero indicates that this mode has been
+disabled.</p>
+
+<p style="margin-top: 1em" valign="top">The value
+<i>off</i> is the amount of time of inactivity in seconds
+before the third and final level of power savings is
+invoked. A value of zero indicates that this mode has been
+disabled.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSEnable</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSEnable(<i>display</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSEnable
+function enables DPMS on the specified display. When
+enabled, DPMS will use the currently saved timeout values,
+and will invoke the DPMS power mode appropriate for the
+amount of time that the workstation input devices have been
+idle. If DPMSEnable is invoked on a display with DPMS
+already enabled, no change is made, and no error is
+returned. If DPMSEnable is invoked on a display without
+support for DPMS, no change is made and no error is
+returned.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSDisable</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSDisable(<i>display</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSDisable
+function disables DPMS on the specified display. When
+disabled, DPMS returns the display to DPMSModeOn. If
+DPMSDisable is invoked on a display with DPMS already
+disabled, no change is made, and no error is returned. If
+DPMSDisable is invoked on a display without support for
+DPMS, no change is made and no error is returned.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSForceLevel</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSForceLevel(<i>display, level</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+CARD16 <i>level;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="70%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>level</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Specifies the level to force power to.</p></td>
+<td width="70%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSForceLevel
+function forces a DPMS capable display into the specified
+power level. The <i>level</i> must be one of DPMSModeOn,
+DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff. Values
+other than these will result in a BadValue error. If DPMS is
+disabled on the display, a BadMatch protocol error will
+result.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>DPMSInfo</i></p>
+
+<p style="margin-top: 1em" valign="top">Status
+DPMSInfo(<i>display, power_level, state</i>)</p>
+
+<p style="margin-left:25%; margin-top: 1em">Display
+<i>*display;</i> <br>
+CARD16 <i>*power_level;</i> <br>
+BOOL <i>*state;</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>display</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the connection to the X
+server.</p> </td>
+<td width="10%"></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>power_level</i></p></td>
+<td width="10%"></td>
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the current power level.</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="10%">
+
+
+<p valign="top"><i>state</i></p></td>
+<td width="10%"></td>
+<td width="10%">
+</td>
+<td width="10%">
+</td>
+<td width="10%">
+
+
+<p valign="top">Specifies the current DPMS state</p></td>
+<td width="50%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The DPMSInfo
+function returns information about the current DPMS state.
+The <i>state</i> return parameter indicates whether or not
+DPMS is enabled (TRUE) or disabled (FALSE). The
+<i>power_level</i> return parameter indicates the current
+power level (one of DPMSModeOn, DPMSModeStandby,
+DPMSModeSuspend, or DPMSModeOff.)</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729486" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

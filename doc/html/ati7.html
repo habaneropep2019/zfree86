@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Known problems and limitations</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="ati.html"><EM>ATI Adapters README file </EM></A>
+ <b>:</b> <EM>Known problems and limitations</EM><BR>
+<b>Previous:</b> <A HREF="ati6.html"><EM>Video modes</EM></A><BR>
+<b>Next:</b> <A HREF="ati8.html"><EM>Reporting problems</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="28"></A>7. Known problems and limitations</H2>
+<p>There are several known problems or limitations related to the XFree86 ATI
+driver.
+They include:</p>
+<p>
+<ul>
+<li>When using a Mach64's accelerator CRTC, the virtual resolution must be
+less than 8192 pixels wide.
+The VGA CRTC further limits the virtual resolution width to less than 4096
+pixels, or to less than 2048 pixels for adapters based on 18800-x's (with 256kB
+of memory) and on Mach64 integrated controllers.
+These are hardware limits that cannot be circumvented.</li>
+<li>Virtual resolutions requiring more than 1MB of video memory (256kB in the
+monochrome case) are not supported by the VGA CRTC on 88800GX and 88800CX
+adapters.
+This is a hardware limit that cannot be circumvented.</li>
+<li>Due to hardware limitations, doublescanned modes are not supported by the
+accelerator CRTC in 88800GX, 88800CX, 264CT and 264ET adapters.</li>
+<li>The ``VScan'' modeline parameter is only supported when using the VGA
+CRTC.</li>
+<li>Interlaced modes are not supported on 18800-x and 28800-x adapters when
+using a virtual resolution that is 2048 pixels or wider.
+When using a 18800-x with 256kB of video memory in 256-colour modes, this limit
+is reduced to 1024.
+This is yet another hardware limitation that cannot be circumvented.</li>
+<li>Video memory banking does not work in monochrome and 16-colour modes on
+18800-x adapters.
+This appears to be another hardware limit, but this conclusion cannot be
+confirmed at this time.
+The driver's default behaviour in this case is to limit video memory to 256kB.</li>
+<li>Video memory corruption can still occur during mode switches on 18800-x
+adapters.
+Symptoms of this problem include garbled fonts on return to text mode, and
+various effects (snow, dashed lines, etc) on initial entry into a graphics
+mode.
+In the first case, the workaround is to use some other means of restoring the
+text font.
+On Linux, this can be accomplished with the kbd or svgalib packages.
+In the second case, <A href="xrefresh.1.html">xrefresh(1)</A>
+will usually clean up the image.
+No complete solution to this problem is currently known.
+It appears this corruption occurs due to either video memory bandwidth or
+RAMDAC limitations, and so the driver will limit mode clocks to 40MHz.</li>
+<li>There is some controversy over what the maximum allowed clock frequency
+should be on 264xT and 3D Rage adapters.
+For now, clocks will, by default, be limited to 80MHz, 135MHz, 170MHz, 200MHz
+or 230MHz, depending on the specific controller.
+This limit can only be increased (up to a driver-calculated absolute maximum)
+through the DACSpeed specification in XF86Config.
+Be aware however that doing so is untested and might damage the adapter.</li>
+<li>Except as in the previous items, clocks are limited to 80MHz on most
+adapters, although many are capable of higher frequencies.
+This will eventually be fixed in a future release.</li>
+<li>The use of a laptop's hot-keys to switch displays while this driver is
+active can cause lockups and/or other woes, and is therefore not recommended.
+It is not currently possible to solve this problem.
+By default, the driver disables the use of such keys, by communicating to the
+video BIOS to ignore them.
+These hot-keys can be re-enabled with Option ``BIOSDisplay'' but results will
+be unpredictable.
+</li>
+<li>In situations where the driver is to simultaneously display on both a
+panel and a CRT, the same image will be seen on both.
+In particular, this means the CRT must be able to synchronise with the timings
+of the panel's native resolution.
+This is quite evident when the panel has ``odd-ball'' dimensions, such as
+1400x1050, a resolution not commonly possible on CRTs or projection
+equipment.<p>Also, the display of independent images on the panel and CRT is not currently
+implemented, and might never be, pending resolution of the previous item.</p>
+
+</li>
+</ul>
+
+Support for the following will be added in a future release:
+<ul>
+<li>Mach32's accelerator CRTC.
+This support is the first step towards accelerated support for Mach32's,
+Mach8's, 8514/A's and other clones.</li>
+<li>Colour depth greater than 8 on non-integrated controllers, where
+permitted by the hardware.</li>
+<li>Mach32, Mach8 and 8514/A Draw Engines.</li>
+<li>Hardware cursors where implemented by hardware.
+This has already been done for Mach64 integrated controllers.</li>
+<li>TVOut, i.e. the ability to use a television screen as a monitor.</li>
+<li>Motion Video, i.e. displaying an asynchronous data stream (TV signal,
+DVD, etc.) in a window or full-screen.</li>
+<li>3D operations.</li>
+</ul>
+</p>
+ <HR NOSHADE>
+<A HREF="ati.html"><EM>ATI Adapters README file </EM></A>
+ <b>:</b> <EM>Known problems and limitations</EM><BR>
+<b>Previous:</b> <A HREF="ati6.html"><EM>Video modes</EM></A><BR>
+<b>Next:</b> <A HREF="ati8.html"><EM>Reporting problems</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728820" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

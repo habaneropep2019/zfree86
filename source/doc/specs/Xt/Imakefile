@@ -1,0 +1,19 @@
+XCOMM $XFree86: xc/doc/specs/Xt/Imakefile,v 1.5 2006/01/09 14:56:36 dawes Exp $
+
+SRCS = 	strings.mit \
+	Xtk.intr.front \
+	CH[01][0123456789] \
+	appA \
+	appB \
+	appC \
+	appD \
+	appE \
+	appF \
+	postproc
+
+MakeEqnDoc(intrinsics,$(SRCS))
+
+MakeDocIndex(intr,strings.mit intr.idxmac.t)
+
+InstallRoffDoc(intrinsics)
+

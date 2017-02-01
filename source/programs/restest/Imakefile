@@ -1,0 +1,12 @@
+XCOMM $XFree86: xc/programs/restest/Imakefile,v 1.1 2007/04/03 14:10:02 tsi Exp $
+
+        DEPLIBS = $(DEPXRESLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(XRESLIB) $(XLIB)
+           SRCS = restest.c
+           OBJS = restest.o
+
+AllTarget(ProgramTargetName(restest))
+
+NormalProgramTarget(restest,$(OBJS),$(DEPLIBS),$(LOCAL_LIBRARIES),NullParameter)
+InstallProgram(restest,$(BINDIR))
+DependTarget()

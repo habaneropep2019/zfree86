@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Configuring Your Mouse </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Configuring Your Mouse </EM><BR>
+<b>Previous:</b> <A HREF="mouse3.html"><EM>OS Support for Mice </EM></A><BR>
+<b>Next:</b> <A HREF="mouse5.html"><EM>XF86Config Options </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="20"></A>4. Configuring Your Mouse </H2>
+
+<p>Before using the <code>xf86config</code> program
+to set up mouse configuration, you must identify the interface type,
+the device name and the protocol type of your mouse.
+Blindly trying every possible combination of mouse settings 
+will lead you nowhere.</p>
+<p>So, the first thing you need to know is the interface type 
+of the mouse you are going to use and this can be determined by looking
+at the connector of the mouse.
+The serial mouse has a D-Sub female 9- or 25-pin connector.
+The bus mice have either a D-Sub male 9-pin connector 
+or a round DIN 9-pin connector.
+The PS/2 mouse is equipped with a small, round DIN 6-pin connector.
+Some mice come with adapters with which a connector can 
+be converted from one type to another.  If you are to use such an adapter,
+remember that the connector at the very end of the mouse/adapter pair is 
+what matters.</p>
+<p>The next thing to do is decide what the device node to use for
+the given interface.  For the bus and PS/2 mice, there is little choice; 
+your OS most possibly offers just one device node each
+for the bus mouse and PS/2 mouse.
+There may be more than one serial port to which the serial
+mouse can be attached.  </p>
+<p>The next step is to guess the appropriate protocol type for the mouse.
+The X server may be able to select a protocol type for the given mouse
+automatically in some cases.
+Otherwise, the user has to choose one manually.
+Follow the guidelines below.</p>
+<p>
+<dl>
+<dt><b>Bus mouse</b><dd><p>The bus and InPort mice always use <code>"BusMouse"</code>
+protocol regardless of the brand of the mouse.</p>
+<p>Some OSs may allow you to specify <code>"Auto"</code> as the 
+protocol type for the bus mouse.</p>
+
+<dt><b>PS/2 mouse</b><dd><p>The <code>"PS/2"</code> protocol should always be tried first for the PS/2 mouse
+regardless of the brand of the mouse.
+Any PS/2 mouse should work with this protocol type, although
+wheels and other additional features are unavailable in the
+X server.</p>
+<p>After verifying the mouse works with this protocol,
+you may choose to specify one of <code>"xxxPS/2"</code> protocols so that
+extra features are made available in the X server.
+However, support for these PS/2 mice assumes certain behavior of
+the underlying OS and may not always work as expected.
+Support for some PS/2 mouse models may be disabled all together
+for some OS platforms for this reason.</p>
+<p>Some OSs may allow you to specify <code>"Auto"</code> as the 
+protocol type for the PS/2 mouse and the X server will automatically
+adjust itself.</p>
+
+<dt><b>Serial mouse</b><dd><p>The XFree86 server supports a wide range of mice, both old and new.
+If your mouse is of a relatively new model, it may conform to the
+PnP COM device specification and the X server may be able to 
+detect an appropriate protocol type for the mouse automatically.</p>
+<p>Specify <code>"Auto"</code> as the protocol type and start the X server.
+If the mouse is not a PnP mouse, or the X server cannot determine
+a suitable protocol type, the server will print the following
+error message and abort.</p>
+<p>
+<pre>
+&lt;mousename&gt;: cannot determine the mouse protocol
+</pre>
+</p>
+<p>If the X server generates the above error message, you need to 
+manually specify a protocol type for your mouse.
+Choose one from the following list:</p>
+<p>
+<ul>
+<li><code>GlidePoint</code></li>
+<li><code>IntelliMouse</code></li>
+<li><code>Logitech</code></li>
+<li><code>Microsoft</code></li>
+<li><code>MMHittab</code></li>
+<li><code>MMSeries</code></li>
+<li><code>MouseMan</code></li>
+<li><code>MouseSystems</code></li>
+<li><code>ThinkingMouse</code></li>
+</ul>
+</p>
+<p>When you choose, keep in mind the following rule of thumb:</p>
+<p>
+<ol>
+<li><code>"Logitech"</code> protocol is for old serial mouse models 
+from Logitech.
+Modern Logitech mice use either <code>"MouseMan"</code> or <code>"Microsoft"</code>
+protocol.</li>
+<li>Most 2-button serial mice support the <code>"Microsoft"</code> protocol.</li>
+<li>3-button serial mice may work with the <code>"Mousesystems"</code>
+protocol. If it doesn't, it may work instead with the 
+<code>"Microsoft"</code> protocol although the third (middle) button won't 
+function.
+3-button serial mice may also work with the <code>"Mouseman"</code>
+protocol under which the third button may function as expected.</li>
+<li>3-button serial mice may have a small switch at the bottom 
+of the mouse to choose between ``MS'' and ``PC'', or ``2'' and ``3''.
+``MS'' or ``2'' usually mean the <code>"Microsoft"</code> protocol.
+``PC'' or ``3'' will choose the <code>"MouseSystems"</code> protocol.</li>
+<li>If the serial mouse has a roller or a wheel, it may be compatible 
+with the <code>"IntelliMouse"</code> protocol.</li>
+<li>If the serial mouse has a roller or a wheel and it doesn't work
+with the <code>"IntelliMouse"</code> protocol, you have to use it 
+as a regular 2- or 3-button serial mouse.</li>
+</ol>
+</p>
+<p>If the <code>"Auto"</code> protocol is specified and the mouse seems working,
+but you find that not all features of the mouse is available, that is
+because the X server does not have native support for that model of mouse
+and is using a ``compatible'' protocol according to PnP information.</p>
+<p>If you suspect this is the case with your mouse, please send a report to
+<EM><A HREF="mailto:XFree86@XFree86.Org">XFree86@XFree86.Org</A></EM>
+.</p>
+
+<dt><b>USB mouse</b><dd><p>If your mouse is connected to the USB port, it can either be supported 
+by the <code>"Auto"</code> protocol, or by an OS-specific protocol (see below), 
+or as a generic Human Interface Device by the <code>"usb"</code> protocol. </p>
+
+<dt><b>Standardized protocols</b><dd><p>Mouse device drivers in your OS may use the standardized protocol 
+regardless of the model or the class of the mouse.
+For example, SVR4 systems may support <code>"Xqueue"</code> protocol.
+In FreeBSD the system mouse device <code>/dev/sysmouse</code>
+uses the <code>"SysMouse"</code> protocol.
+Please refer to the OS support section of this file for more information.</p>
+
+</dl>
+</p>
+
+ <HR NOSHADE>
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>Configuring Your Mouse </EM><BR>
+<b>Previous:</b> <A HREF="mouse3.html"><EM>OS Support for Mice </EM></A><BR>
+<b>Next:</b> <A HREF="mouse5.html"><EM>XF86Config Options </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728776" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

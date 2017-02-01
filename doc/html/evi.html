@@ -1,0 +1,956 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:19:59 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Introduction">1. Introduction</a><br>
+<a href="#2. Goals">2. Goals</a><br>
+<a href="#3. Requests">3. Requests</a><br>
+<a href="#4. Events and Errors">4. Events and Errors</a><br>
+<a href="#5. Changes to existing protocol.">5. Changes to existing protocol.</a><br>
+<a href="#6. Encoding">6. Encoding</a><br>
+<a href="#7. C Language Binding">7. C Language Binding</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Extended
+Visual Information Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+1.0 X Project Team Standard X Version 11, Release
+6.4</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Peter
+Daifuku <br>
+Silicon Graphics, Inc.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Copyright
+&copy; 1986-1997 The Open Group All Rights
+Reserved</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the Software), to use the Software without restriction,
+including, without limitation, the rights to copy, modify,
+merge, publish, distribute and sublicense the Software, to
+make, have made, license and distribute derivative works
+thereof, and to permit persons to whom the Software is
+furnished to do so, subject to the following
+conditions:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>The
+above copyright notice and the following permission notice
+shall be included in all copies of the
+Software:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>THE
+SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NON- INFRINGEMENT. IN NO EVENT SHALL THE OPEN
+GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER USEABILITIY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF, OR IN CONNNECTION WITH THE SOFTWARE OR THE USE
+OF OTHER DEALINGS IN THE SOFTWARE.</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Except
+as contained in this notice, the name of The Open Group
+shall not be used in advertising or otherwise to promote the
+use or other dealings in this Software without prior written
+authorization from The Open Group.</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>X
+Window System is a trademark of The Open
+Group.</small></small></p>
+
+<a name="1. Introduction"></a>
+<h2>1. Introduction</h2>
+
+
+<p style="margin-top: 1em" valign="top">EVI (Extended
+Visual Information extension) allows a client to determine
+information about core X visuals beyond what the core
+protocol provides.</p>
+
+<a name="2. Goals"></a>
+<h2>2. Goals</h2>
+
+
+<p style="margin-top: 1em" valign="top">As the X Window
+System has evolved, it has become clear that the information
+returned by the core X protocol regarding Visuals is often
+insufficient for a client to determine which is the most
+appropriate visual for its needs. This extension allows
+clients to query the X server for additional visual
+information, specifically as regards colormaps and
+framebuffer levels.</p>
+
+<p style="margin-top: 1em" valign="top">This extension is
+meant to address the needs of pure X clients only. It is
+specifically and purposefully not designed to address the
+needs of X extensions. Extensions that have an impact on
+visual information should provide their own mechanisms for
+delivering that information. For example, the Double
+Buffering Extension (DBE) provides its own mechanism for
+determining which visuals support double-buffering.</p>
+
+<a name="3. Requests"></a>
+<h2>3. Requests</h2>
+
+
+<p style="margin-top: 1em" valign="top">__ &#9474;<i><br>
+GetVersion</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>client_major_version</i>:
+CARD8 <i><br>
+client_minor_version</i>: CARD8</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>server_major_version</i>:
+CARD8 <i><br>
+server_minor_version</i>: CARD8 &#9474;__</p>
+
+<p style="margin-top: 1em" valign="top">If supplied, the
+client_major_version and client_minor_version indicate what
+version of the protocol the client wants the server to
+implement. The server version numbers returned indicate the
+protocol this extension actually supports. This might not
+equal the version sent by the client. An implementation can
+(but need not) support more than one version simultaneously.
+The server_major_version and the server_minor_version are a
+mechanism to support future revisions of the EVI protocol
+that may be necessary. In general, the major version would
+increment for incompatible changes, and the minor version
+would increment for small upward-compatible changes. Servers
+that support the protocol defined in this document will
+return a server_major_version of one (1), and a
+server_minor_version of zero (0). __ &#9474;<i><br>
+GetVisualInfo</i></p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>visual_list</i>:
+LISTofVISUALID</p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>per_visual_info</i>:
+LISTofVISUALINFO</p>
+
+<p style="margin-top: 1em" valign="top">where:</p>
+
+<p style="margin-top: 1em" valign="top">&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</p>
+
+
+<p align=center valign="top"><img src="evi1.png" alt="Image evi1.png"></p>
+
+<p valign="top">&#9474;__</p>
+
+<p style="margin-left:25%; margin-top: 1em">- level is 0
+for normal planes, &gt; 0 for overlays, &lt; 0 for
+underlays. <br>
+- transparency_type is 0 for none, 1 for transparent pixel,
+2 for <br>
+transparent mask. <br>
+- transparency_value: value to get transparent pixel if
+transparency <br>
+supported. <br>
+- min_hw_colormaps: minimum number of hardware colormaps
+backing up the visual. <br>
+- max_hw_colormaps: maximum number of hardware colormaps
+backing up the visual. <br>
+(architectures with static colormap allocation/reallocation
+would have min = max) <br>
+- num_colormap_conflicts: number of elements in
+colormap_conflicts. <br>
+- colormap_conflicts: list of visuals that may conflict with
+this one. For <br>
+example, if a 12-bit colormap is overloaded to support 8-bit
+visuals, the <br>
+8-bit visuals would conflict with the 12-bit visuals.</p>
+
+<a name="4. Events and Errors"></a>
+<h2>4. Events and Errors</h2>
+
+
+<p style="margin-top: 1em" valign="top">No new events or
+errors are defined by this extension.</p>
+
+<a name="5. Changes to existing protocol."></a>
+<h2>5. Changes to existing protocol.</h2>
+
+
+<p style="margin-top: 1em" valign="top">None.</p>
+
+<a name="6. Encoding"></a>
+<h2>6. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &quot;Extended-Visual-Information&quot;.</p>
+
+<p style="margin-top: 1em" valign="top">The conventions
+used here are the same as those for the core X11 Protocol
+Encoding.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>GetVersion</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">EVI opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">client_minor_version</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_major_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">server_minor_version</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>GetVisualInfo</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">EVI opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">2+n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">n_visual</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4n</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">visual_ids</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">n_info</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">n_conflicts</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">16</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">16n</p></td>
+<td width="20%"></td>
+<td width="20%">
+
+
+<p valign="top">LISTofVISUALINFOitems</p></td>
+<td width="50%">
+</td>
+</table>
+
+<p style="margin-top: 1em" valign="top">VISUALINFO</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">VisualID</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">core_visual_id</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">INT8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">screen</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">INT8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">level</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">transparency_type</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">transparency_value</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">min_hw_colormaps</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">max_hw_colormaps</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">num_colormap_conflicts</p></td>
+</table>
+
+<a name="7. C Language Binding"></a>
+<h2>7. C Language Binding</h2>
+
+
+<p style="margin-top: 1em" valign="top">The C functions
+provide direct access to the protocol and add no additional
+semantics. For complete details on the effects of these
+functions, refer to the appropriate protocol request, which
+can be derived by deleting Xevi at the start of the
+function. All functions that have return type Status will
+return nonzero for success and zero for failure.</p>
+
+<p style="margin-top: 1em" valign="top">The include file
+for this extension is: &lt;<i>X11/extensions/XEVI.h</i>&gt;.
+__ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>Bool</i>XeviQueryVersion(
+<br>
+Display *<i>display</i>, <br>
+int *<i>major_version_return</i>, <br>
+int *<i>minor_version_return</i>) &#9474;__</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="14%">
+
+
+<p style="margin-top: 1em" valign="top"><i>display</i></p></td>
+<td width="6%"></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+connection to the X server.</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>major_version_return</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">Returns the major version supported by the
+server.</p> </td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>minor_version_return</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">Returns the minor version supported by the
+server.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">XeviQueryVersion
+sets major_version_return and minor_version_return to the
+major and minor EVI protocol version supported by the
+server. If the EVI library is compatible with the version
+returned by the server, it returns nonzero. If dpy does not
+support the EVI extension, or if there was an error during
+communication with the server, or if the server and library
+protocol versions are incompatible, it returns zero. No
+other Xevi functions may be called before this function. If
+a client violates this rule, the effects of all subsequent
+Xevi calls that it makes are undefined.</p>
+
+<p style="margin-top: 1em" valign="top">To get the extended
+information for any subset of visuals use XeviGetVisualInfo.
+__ &#9474;</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>int</i>XeviGetVisualInfo(
+<br>
+Display *<i>display</i>, <br>
+VisualID *<i>visual</i>, <br>
+int <i>n_visual</i>, <br>
+ExtendedVisualInfo **<i>evi_return</i>, <br>
+int *<i>n_info_return</i>) &#9474;__</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>display</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Specifies the
+connection to the X server.</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+<p style="margin-top: 1em" valign="top"><i>visual</i></p></td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">If NULL, then
+information for all visuals of all screens is returned.
+Otherwise, a pointer to a list of visuals for which extended
+visual information is desired.</p></td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>n_visual</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">If 0, then
+information for all visuals of all screens is returned.
+Otherwise, the number of elements in the array
+<i>visual</i>.</p> </td>
+<tr valign="top" align="left">
+<td width="20%">
+
+
+
+<p style="margin-top: 1em" valign="top"><i>evi_return</i></p> </td>
+<td width="80%">
+
+
+<p style="margin-top: 1em" valign="top">Returns a pointer
+to a list of <i>ExtendedVisualInfo</i>. When done, the
+client should free the list using <i>XFree</i>.</p></td>
+</table>
+
+
+<p style="margin-top: 1em" valign="top"><i>n_info_return</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="20%"></td>
+<td width="80%">
+
+
+<p valign="top">Returns the number of elements in the list
+of <i>ExtendedVisualInfo</i>.</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">XeviGetVisualInfo
+returns a list of ExtendedVisualInfo structures that
+describe visual information beyond that supported by the
+core protocol. This includes layer information relevant for
+systems supporting overlays and/or underlay planes, and
+information that allows applications better to determine the
+level of hardware support for multiple colormaps.
+XeviGetVisualInfo returns Success if successful, or an X
+error otherwise.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729487" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

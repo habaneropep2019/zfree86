@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Installing XFree86 4.8.0 manually</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Installing XFree86 4.8.0 manually</EM><BR>
+<b>Previous:</b> <A HREF="Install3.html"><EM>Installing XFree86 4.8.0 using the <code>Xinstall.sh</code> script </EM></A><BR>
+<b>Next:</b> <A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="6"></A>4. Installing XFree86 4.8.0 manually<A NAME="manual-install"></A> 
+</H2>
+<p>This section contains information about manually installing the XFree86
+4.8.0 binary distributions.  You should only use this method if you
+know what you're doing.  The information here covers some common cases,
+but not every possible case.  It also may not be complete or up to date.
+Use at your own risk.</p>
+<p>Put all of the downloaded files into a single directory (choose some
+temporary location with enough space).  Become the super user (root).
+All of the following commands should be run as root, and they should be
+run from the directory that has all of the downloaded files.  The
+"<code>extract</code>" utility should be used to unpack the tarballs.  This
+is a customised version of GNU tar that has the gzip code built-in, and
+which has a different usage when run under the name "extract".  One
+important thing that <code>extract</code> does that most versions of tar do
+not do by default is that it unlinks existing files before writing new
+ones.  This is important when installing over an existing version of X.
+If you choose to use some other utility to extract the tarballs, you're
+on your own.</p>
+
+<H3><A NAME="7"></A>4.1. A new installation </H3>
+<p>The simplest case is when there is no existing X installation.  The
+installation procedure for this case is as follows:</p>
+<p>
+<blockquote><code>
+<pre>
+chmod +x extract
+mkdir /usr/X11R6
+mkdir /etc/X11
+./extract -C /usr/X11R6 X[a-df-qs-uw-z]*.tgz
+./extract -C /usr/X11R6 Xvfb.tgz    # If you are installing Xvfb
+./extract -C /etc Xetc.tgz
+./extract -C /etc Xrc.tgz
+./extract -C /var Xvar.tgz
+ln -s /etc/X11/app-defaults /usr/X11R6/lib/X11
+ln -s /etc/X11/fs /usr/X11R6/lib/X11
+ln -s /etc/X11/lbxproxy /usr/X11R6/lib/X11
+ln -s /etc/X11/proxymngr /usr/X11R6/lib/X11
+ln -s /etc/X11/rstart /usr/X11R6/lib/X11
+ln -s /etc/X11/twm /usr/X11R6/lib/X11
+ln -s /etc/X11/xdm /usr/X11R6/lib/X11
+ln -s /etc/X11/xinit /usr/X11R6/lib/X11
+ln -s /etc/X11/xsm /usr/X11R6/lib/X11
+ln -s /etc/X11/xserver /usr/X11R6/lib/X11
+chmod ug-w /usr/X11R6/lib           # Make sure the permissions are OK
+/sbin/ldconfig /usr/X11R6/lib       # For Linux
+/sbin/ldconfig -m /usr/X11R6/lib    # For FreeBSD, NetBSD, OpenBSD
+/usr/X11R6/bin/mkfontdir /usr/X11R6/lib/X11/fonts/misc
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="8"></A>4.2. Installing over an old installation </H3>
+<p>If you have an existing installation of X, you should make a backup copy
+of it before installing the new version over the top of it.</p>
+<p>Before doing anything else, make sure the <code>extract</code> command is
+executable, and also link it to the name "<code>gnu-tar</code>" so that it
+can be used as a regular <code>tar</code> command:</p>
+<p>
+<blockquote><code>
+<pre>
+chmod +x extract
+rm -f gnu-tar
+ln extract gnu-tar
+</pre>
+</code></blockquote>
+</p>
+<p>The first part of the procedure is to move the old run-time config files
+from <code>/usr/X11R6/lib/X11</code> to <code>/etc/X11</code>.  Create
+<code>/etc/X11</code> if it doesn't already exist.  For each of the following
+sub-directories (<code>app-defaults</code>, <code>fs</code>, <code>lbxproxy</code>,
+<code>proxymngr</code>, <code>rstart</code>, <code>twm</code>, <code>xdm</code>,
+<code>xinit</code>, <code>xsm</code>, <code>xserver</code>) that you want to move,
+check that there is a sub-directory of this name in
+<code>/usr/X11R6/lib/X11</code>.  Create a sub-directory of the same name
+under <code>/etc/X11</code>, then copy the files over by running:</p>
+<p>
+<blockquote><code>
+<pre>
+./gnu-tar -C /usr/X11R6/lib/X11/subdir -c -f - . | \
+  ./gnu-tar -C /etc/X11/subdir -v -x -p -U -f -
+</pre>
+</code></blockquote>
+</p>
+<p>For each subdirectory that is moved, remove the one under
+<code>/usr/X11R6/lib/X11</code> and create a symbolic link to the new
+location:</p>
+<p>
+<blockquote><code>
+<pre>
+rm -fr /usr/X11R6/lib/X11/subdir
+ln -s /etc/X11/subdir /usr/X11R6/lib/X11
+</pre>
+</code></blockquote>
+</p>
+<p>For those subdirectories that didn't already exist under
+<code>/usr/X11R6/lib/X11</code>, create one under <code>/etc/X11</code> and
+create the symbolic link to it:</p>
+<p>
+<blockquote><code>
+<pre>
+mkdir /etc/X11/subdir
+ln -s /etc/X11/subdir /usr/X11R6/lib/X11
+</pre>
+</code></blockquote>
+</p>
+<p>Once that is done, extract the config files from the <code>Xetc.tgz</code>
+and <code>Xrc.tgz</code> tarballs into a temporary directory:</p>
+<p>
+<blockquote><code>
+<pre>
+mkdir tmpdir
+./extract -C tmpdir Xetc.tgz
+./extract -C tmpdir Xrc.tgz
+</pre>
+</code></blockquote>
+</p>
+<p>and then copy each sub-directory over to the installed location:</p>
+<p>
+<blockquote><code>
+<pre>
+./gnu-tar -C tmpdir/subdir -c -f - . | \
+  ./gnu-tar -C /usr/X11R6/lib/X11/subdir -v -x -p -U -f -
+</pre>
+</code></blockquote>
+</p>
+<p>If you have customised any config files in your old installation, you
+may want to omit those sub-directories, or copy selected files over by
+hand.</p>
+<p>Once that's done, the main part of the installation can be done:</p>
+<p>
+<blockquote><code>
+<pre>
+./extract -C /usr/X11R6 `pwd`/X[a-df-qs-uw-z]*.tgz
+./extract -C /usr/X11R6 Xvfb.tgz    # If you are installing Xvfb
+./extract -C /var Xvar.tgz
+chmod ug-w /usr/X11R6/lib           # Make sure the permissions are OK
+/sbin/ldconfig /usr/X11R6/lib       # For Linux
+/sbin/ldconfig -m /usr/X11R6/lib    # For FreeBSD, NetBSD, OpenBSD
+/usr/X11R6/bin/mkfontdir /usr/X11R6/lib/X11/fonts/misc
+</pre>
+</code></blockquote>
+</p>
+
+
+
+ <HR NOSHADE>
+<A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Installing XFree86 4.8.0 manually</EM><BR>
+<b>Previous:</b> <A HREF="Install3.html"><EM>Installing XFree86 4.8.0 using the <code>Xinstall.sh</code> script </EM></A><BR>
+<b>Next:</b> <A HREF="Install.html"><EM>Installation Details for XFree86&reg; 4.8.0 </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728750" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

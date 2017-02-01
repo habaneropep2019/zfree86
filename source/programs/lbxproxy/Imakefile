@@ -1,0 +1,30 @@
+XCOMM $XFree86: xc/programs/lbxproxy/Imakefile,v 1.17 2008/03/26 17:47:27 tsi Exp $
+
+#include <Server.tmpl>
+#define       IHaveSubdirs
+
+LBXPROXYCONFIGDIR = LbxproxyConfigSubdir
+
+   ZLIB = GzipLibrary
+SUBDIRS = di os $(LBXPROXYCONFIGDIR)
+LBXLIBS = di/LibraryTargetName(dilbx) os/LibraryTargetName(os) $(TOP)/lib/lbxutil/LibraryTargetName(lbxutil)
+  
+#ifdef i386IscArchitecture
+OTHERLIBS = $(ICELIB) $(XLIB) -linet $(ZLIB)
+#else
+#ifdef LynxOSArchitecture
+OTHERLIBS = $(ICELIB) $(XLIB) -lbsd $(ZLIB)
+#else
+OTHERLIBS = $(ICELIB) $(XLIB) $(ZLIB)
+#endif
+#endif
+
+ServerTarget(lbxproxy,$(SUBDIRS),di/main.o,$(LBXLIBS),$(OTHERLIBS))
+
+LinkConfDirectory(lbxproxy,.,lbxproxy,.)
+
+DependSubdirs($(SUBDIRS))
+
+ForceSubdirs($(SUBDIRS))
+
+InstallManPage(lbxproxy,$(MANDIR))

@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Summary of new features in 4.8.0. </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="RELNOTES.html"><EM>Release Notes for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Summary of new features in 4.8.0. </EM><BR>
+<b>Previous:</b> <A HREF="RELNOTES2.html"><EM>Configuration: a Quick Synopsis </EM></A><BR>
+<b>Next:</b> <A HREF="RELNOTES4.html"><EM>Drivers</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>3. Summary of new features in 4.8.0. </H2>
+
+<p>This is a sampling of the new features in XFree86 4.8.0.
+A more complete list of changes can be found in the CHANGELOG that is part of
+the XFree86 source tree.
+It can also be viewed online at our <A href="http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/CHANGELOG?rev=HEAD">CVSweb server</A>.</p>
+
+<H3><A NAME="4"></A>3.1. Security Updates </H3>
+<p>A number of reported security issues have been addressed in this release.
+They include:</p>
+<p>
+<ul>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-5760">CVE-2007-5760</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-5958">CVE-2007-5958</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6427">CVE-2007-6427</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6428">CVE-2007-6428</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6429">CVE-2007-6429</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-0006">CVE-2008-0006</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-1377">CVE-2008-1377</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-1379">CVE-2008-1379</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-2360">CVE-2008-2360</A>.</li>
+<li><A href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-2361">CVE-2008-2361</A>.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="5"></A>3.2. Video Driver Enhancements </H3>
+
+
+<H4><A NAME="6"></A>3.2.1. ati, atimisc, r128 and radeon </H4>
+
+<p>
+<ul>
+<li>Mach64 block transfers and XVideo support have been significantly sped
+up on x86_64 platforms.
+</li>
+<li>A bug in atimisc's colourmap handling has been fixed.
+</li>
+<li>Support has been added for dual head on Rage 128 Mobility's.
+</li>
+<li>Add support for newer RADEONs.
+</li>
+<li>Fixed a memory leak in the RADEON driver.
+</li>
+<li>A Solaris hang has been corrected that occurred on UltraSPARCs with
+either a Mach64 or RADEON adapter as the system console.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="7"></A>3.2.2. i830 </H4>
+
+<p>
+<ul>
+<li>Fix bug that occurs when the amount of video memory initially reported by
+the BIOS is zero.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="8"></A>3.3. XKB updates </H3>
+
+<p>
+<ul>
+<li>Fix a segfault in XKB that occrred when the system has no LEDs.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="9"></A>3.4. SHAPE Extension </H3>
+
+<p>
+<ul>
+<li>This extension has been updated to version 1.1.  This adds input regions
+to windows that scope the area within which pointer movements are reported to
+the client.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="10"></A>3.5. X Servers </H3>
+
+
+<H4><A NAME="11"></A>3.5.1. XFree86 core server and modules </H4>
+
+<p>
+<ul>
+<li>A number of bugs in the PCI-X and PCI Express support introduced in the
+previous release have been addressed.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="12"></A>3.5.2. TinyX </H4>
+
+<p>
+<ul>
+<li>Fix stipples in the Xigs and Xsis530 servers.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="13"></A>3.5.3. Xprt </H4>
+
+<p>
+<ul>
+<li>A number of file descriptor leaks and double-closes have been fixed in
+the Xprt server.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="14"></A>3.5.4. Xdmx </H4>
+
+<p>
+<ul>
+<li>Improved Xdmx's handling of USB devices.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="15"></A>3.5.5. GLX and Mesa </H4>
+
+<p>
+<ul>
+<li>Fix segfaults that could occur because buffers were being freeing too
+early during X server termination.
+</li>
+</ul>
+</p>
+
+<H4><A NAME="16"></A>3.5.6. XAA </H4>
+
+<p>
+<ul>
+<li>Fix handling of ceertain TE fonts with null glyphs that caused segfaults
+in XAA.
+</li>
+<li>A number of 64-bit and integer wraparound bugs have been corrected.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="17"></A>3.6. OS Support Updates </H3>
+
+<p>
+<ul>
+<li>On SunOS/sparc or Solaris/sparc, the server now clears all framebuffers
+on exit.
+</li>
+<li>To avoid screen corruption on SunOS and Solaris, the server now
+redirects /dev/console output while it is running, and copies that data back to
+/dev/console on server exit.  This behaviour can be disabled through a command
+line flag.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="18"></A>3.7. Xft Library </H3>
+
+<p>
+<ul>
+<li>A byte-swapping issue in libXft's handling of XImages has been addressed.
+</li>
+</ul>
+</p>
+
+<H3><A NAME="19"></A>3.8. xdm </H3>
+
+<p>
+<ul>
+<li>When using BSD authentication in xdm, wipe out the password as soon as
+possible to prevent it from appearing in the address space of subsequently
+forked child processes.
+</li>
+</ul>
+</p>
+
+ <HR NOSHADE>
+<A HREF="RELNOTES.html"><EM>Release Notes for XFree86&reg; 4.8.0 </EM></A>
+ <b>:</b> <EM>Summary of new features in 4.8.0. </EM><BR>
+<b>Previous:</b> <A HREF="RELNOTES2.html"><EM>Configuration: a Quick Synopsis </EM></A><BR>
+<b>Next:</b> <A HREF="RELNOTES4.html"><EM>Drivers</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728741" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

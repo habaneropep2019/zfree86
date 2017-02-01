@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Data and Data Structures </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Data and Data Structures </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN7.html"><EM>Recommended driver functions </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN9.html"><EM>Keeping Track of Bus Resources</EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="45"></A>8. Data and Data Structures </H2>
+
+
+<H3><A NAME="46"></A>8.1. Command line data </H3>
+
+<p>Command line options are typically global, and are stored in global
+variables.  These variables are read-only and are available to drivers
+via a function call interface.  Most of these command line values are
+processed via helper functions to ensure that they are treated consistently
+by all drivers.  The other means of access is provided for cases where
+the supplied helper functions might not be appropriate.</p>
+<p>Some of them are:</p>
+<p>
+<blockquote>
+<pre>
+    xf86Verbose               verbosity level
+    xf86Bpp                   -bpp from the command line
+    xf86Depth                 -depth from the command line
+    xf86Weight                -weight from the command line
+    xf86Gamma                 -{r,g,b,}gamma from the command line
+    xf86FlipPixels            -flippixels from the command line
+    xf86ProbeOnly             -probeonly from the command line
+    defaultColorVisualClass   -cc from the command line
+</pre>
+</blockquote>
+</p>
+<p>If we ever do allow for screen-specific command line options, we may
+need to rethink this.</p>
+<p>These can be accessed in a read-only manner by drivers with the following
+functions:</p>
+<p>
+<blockquote>
+<p><code>int xf86GetVerbosity()</code>
+<blockquote>
+<p>Returns the value of <code>xf86Verbose</code>.</p>
+
+</blockquote>
+</p>
+<p><code>int xf86GetDepth()</code>
+<blockquote>
+<p>Returns the <code>-depth</code> command line setting.  If not
+set on the command line, <code>-1</code> is returned.</p>
+
+</blockquote>
+</p>
+<p><code>rgb xf86GetWeight()</code>
+<blockquote>
+<p>Returns the <code>-weight</code> command line setting.  If not
+set on the command line, <code>{0, 0, 0}</code> is returned.</p>
+
+</blockquote>
+</p>
+<p><code>Gamma xf86GetGamma()</code>
+<blockquote>
+<p>Returns the <code>-gamma</code> or <code>-rgamma</code>,
+<code>-ggamma</code>, <code>-bgamma</code> command line settings.
+If not set on the command line, <code>{0.0, 0.0, 0.0}</code>
+is returned.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86GetFlipPixels()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if <code>-flippixels</code> is
+present on the command line, and <code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>const char *xf86GetServerName()</code>
+<blockquote>
+<p>Returns the name of the X server from the command line.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="47"></A>8.2. Data handling </H3>
+
+<p>Config file data contains parts that are global, and parts that are
+Screen specific.  All of it is parsed into data structures that neither
+the drivers or most other parts of the server need to know about.</p>
+<p>The global data is typically not required by drivers, and as such, most
+of it is stored in the private <code>xf86InfoRec</code>.</p>
+<p>The screen-specific data collected from the config file is stored in
+screen, device, display, monitor-specific data structures that are separate
+from the <code>ScrnInfoRecs</code>, with the appropriate elements/fields
+hooked into the <code>ScrnInfoRecs</code> as required.  The screen
+config data is held in <code>confScreenRec</code>, device data in
+the <code>GDevRec</code>, monitor data in the <code>MonRec</code>,
+and display data in the <code>DispRec</code>.</p>
+<p>The XFree86 common layer's screen specific data (the actual data in use
+for each screen) is held in the <code>ScrnInfoRecs</code>.  As has
+been outlined above, the <code>ScrnInfoRecs</code> are allocated at probe
+time, and it is the responsibility of the Drivers' <code>Probe()</code>
+and <code>PreInit()</code> functions to finish filling them in based
+on both data provided on the command line and data provided from the
+Config file.  The precedence for this is:</p>
+<p>
+<blockquote>
+command line  -&gt;  config file  -&gt;  probed/default data
+</blockquote>
+</p>
+<p>For most things in this category there are helper functions that the
+drivers can use to ensure that the above precedence is consistently
+used.</p>
+<p>As well as containing screen-specific data that the XFree86 common layer
+(including essential parts of the server infrastructure as well as helper
+functions) needs to access, it also contains some data that drivers use
+internally.  When considering whether to add a new field to the
+<code>ScrnInfoRec</code>, consider the balance between the convenience
+of things that lots of drivers need and the size/obscurity of the
+<code>ScrnInfoRec</code>.</p>
+<p>Per-screen driver specific data that cannot be accommodated with the
+static <code>ScrnInfoRec</code> fields is held in a driver-defined
+data structure, a pointer to which is assigned to the
+<code>ScrnInfoRec</code>'s <code>driverPrivate</code> field.  This
+is per-screen data that persists across server generations (as does the
+bulk of the static <code>ScrnInfoRec</code> data).  It would typically
+also include the video card's saved state.</p>
+<p>Per-screen data for other modules that the driver uses (for example,
+the XAA module) that is reset for each server generation is hooked into
+the <code>ScrnInfoRec</code> through it's <code>privates</code>
+field.</p>
+<p>Once it has stabilised, the data structures and variables accessible to
+video drivers will be documented here.  In the meantime, those things
+defined in the <code>xf86.h</code> and <code>xf86str.h</code>
+files are visible to video drivers.  Things defined in
+<code>xf86Priv.h</code> and <code>xf86Privstr.h</code> are NOT
+intended to be visible to video drivers, and it is an error for a driver
+to include those files.</p>
+
+
+<H3><A NAME="48"></A>8.3. Accessing global data </H3>
+
+<p>Some other global state information that the drivers may access via
+functions is as follows:</p>
+<p>
+<blockquote>
+<p><code>Bool xf86ServerIsExiting()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if the server is at the end of a
+generation and is in the process of exiting, and
+<code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86ServerIsResetting()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if the server is at the end of a
+generation and is in the process of resetting, and
+<code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86ServerIsInitialising()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if the server is at the beginning of
+a generation and is in the process of initialising, and
+<code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86ServerIsOnlyProbing()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if the -probeonly command line flag
+was specified, and <code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+<p><code>Bool xf86CaughtSignal()</code>
+<blockquote>
+<p>Returns <code>TRUE</code> if the server has caught a signal,
+and <code>FALSE</code> otherwise.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="49"></A>8.4. Allocating private data </H3>
+
+<p>A driver and any module it uses may allocate per-screen private storage
+in either the <code>ScreenRec</code> (DIX level) or
+<code>ScrnInfoRec</code> (XFree86 common layer level).
+<code>ScreenRec</code> storage persists only for a single server
+generation, and <code>ScrnInfoRec</code> storage persists across
+generations for the lifetime of the server.</p>
+<p>The <code>ScreenRec</code> <code>devPrivates</code> data must be
+reallocated/initialised at the start of each new generation.  This is
+normally done from the <code>ChipScreenInit()</code> function, and
+Init functions for other modules that it calls.  Data allocated in this
+way should be freed by the driver's <code>ChipCloseScreen()</code>
+functions, and Close functions for other modules that it calls.  A new
+<code>devPrivates</code> entry is allocated by calling the
+<code>AllocateScreenPrivateIndex()</code> function.</p>
+<p>
+<blockquote>
+<p><code>int AllocateScreenPrivateIndex()</code>
+<blockquote>
+<p>This function allocates a new element in the
+<code>devPrivates</code> field of all currently existing
+<code>ScreenRecs</code>.  The return value is the index of this
+new element in the <code>devPrivates</code> array.  The
+<code>devPrivates</code> field is of type
+<code>DevUnion</code>:</p>
+<p>
+<pre>
+        typedef union _DevUnion {
+            pointer             ptr;
+            long                val;
+            unsigned long       uval;
+            pointer             (*fptr)(void);
+        } DevUnion;
+	
+</pre>
+</p>
+<p>which allows the element to be used for any of the above types.
+It is commonly used as a pointer to data that the caller allocates
+after the new index has been allocated.</p>
+<p>This function will return <code>-1</code> when there is an
+error allocating the new index.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+<p>The <code>ScrnInfoRec</code> <code>privates</code> data persists
+for the life of the server, so only needs to be allocated once.  This
+should be done from the <code>ChipPreInit()</code> function, and Init
+functions for other modules that it calls.  Data allocated in this way
+should be freed by the driver's <code>ChipFreeScreen()</code> functions,
+and Free functions for other modules that it calls.  A new
+<code>privates</code> entry is allocated by calling the
+<code>xf86AllocateScrnInfoPrivateIndex()</code> function.</p>
+
+<p>
+<blockquote>
+<p><code>int xf86AllocateScrnInfoPrivateIndex()</code>
+<blockquote>
+<p>This function allocates a new element in the <code>privates</code>
+field of all currently existing <code>ScrnInfoRecs</code>.
+The return value is the index of this new element in the
+<code>privates</code> array.  The <code>privates</code>
+field is of type <code>DevUnion</code>:</p>
+<p>
+<pre>
+        typedef union _DevUnion {
+            pointer             ptr;
+            long                val;
+            unsigned long       uval;
+            pointer             (*fptr)(void);
+        } DevUnion;
+        
+</pre>
+</p>
+<p>which allows the element to be used for any of the above types.
+It is commonly used as a pointer to data that the caller allocates
+after the new index has been allocated.</p>
+<p>This function will not return when there is an error allocating
+the new index.  When there is an error it will cause the server
+to exit with a fatal error.  The similar function for allocation
+privates in the <code>ScreenRec</code>
+(<code>AllocateScreenPrivateIndex()</code>) differs in this
+respect by returning <code>-1</code> when the allocation fails.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Data and Data Structures </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN7.html"><EM>Recommended driver functions </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN9.html"><EM>Keeping Track of Bus Resources</EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728760" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

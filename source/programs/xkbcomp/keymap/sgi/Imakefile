@@ -1,0 +1,8 @@
+XCOMM $XFree86: xc/programs/xkbcomp/keymap/sgi/Imakefile,v 3.7 2006/12/29 19:19:57 tsi Exp $
+
+    DATAFILES = be bg ca cz cz_qwerty de de_CH dk dvorak en_US es fi fr fr_CH \
+		gb hu it jp no pl pt ru se sk sk_qwerty th us
+
+all::
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/keymap/sgi)

@@ -1,0 +1,20 @@
+XCOMM $XFree86: xc/doc/specs/rstart/Imakefile,v 1.4 2006/01/09 14:56:37 dawes Exp $
+
+/*
+ * This is to allow building in symlink trees without trying to figure out
+ * if the version of groff uses/requires the -U flag to .so files outside
+ * of the current directory.
+ */
+
+MakeDepSimpleDoc(rstart,rstart.ms tmac.build, rstart.ms)
+
+tmac.build: tmac.rfc
+	RemoveFile(tmac.build)
+	$(CP) tmac.rfc tmac.build
+
+clean::
+	RemoveFile(tmac.build)
+
+InstallRoffDoc(rstart)
+InstallDoc(rstartd,rstartd.txt)
+

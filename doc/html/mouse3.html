@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>OS Support for Mice </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>OS Support for Mice </EM><BR>
+<b>Previous:</b> <A HREF="mouse2.html"><EM>Supported Hardware </EM></A><BR>
+<b>Next:</b> <A HREF="mouse4.html"><EM>Configuring Your Mouse </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>3. OS Support for Mice </H2>
+
+
+<H3><A NAME="4"></A>3.1. Summary of Supported Mouse Protocol Types </H3>
+<p>
+<pre>
+                                Protocol Types
+                serial     PnP     BusMouse    PS/2   Extended PS/2
+OS platforms   protocols  serial   protocol  protocol  protocols
+                          "Auto"  "BusMouse"  "PS/2"   "xxxPS/2"    USB
+-------------------------------------------------------------------------
+BSD/OS            Ok        ?         ?         ?         ?          ?
+FreeBSD           Ok        Ok        Ok        Ok        SP*1       SP*1
+FreeBSD(98)       Ok        ?         Ok        NA        NA         ?
+Interactive Unix  Ok        NA        ?*1       ?*1       NA         ?
+Linux             Ok        Ok        Ok        Ok        Ok         ?
+Linux/98          Ok        ?         Ok        NA        NA         ?
+LynxOS            Ok        NA        Ok        Ok        NA         ?
+NetBSD            Ok        Ok        Ok        SP*1      SP*1       SP*1
+NetBSD/pc98       Ok        ?         Ok        NA        NA         NA
+OpenBSD           Ok        Ok        Ok        Ok*1      Ok*1       Ok*1
+OS/2              SP*2      SP*2      SP*2      SP*2      SP*2       ?
+SCO               Ok        ?         SP*1      SP*1      NA         ?
+Solaris 2.x       Ok        NA*1      ?*1       Ok        Ok         ?
+SVR4              Ok        NA*1      SP*1      SP*1      NA         ?
+PANIX             Ok        ?         SP*1      SP*1      NA         ?
+
+Ok: support is available,  NA: not available, ?: untested or unknown.
+SP: support is available in a different form
+
+*1 Refer to the following sections for details.
+*2 XFree86/OS2 will support any type of mouse that the OS supports, 
+   whether it is serial, bus mouse, or PnP type. 
+</pre>
+</p>
+
+<H3><A NAME="5"></A>3.2. BSD/OS </H3>
+<p>No testing has been done with BSD/OS.</p>
+
+<H3><A NAME="6"></A>3.3. FreeBSD </H3>
+<p>FreeBSD supports the <code>"SysMouse"</code> protocol which must be 
+specified when the <code>moused</code> daemon is running in versions 2.2.1 
+or later.</p>
+<p>When running the <code>moused</code>daemon, you must always specify the
+<code>/dev/sysmouse</code> device and the <code>"SysMouse"</code> protocol
+to the X server, regardless of the actual type of your mouse.</p>
+<p>FreeBSD versions 2.2.6 or later include the kernel-level
+support for extended PS/2 mouse protocols and there is no need to specify
+the exact protocol name to the X server.
+Instead specify the <code>"PS/2"</code> or <code>"Auto"</code> protocol and 
+the X server will automatically make use of the kernel-level support.</p>
+<p>In fact, <code>"Auto"</code> protocol support is really efficient in these 
+versions.
+You may always specify <code>"Auto"</code> to any mouse, serial, 
+bus or PS/2, unless the mouse is an old serial model which does not
+support PnP.</p>
+<p>FreeBSD versions 2.2.5 or earlier do not support extended PS/2 
+mouse protocols (<code>"xxxPS/2"</code>).
+Always specify the <code>"PS/2"</code> protocol for any PS/2 mouse 
+in these versions regardless of the brand of the mouse.</p>
+<p>FreeBSD versions 3.1 or later have support for USB mice.
+Specify the <code>"Auto"</code> protocol for the <code>/dev/ums0</code> device.
+(If the <code>moused</code> daemon is running for the USB mouse, 
+you must use <code>/dev/sysmouse</code> instead of <code>/dev/ums0</code>
+as explained above.) See the <em>ums(4)</em> manual page for details. </p>
+
+<H3><A NAME="7"></A>3.4. FreeBSD(98) </H3>
+<p>The PS/2 mouse is not supported.</p>
+
+<H3><A NAME="8"></A>3.5. Interactive Unix </H3>
+<p>The PnP serial mouse support (the <code>"Auto"</code> protocol) is not
+supported for the moment.</p>
+<p>The bus mouse and PS/2 mouse should be supported by using the 
+appropriate device drivers. 
+Use <code>/dev/mouse</code> for the <code>"BusMouse"</code> protocol
+and <code>/dev/kdmouse</code> for the <code>"PS/2"</code> protocol. 
+These protocols are untested but may work. 
+Please send success/failure reports to
+<EM><A HREF="mailto:michael.rohleder@stadt-frankfurt.de">michael.rohleder@stadt-frankfurt.de</A></EM>
+.</p>
+
+<H3><A NAME="9"></A>3.6. Linux </H3>
+<p>All protocol types should work.</p>
+
+<H3><A NAME="10"></A>3.7. Linux/98 </H3>
+<p>The PS/2 mouse is not supported.</p>
+
+<H3><A NAME="11"></A>3.8. LynxOS </H3>
+<p>The PnP serial mouse support (the <code>"Auto"</code> protocol) is disabled in
+LynxOS, because of limited TTY device driver functionality.</p>
+
+<H3><A NAME="12"></A>3.9. NetBSD </H3>
+<p>NetBSD 1.3.x and former does not support extended PS/2 mouse protocols
+(<code>"xxxPS/2"</code>). 
+The PS/2 mouse device driver <code>/dev/pms</code> emulates the bus mouse.
+Therefore, you should always specify the <code>"BusMouse"</code> protocol for 
+any PS/2 mouse regardless of the brand of the mouse.</p>
+<p>The <code>"wsmouse"</code> protocol introduced in NetBSD
+1.4 along with the wscons console driver is supported. You need to run binaries
+compiled on NetBSD 1.4 to have support 
+for it though. Use <code>"/dev/wsmouse0"</code> for the device. Refer to the 
+<em>wsmouse(4)</em> manual page for kernel configuration informations.</p>
+<p>This driver also provides support for USB mices. See the
+<em>ums(4)</em> manual page for details. </p>
+
+<H3><A NAME="13"></A>3.10. NetBSD/pc98 </H3>
+<p>The PS/2 mouse is not supported.</p>
+
+<H3><A NAME="14"></A>3.11. OpenBSD </H3>
+<p>The raw PS/2 mouse device driver <code>/dev/psm0</code> uses the raw PS/2
+mouse protocol.</p>
+<p>OpenBSD 2.2 and earlier does not support extended PS/2 mouse protocols
+(<code>"xxxPS/2"</code>) .  Therefore, you should specify the
+<code>"PS/2"</code> protocol for any PS/2 mouse regardless of the brand of
+the mouse.</p>
+<p>OpenBSD 2.3 through 2.8 supports all extended PS/2 mouse protocols by
+selecting the <code>"Auto"</code> protocol for PnP PS/2 mice or any specific
+extended (<code>"xxxPS/2"</code>) protocol for non PnP mice.  There is also
+a cooked PS/2 mouse device driver <code>/dev/pms0</code> which emulates the
+bus mouse.  Specify the <code>"BusMouse"</code> protocol for any PS/2 mouse
+regardless of the brand of the mouse when using this device.  </p>
+
+<p>OpenBSD 2.9 and later supports the <code>"wsmouse"</code> protocol and
+<code>/dev/wsmouse0</code> device as described above for NetBSD 1.4 and later
+(though of course the remark about binaries does not apply).  Again, see
+the wsmouse(4) man page.</p>
+<p>XFree86 3.3.6 support USB mices on OpenBSD 2.6 and later though the
+generic Human Interface Device (hid) <code>/dev/uhid*</code>. Select the
+<code>"usb"</code> protocol and the <code>/dev/uhid*</code> instance
+corresponding to your mouse as the device name.  For OpenBSD 2.9 and later,
+USB mice are supported by the wsmouse driver (see above).</p>
+
+<H3><A NAME="15"></A>3.12. OS/2 </H3>
+<p>XFree86/OS2 always uses the native mouse driver of the operating system
+and will support any type of pointer that the OS supports, whether it is
+serial, bus mouse, or PnP type.
+If the mouse works under Presentation Manager, 
+it will also work under XFree86/OS2.</p>
+<p>Always specify <code>"OSMouse"</code> as the protocol type.</p>
+
+<H3><A NAME="16"></A>3.13. SCO </H3>
+<p>The bus and PS/2 mouse are supported with the <code>"OSMouse"</code> 
+protocol type.</p>
+<p>The <code>"OSMouse"</code> may also be used with the serial mouse.</p>
+
+<H3><A NAME="17"></A>3.14. Solaris </H3>
+<p>Testing has been done with Solaris 2.5.1 and 2.6.  Logitech and
+Microsoft bus mice
+have not been tested, but might work with the <code>/dev/logi</code> and
+<code>/dev/msm</code> devices.
+Standard 2 and 3 button PS/2 mice work with the <code>"PS/2"</code> protocol
+type and the <code>/dev/kdmouse</code> device.
+The PnP serial mouse support (the <code>"Auto"</code> protocol) has been tested
+and does not work.</p>
+
+<H3><A NAME="18"></A>3.15. SVR4 </H3>
+<p>The bus and PS/2 mouse may be supported with the <code>"Xqueue"</code> 
+protocol type.</p>
+<p>The <code>"Xqueue"</code> may also be used with the serial mouse.</p>
+<p>The PnP serial mouse support (the <code>"Auto"</code> protocol) is not
+tested.</p>
+
+<H3><A NAME="19"></A>3.16. PANIX </H3>
+<p>The PC/AT version of PANIX supports the bus and PS/2 mouse with the
+<code>"Xqueue"</code> protocol type.
+The PC-98 version of PANIX supports the bus mouse with the
+<code>"Xqueue"</code> protocol type.</p>
+
+ <HR NOSHADE>
+<A HREF="mouse.html"><EM>Mouse Support in XFree86&reg; </EM></A>
+ <b>:</b> <EM>OS Support for Mice </EM><BR>
+<b>Previous:</b> <A HREF="mouse2.html"><EM>Supported Hardware </EM></A><BR>
+<b>Next:</b> <A HREF="mouse4.html"><EM>Configuring Your Mouse </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728775" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

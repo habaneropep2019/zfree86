@@ -1,0 +1,12 @@
+XCOMM $XFree86: xc/programs/xlsclients/Imakefile,v 1.5 2006/01/09 15:01:35 dawes Exp $
+
+        DEPLIBS = $(DEPXMUULIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XMUULIB) $(XONLYLIB)
+           SRCS = xlsclients.c 
+           OBJS = xlsclients.o 
+
+#undef InstallManPage
+#define InstallManPage(file,dest)  /* as nothing */
+
+ComplexProgramTarget(xlsclients)
+InstallManPageLong(xlscli,$(MANDIR),xlsclients)

@@ -1,0 +1,23 @@
+! $XFree86: xc/programs/xconsole/XConsole.ad,v 1.4 2006/01/09 15:01:02 dawes Exp $
+
+*allowShellResize:		true
+XConsole.translations:		#override\
+	<MapNotify>:		Deiconified()	\n\
+	<UnmapNotify>:		Iconified()	\n\
+	<Message>WM_PROTOCOLS:	Quit()
+XConsole.baseTranslations:		#override\
+	<MapNotify>:		Deiconified()	\n\
+	<UnmapNotify>:		Iconified()	\n\
+	<Message>WM_PROTOCOLS:	Quit()
+*text.translations:		#override\
+	Ctrl<KeyPress>C:	Clear()	\n\
+	<KeyPress>Clear:	Clear()
+*text.baseTranslations:		#override\
+	Ctrl<KeyPress>C:	Clear()	\n\
+	<KeyPress>Clear:	Clear()
+*text.scrollVertical:		Always
+*text.scrollHorizontal:		Never
+*text.width:			400
+*text.height:			70
+*text.allowResize:		true
+*editType:			read

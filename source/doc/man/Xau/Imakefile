@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/doc/man/Xau/Imakefile,v 1.2 2006/01/09 14:56:18 dawes Exp $
+
+MANDIR = $(LIBMANDIR)
+MANSUFFIX = $(LIBMANSUFFIX)
+
+all::
+
+InstallManPage(Xau,$(MANDIR))
+#if ExpandManNames
+InstallManPageAliases(Xau,$(MANDIR),XauFileName XauReadAuth XauLockAuth XauUnlockAuth XauWriteAuth XauDisposeAuth XauGetAuthByAddr XauGetBestAuthByAddr)
+#endif

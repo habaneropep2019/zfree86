@@ -1,0 +1,1375 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:56:18 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<hr>
+
+
+<p style="margin-top: 1em" valign="top">X Consortium J.
+Brown</p>
+
+<p style="margin-top: 1em" valign="top">INTERNET-DRAFT
+Quarterdeck Office Systems</p>
+
+<p style="margin-top: 1em" valign="top">August 1993</p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><big><big>A
+Flexible Remote Execution Protocol Based on
+<b>rsh</b></big></big></p>
+
+<p style="margin-top: 1em" valign="top">Status of this
+Memo</p>
+
+<p style="margin-left:7%; margin-top: 1em">This document is
+being distributed to members of the Internet community in
+order to solicit their reactions to the proposals contained
+in it. This memo does not specify an Internet Standard.
+Distribution of this memo is unlimited.</p>
+
+<p style="margin-left:7%; margin-top: 1em">This document is
+an Internet-Draft. Internet-Drafts are working documents of
+the Internet Engineering Task Force (IETF), its areas, and
+its working groups. Note that other groups may also
+distribute working documents as Internet-Drafts.</p>
+
+<p style="margin-left:7%; margin-top: 1em">Internet-Drafts
+are draft documents valid for a maximum of six months.
+Internet-Drafts may be updated, replaced, or obsoleted by
+other documents at any time. It is not appropriate to use
+Internet-Drafts as reference material or to cite them other
+than as a &quot;working draft&quot; or &quot;work in
+progress.&quot;</p>
+
+<p style="margin-left:7%; margin-top: 1em">To learn the
+current status of any Internet-Draft, please check the
+1id-abstracts.txt listing contained in the Internet-Drafts
+Shadow Directories on ds.internic.net, nic.nordu.net,
+ftp.nisc.sri.com, or munnari.oz.au.</p>
+
+<p style="margin-left:7%; margin-top: 1em">This document is
+filed under &quot;(filename here)&quot;.</p>
+
+<p style="margin-top: 1em" valign="top">Background:</p>
+
+<p style="margin-top: 1em" valign="top">One of the X Window
+System&rsquo;s main strengths is the ability to display and
+control graphical applications remotely. It does not,
+however, address the issue of how to start these
+applications - the application initiates the connection to
+the server sitting in front of the user, not the other way
+&rsquo;round. Some other, non-X, mechanism must be used to
+start the application.</p>
+
+<p style="margin-top: 1em" valign="top">Current methods and
+their problems:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">1)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Walk over to the
+other machine, log in, and run something with its display
+redirected to your workstation. Not very appealing, but
+simple. No security problems associated with whether or not
+you should be able to run something on that machine.</p></td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">2)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Telnet to the other
+machine, log in, and run something with its display
+redirected to your workstation. Relatively simple, but
+doesn&rsquo;t allow for starting remote apps using a menu
+item - requires either human intervention or an autologin
+mechanism with its associated troubles. Security implication
+is that the password is passed &quot;raw&quot; over the
+telnet connection and is susceptible to snooping.</p></td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">3)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Use one of the
+non-standard Berkeley <small>UNIX</small> &reg; &quot;remote
+command&quot; facilities, or their Kerberized equivalents -
+rsh, rexec, krsh. These can provide for the
+no-human-involved startup desired for menus, but have
+security implications which have been adequately documented
+elsewhere and require tuning to achieve
+&quot;desirable&quot; operation, or indeed operation at
+all.</p> </td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">4)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Other proprietary
+schemes.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Well, (1) is
+obviously not very pleasant. (2) isn&rsquo;t much better,
+because you can&rsquo;t run things off menu items. Neither
+(1) nor (2) is &quot;friendly&quot; to an automatic
+session-restart system. (4), being proprietary, isn&rsquo;t
+of much interest in a wide context. (Note that in any of
+these cases once you&rsquo;ve started an app, an xterm say,
+you can ask it to start others. This is OK for some people,
+but not very acceptable if you want things picked off menus
+and especially not if you want apps on various machines
+picked off the same menu. It also isn&rsquo;t friendly to
+automatic session-restart schemes.)</p>
+
+<p style="margin-top: 1em" valign="top">(3) is what this
+memo discusses.</p>
+
+<p style="margin-top: 1em" valign="top">Problems:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Systems and shells
+vary in what exactly constitutes a &quot;command&quot; and
+what the syntax is.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">The apps might not
+be in the &quot;system default search path&quot;.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">The apps might
+require additional setup before they can run - environment
+variables, etc. (LD_LIBRARY_PATH with OpenWindows 2 on
+Suns)</p> </td>
+</table>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Resources (TCP
+connections, processes, etc) get held open on both ends to
+support the (mostly-idle) rsh connection.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">No standard way to
+pass environment variables - DISPLAY, SESSION_MANAGER,
+etc.</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">These issues, both
+in their complexity and in their system-specificity, cause
+continual trouble for less technically aware users and are a
+nuisance even for technical users. In addition, more
+sophisticated uses of remote execution mechanisms (session
+restart for instance) may require more control over the
+environment than is available through the normal rsh
+mechanism.</p>
+
+<p style="margin-top: 1em" valign="top">The result is that
+a great deal of system-dependent manual tuning is required
+to achieve a pleasant result, where the DISPLAY and
+SESSION_MANAGER values (and others in the future) are passed
+transparently, where the app actually gets started(!), where
+unnecessary resources are not held open, etc.</p>
+
+<p style="margin-top: 1em" valign="top">The obvious answer
+is to define a &quot;better&quot; remote execution
+mechanism, but that has a host of problems - while rsh and
+friends have their security problems, at least they are
+reasonably well understood and the &quot;trusted&quot;
+executables have been extensively tested. A new mechanism
+would have to be analysed and tested before it could be
+trusted.</p>
+
+<p style="margin-top: 1em" valign="top">Better to make
+effective use of current services, and take advantage of
+such services as may become available in the future. In the
+future some better remote execution protocol may become
+available. Such a protocol may address some of the issues
+this paper is intended to address like passing auxiliary
+information, but will probably not address issues like
+setting up the environment required to run an X app. Fine,
+adopt it, and adopt conventions like those discussed here to
+allow its convenient use for X applications.</p>
+
+<p style="margin-top: 1em" valign="top">In this spirit this
+paper does not mandate &quot;thou shalt start X apps using
+rsh&quot;, but rather &quot;If you support X, you should
+arrange that the following rsh request will start an X app
+properly&quot;.</p>
+
+<p style="margin-top: 1em" valign="top">Such a solution
+would be to layer a more flexible protocol on top of rsh et
+al, using rsh&rsquo;s standard in/out mechanism to pass
+initial setup information to a &quot;helper&quot; program on
+the other end. Since rsh (or whatever) has already handled
+the security aspects of the request, the helper need have no
+particular special privileges and hence adds no new security
+considerations.</p>
+
+<p style="margin-top: 1em" valign="top">&quot;Why
+rsh?&quot; While this paper refers to &quot;rsh&quot; all
+over the place, few if any of the concepts are peculiar to
+rsh. Any form of remote execution protocol that handles the
+security aspects of remote execution and</p>
+
+<p valign="top">provides</p>
+
+<p style="margin-top: 1em" valign="top">a bidirectional
+data stream to the resulting program can be used. Rsh,
+rexec, and krsh are obvious examples, but there is no reason
+why telnet could not be used, when combined with a scripting
+mechanism to do autologin.</p>
+
+<p style="margin-top: 1em" valign="top">&quot;But I
+don&rsquo;t use X, why do I want this?&quot; Again, while
+this paper refers to X all over the place and the impetus
+for creation of this protocol is starting and restarting X
+applications, the mechanisms defined are as independent of X
+as possible and are applicable to non-X start/restart
+problems.</p>
+
+<p style="margin-top: 1em" valign="top">&quot;I don&rsquo;t
+use POSIX. What do I do?&quot; The initial target systems
+are generally POSIX-based or POSIX-like, and so there are
+some POSIX-specific features and lots of POSIX-specific
+examples, but the protocol is designed to be
+operating-system independent. Such OS independence is, in
+fact, one of the primary goals - to provide an
+OS-independent remote execution mechanism.</p>
+
+<p align=center style="margin-top: 1em" valign="top">The
+Remote Start Protocol &quot;rstart&quot;</p>
+
+<p style="margin-top: 1em" valign="top">Goals:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">A requester should
+be able to have a program started in any of a number of
+predefined &quot;contexts&quot;. (For instance, on a
+dual-universe Berkeley <small>UNIX</small> / System V
+<small>UNIX</small> system those might be two such contexts.
+On a system with multiple versions of the X Window System
+installed each would be available as a predefined context. A
+VAX might support VMS and Eunice contexts.)</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">A requester should
+be able to override (within security bounds usual to the
+system) any aspect of the environment.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Neither the
+requesting program nor the &quot;helper&quot; program on the
+host end should need to have any special privileges.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Any parameter of
+the environment that can be controlled should be
+controllable through this mechanism. In particular, on POSIX
+systems environment variables, open files(?), umask, current
+directory, etc should all be controllable.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">The full richness
+of the host&rsquo;s command argument mechanism should be
+available. In particular, on POSIX this means that arguments
+may contain any character and may be of any length.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Notwithstanding all
+of the control afforded the requester, none of it should be
+required - the requester should be able to provide simple
+&quot;command lines&quot; which will be executed in the
+desired environment much as if they were typed to a
+conventional command processor.</p></td>
+<tr valign="top" align="left">
+<td width="2%">
+
+
+<p style="margin-top: 1em" valign="top">&bull;</p></td>
+<td width="6%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">A &quot;Generic
+Command&quot; mechanism is provided, where standardized
+commands result in an appropriate response, independent of
+the host system. (This might be considered to be similar to
+the FTP model, where the LIST command will produce a
+directory listing no matter what the underlying system.)</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Requesting System
+Requirements:</p>
+
+<p style="margin-top: 1em" valign="top">The requesting
+system MUST support an &quot;rsh&quot; client or a suitable
+replacement. Support of the rsh standard error and control
+connection is desirable but not essential.</p>
+
+<p style="margin-top: 1em" valign="top">Host System
+Requirements:</p>
+
+<p style="margin-top: 1em" valign="top">The host system
+MUST support an &quot;rsh&quot; server or a suitable
+replacement. Support of the rsh standard error and control
+connection is desirable but not essential. Invocation of the
+&quot;rstartd&quot; program in the default rsh environment
+MUST &quot;work&quot;. On POSIX systems this might require
+that rstartd be installed in one of the directories in the
+default $PATH and that rstartd not need any non-default
+shared library setup, etc. On other systems it might require
+that the rsh server specially recognize the string
+&quot;rstartd&quot; and take appropriate action.</p>
+
+<p style="margin-top: 1em" valign="top">The protocol
+itself:</p>
+
+<p style="margin-top: 1em" valign="top">The requesting
+system makes a remote execution request using rsh (or other
+suitable protocol) to execute the program
+&quot;rstartd&quot;. The host system responds with any
+amount of data (to accomodate systems that want to natter
+before starting a program), and then sends a line consisting
+of (exactly):</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="8%"></td>
+<td width="92%">
+
+
+
+<p valign="top">rstartd:&lt;space&gt;Ready:&lt;space&gt;&lt;welcome/version
+message&gt;</p> </td>
+</table>
+
+<p valign="top">Failure to receive this line before the
+connection closes indicates that the host system does not
+support Extended rsh. A timeout is probably appropriate in
+addition.</p>
+
+<p style="margin-top: 1em" valign="top">The requester then
+sends a series of lines of ASCII specifying the program to
+be run and the environment in which it is to be run. The
+request is terminated by a blank line.</p>
+
+<p style="margin-top: 1em" valign="top">Syntax: rstart data
+is passed as a series of lines of ASCII, with spaces
+delimiting words in each line, terminated by a blank line. A
+&quot;line&quot; is terminated by an ASCII LF. CRs and NULs
+MUST be ignored, to allow for a system transmitting in
+Internet NVT ASCII. (Yes, rsh et al are POSIX-style tools
+and won&rsquo;t have CRs, but if there&rsquo;s ever an
+Internet standard remote exec mechanism it will almost
+certainly require NVT ASCII, so it seems wise to provide for
+that possibility from the start.) It is explicitly allowed
+for a system to discard characters other than LF outside the
+range decimal 32-126; characters outside that range MUST NOT
+be used. Words may contain spaces and non-printable
+characters by representing them as octal escape sequences
+consisting of a backslash followed by three octal digits.
+Note that backslashes themselves MUST be passed using this
+mechanism. Thus the initial parsing sequence consists
+of:</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">1)</p></td>
+<td width="5%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top">Receive data until
+the first blank line.</p></td>
+<td width="5%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">2)</p></td>
+<td width="5%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top">Break data into
+lines at LFs, discarding CRs and NULs.</p></td>
+<td width="5%">
+</td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">3)</p></td>
+<td width="5%"></td>
+<td width="87%">
+
+
+<p style="margin-top: 1em" valign="top">Break lines into
+words at spaces.</p></td>
+<td width="5%">
+</td>
+</table>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">4)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Translate \nnn
+sequences in words into the appropriate characters.</p></td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">5)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Process each line
+as appropriate.</p></td>
+<tr valign="top" align="left">
+<td width="3%">
+
+
+<p style="margin-top: 1em" valign="top">6)</p></td>
+<td width="5%"></td>
+<td width="92%">
+
+
+<p style="margin-top: 1em" valign="top">Pass (or more
+likely, allow to be passed) the connection and any data
+after the blank line to the program. (??? Hmm. stdio
+buffering considerations. Byte count instead of blank
+line?)</p> </td>
+</table>
+
+<p style="margin-top: 1em" valign="top">The first word of
+each line is a keyword specifying the interpretation of the
+line. Keywords SHOULD be transmitted as shown in this
+document, but the receiver MUST accept them in any case,
+even mIxEd.</p>
+
+<p style="margin-top: 1em" valign="top">Unless otherwise
+specified, only one instance of any given keyword is
+permitted in a given request. CONTEXT MUST be specified
+first, and after that keywords may be given in any
+order.</p>
+
+<p style="margin-top: 1em" valign="top">After receiving the
+blank line, the host responds with any number of lines of
+output of the following forms, terminated by a blank
+line.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Ready:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">(This
+isn&rsquo;t one of the &quot;response&quot; lines, but
+it&rsquo;s included here for completeness.) This is
+rstartd&rsquo;s &quot;hello&quot; line, and confirms that
+the host does indeed support rstartd.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Failure:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">An
+unrecoverable error has occurred which indicates that either
+the requester or the host is fatally misconfigured. This
+might occur if, for instance, a request is malformed or a
+required configuration file is not present.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Error:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">An
+unrecoverable error has occurred which indicates that the
+request is in error. The most common such error would be
+that the requested program is unavailable.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Warning:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">A recoverable
+error has occurred. The program will be executed but may not
+behave as desired.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Success:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">No errors were
+detected. Unfortunately this does not mean that no errors
+will occur, because there are many classes of errors that
+cannot be detected until rstartd actually attempts to pass
+control to the program.</p>
+
+<p style="margin-top: 1em" valign="top">rstartd: Debug:
+&lt;message&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">A debug
+message. Programs (and most humans!) should ignore
+these.</p>
+
+<p style="margin-top: 1em" valign="top">&lt;anything
+else&gt;</p>
+
+<p style="margin-left:21%; margin-top: 1em">Indicates that
+something else in the system just HAD to say something;
+should be treated as a Warning.</p>
+
+<p style="margin-top: 1em" valign="top">Keywords</p>
+
+
+<p style="margin-top: 1em" valign="top"><b><small>CONTEXT</small></b>
+<small><i>name</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Initializes
+defaults suitable for the specified context. See the section
+on contexts for more information.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>CONTEXT must
+be present, and must be the first line of the
+request.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>CMD</b>
+<i>command args args args</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Executes the
+specified command with the specified arg in the same general
+way as it would have been executed if typed to a the
+user&rsquo;s command interpreter. (If the user&rsquo;s
+primary interface is not a command language, a system
+default command language should be used.) It is expected
+that the command will have been provided by a user, who will
+expect &quot;normal&quot; command language handling of it.
+(For POSIX people, consider this as roughly equivalent to
+system().)</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Note: No
+particular parsing or interpretation is guaranteed. The
+interpretation should be unsurprising to an ordinary user of
+the host system. This mechanism is therefore unsuitable for
+completely automated use; EXEC and GENERIC-CMD are provided
+for that purpose.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Exactly one
+of CMD, EXEC, or GENERIC-CMD must be present.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>EXEC</b>
+<i>progname namearg arg arg arg ...</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Executes a
+program using a low-level execution mechanism which provides
+minimal interpretation; in particular a command processor
+should not enter the picture and no quoting other than that
+required by this protocol should be required. It is expected
+that this interface will be used by programs requesting
+restart; presumably they know exactly what their desired
+arguments are and a command processor will only confuse the
+issue. (For POSIX people, consider this to be like
+execlp().)</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><i>Progname</i>
+is the name of the executable. This will typically be a
+single word but is allowed to be a (system-specific) full
+filename specification; if the latter then the behavior is
+system-specific but normally path searching would be
+disabled.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><i>Namearg</i>
+should be the program name as it should be passed to the
+program. Generally, it should be exactly equal to progname.
+Hosts which do not pass a program&rsquo;s name to it should
+ignore it.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>The
+<i>args</i> are the arguments to be passed to the program.
+Hosts which do not separate their arguments into words
+should concatenate the arguments back together with spaces
+between them. (Optionally, they could elect</small></p>
+
+<p valign="top">to</p>
+
+<p style="margin-top: 1em" valign="top">not fully parse the
+line, and leave in the spaces as originally delivered.)</p>
+
+<p style="margin-top: 1em" valign="top">Note: The
+interpretation of the command may not be intuitive to an
+ordinary user of the host system; this interface is for
+precision, not intuition.</p>
+
+<p style="margin-top: 1em" valign="top">Exactly one of
+<b>CMD</b>, <b>EXEC</b>, or <b>GENERIC-CMD</b> must be
+present.</p>
+
+<p style="margin-top: 1em" valign="top"><b>DIR</b>
+<i>initial-directory</i></p>
+
+<p style="margin-top: 1em" valign="top">Specifies (in a
+system-specific way) the initial default file system
+location for the program. If no <b>DIR</b> line is supplied
+the program is started in a system-specific initial
+location, presumably the user&rsquo;s &quot;home&quot;.</p>
+
+<p style="margin-top: 1em" valign="top">Note: It is
+expected that this value would come from a source with a
+priori knowlege of the host - either the user or a
+&quot;restart&quot; request. It is not expected that an
+automated mechanism with no advance knowlege would be able
+to make use of this request.</p>
+
+<p style="margin-top: 1em" valign="top"><b>MISC</b>
+<i>registryname name=value</i></p>
+
+<p style="margin-top: 1em" valign="top">Passes a value to
+the program using a system-specific mechanism. (Under POSIX
+and similar systems environment variables should generally
+be used.) The <i>registryname</i> specifies the naming
+authority, and is intended to prevent conflicts and allow
+for intelligent conversion. The idea is that systems that
+understand a given registry will map these straight into
+environment variables. Systems that don&rsquo;t entirely
+understand a given registry or use a different but
+convertable mechanism can be picky and convert as needed. An
+appendix lists the names that all systems are strongly
+encouraged to support.</p>
+
+<p style="margin-top: 1em" valign="top">Note: The names in
+the &quot;suggested&quot; appendix are expected to be
+supplied by requesters with no advance knowlege of the host,
+only the blind assumption that the host will support those
+&quot;well-known&quot; names with their
+&quot;well-known&quot; semantics. Other names may be used by
+requesters with advance knowlege of the host - restart
+requests, for example.</p>
+
+<p style="margin-top: 1em" valign="top">Any number of
+<b>MISC</b> lines may be present.</p>
+
+<p style="margin-top: 1em" valign="top"><b>DETACH</b></p>
+
+<p style="margin-top: 1em" valign="top">This line directs
+rstartd to attempt to &quot;detach&quot; the resulting
+process from the rsh connection, leaving as little overhead
+(processes, connections, etc) as possible. In POSIX-land,
+this will probably consist of redirecting standard input,
+output, and error to /dev/null or a log file and then
+executing the program using fork() and exec() and</p>
+
+<p valign="top">not</p>
+
+<p style="margin-top: 1em" valign="top">having the parent
+wait.</p>
+
+<p style="margin-top: 1em" valign="top">It would be nice to
+have a mechanism for specifying where the output should be
+redirected - log file or perhaps log/display program/server.
+For the moment that&rsquo;s left as a matter of local
+implementation and configuration.</p>
+
+<p style="margin-top: 1em" valign="top">Only one of
+<b>DETACH</b> and <b>NODETACH</b> may be present.</p>
+
+
+<p style="margin-top: 1em" valign="top"><b>NODETACH</b></p>
+
+<p style="margin-top: 1em" valign="top">This line directs
+rstartd to attempt NOT to &quot;detach&quot;. It is intended
+to allow one to override a configuration default to
+<b>DETACH</b>.</p>
+
+<p style="margin-top: 1em" valign="top">Only one of
+<b>DETACH</b>and <b>NODETACH</b> may be present.</p>
+
+<p style="margin-top: 1em" valign="top"><b>AUTH</b>
+<i>authscheme authdata ...</i></p>
+
+<p style="margin-top: 1em" valign="top">Specifies
+authentication data to be used by the specified
+authentication scheme. This keyword may be given multiple
+times to give data for multiple authentication schemes or
+for a single scheme to use for multiple purposes.</p>
+
+<p style="margin-top: 1em" valign="top">System-specific
+lines begin with <b>SYSTEMNAME-</b>. No system-independent
+line will be defined that includes a &quot;-&quot; in its
+name. <b>X-</b> is reserved for experimental use.
+(&quot;Reserved&quot; is an interesting word, there; anybody
+can use <b>X-</b> for experiments and nobody can rely on
+there not being a conflict.) <b>INTERNAL-</b> is reserved
+for internal use by rstartd.</p>
+
+<p style="margin-top: 1em" valign="top"><b>POSIX-UMASK</b>
+<i>nnn</i></p>
+
+<p style="margin-top: 1em" valign="top">Sets the POSIX
+umask to <i>nnn</i> (octal).</p>
+
+<p style="margin-top: 1em" valign="top"><b>MSDOS-DIR</b>
+<i>d:path</i></p>
+
+<p style="margin-top: 1em" valign="top">Sets the current
+directory on drive <i>d:</i> to <i>path.</i> This differs
+from <b>DIR</b> in that <b>DIR</b> sets the current working
+drive and directory and <b>MSDOS-DIR</b> doesn&rsquo;t set
+the current drive; <b>MSDOS-DIR</b> would be used to set the
+current directory on drives other than the current one.</p>
+
+
+<p style="margin-top: 1em" valign="top"><b>DESQVIEW-MEM</b>
+<i>nnn</i></p>
+
+<p style="margin-top: 1em" valign="top">Requests <i>nnn</i>
+kilobytes of conventional memory.</p>
+
+
+<p style="margin-top: 1em" valign="top"><b>DESQVIEW-EXPMEM</b>
+<i>nnn</i></p>
+
+<p style="margin-top: 1em" valign="top">Requests <i>nnn</i>
+kilobytes of expanded memory. (To be more verbose, requests
+that the &quot;max expanded memory&quot; parameter be
+<i>nnn</i>.)</p>
+
+
+<p style="margin-top: 1em" valign="top"><b>GENERIC-xxx</b></p>
+
+<p style="margin-top: 1em" valign="top">The <b>GENERIC</b>
+system is a hypothetical system that offers various services
+that can be supported on different real systems; it provides
+a common interface for heterogenous systems.</p>
+
+<p style="margin-top: 1em" valign="top"><b>GENERIC-CMD</b>
+<i>generic-command-name args ...</i></p>
+
+<p style="margin-top: 1em" valign="top">Runs the local
+equivalent to <i>generic-command-name</i>. See the section
+on generic commands for more information. Exactly one of
+<b>CMD</b>, <b>EXEC</b>, or <b>GENERIC-CMD</b> must be
+present.</p>
+
+<p style="margin-top: 1em" valign="top">Generic
+Commands</p>
+
+<p style="margin-top: 1em" valign="top"><small>Unless
+otherwise noted, generic commands are optional.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><b>GENERIC-CMD
+Terminal</b></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Runs a
+default terminal emulator for the current context.
+(It&rsquo;s not clear what, if anything, this means outside
+a windowing system context.) In POSIX X contexts this
+probably means xterm.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><b>GENERIC-CMD
+LoadMonitor</b></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Runs a
+default load monitor for the current context. In POSIX X
+contexts, this probably means xload.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><b>GENERIC-CMD
+ListContexts</b></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Sends to
+standard output a list of available contexts, one per line,
+with a comma-separated list of context names followed by a
+space followed by a brief description of the context. If
+multiple context names invoke the same context (as for
+instance X, X11, and X11R4 might) ListContexts SHOULD list
+the most specific context first.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>This command
+MUST be available in the Default context, and SHOULD be
+available in every context.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><b>GENERIC-CMD
+ListGenericCommands</b></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Sends to
+standard output a list of generic commands available in the
+current context, one per line, with the command name
+followed by a space followed by a brief description of the
+command.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>This command
+SHOULD be available in every context.</small></p>
+
+<p style="margin-top: 1em" valign="top">Contexts</p>
+
+<p style="margin-top: 1em" valign="top"><small>A request
+can specify what <i>context</i> a program should be run in.
+A context will most likely include a set of default values
+for all of the controllable aspects of the program&rsquo;s
+execution environment.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Examples of
+Predefined Context Names</small></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>None</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>A minimal environment. Under POSIX,
+no environment variables.</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Default</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>The default environment.</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>X</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>The X Window System, any
+version</small></p> </td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>X11</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Version 11 of the X Window System,
+any release</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>X11R4</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Version 11 of the X Window System,
+Release 4</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>X11R5</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Version 11 of the X Window System,
+Release 5</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>OpenWindows</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Sun&rsquo;s OpenWindows, any
+version</small></p> </td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>OpenWindows2</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Version 2 of Sun&rsquo;s
+OpenWindows</small></p> </td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>OpenWindows3</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Version 3 of Sun&rsquo;s
+OpenWindows</small></p> </td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>NeWS</small></p></td>
+<tr valign="top" align="left">
+<td width="100%">
+</td>
+<tr valign="top" align="left">
+<td width="100%">
+
+
+<p valign="top"><small>Some version of Sun&rsquo;s Network
+Window System.</small></p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top"><small>Contexts are
+allowed (encouraged even) to support multiple names for the
+same environment configuration. For instance: &quot;X&quot;,
+&quot;X11&quot;, &quot;X11R4&quot; might all refer to
+exactly the same configuration. &quot;OpenWindows3&quot;
+might well refer to a configuration that is a union of
+&quot;X11R4&quot; and &quot;NeWS&quot;.</small></p>
+
+<p style="margin-top: 1em" valign="top">Suggested
+&quot;required&quot; MISC commands</p>
+
+
+<p style="margin-top: 1em" valign="top"><small>General</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>For most of
+these the &quot;simple&quot; behavior is to simply pass the
+value to the app as an environment variable. This should be
+appropriate on any POSIX systems. Other systems should use
+whatever mechanism is appropriate to the given item; note
+that different mechanisms may be appropriate to different
+items.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>All systems
+are encouraged to &quot;understand&quot; all of these names,
+translating them as appropriate to the local
+environment.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>MISC X
+LANG=</b><i>locale identifier</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Specifies
+the locale desired. If POSIX specifies a list of locale
+identifiers then we can use that (and move it to the POSIX
+registry), but if not then we will have to define a list
+(perhaps based on a good de facto standard). Note that if
+there is no POSIX-standardized list of locale names the host
+SHOULD translate from our list to the local list. Note that
+this is based on the POSIX LANG environment variable, but
+rumor says that POSIX does not specify a list of
+identifiers; since we want a standarized list we must
+specify a registry and must assume &quot;control&quot; of
+the name. If in the future POSIX specifies a different list
+then during a transition period MISC X LANG and MISC POSIX
+LANG would perform similar functions but using different
+names for the locales. [[ It may be that ISO
+country/language codes may supply a suitable registry. -- jb
+]]</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>MISC X
+DISPLAY=</b><i>host</i><b>:</b><i>displaynum</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Specifies
+the X server the app is to connect to.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>MISC X
+SESSION_MANAGER=tcp/</b><i>host</i><b>:</b><i>port</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Specifies
+the session manager the app is to connect to.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small><b>MISC
+POSIX TZ=</b><i>time zone info</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Specifies
+the time zone the user is in, using POSIX standard
+notation.</small></p>
+
+<p style="margin-top: 1em" valign="top">Specific Notes on
+use of Extended rsh with the X Window System</p>
+
+<p style="margin-top: 1em" valign="top"><small>To start an
+X program, the requester should specify an X context
+(&quot;X&quot; if nothing else) and specify the display
+parameter by saying</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small><b>MISC
+X
+DISPLAY=</b><i>host</i><b>:</b><i>port.screen</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>If the
+program is to join a session the requester should
+say:</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small><b>MISC
+X
+SESSION_MANAGER=tcp/</b><i>host</i><b>:</b><i>port</i></small></p>
+
+<p style="margin-top: 1em" valign="top"><small>An X host
+MUST understand at least the X context and MUST, regardless
+of whether or not it has environment variables as a system
+concept, interpret <b>MISC X
+DISPLAY=</b><i>host</i><b>:</b><i>port</i> and pass it to
+the program in whatever way is locally appropriate. An X
+host supporting session management (which all will do by the
+time this is adopted, right?) MUST interpret <b>MISC X
+SESSION_MANAGER=tcp/</b><i>host</i><b>:</b><i>port</i>
+similarly.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>An X host
+MUST understand the <b>X11</b> authentication scheme for the
+<b>AUTH</b> keyword. The data given MUST be in the form
+given by &quot;xauth list&quot; and understood by
+&quot;xauth add&quot;. AUTH X11 may be given several times
+to pass multiple kinds of authorization data or data about
+multiple displays.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Input
+methods? Extensibility? (Would be nice if new features could
+be incorporated without new rstartd executables, which
+argues for passing most data as environment
+variables.)</small></p>
+
+<p style="margin-top: 1em" valign="top">Suggestions for
+Implementation</p>
+
+
+<p style="margin-top: 1em" valign="top"><small>Configurability,
+extensibility. Nobody is ever happy with the default. The
+host implementation should allow for as much configurability
+and extensibility as possible. In particular, provision
+should be made for administrator- and user- defined
+contexts, with user defined contexts overriding or
+augmenting the administrator-defined and system-supplied
+contexts. One good implementation scheme would be to have
+system-wide and per-user configuration files which use the
+same syntax as the protocol. ListContexts SHOULD list both
+system-wide and per-user contexts.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Provision
+SHOULD be made for administrator- and user- defined generic
+commands, with user-defined commands overriding system-wide
+ones. ListGenericCommands SHOULD list both.</small></p>
+
+<p style="margin-top: 1em" valign="top">Notes on
+Outstanding specification issues</p>
+
+<p style="margin-top: 1em" valign="top"><small>Note: This
+is not part of the proposal.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small>Syntax</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small>The
+syntax is OK so far for machine generation, but is yucky for
+human generation, especially spaces in environment variables
+in config files.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Environment
+variables</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small>it would
+be nice if one could say things like $HOME in values,
+especially in config files.</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Error
+handling</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small>how to
+reliably mark successfully starting the app. Can report
+syntax errors or lack thereof, but reporting startup or
+execution errors is problematical. (Application execution
+errors are tough no matter what; startup errors are tough
+because you want to report an error if the exec*() fails,
+but if it succeeds you don&rsquo;t have the opportunity to
+give a success report.) [[Clive gives a clever trick for
+reliably distinguishing success, but I think there&rsquo;s a
+race condition if the app is allowed to use the rsh channel
+for output after it starts. -- jb]]</small></p>
+
+<p style="margin-top: 1em" valign="top"><small>Error
+handling</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small>how to
+report post-startup errors and warnings to the user. (Can
+say &quot;not our problem&quot;, but it would be nice if
+there was a standard way to say &quot;give output to a
+program that will report it back to the user&quot; or
+something like that. Session Manager &quot;death
+reason&quot; messages might be adequate, but don&rsquo;t
+cover warnings.)</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small>I18n</small></p>
+
+<p style="margin-left:21%; margin-top: 1em"><small>What
+character set should messages and requests be in? Can this
+be determined by the locale as specified by <b>MISC X
+LANG</b>? (Does this require that <b>MISC X LANG</b> be one
+of the first lines?)</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small>Protocol</small></p>
+
+<p style="margin-left:21%; margin-top: 1em">One reviewer
+suggests an FTP- and SMTP- style protocol with requests and
+responses. Personally I don&rsquo;t think individual
+responses to the lines are required and that the roundtrips
+involved would be wasted. The entire conversation is a
+single request and can be rejected or accepted en toto. The
+response mechanism does not provide for fabulously rich
+interpretation by an automaton, but it does allow for a
+success / serious failure / routine failure / warning
+distinction.</p>
+
+<p style="margin-top: 1em" valign="top">Multiple
+requests/connection</p>
+
+<p style="margin-left:21%; margin-top: 1em">Some have
+suggested that you should be able to start multiple programs
+with a single connection, either to start multiple apps on
+login or to allow a &quot;master&quot; to request apps
+occasionally during the course of a session. As doing so
+would make it less possible (or at least more difficult) to
+use the data channel for communicating with the app after
+start, and as the overhead of starting a new connection
+isn&rsquo;t all that high, I&rsquo;m not enchanted with the
+idea. Admittedly, if the overhead involved got higher (how
+fast is a Kerberos authentication?) it might become more
+attractive.</p>
+
+<p style="margin-top: 1em" valign="top">Conclusion:</p>
+
+<p style="margin-top: 1em" valign="top">A small protocol
+could be easily defined which would layer on top of a
+relatively primitive remote execution facility like rsh,
+rexec, or krsh, that would allow flexible application
+startup in a fairly machine-independent way. By mandating
+appropriate local configuration, X applications could be
+started (or restarted) conveniently, without requiring the
+requester to understand the detailed requirements of the
+remote system. The implementation cost, for both the
+requester and the &quot;server&quot;, is small. Security
+issues are &quot;not our problem&quot;, since they are all
+handled by existing protocols.</p>
+
+<p style="margin-top: 1em" valign="top">Security
+Considerations</p>
+
+<p style="margin-left:21%; margin-top: 1em">Security is
+assumed handled by the underlying remote execution
+mechanism. The &quot;helper&quot; program described by this
+memo runs with the privileges of the user and so generally
+introduces no additional security considerations. Systems
+where security is controlled by controlling what programs
+may be run - where programs are trusted but users are not -
+may see a security impact unless their &quot;helper&quot; is
+careful about what programs it is willing to run.</p>
+
+<p style="margin-top: 1em" valign="top">Copyright</p>
+
+<p style="margin-left:21%; margin-top: 1em">Copyright (c)
+1993 Quarterdeck Office Systems</p>
+
+<p style="margin-left:21%; margin-top: 1em">Permission to
+use, copy, modify, distribute, and sell this software and
+its documentation for any purpose is hereby granted without
+fee, provided that the above copyright notice appear in all
+copies and that both that copyright notice and this
+permission notice appear in supporting documentation, and
+that the name Quarterdeck Office Systems, Inc. not be used
+in advertising or publicity pertaining to distribution of
+this software without specific, written prior
+permission.</p>
+
+<p style="margin-left:21%; margin-top: 1em">THIS SOFTWARE
+IS PROVIDED &lsquo;AS-IS&rsquo;. QUARTERDECK OFFICE SYSTEMS,
+INC., DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING WITHOUT LIMITATION ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+NONINFRINGEMENT. IN NO EVENT SHALL QUARTERDECK OFFICE
+SYSTEMS, INC., BE LIABLE FOR ANY DAMAGES WHATSOEVER,
+INCLUDING SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES,
+INCLUDING LOSS OF USE, DATA, OR PROFITS, EVEN IF ADVISED OF
+THE POSSIBILITY THEREOF, AND REGARDLESS OF WHETHER IN AN
+ACTION IN CONTRACT,</p>
+
+<p valign="top">TORT</p>
+
+<p style="margin-top: 1em" valign="top">OR NEGLIGENCE,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+OF THIS SOFTWARE.</p>
+
+<p style="margin-top: 1em" valign="top">Author&rsquo;s
+Address:</p>
+
+<p style="margin-left:21%; margin-top: 1em">Jordan Brown
+<br>
+Quarterdeck Office Systems <br>
+Santa Monica, CA <br>
+ jbrown@qdeck.com</p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729824" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

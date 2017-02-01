@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/doc/hardcopy/Xt/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(intr.idx,intr.idx.PS.gz)
+InstallHardcopyDoc(intrinsics,intrinsics.PS.gz)
+

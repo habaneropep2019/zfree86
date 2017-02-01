@@ -1,0 +1,15 @@
+XCOMM $XFree86: xc/programs/xclipboard/Imakefile,v 1.4 2006/01/09 15:01:00 dawes Exp $
+
+          SRCS1 = xclipboard.c
+          OBJS1 = xclipboard.o
+          SRCS2 = xcutsel.c
+          OBJS2 = xcutsel.o
+       PROGRAMS = ProgramTargetName(xclipboard) ProgramTargetName(xcutsel)
+        DEPLIBS = XkbClientDepLibs XawClientDepLibs
+LOCAL_LIBRARIES = XkbClientLibs XawClientLibs
+        DEFINES = XkbClientDefines
+
+ComplexProgramTarget_1(xclipboard,$(LOCAL_LIBRARIES),NullParameter)
+ComplexProgramTarget_2(xcutsel,$(LOCAL_LIBRARIES),NullParameter)
+
+InstallAppDefaults(XClipboard)

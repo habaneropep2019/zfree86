@@ -1,0 +1,19 @@
+XCOMM $XFree86: xc/programs/xkbevd/Imakefile,v 3.4 2005/10/14 15:17:34 tsi Exp $
+
+          SRCS = xkbevd.c cfgscan.c cfgparse.c \
+		 evargs.c printev.c utils.c
+          OBJS = xkbevd.o cfgscan.o cfgparse.o \
+		 evargs.o printev.o utils.o
+        DEPLIBS = $(DEPXKBFILELIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XKBFILELIB) $(XONLYLIB)
+
+ROOT_DEFINES = -DDFLT_XKB_CONFIG_ROOT=\"$(LIBDIR)/xkb\"
+
+all::
+
+YaccFile(cfgparse,/**/)
+
+clean::
+	RemoveFiles(test.h *.xkm *.xkb)
+
+ComplexProgramTarget(xkbevd)

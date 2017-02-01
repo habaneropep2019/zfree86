@@ -1,0 +1,10 @@
+XCOMM $XFree86: xc/doc/hardcopy/Xi/Imakefile,v 1.1 2005/03/29 17:33:21 tsi Exp $
+
+InstallHardcopyDoc(xilib,xilib.PS.gz)
+InstallHardcopyDoc(xiport,xiport.PS.gz)
+InstallHardcopyDoc(xiproto,xiproto.PS.gz)
+
+/* Prevent conflicts with XProtocol */
+LinkFile(xilib.PS.gz,lib.PS.gz)
+LinkFile(xiport.PS.gz,port.PS.gz)
+LinkFile(xiproto.PS.gz,proto.PS.gz)

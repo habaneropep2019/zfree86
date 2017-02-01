@@ -1,0 +1,5 @@
+XCOMM $XFree86: xc/programs/lbxproxy/config/Imakefile,v 1.2 2006/01/09 15:00:44 dawes Exp $
+
+all::
+
+InstallNonExecFile(AtomControl,$(LBXPROXYDIR))

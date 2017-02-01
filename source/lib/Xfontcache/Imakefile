@@ -1,0 +1,38 @@
+XCOMM $XFree86: xc/lib/Xfontcache/Imakefile,v 1.8 2006/01/09 14:59:12 dawes Exp $
+
+#define DoNormalLib NormalLibXfontcache
+#define DoSharedLib SharedLibXfontcache
+#define DoExtraLib ExtraLibXfontcache
+#define DoDebugLib DebugLibXfontcache
+#define DoProfileLib ProfileLibXfontcache
+#define LibName Xfontcache
+#define SoRev SOXFONTCACHEREV
+#define LibHeaders NO
+
+#include <Threads.tmpl>
+
+#ifdef SharedXfontcacheReqs
+ REQUIREDLIBS = SharedXfontcacheReqs
+#endif
+
+ FONTCACHESRCS = FontCache.c
+ FONTCACHEOBJS = FontCache.o
+
+#if Malloc0ReturnsNull
+ALLOC_DEFINES = -DMALLOC_0_RETURNS_NULL
+#endif
+
+      DEFINES = $(ALLOC_DEFINES)
+         SRCS = $(FONTCACHESRCS)
+         OBJS = $(FONTCACHEOBJS)
+     LINTLIBS = $(LINTXLIB)
+
+#include <Library.tmpl>
+
+MANSUFFIX=$(LIBMANSUFFIX)
+InstallManPage(LibName,$(LIBMANDIR))
+#if ExpandManNames
+InstallManPageAliases(LibName,$(LIBMANDIR),FontCacheQueryExtension FontCacheQueryVersion FontCacheGetCacheSettings FontCacheChangeCacheSettings FontCacheGetCacheStatistics)
+#endif
+
+DependTarget()

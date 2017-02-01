@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>XFree86&reg; server 4.x Design (DRAFT) </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<H1>XFree86&reg; server 4.x Design (DRAFT) </H1>
+ <h2>The XFree86 Project, Inc </h2>13 October 2005 
+<p><b>NOTE</b>: This is a DRAFT document, and the interfaces described here
+are subject to change without notice.</p>
+
+
+<H3>1. <A HREF="DESIGN1.html#1">Preface </A></H3>
+<H3>2. <A HREF="DESIGN2.html#2">The XF86Config File </A></H3>
+<DL>
+<DD>2.1. <A HREF="DESIGN2.html#3"><b>Device</b> section </A></DD>
+<DD>2.2. <A HREF="DESIGN2.html#4"><b>Screen</b> section </A></DD>
+<DD>2.3. <A HREF="DESIGN2.html#5"><b>InputDevice</b> section </A></DD>
+<DD>2.4. <A HREF="DESIGN2.html#6"><b>ServerLayout</b> section </A></DD>
+<DD>2.5. <A HREF="DESIGN2.html#7">Options </A></DD>
+</DL>
+<H3>3. <A HREF="DESIGN3.html#8">Driver Interface </A></H3>
+<H3>4. <A HREF="DESIGN4.html#9">Resource Access Control Introduction </A></H3>
+<DL>
+<DD>4.1. <A HREF="DESIGN4.html#10">Terms and Definitions </A></DD>
+</DL>
+<H3>5. <A HREF="DESIGN5.html#15">Control Flow in the Server and Mandatory Driver Functions </A></H3>
+<DL>
+<DD>5.1. <A HREF="DESIGN5.html#16">Parse the XF86Config file </A></DD>
+<DD>5.2. <A HREF="DESIGN5.html#17">Initial processing of parsed information and command line options </A></DD>
+<DD>5.3. <A HREF="DESIGN5.html#18">Enable port I/O access </A></DD>
+<DD>5.4. <A HREF="DESIGN5.html#19">General bus probe </A></DD>
+<DD>5.5. <A HREF="DESIGN5.html#20">Load initial set of modules </A></DD>
+<DD>5.6. <A HREF="DESIGN5.html#21">Register Video and Input Drivers </A></DD>
+<DD>5.7. <A HREF="DESIGN5.html#22">Initialise Access Control </A></DD>
+<DD>5.8. <A HREF="DESIGN5.html#23">Video Driver Probe</A></DD>
+<DD>5.9. <A HREF="DESIGN5.html#24">Matching Screens </A></DD>
+<DD>5.10. <A HREF="DESIGN5.html#25">Allocate non-conflicting resources </A></DD>
+<DD>5.11. <A HREF="DESIGN5.html#26">Sort the Screens and pre-check Monitor Information </A></DD>
+<DD>5.12. <A HREF="DESIGN5.html#27">PreInit </A></DD>
+<DD>5.13. <A HREF="DESIGN5.html#28">Cleaning up Unused Drivers </A></DD>
+<DD>5.14. <A HREF="DESIGN5.html#29">Consistency Checks </A></DD>
+<DD>5.15. <A HREF="DESIGN5.html#30">Check if Resource Control is Needed </A></DD>
+<DD>5.16. <A HREF="DESIGN5.html#31">AddScreen (ScreenInit) </A></DD>
+<DD>5.17. <A HREF="DESIGN5.html#32">Finalising RAC Initialisation </A></DD>
+<DD>5.18. <A HREF="DESIGN5.html#33">Finishing InitOutput() </A></DD>
+<DD>5.19. <A HREF="DESIGN5.html#34">Mode Switching </A></DD>
+<DD>5.20. <A HREF="DESIGN5.html#35">Changing Viewport </A></DD>
+<DD>5.21. <A HREF="DESIGN5.html#36">VT Switching </A></DD>
+<DD>5.22. <A HREF="DESIGN5.html#37">End of server generation </A></DD>
+</DL>
+<H3>6. <A HREF="DESIGN6.html#38">Optional Driver Functions </A></H3>
+<DL>
+<DD>6.1. <A HREF="DESIGN6.html#39">Mode Validation </A></DD>
+<DD>6.2. <A HREF="DESIGN6.html#40">Free screen data </A></DD>
+</DL>
+<H3>7. <A HREF="DESIGN7.html#41">Recommended driver functions </A></H3>
+<DL>
+<DD>7.1. <A HREF="DESIGN7.html#42">Save </A></DD>
+<DD>7.2. <A HREF="DESIGN7.html#43">Restore </A></DD>
+<DD>7.3. <A HREF="DESIGN7.html#44">Initialise Mode </A></DD>
+</DL>
+<H3>8. <A HREF="DESIGN8.html#45">Data and Data Structures </A></H3>
+<DL>
+<DD>8.1. <A HREF="DESIGN8.html#46">Command line data </A></DD>
+<DD>8.2. <A HREF="DESIGN8.html#47">Data handling </A></DD>
+<DD>8.3. <A HREF="DESIGN8.html#48">Accessing global data </A></DD>
+<DD>8.4. <A HREF="DESIGN8.html#49">Allocating private data </A></DD>
+</DL>
+<H3>9. <A HREF="DESIGN9.html#50">Keeping Track of Bus Resources</A></H3>
+<DL>
+<DD>9.1. <A HREF="DESIGN9.html#51">Theory of Operation </A></DD>
+<DD>9.2. <A HREF="DESIGN9.html#52">Resource Types </A></DD>
+<DD>9.3. <A HREF="DESIGN9.html#53">Available Functions</A></DD>
+</DL>
+<H3>10. <A HREF="DESIGN10.html#57">Config file ``Option'' entries</A></H3>
+<H3>11. <A HREF="DESIGN11.html#58">Modules, Drivers, Include Files and Interface Issues </A></H3>
+<DL>
+<DD>11.1. <A HREF="DESIGN11.html#59">Include files </A></DD>
+</DL>
+<H3>12. <A HREF="DESIGN12.html#60">Offscreen Memory Manager </A></H3>
+<H3>13. <A HREF="DESIGN13.html#61">Colormap Handling</A></H3>
+<H3>14. <A HREF="DESIGN14.html#62">DPMS Extension </A></H3>
+<H3>15. <A HREF="DESIGN15.html#63">DGA Extension </A></H3>
+<H3>16. <A HREF="DESIGN16.html#64">The XFree86 X Video Extension (Xv) Device Dependent Layer </A></H3>
+<H3>17. <A HREF="DESIGN17.html#65">The Loader </A></H3>
+<DL>
+<DD>17.1. <A HREF="DESIGN17.html#66">Loader Overview </A></DD>
+<DD>17.2. <A HREF="DESIGN17.html#67">Semi-private Loader Interface </A></DD>
+<DD>17.3. <A HREF="DESIGN17.html#68">Module Requirements </A></DD>
+<DD>17.4. <A HREF="DESIGN17.html#69">Public Loader Interface </A></DD>
+<DD>17.5. <A HREF="DESIGN17.html#70">Special Registration Functions </A></DD>
+</DL>
+<H3>18. <A HREF="DESIGN18.html#71">Helper Functions </A></H3>
+<DL>
+<DD>18.1. <A HREF="DESIGN18.html#72">Functions for printing messages </A></DD>
+<DD>18.2. <A HREF="DESIGN18.html#73">Functions for setting values based on command line and config file </A></DD>
+<DD>18.3. <A HREF="DESIGN18.html#74">Primary Mode functions </A></DD>
+<DD>18.4. <A HREF="DESIGN18.html#75">Secondary Mode functions </A></DD>
+<DD>18.5. <A HREF="DESIGN18.html#76">Functions for handling strings and tokens </A></DD>
+<DD>18.6. <A HREF="DESIGN18.html#77">Functions for finding which config file entries to use </A></DD>
+<DD>18.7. <A HREF="DESIGN18.html#78">Probing discrete clocks on older hardware </A></DD>
+<DD>18.8. <A HREF="DESIGN18.html#79">Other helper functions </A></DD>
+</DL>
+<H3>19. <A HREF="DESIGN19.html#80">The vgahw module </A></H3>
+<DL>
+<DD>19.1. <A HREF="DESIGN19.html#81">Data Structures </A></DD>
+<DD>19.2. <A HREF="DESIGN19.html#82">General vgahw Functions </A></DD>
+<DD>19.3. <A HREF="DESIGN19.html#83">VGA Colormap Functions </A></DD>
+<DD>19.4. <A HREF="DESIGN19.html#84">VGA Register Access Functions </A></DD>
+</DL>
+<H3>20. <A HREF="DESIGN20.html#85">Some notes about writing a driver</A></H3>
+<DL>
+<DD>20.1. <A HREF="DESIGN20.html#86">Include files </A></DD>
+<DD>20.2. <A HREF="DESIGN20.html#87">Data structures and initialisation </A></DD>
+<DD>20.3. <A HREF="DESIGN20.html#88">Functions </A></DD>
+</DL>
+<HR><PRE>
+$XFree86: xc/programs/Xserver/hw/xfree86/doc/sgml/DESIGN.sgml,v 1.62 2006/04/18 17:13:22 dawes Exp $
+</PRE>
+ 
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728657" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

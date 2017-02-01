@@ -1,0 +1,15 @@
+// $XFree86: xc/programs/xkbcomp/keymap/sgi/dvorak,v 3.4 2006/01/09 15:01:22 dawes Exp $
+default xkb_keymap "indy" {
+    xkb_keycodes	{ include "sgi/indy(universal)"		};
+    xkb_types		{ include "default"			};
+    xkb_compatibility	{ include "default"			};
+    xkb_symbols 	{ include "us(pc_universal)+dvorak"	};
+    xkb_geometry	{ include "sgi/indy(pc101)"		};
+};
+xkb_keymap "indigo" {
+    xkb_keycodes	{ include "sgi/indigo"		};
+    xkb_types		{ include "default"		};
+    xkb_compatibility	{ include "default"		};
+    xkb_symbols 	{ include "us(pc101)+dvorak"	};
+    xkb_geometry	{ include "sgi/indigo(pc101)"	};
+};

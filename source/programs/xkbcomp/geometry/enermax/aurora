@@ -1,0 +1,267 @@
+// $XFree86: xc/programs/xkbcomp/geometry/enermax/aurora,v 1.1 2007/02/19 15:44:32 tsi Exp $
+//
+//Copyright 2007, Alexander Pohoyda
+//
+//Permission to use, copy, modify, distribute, and sell this software and its
+//documentation for any purpose is hereby granted without fee, provided that
+//the above copyright notice appear in all copies and that both that
+//copyright notice and this permission notice appear in supporting
+//documentation.
+//
+//The above copyright notice and this permission notice shall be
+//included in all copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+//MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+//IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
+//OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+//ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+//OTHER DEALINGS IN THE SOFTWARE.
+//
+//Except as contained in this notice, the name of The Open Group shall
+//not be used in advertising or otherwise to promote the sale, use or
+//other dealings in this Software without prior written authorization
+//from The Open Group.
+//
+
+xkb_geometry "common" {
+    width = 452;
+    height = 172;
+    baseColor = "grey80";
+    labelColor = "white";
+
+    shape.cornerRadius = 1;
+    shape "FUNC" { { [ 18, 12] }, { [2.5, 0], [15.5, 11] } };
+    shape "NORM" { { [ 18, 18] }, { [2.5, 0], [15.5, 14] } };
+    shape "BKSP" { { [ 38, 18] }, { [2.5, 0], [35.5, 14] } };
+    shape "TABK" { { [ 28, 18] }, { [2.5, 0], [25.5, 14] } };
+    shape "BKSL" { { [ 28, 18] }, { [2.5, 0], [25.5, 14] } };
+    shape "RTRN" { { [ 43, 18] }, { [2.5, 0], [40.5, 14] } };
+    shape "CAPS" { { [ 32, 18] }, { [2.5, 0], [29.5, 14] } };
+    shape "LFSH" { { [ 42, 18] }, { [2.5, 0], [39.5, 14] } };
+    shape "RTSH" { { [ 52, 18] }, { [2.5, 0], [49.5, 14] } };
+    shape "MODK" { { [27.5,18] }, { [2.5, 0], [ 25, 14] } };
+    shape "SMOD" { { [ 23, 18] }, { [2.5, 0], [ 21, 14] } };
+    shape "SPCE" { { [113, 18] }, { [2.5, 0], [111, 14] } };
+    shape "KP0"  { { [ 37, 18] }, { [2.5, 0], [ 35, 14] } };
+    shape "KPAD" { { [ 18, 37] }, { [2.5, 0], [ 16, 35] } };
+
+    // Silver line at the top
+    shape "BAR" { cornerRadius = 0, { [ 452, 4 ] } };
+    solid "Bar" { shape = "BAR"; color = "white"; top = 16; left = 0; };
+
+    // Led indicator group
+    shape "LED" { cornerRadius = 0, { [ 2, 5 ] } };
+    indicator.onColor = "blue";
+    indicator.offColor = "grey80";
+    indicator.top = 14;
+    indicator.shape = "LED";
+    indicator "NumLock"     { left = 385; };
+    indicator "CapsLock"    { left = 403; };
+    indicator "ScrollLock"  { left = 421; };
+    text.top = 22;
+    text.color = "white";
+    text "NumLockLabel"	    { left = 385; text = "1"; };
+    text "CapsLockLabel"    { left = 403; text = "A"; };
+    text "ScrollLockLabel"  { left = 421; text = "V"; };
+
+    shape "ESC" { cornerRadius = 2, { [22, 16] }, { [1, 1], [21, 15] } };
+    solid "Esc" { shape = "ESC"; color = "grey20"; top = 19; left = 11; };
+
+    shape "FGRP4" { cornerRadius = 2, { [79, 16] }, { [1, 1], [78, 15] } };
+    solid "Group1" { shape = "FGRP4"; color = "grey20"; top = 19; left = 49; };
+    solid "Group2" { shape = "FGRP4"; color = "grey20"; top = 19; left = 135; };
+    solid "Group3" { shape = "FGRP4"; color = "grey20"; top = 19; left = 221; };
+    shape "FGRP3" { cornerRadius = 2, { [60, 16] }, { [1, 1], [59, 15] } };
+    solid "Group4" { shape = "FGRP3"; color = "grey20"; top = 19; left = 304; };
+
+    shape "EDT" { cornerRadius = 2, { [60, 41] }, { [1, 1], [59, 40] } };
+    solid "Edit" { shape = "EDT"; color = "grey20"; top = 38; left = 304; };
+
+    shape "ALPH" { cornerRadius = 2, { [289, 98] }, { [1, 1], [288, 97] } };
+    solid "Alph" { shape = "ALPH"; color = "grey20"; top = 38; left = 11; };
+
+    shape "NAV" { cornerRadius = 2, { [0,  19], [19, 19], [19,  0], [41, 0],
+                                      [41, 19], [60, 19], [60, 41], [0, 41] },
+                                    { [1,  20], [20, 20], [20,  1], [40, 1],
+                                      [40, 20], [59, 20], [59, 40], [1, 40] }
+    };
+    solid "Nav" { shape = "NAV"; color = "grey20"; top = 95; left = 304; };
+
+    shape "KPD" { cornerRadius = 2, { [79, 98] }, { [1, 1], [78, 97] } };
+    solid "KeyPad" { shape = "KPD"; color = "grey20"; top = 38; left = 366; };
+
+    key.gap = 1;
+    key.color = "grey80";
+
+    key.shape = "FUNC";
+    section "Function" {
+	left = 12;
+	top = 20;
+	row {
+	    top = 1;
+	    keys {  { <ESC> },
+		    { <FK01>, 20 }, <FK02>, <FK03>, <FK04>,
+		    { <FK05>, 11 }, <FK06>, <FK07>, <FK08>,
+		    { <FK09>, 11 }, <FK10>, <FK11>, <FK12>,
+		    { <PRSC>, 8 }, <SCLK>, <PAUS> 
+	    };
+	};
+    }; // End of "Function" section
+
+    key.gap = 1;
+    key.shape = "NORM";
+    section "Editing" {
+	top = 39;
+	left = 305;
+	row {
+	    top = 1;
+ 	    keys { <INS>, <HOME>, <PGUP> };
+	};
+        row {
+	    top = 20;
+	    keys { <DELE>, <END>, <PGDN> };
+	};
+	row {
+	    top = 58; left = 19;
+	    keys { <UP> };
+	};
+	row {
+	    top = 77;
+	    keys { <LEFT>, <DOWN>, <RGHT> };
+	};
+    }; // End of "Editing" section
+
+    key.gap = 1;
+    key.shape = "NORM";
+    section "Keypad" {
+	top = 39;
+	left = 367;
+	row {
+	    top = 1;
+	    keys { <NMLK>, <KPDV>, <KPMU>, <KPSU> };
+	};
+	row {
+	    top = 20;
+	    keys { <KP7>, <KP8>, <KP9>, { <KPAD>, "KPAD" } };
+	};
+	row {
+	    top = 39;
+	    keys { <KP4>, <KP5>, <KP6> };
+	};
+	row {
+	    top = 58;
+	    keys { <KP1>, <KP2>, <KP3>, { <KPEN>, "KPAD" } };
+	};
+	row {
+	    top = 77;
+	    keys { { <KP0>, "KP0" }, <KPDL> };
+	};
+    }; // End of "Keypad" section
+
+    alias <AC00> = <CAPS>;
+    alias <AA00> = <LCTL>;
+}; // End of "common" geometry
+
+xkb_geometry "us" {
+    include "aurora(common)"
+    description = "Enermax Aurora (US layout, 104 keys)";
+
+    key.gap = 1;
+    key.color = "grey80";
+    key.shape = "NORM";
+    section "Alpha" {
+	left = 12;
+	top = 39;
+	row {
+	    top = 1;
+	    keys { <TLDE>, <AE01>, <AE02>, <AE03>, <AE04>,
+		   <AE05>, <AE06>, <AE07>, <AE08>, <AE09>,
+		   <AE10>, <AE11>, <AE12>, { <BKSP>, "BKSP" }
+	    };
+	};
+	row {
+	    top = 20;
+	    keys { { <TAB>, "TABK" }, <AD01>, <AD02>, <AD03>,
+		   <AD04>, <AD05>, <AD06>, <AD07>, <AD08>, <AD09>,
+		   <AD10>, <AD11>, <AD12>, { <BKSL>, "BKSL" }
+	    };
+	};
+	row {
+	    top = 39;
+	    keys { { <CAPS>, "CAPS" }, <AC01>, <AC02>, <AC03>,
+		   <AC04>, <AC05>, <AC06>, <AC07>, <AC08>, <AC09>,
+		   <AC10>, <AC11>, { <RTRN>, "RTRN" }
+	    };
+	};
+	row {
+	    top = 58;
+	    keys { { <LFSH>, "LFSH" }, <AB01>, <AB02>, <AB03>,
+		   <AB04>, <AB05>, <AB06>, <AB07>, <AB08>, <AB09>,
+		   <AB10>, { <RTSH>, "RTSH" }
+	    };
+	};
+	row {
+	    top = 77;
+	    key.shape = "SMOD";
+	    keys { { <LCTL>, "MODK" }, { <LWIN>, "NORM" }, { <LALT>, "MODK" },
+		   { <SPCE>, "SPCE" }, <RALT>, <RWIN>, <MENU>, <RCTL>
+	    };
+	};
+    }; // End of "Alpha" section
+}; // End of "us" geometry
+
+xkb_geometry "intl" {
+    include "aurora(common)"
+    description = "Enermax Aurora (international layout, 105 keys)";
+
+    shape "RTRN-I" { cornerRadius = 1,
+                     { [0, 0], [28, 0], [28, 37], [4, 37], [4, 18], [0, 18] },
+                     { [2.5, 0], [25.5, 0], [25.5, 31],
+                       [7, 31], [7, 14], [2.5, 14] } };
+    shape "LFSH-I" { cornerRadius = 1, { [23, 18] }, { [2.5, 0], [20.5, 14] } };
+
+    key.gap = 1;
+    key.color = "grey80";
+    key.shape = "NORM";
+    section "Alpha" {
+	left = 12;
+	top = 39;
+	row {
+	    top = 1;
+	    keys { <TLDE>, <AE01>, <AE02>, <AE03>, <AE04>,
+		   <AE05>, <AE06>, <AE07>, <AE08>, <AE09>,
+		   <AE10>, <AE11>, <AE12>, { <BKSP>, "BKSP" }
+	    };
+	};
+	row {
+	    top = 20;
+	    keys { { <TAB>, "TABK" }, <AD01>, <AD02>, <AD03>,
+		   <AD04>, <AD05>, <AD06>, <AD07>, <AD08>, <AD09>,
+		   <AD10>, <AD11>, <AD12>, { <RTRN>, "RTRN-I" }
+	    };
+	};
+	row {
+	    top = 39;
+	    keys { { <CAPS>, "CAPS" }, <AC01>, <AC02>, <AC03>,
+		   <AC04>, <AC05>, <AC06>, <AC07>, <AC08>, <AC09>,
+		   <AC10>, <AC11>, <AC12>
+	    };
+	};
+	row {
+	    top = 58;
+	    keys { { <LFSH>, "LFSH-I" }, <LSGT>, <AB01>, <AB02>, <AB03>,
+		   <AB04>, <AB05>, <AB06>, <AB07>, <AB08>, <AB09>,
+		   <AB10>, { <RTSH>, "RTSH" }
+	    };
+	};
+	row {
+	    top = 77;
+	    key.shape = "SMOD";
+	    keys { { <LCTL>, "MODK" }, { <LWIN>, "NORM" }, { <LALT>, "MODK" },
+		   { <SPCE>, "SPCE" }, <RALT>, <RWIN>, <MENU>, <RCTL>
+	    };
+	};
+    }; // End of "Alpha" section
+}; // End of "intl" geometry

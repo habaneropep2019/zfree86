@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Kernel Support for X </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="NetBSD.html"><EM>README for XFree86&reg; 4.8.0 on NetBSD </EM></A>
+ <b>:</b> <EM>Kernel Support for X </EM><BR>
+<b>Previous:</b> <A HREF="NetBSD6.html"><EM>Running X </EM></A><BR>
+<b>Next:</b> <A HREF="NetBSD8.html"><EM>Rebuilding the XFree86 Distribution </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="16"></A>7. Kernel Support for X </H2>
+<p>To make sure X support is enabled under NetBSD, the following
+line must be in your config file in <code>/sys/arch/i386/conf</code>:</p>
+<p>
+<blockquote><code>
+options XSERVER, UCONSOLE
+</code></blockquote>
+</p>
+
+<H3><A NAME="17"></A>7.1. Console drivers </H3>
+<p>The server supports the standard NetBSD/i386
+console drivers: pccons, pcvt and wscons (in pcvt compatibility
+mode). They are detected at runtime and no 
+configuration of the server itself is required.</p>
+
+<p>The pccons driver is the most widely tested and is the console driver
+contained in the NetBSD binary distribution's kernels.</p>
+
+<p>The pcvt console driver was bundled with NetBSD until 1.4. The pcvt X
+mode is compatible with the pccons driver X mode. It offers several
+virtual consoles and international keyboard support. In order to use
+this driver, change the line:</p>
+<p>
+<blockquote><code>
+device          pc0     at isa? port "IO_KBD" irq 1
+</code></blockquote>
+</p>
+<p>to</p>
+<p>
+<blockquote><code>
+device         vt0     at isa? port "IO_KBD" irq 1
+</code></blockquote>
+</p>
+<p>in your kernel config file, and rebuild and install your kernel.</p>
+
+<p>
+<A NAME="wscons"></A>
+Wscons is the current console driver, included in NetBSD 1.4 and
+later. For now, XFree86 supports wscons using the pcvt compatibility
+mode, so be sure to have the lines:
+<blockquote><code>
+<pre>
+options         WSDISPLAY_COMPAT_PCVT           # emulate some ioctls
+options         WSDISPLAY_COMPAT_SYSCONS        # emulate some ioctls
+options         WSDISPLAY_COMPAT_USL		# VT handling
+options         WSDISPLAY_COMPAT_RAWKBD         # can get raw scancodes
+</pre>
+</code></blockquote>
+
+in your kernel configuration file if you're using wscons. Refer to the 
+<em>wscons(4)</em> and <em>wsmouse(4)</em> manual pages for
+informations on how to configure wscons into the kernel.</p>
+
+<H3><A NAME="18"></A>7.2. Aperture Driver </H3>
+<p>By default NetBSD include the BSD 4.4 kernel security
+feature that disable access to the <code>/dev/mem</code> device when in
+multi-users mode. But XFree86 servers can take advantage (or require)
+linear access to the display memory.</p>
+<p>Most XFree86 4.8.0 card drivers require linear memory access.
+There are two ways to allow XFree86 to access linear memory:</p>
+<p>The first way is to disable the kernel security feature by adding
+``<code>option INSECURE</code>'' in the kernel configuration file and build a new
+kernel.</p>
+
+<p>The second way is to install the aperture driver, included in source form in
+<code>xc/programs/Xserver/hw/xfree86/etc/apNetBSD.shar</code> in the
+XFree86 4.8.0 source distribution. Unpack it in a new directory of your 
+choice by running:
+<blockquote><code>
+<pre>
+  sh apNetBSD.shar
+</pre>
+</code></blockquote>
+
+By default the aperture driver will be installed in
+<code>/usr/local/aperture</code>. You can change this default directory by 
+editing <code>Makefile.inc</code> before building it. </p>
+<p>Then run ``<code>make build</code>'' as root to install it. To enable it, 
+add the following line to  <code>/etc/lkm.conf</code>:
+<blockquote><code>
+<pre>
+/usr/local/aperture/lkm/xf86.o  -  - /usr/local/aperture/lkm/xf86_mod_install - -
+</pre>
+</code></blockquote>
+ 
+and set ``<code>lkm=YES</code>'' in <code>/etc/rc.conf</code></p>
+<p>Reboot your system. XFree86 will auto-detect the aperture
+driver if available.</p>
+<p><b>Warning 1:</b> if you boot another kernel than <code>/netbsd</code>,
+loadable kernel modules can crash your system. Always boot in
+single user mode when you want to run another kernel.</p>
+
+<p><b>Warning 2:</b> the  aperture driver only allows one access at a time
+(so that the system is in the same security state once X is
+launched). This means that if you run multiple servers on multiples
+VT, only the first one will have linear memory access.
+Use ``option INSECURE'' if you need more that one X server at a time.</p>
+
+<p>Starting with XFree86 3.9.17, the XFree86 aperture driver
+also supports MTRR write combining on Pentiums II
+and AMD K6 class processors. </p>
+
+<H3><A NAME="19"></A>7.3. MIT-SHM </H3>
+<p>NetBSD 1.0 and later supports System V shared memory. If XFree86 
+detects this support in your kernel, it will support the MIT-SHM
+extension.</p>
+<p>To add support for system V shared memory to your kernel add the
+lines:</p>
+<p>
+<blockquote><code>
+<pre>
+ # System V-like IPC
+ options         SYSVMSG
+ options         SYSVSEM
+ options         SYSVSHM
+</pre>
+</code></blockquote>
+</p>
+<p>to your kernel config file.</p>
+
+ <HR NOSHADE>
+<A HREF="NetBSD.html"><EM>README for XFree86&reg; 4.8.0 on NetBSD </EM></A>
+ <b>:</b> <EM>Kernel Support for X </EM><BR>
+<b>Previous:</b> <A HREF="NetBSD6.html"><EM>Running X </EM></A><BR>
+<b>Next:</b> <A HREF="NetBSD8.html"><EM>Rebuilding the XFree86 Distribution </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728804" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

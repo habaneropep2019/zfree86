@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Fonts included with XFree86 </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Fonts included with XFree86 </EM><BR>
+<b>Previous:</b> <A HREF="fonts2.html"><EM>Installing fonts</EM></A><BR>
+<b>Next:</b> <A HREF="fonts4.html"><EM>More about core fonts </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="17"></A>3. Fonts included with XFree86 </H2>
+<H3><A NAME="18"></A>3.1. Standard bitmap fonts </H3>
+<p>The Sample Implementation of X11 (SI) comes with a large number of
+bitmap fonts, including the `<code>fixed</code>' family, and bitmap versions
+of Courier, Times, Helvetica and some members of the Lucida family.  In
+the SI, these fonts are provided in the ISO&nbsp;8859-1 encoding (ISO
+Latin Western-European).</p>
+<p>In XFree86, a number of these fonts are provided in Unicode-encoded
+font files instead.  At build time, these fonts are split into font
+files encoded according to legacy encodings, a process which allows
+us to provide the standard fonts in a number of regional encodings
+with no duplication of work.</p>
+<p>For example, the font file
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/misc/6x13.bdf
+</pre>
+</code></blockquote>
+
+with XLFD
+<blockquote><code>
+<pre>
+-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
+</pre>
+</code></blockquote>
+
+is a Unicode-encoded version of the standard `<code>fixed</code>' font with
+added support for the Latin, Greek, Cyrillic, Georgian, Armenian, IPA
+and other scripts plus numerous technical symbols.  It contains over
+2800 glyphs, covering all characters of ISO&nbsp;8859 parts 1-5,
+7-10, 13-15, as well as all European IBM and Microsoft code pages,
+KOI8, WGL4, and the repertoires of many other character sets.</p>
+<p>This font is used at build time for generating the font files
+<blockquote><code>
+<pre>
+6x13-ISO8859-1.bdf
+6x13-ISO8859-2.bdf
+...
+6x13-ISO8859-15.bdf
+6x13-KOI8-R.bdf
+</pre>
+</code></blockquote>
+
+with respective XLFDs
+<blockquote><code>
+<pre>
+-misc-fixed-medium-r-normal--13-120-75-75-c-60-iso8859-1
+...
+-misc-fixed-medium-r-normal--13-120-75-75-c-60-iso8859-15
+-misc-fixed-medium-r-normal--13-120-75-75-c-60-koi8-r
+</pre>
+</code></blockquote>
+
+The standard short name `<code>fixed</code>' is normally an alias for
+<blockquote><code>
+<pre>
+-misc-fixed-medium-r-normal--13-120-75-75-c-60-iso8859-1
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="19"></A>3.2. The ClearlyU Unicode font family </H3>
+<p>The ClearlyU family of fonts provides a set of 12&nbsp;pt,
+100&nbsp;dpi proportional fonts with many of the glyphs needed for
+Unicode text.  Together, the fonts contain approximately 7500 glyphs.</p>
+<p>The main ClearlyU font has the XLFD
+<blockquote><code>
+<pre>
+-mutt-clearlyu-medium-r-normal--17-120-100-100-p-101-iso10646-1 
+</pre>
+</code></blockquote>
+
+and resides in the font file
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/misc/cu12.pcf.gz 
+</pre>
+</code></blockquote>
+
+Additional ClearlyU fonts include
+<blockquote><code>
+<pre>
+-mutt-clearlyu alternate glyphs-medium-r-normal--17-120-100-100-p-91-iso10646-1 
+-mutt-clearlyu pua-medium-r-normal--17-120-100-100-p-111-iso10646-1
+-mutt-clearlyu arabic extra-medium-r-normal--17-120-100-100-p-103-fontspecific-0
+-mutt-clearlyu ligature-medium-r-normal--17-120-100-100-p-141-fontspecific-0
+</pre>
+</code></blockquote>
+</p>
+<p>The <i>Alternate Glyphs</i> font contains additional glyph shapes that
+are needed for certain languages.  A second alternate glyph font will
+be provided later for cases where a character has more than one
+commonly used alternate shape (<i>e.g.</i> the Urdu heh).</p>
+<p>The <i>PUA</i> font contains extra glyphs that are useful for certain
+rendering purposes.</p>
+<p>The <i>Arabic Extra</i> font contains the glyphs necessary for
+characters that don't have all of their possible shapes encoded in
+ISO&nbsp;10646.  The glyphs are roughly ordered according to the order
+of the characters in the ISO&nbsp;10646 standard.</p>
+<p>The <i>Ligature</i> font contains ligatures for various scripts that
+may be useful for improved presentation of text.</p>
+
+<H3><A NAME="20"></A>3.3. Standard scalable fonts </H3>
+<p>XFree86 includes all the scalable fonts distributed with X11R6.</p>
+
+<H4><A NAME="21"></A>3.3.1. Standard Type&nbsp;1 fonts </H4>
+<p>The IBM Courier set of fonts cover ISO&nbsp;8859-1 and
+ISO&nbsp;8859-2 as well as Adobe Standard Encoding.  These fonts have
+XLFD
+<blockquote><code>
+<pre>
+-adobe-courier-medium-*-*--0-0-0-0-m-0-*-*
+</pre>
+</code></blockquote>
+
+and reside in the font files
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/Type1/cour*.pfa
+</pre>
+</code></blockquote>
+</p>
+<p>The Adobe Utopia set of fonts only cover ISO&nbsp;8859-1 as well as
+Adobe Standard Encoding.  These fonts have XLFD
+<blockquote><code>
+<pre>
+-adobe-utopia-*-*-normal--0-0-0-0-p-0-iso8859-1
+</pre>
+</code></blockquote>
+
+and reside in the font files
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/Type1/UT*.pfa
+</pre>
+</code></blockquote>
+</p>
+<p>Finally, XFree86 also comes with Type&nbsp;1 versions of Bitstream
+Courier and Charter.  These fonts have XLFD
+<blockquote><code>
+<pre>
+-bitstream-courier-*-*-normal--0-0-0-0-m-0-iso8859-1
+-bitstream-charter-*-*-normal--0-0-0-0-p-0-iso8859-1
+</pre>
+</code></blockquote>
+
+and reside in the font files
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/Type1/c*bt_.pfb
+</pre>
+</code></blockquote>
+</p>
+
+<H4><A NAME="22"></A>3.3.2. Standard Speedo fonts </H4>
+<p>XFree86 includes Speedo versions of the Bitstream Courier and
+Charter fonts.  In order to use these fonts, you should ensure that
+your X server is loading the `<code>Speedo</code>' font backend; see 
+<A HREF="fonts2.html#sec:troubleshooting-core">Troubleshooting</A>.</p>
+<p>These fonts cover all of ISO&nbsp;8859-1 and almost all of
+ISO&nbsp;8859-2.  They have XLFD name
+<blockquote><code>
+<pre>
+-bitstream-courier-*-*-normal--0-0-0-0-m-0-*-*
+-bitstream-charter-*-*-normal--0-0-0-0-p-0-*-*
+</pre>
+</code></blockquote>
+
+and reside in the font files
+<blockquote><code>
+<pre>
+/usr/X11R6/lib/X11/fonts/Speedo/font*.spd
+</pre>
+</code></blockquote>
+</p>
+
+<H3><A NAME="23"></A>3.4. The Bigelow &amp; Holmes Luxi family </H3>
+<p>XFree86 includes the <i>Luxi</i> family of scalable fonts, in both
+TrueType and Type&nbsp;1 format.  This family consists of the fonts
+<i>Luxi Serif</i>, with XLFD
+<blockquote><code>
+<pre>
+-b&amp;h-luxi serif-medium-*-normal--*-*-*-*-p-*-*-*
+</pre>
+</code></blockquote>
+
+<i>Luxi Sans</i>, with XLFD
+<blockquote><code>
+<pre>
+-b&amp;h-luxi sans-medium-*-normal--*-*-*-*-p-*-*-*
+</pre>
+</code></blockquote>
+
+and <i>Luxi Mono</i>, with XLFD
+<blockquote><code>
+<pre>
+-b&amp;h-luxi mono-medium-*-normal--*-*-*-*-m-*-*-*
+</pre>
+</code></blockquote>
+
+Each of these fonts comes Roman, oblique, bold and bold oblique variants
+The TrueType version have glyphs covering the basic ASCII Unicode
+range, the Latin&nbsp;1 range, as well as the <i>Extended Latin</i>
+range and some additional punctuation characters.  In particular,
+these fonts include all the glyphs needed for ISO&nbsp;8859 parts 1,
+2, 3, 4, 9, 13 and 15, as well as all the glyphs in the Adobe Standard
+encoding and the Windows 3.1 character set.</p>
+<p>The glyph coverage of the Type&nbsp;1 versions is somewhat reduced,
+and only covers ISO&nbsp;8859 parts 1, 2 and 15 as well as the Adobe
+Standard encoding.</p>
+<p>The Luxi fonts are original designs by Kris Holmes and Charles 
+Bigelow.  Luxi fonts include seriffed, sans serif, and monospaced 
+styles, in roman and oblique, and normal and bold weights. The fonts 
+share stem weight, x-height, capital height, ascent and descent, for 
+graphical harmony.</p>
+<p>The character width metrics of Luxi roman and bold fonts match those 
+of core fonts bundled with popular operating and window systems.</p>
+<p>The license terms for the Luxi fonts are included in the file
+`<code>COPYRIGHT.BH</code>', as well as in the <A href="LICENSE.html">License document</A>.</p>
+<p>Charles Bigelow and Kris Holmes from Bigelow and Holmes Inc. 
+developed the Luxi typeface designs in Ikarus digital format.</p>
+<p>URW++ Design and Development GmbH converted the Ikarus format fonts 
+to TrueType and Type1 font programs and implemented the grid-fitting 
+"hints" and kerning tables in the Luxi fonts.</p>
+<p>For more information, please contact
+<EM><A HREF="mailto:design@bigelowandholmes.com">design@bigelowandholmes.com</A></EM>
+ or 
+<EM><A HREF="mailto:info@urwpp.de">info@urwpp.de</A></EM>
+, or consult 
+<A href="http://www.urwpp.de">the URW++ web site</A>.</p>
+<p>An earlier version of the Luxi fonts was made available under the
+name <em>Lucidux</em>.  This name should no longer be used due to trademark
+uncertainties, and all traces of the <em>Lucidux</em> name have been
+removed from XFree86.</p>
+
+ <HR NOSHADE>
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Fonts included with XFree86 </EM><BR>
+<b>Previous:</b> <A HREF="fonts2.html"><EM>Installing fonts</EM></A><BR>
+<b>Next:</b> <A HREF="fonts4.html"><EM>More about core fonts </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728778" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

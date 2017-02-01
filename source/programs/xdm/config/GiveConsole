@@ -1,0 +1,10 @@
+#!/bin/sh
+# Assign ownership of the console to the invoking user
+# $XFree86: xc/programs/xdm/config/GiveConsole,v 1.2 2006/01/09 15:01:05 dawes Exp $
+#
+# By convention, both xconsole and xterm -C check that the
+# console is owned by the invoking user and is readable before attaching
+# the console output.  This way a random user can invoke xterm -C without
+# causing serious grief.
+#
+chown $USER /dev/console

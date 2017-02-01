@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Introduction </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Introduction </EM><BR>
+<b>Previous:</b> <A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A><BR>
+<b>Next:</b> <A HREF="dmx2.html"><EM>Development plan </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="1"></A>1. Introduction </H2>
+<H3><A NAME="2"></A>1.1. The Distributed Multihead X Server </H3>
+<p>Current Open Source multihead solutions are limited to a single
+physical machine.  A single X server controls multiple display devices,
+which can be arranged as independent heads or unified into a single
+desktop (with Xinerama).  These solutions are limited to the number of
+physical devices that can co-exist in a single machine (e.g., due to the
+number of AGP/PCI slots available for graphics cards).  Thus, large
+tiled displays are not currently possible.  The work described in this
+paper will eliminate the requirement that the display devices reside in
+the same physical machine.  This will be accomplished by developing a
+front-end proxy X server that will control multiple back-end X servers
+that make up the large display.</p>
+
+<p>The overall structure of the distributed multihead X (DMX) project is
+as follows: A single front-end X server will act as a proxy to a set of
+back-end X servers, which handle all of the visible rendering.  X
+clients will connect to the front-end server just as they normally would
+to a regular X server.  The front-end server will present an abstracted
+view to the client of a single large display.  This will ensure that all
+standard X clients will continue to operate without modification
+(limited, as always, by the visuals and extensions provided by the X
+server).  Clients that are DMX-aware will be able to use an extension to
+obtain information about the back-end servers (e.g., for placement of
+pop-up windows, window alignments by the window manager, etc.).</p>
+
+<p>The architecture of the DMX server is divided into two main sections:
+input (e.g., mouse and keyboard events) and output (e.g., rendering and
+windowing requests).  Each of these are describe briefly below, and the
+rest of this design document will describe them in greater detail.</p>
+
+<p>The DMX server can receive input from three general types of input
+devices: "local" devices that are physically attached to the machine on
+which DMX is running, "backend" devices that are physically attached to
+one or more of the back-end X servers (and that generate events via the
+X protocol stream from the backend), and "console" devices that can be
+abstracted from any non-back-end X server.  Backend and console devices
+are treated differently because the pointer device on the back-end X
+server also controls the location of the hardware X cursor.  Full
+support for XInput extension devices is provided.</p>
+
+<p>Rendering requests will be accepted by the front-end server; however,
+rendering to visible windows will be broken down as needed and sent to
+the appropriate back-end server(s) via X11 library calls for actual
+rendering.  The basic framework will follow a Xnest-style approach.  GC
+state will be managed in the front-end server and sent to the
+appropriate back-end server(s) as required.  Pixmap rendering will (at
+least initially) be handled by the front-end X server.  Windowing
+requests (e.g., ordering, mapping, moving, etc.) will handled in the
+front-end server.  If the request requires a visible change, the
+windowing operation will be translated into requests for the appropriate
+back-end server(s).  Window state will be mirrored in the back-end
+server(s) as needed.</p>
+
+<H3><A NAME="3"></A>1.2. Layout of Paper </H3>
+<p>The next section describes the general development plan that was
+actually used for implementation.  The final section discusses
+outstanding issues at the conclusion of development.  The first appendix
+provides low-level technical detail that may be of interest to those
+intimately familiar with the X server architecture.  The final appendix
+describes the four phases of development that were performed during the
+first two years of development.</p>
+
+<p>The final year of work was divided into 9 tasks that are not
+described in specific sections of this document.  The major tasks during
+that time were the enhancement of the reconfiguration ability added in
+Phase IV, addition of support for a dynamic number of back-end displays
+(instead of a hard-coded limit), and the support for back-end display
+and input removal and addition.  This work is mentioned in this paper,
+but is not covered in detail.</p>
+
+ <HR NOSHADE>
+<A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A>
+ <b>:</b> <EM>Introduction </EM><BR>
+<b>Previous:</b> <A HREF="dmx.html"><EM>Distributed Multihead X design </EM></A><BR>
+<b>Next:</b> <A HREF="dmx2.html"><EM>Development plan </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728812" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

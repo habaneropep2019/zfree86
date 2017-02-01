@@ -1,0 +1,594 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		  1mXTEST Extension Protocol0m
+
+
+
+			Version 2.2
+		   X Consortium Standard
+
+
+
+
+
+
+			Kieron Drake
+			UniSoft Ltd.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Copyright © 1992 by UniSoft Group Ltd.
+
+Permission to use, copy, modify, and distribute this docu-
+mentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice and this permission
+notice appear in all copies.  UniSoft makes no representa-
+tions about the suitability for any purpose of the informa-
+tion in this document.	This documentation is provided ``as
+is'' without express or implied warranty.
+
+
+
+
+
+
+Copyright © 1992, 1994 X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview0m
+
+This extension is a minimal set of client and server exten-
+sions required to completely test the X11 server with no
+user intervention.
+
+This extension is not intended to support general journaling
+and playback of user actions.  This is a difficult area
+[XTrap, 89] as it attempts to synchronize synthetic user
+interactions with their effects; it is at the higher level
+of dialogue recording/playback rather than at the strictly
+lexical level.	We are interested only in the latter, sim-
+pler, case.  A more detailed discussion and justification of
+the extension functionality is given in [Drake, 91].
+
+We are aiming only to provide a minimum set of facilities
+that solve immediate testing and validation problems.  The
+testing extension itself needs testing, where possible, and
+so should be as simple as possible.
+
+We have also tried to:
+
+·    Confine the extension to an appropriate high level
+     within the server to minimize portability problems.  In
+     practice this means that the extension should be at the
+     DIX level or use the DIX/DDX interface, or both.  This
+     has effects, in particular, on the level at which
+     "input synthesis" can occur.
+
+·    Minimize the changes required in the rest of the
+     server.
+
+·    Minimize performance penalties on normal server opera-
+     tion.
+
+
+1m2.  Description0m
+
+The functions provided by this extension fall into two
+groups:
+
+1mClient Operations0m
+     These routines manipulate otherwise hidden client-side
+     behavior.	The actual implementation will depend on the
+     details of the actual language binding and what degree
+     of request buffering, GContext caching, and so on, is
+     provided.	In the C binding, defined in ``XTEST Exten-
+     sion Library'', routines are provided to access the
+     internals of two opaque data structures --4mGC24ms and
+     4mVisual24ms-- and to discard any requests pending within
+     the output buffer of a connection.	 The exact details
+     can be expected to differ for other language bindings.
+
+
+
+
+
+			      1m10m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+
+1mServer Requests0m
+     The first of these requests is similar to that provided
+     in most extensions: it allows a client to specify a
+     major and minor version number to the server and for
+     the server to respond with major and minor versions of
+     its own.  The remaining two requests allow the follow-
+     ing:
+
+     ·	  Access to an otherwise "write-only" server
+	  resource: the cursor associated with a given win-
+	  dow
+
+     ·	  Perhaps most importantly, limited synthesis of
+	  input device events, almost as if a cooperative
+	  user had moved the pointing device or pressed a
+	  key or button.
+
+1m3.  Types0m
+
+The following types are used in the request and event defi-
+nitions in subsequent sections:
+
+FAKE_EVENT_TYPE {4mKeyPress24m, 4mKeyRelease24m, 4mMotionNotify24m, 4mButton-0m
+4mPress24m, 4mButtonRelease24m}
+
+
+FAKE_EVENT  [type: FAKE_EVENT_TYPE,
+	    detail: BYTE,
+	    time: TIMESTAMP,
+	    root: WINDOW,
+	    rootX, rootY: INT16]
+
+
+CURSOR {4mCurrentCursor24m, 4mNone24m} or a cursor as defined by the
+X11 Protocol.
+
+1m4.  Client Operations0m
+
+These are abstract definitions of functionality.  They refer
+to client-side objects such as "GC" and "VISUAL" that are
+quoted to denote their abstract nature.	 Concrete versions
+of these functions are defined only for particular language
+bindings.  In some circumstances a particular language bind-
+ing may not implement the relevant abstract type or may pro-
+vide it as a transparent, rather than opaque, type, with the
+result that the corresponding function does not make sense
+or is not required, respectively.
+
+
+
+
+
+
+
+
+
+
+			      1m20m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+__
+|    4mXTestSetGContextOfGC0m
+
+     4mgc24m: "GC"
+     4mgid24m: GCONTEXT
+|__
+
+
+Sets the GCONTEXT within the "GC" gc to have the value spec-
+ified by gid.
+
+__
+|    4mXTestSetVisualIDOfVisual0m
+
+     4mvisual24m: "VISUAL"
+     4mvisualid24m: VISUALID
+|__
+
+
+Sets the VISUALID within the "VISUAL" visual to have the
+value specified by visualid.
+
+__
+|    4mXTestDiscard0m
+
+     4mdpy24m: "CONNECTION"
+
+   =>
+
+     status: BOOL
+|__
+
+
+Discards any requests that are present in the request buffer
+associated with the "CONNECTION" dpy.  The status returned
+is 4mTrue24m if there were one or more requests in the buffer and
+4mFalse24m otherwise.
+
+1m5.  Server Requests0m
+
+__
+|    4mXTestGetVersion0m
+
+     4mclientMajorVersion24m: CARD16
+     4mclientMinorVersion24m: CARD16
+
+   =>
+
+     serverMajorVersion: CARD16
+     serverMinorVersion: CARD16
+
+     Errors: 4mLength0m
+|__
+
+
+
+
+
+			      1m30m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+
+This request can be used to ensure that the server version
+of the XTEST extension is usable by the client.	 This docu-
+ment defines major version two (2), minor version one (1).
+
+__
+|    4mXTestCompareCursor0m
+
+     4mwindow24m: WINDOW
+     4mcursor-id24m: CURSOR or 4mCurrentCursor24m or 4mNone0m
+
+   =>
+
+     same: BOOL
+
+     Errors: 4mWindow24m, 4mLength24m, 4mCursor0m
+|__
+
+
+This request looks up the cursor associated with the window
+and compares it with either the null cursor if cursor-id is
+4mNone24m, or the current cursor (that is, the one being dis-
+played), or the cursor whose ID is cursor-id, and returns
+the result of the comparison in same.
+
+__
+|    4mXTestFakeInput0m
+
+     4mevents24m: LISTofFAKE_EVENT
+
+     Errors: 4mWindow24m, 4mLength24m, 4mAlloc24m, 4mValue0m
+|__
+
+
+This request simulates the limited set of core protocol
+events within the set FAKE_EVENT_TYPE.	Only the following
+event fields, defined in FAKE_EVENT, are interpreted:
+
+4mtype24m      This must be one of 4mKeyPress24m, 4mKeyRelease24m, 4mMotion-0m
+	  4mNotify24m, 4mButtonPress24m, or 4mButtonRelease24m, or else a
+	  4mValue24m error occurs.
+
+4mdetail24m    For key events, this field is interpreted as the
+	  physical keycode.  If the keycode is less than
+	  min-keycode or greater than max-keycode, as
+	  returned in the connection setup, then a 4mValue0m
+	  error occurs.	 For button events, this field is
+	  interpreted as the physical (or core) button,
+	  meaning it will be mapped to the corresponding
+	  logical button according to the most recent 4mSet-0m
+	  4mPointerMapping24m request.	If the button number is
+	  less than one or greater than the number of physi-
+	  cal buttons, then a 4mValue24m error occurs.	For
+	  motion events, if this field is 4mTrue24m, then rootX
+	  and rootY are relative distances from the current
+
+
+
+			      1m40m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+
+	  pointer location; if this field is 4mFalse,24m then
+	  they are absolute positions.
+
+4mtime24m      This is either 4mCurrentTime24m (meaning no delay) or
+	  the delay in milliseconds that the server should
+	  wait before simulating this event.  No other
+	  requests from this client will be processed until
+	  this delay, if any, has expired and subsequent
+	  processing of the simulated event has been com-
+	  pleted.
+
+4mroot24m      In the case of motion events this field is the ID
+	  of the root window on which the new motion is to
+	  take place.  If 4mNone24m is specified, the root window
+	  of the screen the pointer is currently on is used
+	  instead.  If this field is not a valid window,
+	  then a 4mWindow24m error occurs.
+
+4mrootX24m & 4mrootY0m
+	  In the case of motion events these fields indicate
+	  relative distance or absolute pointer coordinates,
+	  according to the setting of detail.  If the speci-
+	  fied coordinates are off-screen, the closest on-
+	  screen coordinates will be substituted.
+
+When the simulated event(s) are processed, they cause event
+propagation, passive grab activation, and so on, just as if
+the corresponding input device action had occurred.  How-
+ever, motion events might not be recorded in the motion his-
+tory buffer.
+
+For the currently supported event types, the event list must
+have length one, otherwise a 4mBadLength24m error occurs.
+
+__
+|    4mXTestGrabControl0m
+
+     4mimpervious24m: BOOL
+|__
+
+
+If impervious is 4mTrue24m, then the executing client becomes
+impervious to server grabs; that is, it can continue execut-
+ing requests even if another client grabs the server.  If
+impervious is 4mFalse24m, then the executing client returns to
+the normal state of being susceptible to server grabs.
+
+
+
+
+
+
+
+
+
+
+
+			      1m50m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+
+1m6.  Encoding0m
+
+Please refer to the X11 Protocol Encoding document as this
+document uses conventions established there.
+
+The name of this extension is ``XTEST''.
+
+1m6.1.	New Types0m
+
+
+FAKE_EVENT_TYPE
+       2	 KeyPress
+       3	 KeyRelease
+       4	 ButtonPress
+       5	 ButtonRelease
+       6	 MotionNotify
+
+
+NOTE that the above values are defined to be the same as
+those for the corresponding core protocol event types.
+
+1m6.2.	Requests0m
+
+
+4mXTestGetVersion0m
+  1  CARD8		 opcode
+  1  0			 xtest opcode
+  2  2			 request length
+  1  CARD8		 client major version
+  1			 unused
+  2  CARD16		 client minor version
+
+
+ =>
+  1  1			 Reply
+  1  CARD8		 server major version
+  2  CARD16		 sequence number
+  4  0			 reply length
+  2  CARD16		 server minor version
+  22			 unused
+
+
+
+4mXTestCompareCursor0m
+  1  CARD8		 opcode
+  1  1			 xtest opcode
+  2  3			 request length
+  4  WINDOW		 window
+  4  CURSOR		 cursor-id
+     0	       None
+     1	       CurrentCursor
+
+
+ =>
+
+
+
+			      1m60m
+
+
+
+
+
+		  XTEST Extension Protocol
+
+
+  1  1			 Reply
+  1  BOOL		 cursors are the same
+  2  CARD16		 sequence number
+  4  0			 reply length
+  24			 unused
+
+
+
+4mXTestFakeInput0m
+  1  CARD8		 opcode
+  1  2			 xtest opcode
+  2  1+(1*8)		 request length
+  1  FAKE_EVENT_TYPE	 fake device event type
+  1  BYTE		 detail: button or keycode
+  2			 unused
+  4  TIMESTAMP		 delay (milliseconds)
+     0	       CurrentTime
+  4  WINDOW		 root window for MotionNotify
+     0	       None
+  8			 unused
+  2  INT16		 x position for MotionNotify
+  2  INT16		 y position for MotionNotify
+  8			 unused
+
+
+
+4mXTestGrabControl0m
+  1  CARD8		 opcode
+  1  3			 xtest opcode
+  2  2			 request length
+  1  BOOL		 impervious
+  3			 unused
+
+
+1m7.  References0m
+
+Annicchiarico, D., et al., 4mXTrap:24m 4mThe24m 4mXTrap24m 4mArchitecture24m.
+     Digital Equipment Corporation, July 1991.
+
+Drake, K. J., 4mSome24m 4mProposals24m 4mfor24m 4ma24m 4mMinimum24m 4mX1124m 4mTesting0m
+     4mExtension24m.  UniSoft Ltd., June 1991.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m70m
+
+

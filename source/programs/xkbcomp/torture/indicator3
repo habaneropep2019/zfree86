@@ -1,0 +1,8 @@
+// $XFree86: xc/programs/xkbcomp/torture/indicator3,v 1.2 2006/01/09 15:01:30 dawes Exp $
+xkb_compatibility "torture3" 
+
+indicator "Mouse Keys" {
+	groups= None;
+	modifiers= None;
+	controls= MouseKeys;
+};

@@ -1,0 +1,449 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Installing fonts</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Installing fonts</EM><BR>
+<b>Previous:</b> <A HREF="fonts1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="fonts3.html"><EM>Fonts included with XFree86 </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="3"></A>2. Installing fonts<A NAME="sec:installing"></A> 
+</H2>
+<p>This section explains how to configure both Xft and the core fonts
+system to access newly-installed fonts.</p>
+
+<H3><A NAME="4"></A>2.1. Configuring Xft<A NAME="sec:configuring-xft"></A> 
+</H3>
+<p>Xft has no configuration mechanism itself, rather it relies upon
+the fontconfig library to configure and customize fonts.  That library
+is not specific to XFree86 or indeed on any particular font output
+mechanism.  This discussion describes how fontconfig, rather than Xft,
+works.</p>
+
+<H4><A NAME="5"></A>2.1.1. Installing fonts in Xft </H4>
+<p>Fontconfig looks for fonts in a set of well-known directories that
+include all of XFree86's standard font directories
+(`<code>/usr/X11R6/lib/X11/lib/fonts/*</code>') by default) as well as a
+directory called `<code>.fonts/</code>' in the user's home directory.
+Installing a font for use by Xft applications is as simple
+as copying a font file into one of these directories.
+<blockquote><code>
+<pre>
+$ cp lucbr.ttf ~/.fonts/
+</pre>
+</code></blockquote>
+
+Fontconfig will notice the new font at the next opportunity and rebuild its
+list of fonts.  If you want to trigger this update from the command
+line (for example in order to globally update the system-wide Fontconfig
+information), you may run the command `<code>fc-cache</code>'.
+<blockquote><code>
+<pre>
+$ fc-cache
+</pre>
+</code></blockquote>
+</p>
+
+<H4><A NAME="6"></A>2.1.2. Fine-tuning Xft </H4>
+<p>Fontconfig's behaviour is controlled by a set of configuration files: a
+system-wide configuration file, `<code>/etc/fonts/fonts.conf</code>', and
+a user-specific file called `<code>.fonts.conf</code>' in the user's home
+directory (this can be overridden with the `<code>FONTCONFIG_FILE</code>'
+environment variable).</p>
+<p>Every Fontconfig configuration file must start with the following
+boilerplate:
+<blockquote><code>
+<pre>
+&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
+&lt;fontconfig&gt;
+</pre>
+</code></blockquote>
+
+In addition, every Fontconfig configuration file must end with the
+following line:
+<blockquote><code>
+<pre>
+&lt;/fontconfig&gt;
+</pre>
+</code></blockquote>
+</p>
+<p>The default Fontconfig configuration file includes the directory
+`<code>~/.fonts/</code>' in the list of directories searched for font
+files, and this is where user-specific font files should be installed.
+In the unlikely case that a new font directory needs to be added, this
+can be done with the following syntax:
+<blockquote><code>
+<pre>
+&lt;dir&gt;/usr/local/share/fonts/&lt;/dir&gt;
+</pre>
+</code></blockquote>
+</p>
+<p>Another useful option is the ability to disable anti-aliasing (font
+smoothing) for selected fonts.  This can be done with the following
+syntax:
+<blockquote><code>
+<pre>
+&lt;match target="font"&gt;
+    &lt;test qual="any" name="family"&gt;
+        &lt;string&gt;Lucida Console&lt;/string&gt;
+    &lt;/test&gt;
+    &lt;edit name="antialias" mode="assign"&gt;
+        &lt;bool&gt;false&lt;/bool&gt;
+    &lt;/edit&gt;
+&lt;/match&gt;
+</pre>
+</code></blockquote>
+
+Anti-aliasing can be disabled for all fonts by the following incantation:
+<blockquote><code>
+<pre>
+&lt;match target="font"&gt;
+    &lt;edit name="antialias" mode="assign"&gt;
+        &lt;bool&gt;false&lt;/bool&gt;
+    &lt;/edit&gt;
+&lt;/match&gt;
+</pre>
+</code></blockquote>
+</p>
+<p>Xft supports sub-pixel rasterisation on LCD displays.  XFree86 should
+automatically enable this feature on laptops and when using an LCD
+monitor connected with a DVI cable; you can check whether this was
+done by typing
+<blockquote><code>
+<pre>
+$ xdpyinfo -ext RENDER | grep sub-pixel
+</pre>
+</code></blockquote>
+
+If this doesn't print anything, you will need to configure Render for
+your particular LCD hardware manually; this is done with the following
+syntax:
+<blockquote><code>
+<pre>
+&lt;match target="font"&gt;
+    &lt;edit name="rgba" mode="assign"&gt;
+        &lt;const&gt;rgb&lt;/const&gt;
+    &lt;/edit&gt;
+&lt;/match&gt;
+</pre>
+</code></blockquote>
+
+The string `<code>rgb</code>' within the
+`<code>&lt;const&gt;</code>'...`<code>&lt;/const&gt;</code>'
+specifies the order of pixel components on your display, and should be
+changed to match your hardware; it can be one of `<code>rgb</code> (normal
+LCD screen), `<code>bgr</code>' (backwards LCD screen), `<code>vrgb</code>' (LCD
+screen rotated clockwise) or `<code>vbgr</code>' (LCD screen rotated
+counterclockwise).</p>
+
+<H4><A NAME="7"></A>2.1.3. Configuring applications </H4>
+<p>Because most current applications use the core fonts system by
+default, it is necessary to explicitly configure them to use Xft.
+How this is done depends on the application.</p>
+<p>XTerm can be set to use Xft by using the `<code>-fa</code>' command line
+option or by setting the `<code>XTerm*faceName</code>' resource:
+<blockquote><code>
+<pre>
+XTerm*faceName: Courier
+</pre>
+</code></blockquote>
+
+or
+<blockquote><code>
+<pre>
+$ xterm -fa "Courier"
+</pre>
+</code></blockquote>
+</p>
+<p>For applications based on GTK+ 2.0 (including GNOME 2 applications),
+the environment variable `<code>GDK_USE_XFT</code>' should be set to `<code>1</code>':
+<blockquote><code>
+<pre>
+$ export GDK_USE_XFT=1
+</pre>
+</code></blockquote>
+</p>
+<p>GTK+ 2.2 uses Xft by default.</p>
+<p>For KDE applications, you should select ``Anti-alias fonts'' in the
+``Fonts'' panel of KDE's ``Control Center''.  Note that this option is
+misnamed: it switches KDE to using Xft but doesn't enable
+anti-aliasing in case it was disabled by your Xft configuration file.</p>
+<p><i>(What about Mozilla?)</i></p>
+
+<H4><A NAME="8"></A>2.1.4. Troubleshooting <A NAME="sec:troubleshooting-xft"></A> 
+</H4>
+<p>If some Xft-based applications don't seem to notice the changes you
+are making to your configuration files, they may be linked against the
+XFree86 4.2 version of Xft.  In order to fix the problem, you should
+relink them against a current version of Xft; on most systems, it is
+enough to install the current version of the Xft and Fontconfig
+libraries.</p>
+<p>If, for some reason, you cannot upgrade the shared libraries, please
+check the <A href="Xft.3.html">Xft(3)</A> manual page included
+with XFree86 4.2 for the configuration mechanisms of the previous version
+of Xft.</p>
+
+<H3><A NAME="9"></A>2.2. Configuring the core X11 fonts system </H3>
+<p>Installing fonts in the core system is a two step process.  First,
+you need to create a <i>font directory</i> that contains all the
+relevant font files as well as some index files.  You then need to
+inform the X server of the existence of this new directory by
+including it in the <i>font path</i>.</p>
+
+<H4><A NAME="10"></A>2.2.1. Installing bitmap fonts </H4>
+<p>The XFree86 server can use bitmap fonts in both the cross-platform
+BDF format and the somewhat more efficient binary PCF format.
+(XFree86 also supports the obsolete SNF format.)</p>
+<p>Bitmap fonts are normally distributed in the BDF format.  Before
+installing such fonts, it is desirable (but not absolutely necessary)
+to convert the font files to the PCF format.  This is done by using the
+command `<code>bdftopcf</code>', <i>e.g.</i> 
+<blockquote><code>
+<pre>
+$ bdftopcf courier12.bdf
+</pre>
+</code></blockquote>
+
+You will then want to compress the resulting PCF font files:
+<blockquote><code>
+<pre>
+$ gzip courier12.pcf
+</pre>
+</code></blockquote>
+</p>
+<p>After the fonts have been converted, you should copy all the font
+files that you wish to make available into a arbitrary directory, say
+`<code>/usr/local/share/fonts/bitmap/</code>'.  You should then create the
+index file `<code>fonts.dir</code>' by running the command `<code>mkfontdir</code>'
+(please see the <A href="mkfontdir.1.html">mkfontdir(1)</A>
+manual page for more information):
+<blockquote><code>
+<pre>
+$ mkdir /usr/local/share/fonts/bitmap/
+$ cp *.pcf.gz /usr/local/share/fonts/bitmap/
+$ mkfontdir /usr/local/share/fonts/bitmap/
+</pre>
+</code></blockquote>
+</p>
+<p>All that remains is to tell the X server about the existence of the
+new font directory; see 
+<A HREF="fonts2.html#sec:set-font-path">Setting the server font path</A> below.</p>
+
+<H4><A NAME="11"></A>2.2.2. Installing scalable fonts </H4>
+<p>The XFree86 server supports scalable fonts in four formats:
+Type&nbsp;1, Speedo, TrueType and CIDFont.  This section only applies
+to the former three; for information on CIDFonts, please see
+<A HREF="fonts2.html#sec:cid-fonts">Installing CIDFonts</A> later in this
+document.</p>
+<p>Installing scalable fonts is very similar to installing bitmap fonts:
+you create a directory with the font files, and run `<code>mkfontdir</code>'
+to create an index file called `<code>fonts.dir</code>'.</p>
+<p>There is, however, a big difference: `<code>mkfontdir</code>' cannot
+automatically recognise scalable font files.  For that reason, you
+must first index all the font files in a file called
+`<code>fonts.scale</code>'.  While this can be done by hand, it is best done
+by using the `<code>mkfontscale</code>' utility.
+<blockquote><code>
+<pre>
+$ mkfontscale /usr/local/share/fonts/Type1/
+$ mkfontdir /usr/local/share/fonts/Type1/
+</pre>
+</code></blockquote>
+
+Under some circumstances, it may be necessary to modify the
+`<code>fonts.scale</code>' file generated by <code>mkfontscale</code>; for more
+information, please see the <A href="mkfontdir.1.html">mkfontdir(1)</A> and <A href="mkfontscale.1.html">mkfontscale(1)</A> manual pages and 
+<A HREF="fonts4.html#sec:internationalisation">Core fonts and internationalisation</A>
+later in this document.</p>
+
+<H4><A NAME="12"></A>2.2.3. Installing CID-keyed fonts <A NAME="sec:cid-fonts"></A> 
+</H4>
+<p>The CID-keyed font format was designed by Adobe Systems for fonts
+with large character sets.  A CID-keyed font, or CIDFont for short,
+contains a collection of glyphs indexed by <i>character ID</i> (CID).</p>
+<p>In order to map such glyphs to meaningful indices, Adobe provide a set
+of <i>CMap</i> files.  The PostScript name of a font generated from a
+CIDFont consists of the name of the CIDFont and the name of the CMap
+separated by two dashes.  For example, the font generated from the
+CIDFont `<code>Munhwa-Regular</code>' using the CMap `<code>UniKS-UCS2-H</code>' is
+called
+<blockquote><code>
+<pre>
+Munhwa-Regular--UniKS-UCS2-H
+</pre>
+</code></blockquote>
+</p>
+<p>The CIDFont code in XFree86 requires a very rigid directory
+structure.  The main directory must be called `<code>CID</code>' (its location
+defaults to `<code>/usr/X11R6/lib/X11/fonts/CID</code>' but it may be
+located anywhere), and it should contain a subdirectory for every CID
+collection.  Every subdirectory <i>must</i> contain subdirectories
+called <code>CIDFont</code> (containing the actual CIDFont files), <code>CMap</code>
+(containing all the needed CMaps), <code>AFM</code> (containing the font
+metric files) and <code>CFM</code> (initially empty).  For example, in the
+case of the font <code>Munhwa-Regular</code> that uses the CID collection
+<code>Adobe-Korea1-0</code>, the directory structure should be as follows:
+<blockquote><code>
+<pre>
+CID/Adobe-Korea1/CIDFont/Munhwa-Regular
+CID/Adobe-Korea1/CMap/UniKS-UCS2-H
+CID/Adobe-Korea1/AFM/Munhwa-Regular.afm
+CID/Adobe-Korea1/CFM/
+CID/fonts.dir
+CID/fonts.scale
+</pre>
+</code></blockquote>
+</p>
+<p>After creating this directory structure and copying the relevant
+files, you should create a `<code>fonts.scale</code>' file.  This file has the
+same format as in the case of (non-CID) scalable fonts, except that
+its first column contains PostScript font names with the extension
+`<code>.cid</code>' appended rather than actual filenames:
+<blockquote><code>
+<pre>
+1
+Adobe-Korea1/Munhwa-Regular--UniKS-UCS2-H.cid \
+  -adobe-munhwa-medium-r-normal--0-0-0-0-p-0-iso10646-1
+</pre>
+</code></blockquote>
+
+(both names on the same line).  Running `<code>mkfontdir</code>'
+creates the `<code>fonts.dir</code>' file:
+<blockquote><code>
+<pre>
+$ cd /usr/local/share/fonts/CID
+$ mkfontdir
+</pre>
+</code></blockquote>
+</p>
+<p>Finally, you should create the font metrics summary files in the
+directory `<code>CFM</code>' by running the command `<code>mkcfm</code>':
+<blockquote><code>
+<pre>
+$ mkcfm /usr/local/share/fonts/CID
+</pre>
+</code></blockquote>
+
+If no CFM files are available, the server will still be able to use
+the CID fonts but querying them will take a long time.  You should run
+`<code>mkcfm</code>' again whenever a change is made to any of the CID-keyed
+fonts, or when the CID-keyed fonts are copied to a machine with a
+different architecture.</p>
+
+<H4><A NAME="13"></A>2.2.4. Setting the server's font path <A NAME="sec:set-font-path"></A> 
+</H4>
+<p>The list of directories where the server looks for fonts is known
+as the <i>font path</i>.  Informing the server of the existence of a new
+font directory consists of putting it on the font path.</p>
+<p>The font path is an ordered list; if a client's request matches
+multiple fonts, the first one in the font path is the one that gets
+used.  When matching fonts, the server makes two passes over the font
+path: during the first pass, it searches for an exact match; during
+the second, it searches for fonts suitable for scaling.</p>
+<p>For best results, scalable fonts should appear in the font path before
+the bitmap fonts; this way, the server will prefer bitmap fonts to
+scalable fonts when an exact match is possible, but will avoid scaling
+bitmap fonts when a scalable font can be used.  (The `<code>:unscaled</code>'
+hack, while still supported, should no longer be necessary in XFree86
+4.0 and later.)</p>
+<p>You may check the font path of the running server by typing the command
+<blockquote><code>
+<pre>
+$ xset q
+</pre>
+</code></blockquote>
+</p>
+
+<H5><A NAME="14"></A>2.2.4.1. Temporary modification of the font path </H5>
+<p>The `<code>xset</code>' utility may be used to modify the font path for the
+current session.  The font path is set with the command <code>xset fp</code>;
+a new element is added to the front with <code>xset +fp</code>, and added to
+the end with <code>xset fp+</code>.  For example,
+<blockquote><code>
+<pre>
+$ xset +fp /usr/local/fonts/Type1
+$ xset fp+ /usr/local/fonts/bitmap
+</pre>
+</code></blockquote>
+</p>
+<p>Conversely, an element may be removed from the front of the font path
+with `<code>xset -fp</code>', and removed from the end with `<code>xset fp-</code>'.
+You may reset the font path to its default value with 
+`<code>xset fp default</code>'.</p>
+<p>For more information, please consult the <A href="xset.1.html">xset(1)</A> manual page.</p>
+
+<H5><A NAME="15"></A>2.2.4.2. Permanent modification of the font path </H5>
+<p>The default font path (the one used just after server startup or
+after `<code>xset fp default</code>') is specified in the X server's
+`<code>XF86Config</code>' file.  It is computed by appending all the
+directories mentioned in the `<code>FontPath</code>' entries of the
+`<code>Files</code>' section in the order in which they appear.
+<blockquote><code>
+<pre>
+FontPath "/usr/local/fonts/Type1"
+...
+FontPath "/usr/local/fonts/bitmap"
+</pre>
+</code></blockquote>
+</p>
+<p>For more information, please consult the <A href="XF86Config.5.html">XF86Config(5)</A> manual page.</p>
+
+<H4><A NAME="16"></A>2.2.5. Troubleshooting <A NAME="sec:troubleshooting-core"></A> 
+</H4>
+<p>If you seem to be unable to use some of the fonts you have
+installed, the first thing to check is that the `<code>fonts.dir</code>' files
+are correct and that they are readable by the server (the X server
+usually runs as root, beware of NFS-mounted font directories).  If
+this doesn't help, it is quite possible that you are trying to use a
+font in a format that is not supported by your server.</p>
+<p>XFree86 supports the BDF, PCF, SNF, Type 1, Speedo, TrueType, OpenType
+and CIDFont font formats.  However, not all XFree86 servers come with
+all the font backends configured in.</p>
+<p>On most platforms, the XFree86 servers are <i>modular</i>: the font
+backends are included in modules that are loaded at runtime.  The
+modules to be loaded are specified in the `<code>XF86Config</code>' file using
+the `<code>Load</code>' directive:
+<blockquote><code>
+<pre>
+Load "type1"
+</pre>
+</code></blockquote>
+
+If you have trouble installing fonts in a specific format, you may
+want to check the server's log file in order to see whether the
+relevant modules are properly loaded.  The list of font modules
+distributed with XFree86 is as follows:
+<ul>
+<li> <code>"bitmap"</code>: bitmap fonts (`<code>*.bdf</code>', `<code>*.pcf</code>'
+and `<code>*.snf</code>');</li>
+<li> <code>"freetype"</code>: TrueType fonts (`<code>*.ttf</code>' and
+`<code>*.ttc</code>'), OpenType fonts (`<code>*.otf</code>' and `<code>*.otc</code>') and
+Type&nbsp;1 fonts (`<code>*.pfa</code>' and `<code>*.pfb</code>');</li>
+<li> <code>"type1"</code>: alternate Type&nbsp;1 backend (`<code>*.pfa</code>' and
+`<code>*.pfb</code>') and CIDFont backend;</li>
+<li> <code>"xtt"</code>: alternate TrueType backend (`<code>*.ttf</code>' and
+`<code>*.ttc</code>');</li>
+<li> <code>"speedo"</code>: Bitstream Speedo fonts (`<code>*.spd</code>').</li>
+</ul>
+
+Please note that the argument of the `<code>Load</code>' directive is
+case-sensitive.</p>
+
+ <HR NOSHADE>
+<A HREF="fonts.html"><EM>Fonts in XFree86 </EM></A>
+ <b>:</b> <EM>Installing fonts</EM><BR>
+<b>Previous:</b> <A HREF="fonts1.html"><EM>Introduction </EM></A><BR>
+<b>Next:</b> <A HREF="fonts3.html"><EM>Fonts included with XFree86 </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728777" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

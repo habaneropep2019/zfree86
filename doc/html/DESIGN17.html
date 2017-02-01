@@ -1,0 +1,730 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>The Loader </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The Loader </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN16.html"><EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN18.html"><EM>Helper Functions </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="65"></A>17. The Loader </H2>
+
+<p>This section describes the interfaces to the module loader.  The loader
+interfaces can be divided into two groups: those that are only available to
+the XFree86 common layer, and those that are also available to modules.</p>
+
+<H3><A NAME="66"></A>17.1. Loader Overview </H3>
+
+<p>The loader is capable of loading modules in a range of object formats,
+and knowledge of these formats is built in to the loader.  Knowledge of
+new object formats can be added to the loader in a straightforward
+manner.  This makes it possible to provide OS-independent modules (for
+a given CPU architecture type).  In addition to this, the loader can
+load modules via the OS-provided <code>dlopen(3)</code> service where
+available.  Such modules are not platform independent, and the semantics
+of <code>dlopen()</code> on most systems results in significant
+limitations in the use of modules of this type.  Support for
+<code>dlopen()</code> modules in the loader is primarily for
+experimental and development purposes.</p>
+<p>Symbols exported by the loader (on behalf of the core X server) to
+modules are determined at compile time.  Only those symbols explicitly
+exported are available to modules.  All external symbols of loaded
+modules are exported to other modules, and to the core X server.  The
+loader can be requested to check for unresolved symbols at any time,
+and the action to be taken for unresolved symbols can be controlled by
+the caller of the loader.  Typically the caller identifies which symbols
+can safely remain unresolved and which cannot.</p>
+<p>NOTE:  Now that ISO-C allows pointers to functions and pointers to data to
+have different internal representations, some of the following interfaces
+will need to be revisited.</p>
+
+<H3><A NAME="67"></A>17.2. Semi-private Loader Interface </H3>
+
+<p>The following is the semi-private loader interface that is available to the
+XFree86 common layer.</p>
+<p>
+<blockquote>
+<p><code>void LoaderInit(void)</code>
+<blockquote>
+<p>The <code>LoaderInit()</code> function initialises the loader,
+and it must be called once before calling any other loader functions.
+This function initialises the tables of exported symbols, and anything
+else that might need to be initialised.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderSetPath(const char *path)</code>
+<blockquote>
+<p>The <code>LoaderSetPath()</code> function initialises a default
+module search path.  This must be called if calls to other functions
+are to be made without explicitly specifying a module search path.
+The search path <code>path</code> must be a string of one or more
+comma separated absolute paths.  Modules are expected to be located
+below these paths, possibly in subdirectories of these paths.</p>
+
+</blockquote>
+</p>
+<p><code>pointer LoadModule(const char *module, const char *path,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const char **subdirlist, const char **patternlist,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pointer options, const XF86ModReqInfo * modreq,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *errmaj, int *errmin)</code>
+<blockquote>
+<p>The <code>LoadModule()</code> function loads the module called
+<code>module</code>.  The return value is a module handle, and
+may be used in future calls to the loader that require a reference
+to a loaded module.  The module name <code>module</code> is
+normally the module's canonical name, which doesn't contain any
+directory path information, or any object/library file prefixes of
+suffixes.  Currently a full pathname and/or filename is also accepted.
+This might change.  The other parameters are:</p>
+<p><code>path</code>
+<blockquote>
+<p>An optional comma-separated list of module search paths.
+When <code>NULL</code>, the default search path is used.</p>
+
+</blockquote>
+</p>
+<p><code>subdirlist</code>
+<blockquote>
+<p>An optional <code>NULL</code> terminated list of
+subdirectories to search.  When <code>NULL</code>,
+the default built-in list is used (refer to
+<code>stdSubdirs</code> in <code>loadmod.c</code>).
+The default list is also substituted for entries in
+<code>subdirlist</code> with the value
+<code>DEFAULT_LIST</code>.  This makes is possible
+to augment the default list instead of replacing it.
+Subdir elements must be relative, and must not contain
+<code>".."</code>.  If any violate this requirement,
+the load fails.</p>
+
+</blockquote>
+</p>
+<p><code>patternlist</code>
+<blockquote>
+<p>An optional <code>NULL</code> terminated list of
+POSIX regular expressions used to connect module
+filenames with canonical module names.  Each regex
+should contain exactly one subexpression that corresponds
+to the canonical module name.  When <code>NULL</code>,
+the default built-in list is used (refer to
+<code>stdPatterns</code> in
+<code>loadmod.c</code>).  The default list is also
+substituted for entries in <code>patternlist</code>
+with the value <code>DEFAULT_LIST</code>.  This
+makes it possible to augment the default list instead
+of replacing it.</p>
+
+</blockquote>
+</p>
+<p><code>options</code>
+<blockquote>
+<p>An optional parameter that is passed to the newly
+loaded module's <code>SetupProc</code> function
+(if it has one).  This argument is normally a
+<code>NULL</code> terminated list of
+<code>Options</code>, and must be interpreted that
+way by modules loaded directly by the XFree86 common
+layer.  However, it may be used for application-specific
+parameter passing in other situations.</p>
+<p>When loading ``external'' modules (modules that don't
+have the standard entry point, for example a
+special shared library) the options parameter can be
+set to <code>EXTERN_MODULE</code> to tell the
+loader not to reject the module when it doesn't find
+the standard entry point.</p>
+
+</blockquote>
+</p>
+<p><code>modreq</code>
+<blockquote>
+<p>An optional <code>XF86ModReqInfo*</code> containing
+version/ABI/vendor information specifying requirements to
+check the newly loaded module against.  The main
+purpose of this is to allow the loader to verify that
+a module of the correct type/version before running
+its <code>SetupProc</code> function.</p>
+<p>The <code>XF86ModReqInfo</code> struct is defined
+as follows:
+<pre>
+typedef struct {
+	CARD8        majorversion;  /* MAJOR_UNSPEC */
+	CARD8        minorversion;  /* MINOR_UNSPEC */
+	CARD16       patchlevel;    /* PATCH_UNSPEC */
+	const char * abiclass;      /* ABI_CLASS_NONE */
+	CARD32       abiversion;    /* ABI_VERS_UNSPEC */
+	const char * moduleclass;   /* MOD_CLASS_NONE */
+} XF86ModReqInfo;
+</pre>
+</p>
+<p>The information here is compared against the equivalent
+information in the module's
+<code>XF86ModuleVersionInfo</code> record (which
+is described below).  The values in comments above
+indicate ``don't care'' settings for each of the fields.
+The comparisons made are as follows:</p>
+<p><code>majorversion</code>
+<blockquote>
+<p>Must match the module's majorversion
+exactly.</p>
+
+</blockquote>
+
+<code>minorversion</code>
+<blockquote>
+<p>The module's minor version must be
+no less than this value.  This
+comparison is only made if
+<code>majorversion</code> is
+specified and matches.</p>
+
+</blockquote>
+
+<code>patchlevel</code>
+<blockquote>
+<p>The module's patchlevel must be no
+less than this value.  This comparison
+is only made if
+<code>minorversion</code> is
+specified and matches.</p>
+
+</blockquote>
+
+<code>abiclass</code>
+<blockquote>
+<p>String must match the module's abiclass
+string.</p>
+
+</blockquote>
+
+<code>abiversion</code>
+<blockquote>
+<p>Must be consistent with the module's
+abiversion (major equal, minor no
+older).</p>
+
+</blockquote>
+
+<code>moduleclass</code>
+<blockquote>
+<p>String must match the module's
+moduleclass string.</p>
+
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>errmaj</code>
+<blockquote>
+<p>An optional pointer to a variable holding the major
+part or the error code.  When provided,
+<code>*errmaj</code> is filled in when
+<code>LoadModule()</code> fails.</p>
+
+</blockquote>
+</p>
+<p><code>errmin</code>
+<blockquote>
+<p>Like <code>errmaj</code>, but for the minor part
+of the error code.</p>
+
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>void UnloadModule(pointer mod)</code>
+<blockquote>
+<p>This function unloads the module referred to by the handle mod.
+All child modules are also unloaded recursively.  This function must
+not be used to directly unload modules that are child modules (i.e.,
+those that have been loaded with the <code>LoadSubModule()</code>
+described below).</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="68"></A>17.3. Module Requirements </H3>
+
+<p>Modules must provide information about themselves to the loader, and
+may optionally provide entry points for "setup" and "teardown" functions
+(those two functions are referred to here as <code>SetupProc</code>
+and <code>TearDownProc</code>).</p>
+<p>The module information is contained in the
+<code>XF86ModuleVersionInfo</code> struct, which is defined as follows:</p>
+<p>
+<blockquote>
+<p>
+<pre>
+typedef struct {
+    const char * modname;      /* name of module, e.g. "foo" */
+    const char * vendor;       /* vendor specific string */
+    CARD32       _modinfo1_;   /* constant MODINFOSTRING1/2 to find */
+    CARD32       _modinfo2_;   /* infoarea with a binary editor/sign tool */
+    CARD32       xf86version;  /* contains XF86_VERSION_CURRENT */
+    CARD8        majorversion; /* module-specific major version */
+    CARD8        minorversion; /* module-specific minor version */
+    CARD16       patchlevel;   /* module-specific patch level */
+    const char * abiclass;     /* ABI class that the module uses */
+    CARD32       abiversion;   /* ABI version */
+    const char * moduleclass;  /* module class */
+    CARD32       checksum[4];  /* contains a digital signature of the */
+                               /* version info structure */
+} XF86ModuleVersionInfo;
+</pre>
+</p>
+<p>The fields are used as follows:</p>
+<p><code>modname</code>
+<blockquote>
+<p>The module's name.  This field is currently only for
+informational purposes, but the loader may be modified
+in future to require it to match the module's canonical
+name.</p>
+
+</blockquote>
+</p>
+<p><code>vendor</code>
+<blockquote>
+<p>The module vendor.  This field is for informational purposes
+only.</p>
+
+</blockquote>
+</p>
+<p><code>_modinfo1_</code>
+<blockquote>
+<p>This field holds the first part of a signature that can
+be used to locate this structure in the binary.  It should
+always be initialised to <code>MODINFOSTRING1</code>.</p>
+
+</blockquote>
+</p>
+<p><code>_modinfo2_</code>
+<blockquote>
+<p>This field holds the second part of a signature that can
+be used to locate this structure in the binary.  It should
+always be initialised to <code>MODINFOSTRING2</code>.</p>
+
+</blockquote>
+</p>
+<p><code>xf86version</code>
+<blockquote>
+<p>The XFree86 version against which the module was compiled.
+This is mostly for informational/diagnostic purposes.  It
+should be initialised to <code>XF86_VERSION_CURRENT</code>, which is
+defined in <code>xf86Version.h</code>.</p>
+
+</blockquote>
+</p>
+<p><code>majorversion</code>
+<blockquote>
+<p>The module-specific major version.  For modules where this
+version is used for more than simply informational
+purposes, the major version should only change (be
+incremented) when ABI incompatibilities are introduced,
+or ABI components are removed.</p>
+
+</blockquote>
+</p>
+<p><code>minorversion</code>
+<blockquote>
+<p>The module-specific minor version.  For modules where this
+version is used for more than simply informational
+purposes, the minor version should only change (be
+incremented) when ABI additions are made in a backward
+compatible way.  It should be reset to zero when the major
+version is increased.</p>
+
+</blockquote>
+</p>
+<p><code>patchlevel</code>
+<blockquote>
+<p>The module-specific patch level.  The patch level should
+increase with new revisions of the module where there
+are no ABI changes, and it should be reset to zero when
+the minor version is increased.</p>
+
+</blockquote>
+</p>
+<p><code>abiclass</code>
+<blockquote>
+<p>The ABI class that the module requires.  The class is
+specified as a string for easy extensibility.  It should
+indicate which (if any) of the X server's built-in ABI
+classes that the module relies on, or a third-party ABI
+if appropriate.  Built-in ABI classes currently defined are:</p>
+<p>
+<blockquote>
+<code>ABI_CLASS_NONE</code>
+<blockquote>
+no class
+</blockquote>
+
+<code>ABI_CLASS_ANSIC</code>
+<blockquote>
+only requires the ANSI C interfaces
+</blockquote>
+
+<code>ABI_CLASS_VIDEODRV</code>
+<blockquote>
+requires the video driver ABI
+</blockquote>
+
+<code>ABI_CLASS_XINPUT</code>
+<blockquote>
+requires the XInput driver ABI
+</blockquote>
+
+<code>ABI_CLASS_EXTENSION</code>
+<blockquote>
+requires the extension module ABI
+</blockquote>
+
+<code>ABI_CLASS_FONT</code>
+<blockquote>
+requires the font module ABI
+</blockquote>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>abiversion</code>
+<blockquote>
+<p>The version of abiclass that the module requires.  The
+version consists of major and minor components.  The
+major version must match and the minor version must be
+no newer than that provided by the server or parent
+module.  Version identifiers for the built-in classes
+currently defined are:</p>
+<p>
+<blockquote>
+<code>ABI_ANSIC_VERSION<br>
+ABI_VIDEODRV_VERSION<br>
+ABI_XINPUT_VERSION<br>
+ABI_EXTENSION_VERSION<br>
+ABI_FONT_VERSION</code>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>moduleclass</code>
+<blockquote>
+<p>This is similar to the abiclass field, except that it
+defines the type of module rather than the ABI it
+requires.  For example, although all video drivers require
+the video driver ABI, not all modules that require the
+video driver ABI are video drivers.  This distinction
+can be made with the moduleclass.  Currently pre-defined
+module classes are:</p>
+<p>
+<blockquote>
+<code>MOD_CLASS_NONE<br>
+MOD_CLASS_VIDEODRV<br>
+MOD_CLASS_XINPUT<br>
+MOD_CLASS_FONT<br>
+MOD_CLASS_EXTENSION</code>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>checksum</code>
+<blockquote>
+<p>Not currently used.</p>
+
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p>The module version information, and the optional <code>SetupProc</code>
+and <code>TearDownProc</code> entry points are found by the loader
+by locating a data object in the module called "modnameModuleData",
+where "modname" is the canonical name of the module.  Modules must
+contain such a data object, and it must be declared with global scope,
+be compile-time initialised, and is of the following type:</p>
+<p>
+<blockquote>
+<pre>
+typedef struct {
+    XF86ModuleVersionInfo *     vers;
+    ModuleSetupProc             setup;
+    ModuleTearDownProc          teardown;
+} XF86ModuleData;
+</pre>
+</blockquote>
+</p>
+<p>The vers parameter must be initialised to a pointer to a correctly
+initialised <code>XF86ModuleVersionInfo</code> struct.  The other
+two parameters are optional, and should be initialised to
+<code>NULL</code> when not required.  The other parameters are defined
+as</p>
+<p>
+<blockquote>
+<p><code>typedef pointer (*ModuleSetupProc)(pointer, pointer, int *, int *)</code></p>
+<p><code>typedef void (*ModuleTearDownProc)(pointer)</code></p>
+
+<p><code>pointer SetupProc(pointer module, pointer options,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *errmaj, int *errmin)</code>
+<blockquote>
+<p>When defined, this function is called by the loader after successfully
+loading a module.  module is a handle for the newly loaded module,
+and maybe used by the <code>SetupProc</code> if it calls other
+loader functions that require a reference to it.   The remaining
+arguments are those that were passed to the
+<code>LoadModule()</code> (or <code>LoadSubModule()</code>),
+and are described above. When the <code>SetupProc</code> is
+successful it must return a non-<code>NULL</code> value.  The
+loader checks this, and if it is <code>NULL</code> it unloads
+the module and reports the failure to the caller of
+<code>LoadModule()</code>.  If the <code>SetupProc</code>
+does things that need to be undone when the module is unloaded,
+it should define a <code>TearDownProc</code>, and return a
+pointer that the <code>TearDownProc</code> can use to undo what
+has been done.</p>
+<p>When a module is loaded multiple times, the <code>SetupProc</code>
+is called once for each time it is loaded.</p>
+
+</blockquote>
+</p>
+<p><code>void TearDownProc(pointer tearDownData)</code>
+<blockquote>
+<p>When defined, this function is called when the loader unloads a
+module.  The <code>tearDownData</code> parameter is the return
+value of the <code>SetupProc()</code> that was called when the
+module was loaded.  The purpose of this function is to clean up
+before the module is unloaded (for example, by freeing allocated
+resources).</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="69"></A>17.4. Public Loader Interface </H3>
+
+<p>The following is the Loader interface that is available to any part of
+the server, and may also be used from within modules.</p>
+
+<p>Some of these have <code>xf86*</code> wrappers with simpler interfaces
+declared in <code>"xf86.h"</code>.
+These wrappers are the preferred interface for modules, given that they are also
+available in a statically built server, whereas the functions below are not.</p>
+<p>
+<blockquote>
+<p><code>pointer LoadSubModule(pointer parent, const char *module,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const char **subdirlist, const char **patternlist,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pointer options, const XF86ModReqInfo * modreq,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int *errmaj, int *errmin)</code>
+<blockquote>
+<p>This function is like the <code>LoadModule()</code> function
+described above, except that the module loaded is registered as a
+child of the calling module.  The <code>parent</code> parameter
+is the calling module's handle.  Modules loaded with this function
+are automatically unloaded when the parent module is unloaded.  The
+other difference is that the path parameter may not be specified.
+The module search path used for modules loaded with this function
+is the default search path as initialised with
+<code>LoaderSetPath()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>void UnloadSubModule(pointer module)</code>
+<blockquote>
+<p>This function unloads the module with handle <code>module</code>.
+If that module itself has children, they are also unloaded.  It is
+like <code>UnloadModule()</code>, except that it is safe to use
+for unloading child modules.</p>
+
+</blockquote>
+</p>
+<p><code>pointer LoaderSymbol(const char *symbol)</code>
+<blockquote>
+<p>This function returns the address of the symbol with name
+<code>symbol</code>.  This may be used to locate a module entry
+point with a known name.</p>
+
+</blockquote>
+</p>
+<p><code>char **LoaderlistDirs(const char **subdirlist,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const char **patternlist)</code>
+<blockquote>
+<p>This function returns a <code>NULL</code> terminated list of
+canonical modules names for modules found in the default module
+search path.  The <code>subdirlist</code> and
+<code>patternlist</code> parameters are as described above, and
+can be used to control the locations and names that are searched.
+If no modules are found, the return value is <code>NULL</code>.
+The returned list should be freed by calling
+<code>LoaderFreeDirList()</code> when it is no longer needed.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderFreeDirList(char **list)</code>
+<blockquote>
+<p>This function frees a module list created by
+<code>LoaderlistDirs()</code>.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderReqSymLists(const char **list0, ...)</code>
+<blockquote>
+<p>This function allows the registration of required symbols with the
+loader.  It is normally used by a caller of
+<code>LoadSubModule()</code>.  If any symbols registered in this
+way are found to be unresolved when
+<code>LoaderCheckUnresolved()</code> is called then
+<code>LoaderCheckUnresolved()</code> will report a failure.
+The function takes one or more <code>NULL</code> terminated
+lists of symbols.  The end of the argument list is indicated by a
+<code>NULL</code> argument.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderReqSymbols(const char *sym0, ...)</code>
+<blockquote>
+<p>This function is like <code>LoaderReqSymLists()</code> except
+that its arguments are symbols rather than lists of symbols.  This
+function is more convenient when single functions are to be registered,
+especially when the single function might depend on runtime factors.
+The end of the argument list is indicated by a <code>NULL</code>
+argument.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderRefSymLists(const char **list0, ...)</code>
+<blockquote>
+<p>This function allows the registration of possibly unresolved symbols
+with the loader.  When <code>LoaderCheckUnresolved()</code> is
+run it won't generate warnings for symbols registered in this way
+unless they were also registered as required symbols.
+The function takes one or more <code>NULL</code> terminated
+lists of symbols.  The end of the argument list is indicated by a
+<code>NULL</code> argument.</p>
+
+</blockquote>
+</p>
+<p><code>void LoaderRefSymbols(const char *sym0, ...)</code>
+<blockquote>
+<p>This function is like <code>LoaderRefSymLists()</code> except
+that its arguments are symbols rather than lists of symbols.  This
+function is more convenient when single functions are to be registered,
+especially when the single function might depend on runtime factors.
+The end of the argument list is indicated by a <code>NULL</code>
+argument.</p>
+
+</blockquote>
+</p>
+<p><code>int LoaderCheckUnresolved(int dummy)</code>
+<blockquote>
+<p>This function checks for unresolved symbols.  It generates warnings
+for unresolved symbols that have not been registered with
+<code>LoaderRefSymLists()</code>.  All such symbols are automatically
+mapped to a dummy function.  If unresolved
+symbols are found that have been registered with
+<code>LoaderReqSymLists()</code> or
+<code>LoaderReqSymbols()</code> then this function returns a
+non-zero value.  If none of these symbols are unresolved the return
+value is zero, indicating success.</p>
+<p>The <code>dummy</code> parameter is not used, and should be set to
+<code>0</code>.  It is kept only for compatibility purposes.</p>
+
+</blockquote>
+</p>
+<p><code>LoaderErrorMsg(const char *name, const char *modname,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int errmaj, int errmin)</code>
+<blockquote>
+<p>This function prints an error message that includes the text ``Failed
+to load module'', the module name <code>modname</code>, a message
+specific to the <code>errmaj</code> value, and the value if
+<code>errmin</code>.  If <code>name</code> is
+non-<code>NULL</code>, it is printed as an identifying prefix
+to the message (followed by a `:').</p>
+
+</blockquote>
+</p>
+<p><code>LoaderSetParentModuleRequirements(pointer module,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pointer req);</code>
+<blockquote>
+<p>This function is intended to be called from a module's
+<code>Setup</code> function.  It associates an
+<code>XF86ModReqInfo</code> structure occurrence (addressed by
+<code>req</code>) with the module being loaded (specified by
+<code>module</code>).  This structure occurrence will then be used to
+check this module's parent modules against.  This mechanism allows a module
+to ensure its callers are compatible.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+<H3><A NAME="70"></A>17.5. Special Registration Functions </H3>
+
+<p>The loader contains some functions for registering some classes of modules.
+These may be moved out of the loader at some point.</p>
+<p>
+<blockquote>
+<p><code>void LoadExtension(ExtensionModule *ext)</code>
+<blockquote>
+<p>This registers the entry points for the extension identified by
+<code>ext</code>.  The <code>ExtensionModule</code> struct is
+defined as:</p>
+<p>
+<blockquote>
+<pre>
+typedef struct {
+    InitExtension       initFunc;
+    char *              name;
+    Bool                *disablePtr;
+    InitExtension       setupFunc;
+} ExtensionModule;
+</pre>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+<p><code>void LoadFont(FontModule *font)</code>
+<blockquote>
+<p>This registers the entry points for the font rasteriser module
+identified by <code>font</code>.  The <code>FontModule</code>
+struct is defined as:</p>
+<p>
+<blockquote>
+<pre>
+typedef struct {
+    InitFont    initFunc;
+    char *      name;
+    pointer     module;
+} FontModule;
+</pre>
+</blockquote>
+</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>The Loader </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN16.html"><EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN18.html"><EM>Helper Functions </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728766" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

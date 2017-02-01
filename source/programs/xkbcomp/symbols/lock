@@ -1,0 +1,17 @@
+// $XFree86: xc/programs/xkbcomp/symbols/lock,v 3.5 2006/01/09 15:01:26 dawes Exp $
+
+partial hidden modifier_keys
+xkb_symbols "shift" {
+    key <CAPS> {	[	Shift_Lock		]	};
+    modifier_map Shift { Shift_Lock };
+};
+partial hidden modifier_keys
+xkb_symbols "caps" {
+    key <CAPS> {	[	Caps_Lock		]	};
+    modifier_map Lock { Caps_Lock };
+};
+partial hidden modifier_keys
+xkb_symbols "group" {
+    key <CAPS> {	[	ISO_Next_Group		]	};
+};
+

@@ -1,0 +1,13 @@
+XCOMM $XFree86: xc/programs/xprop/Imakefile,v 1.7 2006/01/09 15:01:42 dawes Exp $
+
+        DEPLIBS = $(DEPXMUULIB) $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XMUULIB) $(XONLYLIB)
+           SRCS = xprop.c dsimple.c
+           OBJS = xprop.o dsimple.o
+
+        DEFINES = XawI18nDefines
+
+LinkSourceFile(dsimple.c,../xlsfonts)
+LinkSourceFile(dsimple.h,../xlsfonts)
+
+ComplexProgramTarget(xprop)

@@ -1,0 +1,653 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Mon Dec 29 01:17:00 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title></title>
+</head>
+<body>
+
+<a href="#1. Overview">1. Overview</a><br>
+<a href="#2. Requests">2. Requests</a><br>
+<a href="#3. Events and Errors">3. Events and Errors</a><br>
+<a href="#4. Encoding">4. Encoding</a><br>
+<a href="#5. C language binding">5. C language binding</a><br>
+<a href="#6. Acknowledgements">6. Acknowledgements</a><br>
+
+<hr>
+
+
+
+<p align=center style="margin-top: 1em" valign="top"><b>Big
+Requests Extension</b></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Version
+2.0 X Consortium Standard X Version 11, Release
+6.4</small></p>
+
+
+<p align=center style="margin-top: 1em" valign="top"><small>Bob
+Scheifler <br>
+X Consortium, Inc.</small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Copyright
+&copy; 1993, 1994 X Consortium</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Permission
+is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files
+(the &lsquo;&lsquo;Software&rsquo;&rsquo;), to deal in the
+Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>The
+above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the
+Software.</small></small></p>
+
+<p style="margin-top: 1em" valign="top"><small><small>THE
+SOFTWARE IS PROVIDED &lsquo;&lsquo;AS IS&rsquo;&rsquo;,
+WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</small></small></p>
+
+
+<p style="margin-top: 1em" valign="top"><small><small>Except
+as contained in this notice, the name of the X Consortium
+shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without prior
+written authorization from the X
+Consortium.</small></small></p>
+
+<a name="1. Overview"></a>
+<h2>1. Overview</h2>
+
+
+<p style="margin-top: 1em" valign="top">This extension
+enables the use of protocol requests that exceed 262140
+bytes in length.</p>
+
+<p style="margin-top: 1em" valign="top">The core protocol
+restricts the maximum length of a protocol request to 262140
+bytes, in that it uses a 16-bit length field specifying the
+number of 4-byte units in the request. This is a problem in
+the core protocol when joining large numbers of lines
+(<i>PolyLine</i>) or arcs (<i>PolyArc</i>), since these
+requests cannot be broken up into smaller requests without
+disturbing the rendering of the join points. It is also much
+more of a problem for certain protocol extensions that need
+to send long data lists in output commands.</p>
+
+<p style="margin-top: 1em" valign="top">This extension
+defines a mechanism for extending the length field beyond 16
+bits. If the normal 16-bit length field of the protocol
+request is zero, then an additional 32-bit field containing
+the actual length (in 4-byte units) is inserted into the
+request, immediately following the 16-bit length field.</p>
+
+<p style="margin-top: 1em" valign="top">For example, a
+normal <i>PolyLine</i> encoding is:</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>PolyLine</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">65</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">coordinate-mode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">Origin</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">Previous</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">3+n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">DRAWABLE</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">drawable</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">GCONTEXT</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">gc</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofPOINT</p></td>
+<td width="20%"></td>
+<td width="50%">
+
+
+<p valign="top">points</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">An extended-length
+<i>PolyLine</i> encoding is:</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>PolyLine</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">65</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">coordinate-mode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+
+
+<p valign="top">Origin</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+</td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">Previous</p></td>
+<td width="50%">
+</td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">extended length flag</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">4+n</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">DRAWABLE</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">drawable</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">GCONTEXT</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">gc</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4n</p></td>
+<td width="20%">
+
+
+<p valign="top">LISTofPOINT</p></td>
+<td width="20%"></td>
+<td width="50%">
+
+
+<p valign="top">points</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">Extended-length
+protocol encodings, once enabled, can be used on all
+protocol requests, including all extensions.</p>
+
+<a name="2. Requests"></a>
+<h2>2. Requests</h2>
+
+
+
+<p style="margin-top: 1em" valign="top"><i>BigReqEnable</i></p>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+
+<p style="margin-left:25%; margin-top: 1em"><i>maximum-request-length</i>:
+CARD32</p>
+
+<p style="margin-left:25%; margin-top: 1em">This request
+enables extended-length protocol requests for the requesting
+client. It also returns the maximum length of a request, in
+4-byte units, that can be used in extended-length protocol
+requests. This value will always be greater than the
+maximum-request-length returned in the connection setup
+information.</p>
+
+<a name="3. Events and Errors"></a>
+<h2>3. Events and Errors</h2>
+
+
+<p style="margin-top: 1em" valign="top">No new events or
+errors are defined by this extension.</p>
+
+<a name="4. Encoding"></a>
+<h2>4. Encoding</h2>
+
+
+<p style="margin-top: 1em" valign="top">Please refer to the
+X11 Protocol Encoding document as this document uses
+conventions established there.</p>
+
+<p style="margin-top: 1em" valign="top">The name of this
+extension is &lsquo;&lsquo;BIG-REQUESTS&rsquo;&rsquo;.</p>
+
+
+<p style="margin-top: 1em" valign="top"><i>BigReqEnable</i></p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD8</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">bigreq opcode</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">request length</p></td>
+</table>
+
+<p style="margin-top: 1em" valign="top">=&gt;</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">Reply</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">1</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">2</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD16</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">sequence number</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">0</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">4</p></td>
+<td width="20%">
+
+
+<p valign="top">CARD32</p></td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">maximum-request-length</p></td>
+<tr valign="top" align="left">
+<td width="4%"></td>
+<td width="6%">
+
+
+<p valign="top">20</p></td>
+<td width="20%">
+</td>
+<td width="20%">
+</td>
+<td width="50%">
+
+
+<p valign="top">unused</p></td>
+</table>
+
+<a name="5. C language binding"></a>
+<h2>5. C language binding</h2>
+
+
+<p style="margin-top: 1em" valign="top">It is desirable for
+core Xlib, and other extensions, to use this extension
+internally when necessary. It is also desirable to make the
+use of this extension as transparent as possible to the X
+client. For example, if enabling of the extension were
+delayed until the first time it was needed, an application
+that used <i>XNextRequest</i> to determine the sequence
+number of a request would no longer get the correct sequence
+number. As such, <i>XOpenDisplay</i> will determine if the
+extension is supported by the server and, if it is, enable
+extended-length encodings.</p>
+
+<p style="margin-top: 1em" valign="top">The core Xlib
+functions <i>XDrawLines</i>, <i>XDrawArcs</i>,
+<i>XFillPolygon</i>, <i>XChangeProperty</i>,
+<i>XSetClipRectangles</i>, and <i>XSetRegion</i> are
+required to use extended-length encodings when necessary, if
+supported by the server. Use of extended-length encodings in
+other core Xlib functions (<i>XDrawPoints</i>,
+<i>XDrawRectangles</i>, <i>XDrawSegments</i>,
+<i>XFillArcs</i>, <i>XFillRectangles</i>, <i>XPutImage</i>)
+is permitted but not required; an Xlib implementation may
+choose to split the data across multiple smaller requests
+instead.</p>
+
+<p style="margin-top: 1em" valign="top">To permit clients
+to know what the maximum-request-length for extended-length
+encodings is, the following function is added to Xlib:</p>
+
+<p style="margin-top: 1em" valign="top">long <br>
+XExtendedMaxRequestSize (display)</p>
+
+<table width="100%" border=0 rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">Display</p></td>
+<td width="10%"></td>
+<td width="10%">
+
+
+<p valign="top">*display;</p></td>
+<td width="60%">
+</td>
+</table>
+
+<p style="margin-left:25%; margin-top: 1em">Returns zero
+(0) if the specified display does not support this
+extension, otherwise returns the maximum-request-length (in
+4-byte units) supported by the server through the
+extended-length encoding.</p>
+
+<a name="6. Acknowledgements"></a>
+<h2>6. Acknowledgements</h2>
+
+
+<p style="margin-top: 1em" valign="top">Clive Feather (IXI)
+originated the extended-length encoding used in this
+extension proposal.</p>
+ 
+<p style="margin-top: 1em" valign="top"><b>1</b></p>
+<hr>
+</body>
+</html>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481729470" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

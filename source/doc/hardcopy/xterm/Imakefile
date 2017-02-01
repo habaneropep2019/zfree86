@@ -1,0 +1,4 @@
+XCOMM $XFree86: xc/doc/hardcopy/xterm/Imakefile,v 1.1 2005/03/29 17:33:22 tsi Exp $
+
+InstallHardcopyDoc(ctlseqs,ctlseqs.PS.gz)
+

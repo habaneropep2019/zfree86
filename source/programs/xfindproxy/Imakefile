@@ -1,0 +1,14 @@
+XCOMM $XFree86: xc/programs/xfindproxy/Imakefile,v 1.6 2006/01/09 15:01:09 dawes Exp $
+
+         DEPLIBS = $(DEPXTOOLLIB) $(DEPXONLYLIB)
+ LOCAL_LIBRARIES = $(XTOOLLIB) $(XONLYLIB)
+
+           SRCS1 = xfindproxy.c
+                   
+           OBJS1 = xfindproxy.o
+
+          PROGS1 = ProgramTargetName(xfindproxy)
+
+        PROGRAMS = $(PROGS1)
+
+ComplexProgramTarget_1(xfindproxy,$(LOCAL_LIBRARIES),NullParameter)

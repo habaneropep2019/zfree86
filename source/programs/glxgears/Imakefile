@@ -1,0 +1,8 @@
+XCOMM $XFree86: xc/programs/glxgears/Imakefile,v 1.3 2006/07/23 20:21:12 tsi Exp $
+
+#include <Threads.tmpl>
+        DEPLIBS = $(DEPGLXLIB) $(DEPXXF86VMLIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(GLXLIB) $(XXF86VMLIB) $(XLIB) 
+  SYS_LIBRARIES = MathLibrary
+
+SimpleProgramTarget(glxgears)

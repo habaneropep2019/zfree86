@@ -1,0 +1,6 @@
+XCOMM $XFree86: xc/doc/specs/xterm/Imakefile,v 1.6 2006/01/09 14:56:38 dawes Exp $
+
+MakeTblDoc(ctlseqs,ctlseqs.ms)
+
+InstallRoffDoc(ctlseqs)
+

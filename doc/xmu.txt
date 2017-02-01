@@ -1,0 +1,2706 @@
+
+
+
+
+
+
+			1mXmu Library0m
+		 X Version 11, Release 6.4
+
+		       ``4mDon't24m 4mask.24m''
+
+
+
+Copyright © 1989 X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+4mX24m 4mWindow24m 4mSystem24m is a trademark of X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     -2-
+
+
+1m1.  Introduction0m
+
+The Xmu Library is a collection of miscellaneous (some might
+say random) utility functions that have been useful in
+building various applications and widgets.  This library is
+required by the Athena Widgets.
+
+
+1m2.  Atom Functions0m
+
+The use the functions and macros defined in this section,
+you should include the header file <4mX11/Xmu/Atoms.h24m>.
+
+
+XA_ATOM_PAIR(4md24m)
+XA_CHARACTER_POSITION(4md24m)
+XA_CLASS(4md24m)
+XA_CLIENT_WINDOW(4md24m)
+XA_CLIPBOARD(4md24m)
+XA_COMPOUND_TEXT(4md24m)
+XA_DECNET_ADDRESS(4md24m)
+XA_DELETE(4md24m)
+XA_FILENAME(4md24m)
+XA_HOSTNAME(4md24m)
+XA_IP_ADDRESS(4md24m)
+XA_LENGTH(4md24m)
+XA_LIST_LENGTH(4md24m)
+XA_NAME(4md24m)
+XA_NET_ADDRESS(4md24m)
+XA_NULL(4md24m)
+XA_OWNER_OS(4md24m)
+XA_SPAN(4md24m)
+XA_TARGETS(4md24m)
+XA_TEXT(4md24m)
+XA_TIMESTAMP(4md24m)
+XA_USER(4md24m)
+XA_UTF8_STRING(4md24m)
+
+
+These macros take a display as argument and return an 4mAtom24m.
+The name of the atom is obtained from the macro name by
+removing the leading characters ``XA_''.  The 4mAtom24m value is
+cached, such that subsequent requests do not cause another
+round-trip to the server.
+
+
+AtomPtr XmuMakeAtom(4mname24m)
+      char* 4mname24m;
+
+
+4mname24m      specifies the atom name
+
+This function creates and initializes an opaque object, an
+4mAtomPtr24m, for an 4mAtom24m with the given name.  4mXmuInternAtom24m can
+
+
+
+
+
+
+
+
+
+			     -3-
+
+
+be used to cache the Atom value for one or more displays.
+
+
+char *XmuNameOfAtom(4matom_ptr24m)
+      AtomPtr 4matom_ptr24m;
+
+
+4matom_ptr24m  specifies the AtomPtr
+
+The function returns the name of an AtomPtr.
+
+
+Atom XmuInternAtom(4md24m, 4matom_ptr24m)
+      Display *4md24m;
+      AtomPtr 4matom_ptr24m;
+
+
+4md24m	       specifies the connection to the X server
+
+4matom_ptr24m  specifies the AtomPtr
+
+This function returns the 4mAtom24m for an 4mAtomPtr24m.  The 4mAtom24m is
+cached, such that subsequent requests do not cause another
+round-trip to the server.
+
+
+char *XmuGetAtomName(4md24m, 4matom24m)
+      Display *4md24m;
+      Atom 4matom24m;
+
+
+4md24m	       specifies the connection to the X server
+
+4matom24m      specifies the atom whose name is desired
+
+This function returns the name of an 4mAtom24m.	 The result is
+cached, such that subsequent requests do not cause another
+round-trip to the server.
+
+
+void XmuInternStrings(4md24m, 4mnames24m, 4mcount24m, 4matoms24m)
+      Display *4md24m;
+      String *4mnames24m;
+      Cardinal 4mcount24m;
+      Atom *4matoms24m;
+
+
+4md24m	       specifies the connection to the X server
+
+4mnames24m     specifies the strings to intern
+
+4mcount24m     specifies the number of strings
+
+
+
+
+
+
+
+
+
+
+
+			     -4-
+
+
+4matoms24m     returns the list of Atom values
+
+This function converts a list of atom names into 4mAtom24m val-
+ues.  The results are cached, such that subsequent requests
+do not cause further round-trips to the server.	 The caller
+is responsible for preallocating the array pointed at by
+atoms.
+
+
+1m3.  Error Handler Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/Error.h24m>.
+
+
+int XmuPrintDefaultErrorMessage(4mdpy24m, 4mevent24m, 4mfp24m)
+      Display *4mdpy24m;
+      XErrorEvent *4mevent24m;
+      FILE *4mfp24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mevent24m     specifies the error
+
+4mfp24m	       specifies where to print the error message
+
+This function prints an error message, equivalent to Xlib's
+default error message for protocol errors.  It returns a
+non-zero value if the caller should consider exiting, other-
+wise it returns 0.  This function can be used when you need
+to write your own error handler, but need to print out an
+error from within that handler.
+
+
+int XmuSimpleErrorHandler(4mdpy24m, 4merrorp24m)
+      Display *4mdpy24m;
+      XErrorEvent *4merrorp24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4merrorp24m    specifies the error
+
+This function ignores errors for 4mBadWindow24m errors for
+4mXQueryTree24m and 4mXGetWindowAttributes24m, and ignores 4mBadDrawable0m
+errors for 4mXGetGeometry24m; it returns 0 in those cases.  Oth-
+erwise, it prints the default error message, and returns a
+non-zero value if the caller should consider exiting, and 0
+if the caller should not exit.
+
+
+
+
+
+
+
+
+
+
+
+
+
+			     -5-
+
+
+1m4.  System Utility Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/SysUtil.h24m>.
+
+
+int XmuGetHostname(4mbuf24m, 4mmaxlen24m)
+      char *4mbuf24m;
+      int 4mmaxlen24m;
+
+
+4mbuf24m       returns the host name
+
+4mmaxlen24m    specifies the length of buf
+
+This function stores the null terminated name of the local
+host in buf, and returns length of the name.  This function
+hides operating system differences, such as whether to call
+gethostname or uname.
+
+
+1m5.  Window Utility Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/WinUtil.h24m>.
+
+
+Screen *XmuScreenOfWindow(4mdpy24m, 4mw24m)
+      Display *4mdpy24m;
+      Window 4mw24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mw24m	       specifies the window
+
+This function returns the 4mScreen24m on which the specified win-
+dow was created.
+
+
+Window XmuClientWindow(4mdpy24m, 4mwin24m)
+      Display *4mdpy24m;
+      Window 4mwin24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mwin24m       specifies the window
+
+This function finds a window, at or below the specified win-
+dow, which has a WM_STATE property.  If such a window is
+found, it is returned, otherwise the argument window is
+returned.
+
+
+
+
+
+
+
+
+
+
+			     -6-
+
+
+Bool XmuUpdateMapHints(4mdpy24m, 4mw24m, 4mhints24m)
+      Display *4mdpy24m;
+      Window 4mw24m;
+      XSizeHints *4mhints24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mwin24m       specifies the window
+
+4mhints24m     specifies the new hints, or NULL
+
+This function clears the 4mPPosition24m and 4mPSize24m flags and sets
+the 4mUSPosition24m and 4mUSSize24m flags in the hints structure, and
+then stores the hints for the window using 4mXSetWMNormalHints0m
+and returns 4mTrue24m.	If NULL is passed for the hints struc-
+ture, then the current hints are read back from the window
+using 4mXGetWMNormalHints24m and are used instead, and 4mTrue24m is
+returned; otherwise 4mFalse24m is returned.
+
+
+1m6.  Cursor Utility Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/CurUtil.h24m>.
+
+
+int XmuCursorNameToIndex(4mname24m)
+      char *4mname24m;
+
+
+4mname24m      specifies the name of the cursor
+
+This function takes the name of a standard cursor and
+returns its index in the standard cursor font.	The cursor
+names are formed by removing the ``XC_'' prefix from the
+cursor defines listed in Appendix B of the Xlib manual.
+
+
+1m7.  Graphics Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/Drawing.h24m>.
+
+
+void XmuDrawRoundedRectangle(4mdpy24m, 4mdraw24m, 4mgc24m, 4mx24m, 4my24m, 4mw24m, 4mh24m, 4mew24m, 4meh24m)
+      Display *4mdpy24m;
+      Drawable 4mdraw24m;
+      GC 4mgc24m;
+      int 4mx24m, 4my24m, 4mw24m, 4mh24m, 4mew24m, 4meh24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+
+
+
+
+
+
+
+
+
+			     -7-
+
+
+4mdraw24m      specifies the drawable
+
+4mgc24m	       specifies the GC
+
+4mx24m	       specifies the upper left x coordinate
+
+4my24m	       specifies the upper left y coordinate
+
+4mw24m	       specifies the rectangle width
+
+4mh24m	       specifies the rectangle height
+
+4mew24m	       specifies the corner width
+
+4meh24m	       specifies the corner height
+
+This function draws a rounded rectangle, where x, y, w, h
+are the dimensions of the overall rectangle, and ew and eh
+are the sizes of a bounding box that the corners are drawn
+inside of; ew should be no more than half of w, and eh
+should be no more than half of h.  The current GC line
+attributes control all attributes of the line.
+
+
+void XmuFillRoundedRectangle(4mdpy24m, 4mdraw24m, 4mgc24m, 4mx24m, 4my24m, 4mw24m, 4mh24m, 4mew24m, 4meh24m)
+      Display *4mdpy24m;
+      Drawable 4mdraw24m;
+      GC 4mgc24m;
+      int 4mx24m, 4my24m, 4mw24m, 4mh24m, 4mew24m, 4meh24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mdraw24m      specifies the drawable
+
+4mgc24m	       specifies the GC
+
+4mx24m	       specifies the upper left x coordinate
+
+4my24m	       specifies the upper left y coordinate
+
+4mw24m	       specifies the rectangle width
+
+4mh24m	       specifies the rectangle height
+
+4mew24m	       specifies the corner width
+
+4meh24m	       specifies the corner height
+
+This function draws a filled rounded rectangle, where x, y,
+w, h are the dimensions of the overall rectangle, and ew and
+eh are the sizes of a bounding box that the corners are
+drawn inside of; ew should be no more than half of w, and eh
+should be no more than half of h.  The current GC fill
+
+
+
+
+
+
+
+
+
+			     -8-
+
+
+settings control all attributes of the fill contents.
+
+
+XmuDrawLogo(4mdpy24m, 4mdrawable24m, 4mgcFore24m, 4mgcBack24m, 4mx24m, 4my24m, 4mwidth24m, 4mheight24m)
+      Display *4mdpy24m;
+      Drawable 4mdrawable24m;
+      GC 4mgcFore24m, 4mgcBack24m;
+      int 4mx24m, 4my24m;
+      unsigned int 4mwidth24m, 4mheight24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mdrawable24m  specifies the drawable
+
+4mgcFore24m    specifies the foreground GC
+
+4mgcBack24m    specifies the background GC
+
+4mx24m	       specifies the upper left x coordinate
+
+4my24m	       specifies the upper left y coordinate
+
+4mwidth24m     specifies the logo width
+
+4mheight24m    specifies the logo height
+
+This function draws the ``official'' X Window System logo.
+The bounding box of the logo in the drawable is given by x,
+y, width, and height.  The logo itself is filled using
+gcFore, and the rest of the rectangle is filled using
+gcBack.
+
+
+Pixmap XmuCreateStippledPixmap(4mscreen24m, 4mfore24m, 4mback24m, 4mdepth24m)
+      Screen *4mscreen24m;
+      Pixel 4mfore24m, 4mback24m;
+      unsigned int 4mdepth24m;
+
+
+4mscreen24m    specifies the screen the pixmap is created on
+
+4mfore24m      specifies the foreground pixel value
+
+4mback24m      specifies the background pixel value
+
+4mdepth24m     specifies the depth of the pixmap
+
+This function creates a two pixel by one pixel stippled
+pixmap of specified depth on the specified screen.  The
+pixmap is cached so that multiple requests share the same
+pixmap.	 The pixmap should be freed with 4mXmuReleaseStippled-0m
+4mPixmap24m to maintain correct reference counts.
+
+
+
+
+
+
+
+
+
+
+			     -9-
+
+
+void XmuReleaseStippledPixmap(4mscreen24m, 4mpixmap24m)
+      Screen *4mscreen24m;
+      Pixmap 4mpixmap24m;
+
+
+4mscreen24m    specifies the screen the pixmap was created on
+
+4mpixmap24m    specifies the pixmap to free
+
+This function frees a pixmap created with 4mXmuCreateStippled-0m
+4mPixmap24m.
+
+
+int XmuReadBitmapData(4mfstream24m, 4mwidth24m, 4mheight24m, 4mdatap24m, 4mx_hot24m, 4my_hot24m)
+    FILE *4mfstream24m;
+    unsigned int *4mwidth24m, *4mheight24m;
+    unsigned char **4mdatap24m;
+    int *4mx_hot24m, *4my_hot24m;
+
+
+4mstream24m    specifies the stream to read from
+
+4mwidth24m     returns the width of the bitmap
+
+4mheight24m    returns the height of the bitmap
+
+4mdatap24m     returns the parsed bitmap data
+
+4mx_hot24m     returns the x coordinate of the hotspot
+
+4my_hot24m     returns the y coordinate of the hotspot
+
+This function reads a standard bitmap file description from
+the specified stream, and returns the parsed data in a for-
+mat suitable for passing to 4mXCreateBitmapFromData24m.	 The
+return value of the function has the same interpretation as
+the return value for 4mXReadBitmapFile24m.
+
+
+int XmuReadBitmapDataFromFile(4mfilename24m, 4mwidth24m, 4mheight24m, 4mdatap24m, 4mx_hot24m, 4my_hot24m)
+    char *4mfilename24m;
+    unsigned int *4mwidth24m, *4mheight24m;
+    unsigned char **4mdatap24m;
+    int *4mx_hot24m, *4my_hot24m;
+
+
+4mfilename24m  specifies the file to read from
+
+4mwidth24m     returns the width of the bitmap
+
+4mheight24m    returns the height of the bitmap
+
+4mdatap24m     returns the parsed bitmap data
+
+
+
+
+
+
+
+
+
+
+			    -10-
+
+
+4mx_hot24m     returns the x coordinate of the hotspot
+
+4my_hot24m     returns the y coordinate of the hotspot
+
+This function reads a standard bitmap file description from
+the specified file, and returns the parsed data in a format
+suitable for passing to 4mXCreateBitmapFromData24m.  The return
+value of the function has the same interpretation as the
+return value for 4mXReadBitmapFile24m.
+
+
+Pixmap XmuLocateBitmapFile(4mscreen24m, 4mname24m, 4msrcname24m, 4msrcnamelen24m, 4mwidthp24m, 4mheightp24m, 4mxhotp24m, 4myhotp24m)
+    Screen *4mscreen24m;
+    char *4mname24m;
+    char *4msrcname24m;
+    int 4msrcnamelen24m;
+    int *4mwidthp24m, *4mheightp24m, *4mxhotp24m, *4myhotp24m;
+
+
+4mscreen24m    specifies the screen the pixmap is created on
+
+4mname24m      specifies the file to read from
+
+4msrcname24m   returns the full filename of the bitmap
+
+4msrcnamelen0m
+	  specifies the length of the srcname buffer
+
+4mwidth24m     returns the width of the bitmap
+
+4mheight24m    returns the height of the bitmap
+
+4mxhotp24m     returns the x coordinate of the hotspot
+
+4myhotp24m     returns the y coordinate of the hotspot
+
+This function reads a file in standard bitmap file format,
+using 4mXReadBitmapFile24m, and returns the created bitmap.  The
+filename may be absolute, or relative to the global resource
+named bitmapFilePath with class BitmapFilePath.	 If the
+resource is not defined, the default value is the build sym-
+bol BITMAPDIR, which is typically "/usr/include/X11/bit-
+maps".	If srcnamelen is greater than zero and srcname is
+not NULL, the null terminated filename will be copied into
+srcname.  The size and hotspot of the bitmap are also
+returned.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			    -11-
+
+
+Pixmap XmuCreatePixmapFromBitmap(4mdpy24m, 4md24m, 4mbitmap24m, 4mwidth24m, 4mheight24m, 4mdepth24m, 4mfore24m, 4mback24m)
+    Display *4mdpy24m;
+    Drawable 4md24m;
+    Pixmap 4mbitmap24m;
+    unsigned int 4mwidth24m, 4mheight24m;
+    unsigned int 4mdepth24m;
+    unsigned long 4mfore24m, 4mback24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4md24m	       specifies the screen the pixmap is created on
+
+4mbitmap24m    specifies the bitmap source
+
+4mwidth24m     specifies the width of the pixmap
+
+4mheight24m    specifies the height of the pixmap
+
+4mdepth24m     specifies the depth of the pixmap
+
+4mfore24m      specifies the foreground pixel value
+
+4mback24m      specifies the background pixel value
+
+This function creates a pixmap of the specified width,
+height, and depth, on the same screen as the specified draw-
+able, and then performs an 4mXCopyPlane24m from the specified
+bitmap to the pixmap, using the specified foreground and
+background pixel values.  The created pixmap is returned.
+
+
+1m8.  Selection Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/StdSel.h24m>.
+
+
+Boolean XmuConvertStandardSelection(4mw24m, 4mtime24m, 4mselection24m, 4mtarget24m, 4mtype24m, 4mvalue24m, 4mlength24m, 4mformat24m)
+      Widget 4mw24m;
+      Time 4mtime24m;
+      Atom *4mselection24m, *4mtarget24m, *4mtype24m;
+      caddr_t *4mvalue24m;
+      unsigned long *4mlength24m;
+      int *4mformat24m;
+
+
+4mw24m	       specifies the widget which currently owns the
+	  selection
+
+4mtime24m      specifies the time at which the selection was
+	  established
+
+
+
+
+
+
+
+
+
+
+
+			    -12-
+
+
+4mselection24m this argument is ignored
+
+4mtarget24m    specifies the target type of the selection
+
+4mtype24m      returns the property type of the converted value
+
+4mvalue24m     returns the converted value
+
+4mlength24m    returns the number of elements in the converted
+	  value
+
+4mformat24m    returns the size in bits of the elements
+
+This function converts the following standard selections:
+CLASS, CLIENT_WINDOW, DECNET_ADDRESS, HOSTNAME, IP_ADDRESS,
+NAME, OWNER_OS, TARGETS, TIMESTAMP, and USER.  It returns
+4mTrue24m if the conversion was successful, else it returns
+4mFalse.0m
+
+
+1m9.  Type Converter Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/Converters.h24m>.
+
+
+void XmuCvtFunctionToCallback(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValue *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument is ignored
+
+4mfromVal24m   the function to convert
+
+4mtoVal24m     the place to store the converted value
+
+This function converts a callback procedure to a callback
+list containing that procedure, with NULL closure data.	 To
+use this converter, include the following in your widget's
+ClassInitialize procedure:
+
+XtAddConverter(XtRCallProc, XtRCallback, XmuCvtFunctionTo-
+Callback, NULL, 0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			    -13-
+
+
+void XmuCvtStringToBackingStore(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValue *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument must be a pointer to a Cardinal con-
+	  taining the value 0
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to a backing-store integer
+as defined in <4mX11/X.h24m>.  The string "notUseful" converts to
+4mNotUseful24m, "whenMapped" converts to 4mWhenMapped24m, and "always"
+converts to 4mAlways24m.  The string "default" converts to the
+value 4mAlways24m+ 4mWhenMapped24m+ 4mNotUseful24m.  The case of the string
+does not matter.  To use this converter, include the follow-
+ing in your widget's ClassInitialize procedure:
+
+XtAddConverter(XtRString, XtRBackingStore, XmuCvtStringTo-
+BackingStore, NULL, 0);
+
+
+void XmuCvtStringToBitmap(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr 4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      the sole argument specifies the Screen on which to
+	  create the bitmap
+
+4mnum_args24m  must be the value 1
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function creates a bitmap (a Pixmap of depth one) suit-
+able for window manager icons.	The string argument is the
+name of a file in standard bitmap file format.	For the pos-
+sible filename specifications, see 4mXmuLocateBitmapFile24m.  To
+use this converter, include the following in your widget's
+ClassInitialize procedure:
+
+static XtConvertArgRec screenConvertArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffset(Widget, core.screen),
+sizeof(Screen *)}
+
+
+
+
+
+
+
+
+
+			    -14-
+
+
+};
+
+XtAddConverter(XtRString, XtRBitmap, XmuCvtStringToBitmap,
+	   screenConvertArg, XtNumber(screenConvertArg));
+
+
+Boolean XmuCvtStringToColorCursor(4mdpy24m, 4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m, 4mdata24m)
+      Display * 4mdpy24m;
+      XrmValuePtr 4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+      XtPointer * 4mdata24m;
+
+
+4mdpy24m       specifies the display to use for conversion warn-
+	  ings
+
+4margs24m      specifies the required conversion arguments
+
+4mnum_args24m  specifies the number of required conversion argu-
+	  ments, which is 4
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+4mdata24m      this argument is ignored
+
+This function converts a string to a 4mCursor24m with the fore-
+ground and background pixels specified by the conversion
+arguments.  The string can either be a standard cursor name
+formed by removing the ``XC_'' prefix from any of the cursor
+defines listed in Appendix B of the Xlib Manual, a font name
+and glyph index in decimal of the form "FONT fontname index
+[[font] index]", or a bitmap filename acceptable to 4mXmuLo-0m
+4mcateBitmapFile24m.  To use this converter, include the follow-
+ing in the widget ClassInitialize procedure:
+
+static XtConvertArgRec colorCursorConvertArgs[] = {
+  {XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec,
+core.screen),
+   sizeof(Screen *)},
+  {XtResourceString, (XtPointer) XtNpointerColor,
+sizeof(Pixel)},
+  {XtResourceString, (XtPointer) XtNpointerColorBackground,
+sizeof(Pixel)},
+  {XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec,
+core.colormap),
+   sizeof(Colormap)}
+};
+
+XtSetTypeConverter(XtRString, XtRColorCursor, XmuCvtString-
+ToColorCursor,
+
+
+
+
+
+
+
+
+
+			    -15-
+
+
+	   colorCursorConvertArgs, XtNumber(colorCursorCon-
+vertArgs),
+		 XtCacheByDisplay, NULL); The widget must
+recognize XtNpointerColor and XtNpointerColorBackground as
+resources, or specify other appropriate foreground and back-
+ground resources.  The widget's Realize and SetValues meth-
+ods must cause the converter to be invoked with the appro-
+priate arguments when one of the foreground, background, or
+cursor resources has changed, or when the window is created,
+and must assign the cursor to the window of the widget.
+
+
+void XmuCvtStringToCursor(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr 4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      specifies the required conversion argument, the
+	  screen
+
+4mnum_args24m  specifies the number of required conversion argu-
+	  ments, which is 1
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to a 4mCursor24m.  The string can
+either be a standard cursor name formed by removing the
+``XC_'' prefix from any of the cursor defines listed in Ap-
+pendix B of the Xlib Manual, a font name and glyph index in
+decimal of the form "FONT fontname index [[font] index]", or
+a bitmap filename acceptable to 4mXmuLocateBitmapFile24m.  To use
+this converter, include the following in your widget's
+ClassInitialize procedure:
+
+static XtConvertArgRec screenConvertArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffsetOf(WidgetRec,
+core.screen), sizeof(Screen *)}
+};
+
+XtAddConverter(XtRString, XtRCursor, XmuCvtStringToCursor,
+	   screenConvertArg, XtNumber(screenConvertArg));
+
+
+void XmuCvtStringToGravity(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+     XrmValuePtr *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+
+
+
+
+
+
+
+
+
+			    -16-
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument must be a pointer to a Cardinal con-
+	  taining the value 0
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to an 4mXtGravity24m enumeration
+value.	The string "forget" and a NULL value convert to 4mFor-0m
+4mgetGravity24m, "NorthWestGravity" converts to 4mNorthWestGravity24m,
+the strings "NorthGravity" and "top" convert to 4mNorthGrav-0m
+4mity24m, "NorthEastGravity" converts to 4mNorthEastGravity24m, the
+strings "West" and "left" convert to 4mWestGravity24m, "Center-
+Gravity" converts to 4mCenterGravity24m, "EastGravity" and
+"right" convert to 4mEastGravity24m, "SouthWestGravity" converts
+to 4mSouthWestGravity24m, "SouthGravity" and "bottom" convert to
+4mSouthGravity24m, "SouthEastGravity" converts to 4mSouthEastGrav-0m
+4mity24m, "StaticGravity" converts to 4mStaticGravity24m, and "Unmap-
+Gravity" converts to 4mUnmapGravity24m.	 The case of the string
+does not matter.  To use this converter, include the follow-
+ing in your widget's class initialize procedure:
+
+XtAddConverter(XtRString, XtRGravity, XmuCvtStringToGravity,
+NULL, 0);
+
+
+void XmuCvtStringToJustify(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument is ignored
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to an 4mXtJustify24m enumeration
+value.	The string "left" converts to 4mXtJustifyLeft24m, "cen-
+ter" converts to 4mXtJustifyCenter24m, and "right" converts to
+4mXtJustifyRight24m.  The case of the string does not matter.  To
+use this converter, include the following in your widget's
+ClassInitialize procedure:
+
+XtAddConverter(XtRString, XtRJustify, XmuCvtStringToJustify,
+NULL, 0);
+
+
+
+
+
+
+
+
+
+
+
+			    -17-
+
+
+void XmuCvtStringToLong(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr 4margs24m;
+      Cardinal	  *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument must be a pointer to a Cardinal con-
+	  taining 0
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to an integer of type long.
+It parses the string using 4msscanf24m with a format of "%ld".
+To use this converter, include the following in your wid-
+get's ClassInitialize procedure:
+
+XtAddConverter(XtRString, XtRLong, XmuCvtStringToLong, NULL,
+0);
+
+
+void XmuCvtStringToOrientation(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument is ignored
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to an 4mXtOrientation24m enumera-
+tion value.  The string "horizontal" converts to 4mXtorientHo-0m
+4mrizontal24m and "vertical" converts to 4mXtorientVertical24m.	 The
+case of the string does not matter.  To use this converter,
+include the following in your widget's ClassInitialize pro-
+cedure:
+
+XtAddConverter(XtRString, XtROrientation, XmuCvtStringToOri-
+entation, NULL, 0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			    -18-
+
+
+Boolean XmuCvtStringToShapeStyle(4mdpy24m, 4margs24m, 4mnum_args24m, 4mfrom24m, 4mtoVal24m, data)
+      Display *4mdpy24m;
+      XrmValue *4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValue *4mfrom24m;
+      XrmValue *4mtoVal24m;
+      XtPointer *4mdata24m;
+
+
+4mdpy24m       the display to use for conversion warnings
+
+4margs24m      this argument is ignored
+
+4mnum_args24m  this argument is ignored
+
+4mfromVal24m   the value to convert from
+
+4mtoVal24m     the place to store the converted value
+
+4mdata24m      this argument is ignored
+
+This function converts a string to an integer shape style.
+The string "rectangle" converts to 4mXmuShapeRectangle24m, "oval"
+converts to 4mXmuShapeOval24m, "ellipse" converts to 4mXmuShapeEl-0m
+4mlipse24m, and "roundedRectangle" converts to 4mXmuShapeRounde-0m
+4mdRectangle24m.  The case of the string does not matter.  To use
+this converter, include the following in your widget's
+ClassInitialize procedure:
+
+XtSetTypeConverter(XtRString, XtRShapeStyle, XmuCvtString-
+ToShapeStyle,
+	       NULL, 0, XtCacheNone, NULL);
+
+
+Boolean XmuReshapeWidget(w, 4mshape_style24m, 4mcorner_width24m, 4mcorner_height24m)
+      Widget 4mw24m;
+      int 4mshape_style24m;
+      int 4mcorner_width24m, 4mcorner_height24m;
+
+
+4mw24m	       specifies the widget to reshape
+
+4mshape_style0m
+	  specifies the new shape
+
+4mcorner_width0m
+	  specifies the width of the rounded rectangle cor-
+	  ner
+
+4mcorner_height0m
+	  specified the height of the rounded rectangle cor-
+	  ner
+
+
+
+
+
+
+
+
+
+
+
+			    -19-
+
+
+This function reshapes the specified widget, using the Shape
+extension, to a rectangle, oval, ellipse, or rounded rectan-
+gle, as specified by shape_style ( 4mXmuShapeRectangle24m,
+4mXmuShapeOval24m, 4mXmuShapeEllipse24m, and 4mXmuShapeRoundedRectangle24m,
+respectively).	The shape is bounded by the outside edges of
+the rectangular extents of the widget.	If the shape is a
+rounded rectangle, corner_width and corner_height specify
+the size of the bounding box that the corners are drawn
+inside of (see 4mXmuFillRoundedRectangle24m); otherwise, cor-
+ner_width and corner_height are ignored.  The origin of the
+widget within its parent remains unchanged.
+
+
+void XmuCvtStringToWidget(4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m)
+      XrmValuePtr 4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValuePtr 4mfromVal24m;
+      XrmValuePtr 4mtoVal24m;
+
+
+4margs24m      this sole argument is the parent Widget
+
+4mnum_args24m  this argument must be 1
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+This function converts a string to an immediate child widget
+of the parent widget passed as an argument.  Note that this
+converter only works for child widgets that have already
+been created; there is no lazy evaluation.  The string is
+first compared against the names of the normal and popup
+children, and if a match is found the corresponding child is
+returned.  If no match is found, the string is compared
+against the classes of the normal and popup children, and if
+a match is found the corresponding child is returned.  The
+case of the string is significant.  To use this converter,
+include the following in your widget's ClassInitialize pro-
+cedure:
+
+static XtConvertArgRec parentCvtArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffset(Widget, core.parent),
+sizeof(Widget)},
+};
+
+XtAddConverter(XtRString, XtRWidget, XmuCvtStringToWidget,
+	   parentCvtArg, XtNumber(parentCvtArg));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			    -20-
+
+
+Boolean XmuNewCvtStringToWidget(4mdpy24m, 4margs24m, 4mnum_args24m, 4mfromVal24m, 4mtoVal24m, 4mdata24m)
+      Display *4mdpy24m;
+      XrmValue * 4margs24m;
+      Cardinal *4mnum_args24m;
+      XrmValue * 4mfromVal24m;
+      XrmValue * 4mtoVal24m;
+      XtPointer *4mdata24m;
+
+
+4mdpy24m       the display to use for conversion warnings
+
+4margs24m      this sole argument is the parent Widget
+
+4mnum_args24m  this argument must be a pointer to a Cardinal con-
+	  taining the value 1
+
+4mfromVal24m   specifies the string to convert
+
+4mtoVal24m     returns the converted value
+
+4mdata24m      this argument is ignored
+
+This converter is identical in functionality to XmuCvt-
+StringToWidget, except that it is a new-style converter,
+allowing the specification of a cache type at the time of
+registration.  Most widgets will not cache the conversion
+results, as the application may dynamically create and
+destroy widgets, which would cause cached values to become
+illegal.  To use this converter, include the following in
+the widget's class initialize procedure:
+
+static XtConvertArgRec parentCvtArg[] = {
+  {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec,
+core.parent),
+   sizeof(Widget)}
+};
+
+XtSetTypeConverter(XtRString, XtRWidget, XmuNewCvtString-
+ToWidget,
+	     parentCvtArg, XtNumber(parentCvtArg),
+XtCacheNone, NULL);
+
+
+1m10.  Character Set Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/CharSet.h24m>.
+
+The functions in this section are 1mdeprecated 22mbecause they
+don't work in most locales now supported by X11; the func-
+tion 4mXmbLookupString24m provides a better alternative.
+
+
+
+
+
+
+
+
+
+
+
+
+			    -21-
+
+
+void XmuCopyISOLatin1Lowered(4mdst24m, 4msrc24m)
+      char *4mdst24m, *4msrc24m;
+
+
+4mdst24m       returns the string copy
+
+4msrc24m       specifies the string to copy
+
+This function copies a null terminated string from src to
+dst (including the null), changing all Latin-1 uppercase
+letters to lowercase.  The string is assumed to be encoded
+using ISO 8859-1.
+
+
+void XmuCopyISOLatin1Uppered(4mdst24m, 4msrc24m)
+      char *4mdst24m, *4msrc24m;
+
+
+4mdst24m       returns the string copy
+
+4msrc24m       specifies the string to copy
+
+This function copies a null terminated string from src to
+dst (including the null), changing all Latin-1 lowercase
+letters to uppercase.  The string is assumed to be encoded
+using ISO 8859-1.
+
+
+int XmuCompareISOLatin1(4mfirst24m, 4msecond24m)
+      char *4mfirst24m, *4msecond24m;
+
+
+4mdst24m       specifies a string to compare
+
+4msrc24m       specifies a string to compare
+
+This function compares two null terminated Latin-1 strings,
+ignoring case differences, and returns an integer greater
+than, equal to, or less than 0, according to whether first
+is lexicographically greater than, equal to, or less than
+second.	 The two strings are assumed to be encoded using ISO
+8859-1.
+
+
+int XmuLookupLatin1(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+
+
+
+
+
+
+
+
+
+			    -22-
+
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is identical to 4mXLookupString24m, and exists only
+for naming symmetry with other functions.
+
+
+int XmuLookupLatin2(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to an Latin-2 (ISO 8859-2) string, or to an
+ASCII control string.
+
+
+int XmuLookupLatin3(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+
+
+
+
+
+
+
+
+
+
+			    -23-
+
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to an Latin-3 (ISO 8859-3) string, or to an
+ASCII control string.
+
+
+int XmuLookupLatin4(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to an Latin-4 (ISO 8859-4) string, or to an
+ASCII control string.
+
+
+int XmuLookupKana(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a string in an encoding consisting of
+Latin-1 (ISO 8859-1) and ASCII control in the Graphics Left
+half (values 0 to 127), and Katakana in the Graphics Right
+half (values 128 to 255), using the values from JIS
+X201-1976.
+
+
+
+
+
+
+
+
+
+
+
+			    -24-
+
+
+int XmuLookupJISX0201(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a string in the JIS X0201-1976 encoding,
+including ASCII control.
+
+
+int XmuLookupArabic(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a Latin/Arabic (ISO 8859-6) string, or
+to an ASCII control string.
+
+
+int XmuLookupCyrillic(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+
+
+
+
+
+
+
+
+
+			    -25-
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a Latin/Cyrillic (ISO 8859-5) string, or
+to an ASCII control string.
+
+
+int XmuLookupGreek(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a Latin/Greek (ISO 8859-7) string, or to
+an ASCII control string.
+
+
+int XmuLookupHebrew(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+
+
+
+
+
+
+
+
+
+			    -26-
+
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to a Latin/Hebrew (ISO 8859-8) string, or
+to an ASCII control string.
+
+
+int XmuLookupAPL(4mevent24m, 4mbuffer24m, 4mnbytes24m, 4mkeysym24m, 4mstatus24m)
+      XKeyEvent *4mevent24m;
+      char *4mbuffer24m;
+      int 4mnbytes24m;
+      KeySym *4mkeysym24m;
+      XComposeStatus *4mstatus24m;
+
+
+4mevent24m     specifies the key event
+
+4mbuffer24m    returns the translated characters
+
+4mnbytes24m    specifies the length of the buffer
+
+4mkeysym24m    returns the computed KeySym, or None
+
+4mstatus24m    specifies or returns the compose state
+
+This function is similar to 4mXLookupString24m, except that it
+maps a key event to an APL string.
+
+
+1m11.  Compound Text Functions0m
+
+The functions defined in this section are for parsing Com-
+pound Text strings, decomposing them into individual seg-
+ments. Definitions needed to use these routines are in the
+include file <4mX11/Xmu/Xct.h24m>.
+
+The functions in this section are 1mdeprecated 22mbecause they
+shift the burden for recently introduced locale encodings to
+the application. The use of the 4mUTF8_STRING24m text encoding
+provides a better alternative.
+
+A Compound Text string is represented as the following type:
+
+     typedef unsigned char *XctString;
+
+
+XctData XctCreate(4mstring24m, 4mlength24m, 4mflags24m)
+      XctString 4mstring24m;
+      int 4mlength24m;
+      XctFlags 4mflags24m;
+
+
+4mstring24m    the Compound Text string
+
+
+
+
+
+
+
+
+
+
+			    -27-
+
+
+4mlength24m    the number of bytes in string
+
+4mflags24m     parsing control flags
+
+This function creates an 4mXctData24m structure for parsing a
+Compound Text string.  The string need not be null termi-
+nated.	The following flags are defined to control parsing
+of the string:
+
+4mXctSingleSetSegments24m -- This means that returned segments
+should contain characters from only one set (C0, C1, GL,
+GR).  When this is requested, 4mXctSegment24m is never returned
+by 4mXctNextItem24m, instead 4mXctC0Segment24m, 4mXctC1Segment24m, 4mXct-0m
+4mGlSegment24m, and 4mXctGRSegment24m are returned.  C0 and C1 seg-
+ments are always returned as singleton characters.
+
+4mXctProvideExtensions24m -- This means that if the Compound Text
+string is from a higher version than this code is imple-
+mented to, then syntactically correct but unknown control
+sequences should be returned as 4mXctExtension24m items by 4mXct-0m
+4mNextItem24m.	If this flag is not set, and the Compound Text
+string version indicates that extensions cannot be ignored,
+then each unknown control sequence will be reported as an
+4mXctError24m.
+
+4mXctAcceptC0Extensions24m -- This means that if the Compound
+Text string is from a higher version than this code is
+implemented to, then unknown C0 characters should be treated
+as if they were legal, and returned as C0 characters
+(regardless of how 4mXctProvideExtensions24m is set) by 4mXctNex-0m
+4mtItem24m.  If this flag is not set, then all unknown C0 charac-
+ters are treated according to 4mXctProvideExtensions24m.
+
+4mXctAcceptC1Extensions24m -- This means that if the Compound
+Text string is from a higher version than this code is
+implemented to, then unknown C1 characters should be treated
+as if they were legal, and returned as C1 characters
+(regardless of how 4mXctProvideExtensions24m is set) by 4mXctNex-0m
+4mtItem24m.  If this flag is not set, then all unknown C1 charac-
+ters are treated according to 4mXctProvideExtensions24m.
+
+4mXctHideDirection24m -- This means that horizontal direction
+changes should be reported as 4mXctHorizontal24m items by 4mXctNex-0m
+4mtItem24m.  then direction changes are not returned as items,
+but the current direction is still maintained and reported
+for other items.  The current direction is given as an enu-
+meration, with the values 4mXctUnspecified24m, 4mXctLeftToRight24m,
+and 4mXctRightToLeft24m.
+
+4mXctFreeString24m -- This means that 4mXctFree24m should free the
+Compound Text string that is passed to 4mXctCreate24m.	If this
+flag is not set, the string is not freed.
+
+
+
+
+
+
+
+
+
+
+
+			    -28-
+
+
+4mXctShiftMultiGRToGL24m -- This means that 4mXctNextItem24m should
+translate GR segments on-the-fly into GL segments for the GR
+sets: GB2312.1980-1, JISX0208.1983-1, and KSC5601.1987-1.
+
+
+void XctReset(4mdata24m)
+      XctData 4mdata24m;
+
+
+4mdata24m      specifies the Compound Text structure
+
+This function resets the 4mXctData24m structure to reparse the
+Compound Text string from the beginning.
+
+
+XctResult XctNextItem(4mdata24m)
+      XctData 4mdata24m;
+
+
+4mdata24m      specifies the Compound Text structure
+
+This function parses the next ``item'' from the Compound
+Text string.  The return value indicates what kind of item
+is returned.  The item itself, it's length, and the current
+contextual state, are reported as components of the 4mXctData0m
+structure.  4mXctResult24m is an enumeration, with the following
+values:
+
+4mXctSegment24m -- the item contains some mixture of C0, GL, GR,
+and C1 characters.
+
+4mXctC0Segment24m -- the item contains only C0 characters.
+
+4mXctGLSegment24m -- the item contains only GL characters.
+
+4mXctC1Segment24m -- the item contains only C1 characters.
+
+4mXctGRSegment24m -- the item contains only GR characters.
+
+4mXctExtendedSegment24m -- the item contains an extended segment.
+
+4mXctExtension24m -- the item is an unknown extension control
+sequence.
+
+4mXctHorizontal24m -- the item indicates a change in horizontal
+direction or depth.  The new direction and depth are
+recorded in the 4mXctData24m structure.
+
+4mXctEndOfText24m -- The end of the Compound Text string has been
+reached.
+
+4mXctError24m -- the string contains a syntactic or semantic
+error; no further parsing should be performed.
+
+
+
+
+
+
+
+
+
+
+			    -29-
+
+
+The following state values are stored in the 4mXctData24m struc-
+ture:
+
+     XctString item;	      /* the action item */
+     int item_length;	      /* the length of item in bytes */
+     int char_size;	      /* the number of bytes per character in
+			       * item, with zero meaning variable */
+     char *encoding;	      /* the XLFD encoding name for item */
+     XctHDirection horizontal;/* the direction of item */
+     int horz_depth;	      /* the current direction nesting depth */
+     char *GL;		      /* the "{I} F" string for the current GL */
+     char *GL_encoding;	      /* the XLFD encoding name for the current GL */
+     int GL_set_size;	      /* 94 or 96 */
+     int GL_char_size;	      /* the number of bytes per GL character */
+     char *GR;		      /* the "{I} F" string for the current GR */
+     char *GR_encoding;	      /* the XLFD encoding name the for current GR */
+     int GR_set_size;	      /* 94 or 96 */
+     int GR_char_size;	      /* the number of bytes per GR character */
+     char *GLGR_encoding;     /* the XLFD encoding name for the current
+			       * GL+GR, if known */
+
+
+
+void XctFree(4mdata24m)
+      XctData 4mdata24m;
+
+
+4mdata24m      specifies the Compound Text structure
+
+This function frees all data associated with the 4mXctData0m
+structure.
+
+
+1m12.  CloseDisplay Hook Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/CloseHook.h24m>.
+
+
+CloseHook XmuAddCloseDisplayHook(4mdpy24m, 4mfunc24m, 4marg24m)
+      Display *4mdpy24m;
+      int (*4mfunc24m)();
+      caddr_t 4marg24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mfunc24m      specifies the function to call at display close
+
+4marg24m       specifies arbitrary data to pass to func
+
+This function adds a callback for the given display.  When
+the display is closed, the given function will be called
+with the given display and argument as:
+
+
+
+
+
+
+
+
+
+			    -30-
+
+
+     (*func)(dpy, arg)
+
+The function is declared to return an int even though the
+value is ignored, because some compilers have problems with
+functions returning void.
+
+This routine returns NULL if it was unable to add the call-
+back, otherwise it returns an opaque handle that can be used
+to remove or lookup the callback.
+
+
+Bool XmuRemoveCloseDisplayHook(4mdpy24m, 4mhandle24m, 4mfunc24m, 4marg24m)
+      Display *4mdpy24m;
+      CloseHook 4mhandle24m;
+      int (*4mfunc24m)();
+      caddr_t 4marg24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mhandle24m    specifies the callback by id, or NULL
+
+4mfunc24m      specifies the callback by function
+
+4marg24m       specifies the function data to match
+
+This function deletes a callback that has been added with
+4mXmuAddCloseDisplayHook24m.  If handle is not NULL, it specifies
+the callback to remove, and the func and arg parameters are
+ignored.  If handle is NULL, the first callback found to
+match the specified func and arg will be removed.  Returns
+4mTrue24m if a callback was removed, else returns 4mFalse24m.
+
+
+Bool XmuLookupCloseDisplayHook(4mdpy24m, 4mhandle24m, 4mfunc24m, 4marg24m)
+      Display *4mdpy24m;
+      CloseHook 4mhandle24m;
+      int (*4mfunc24m)();
+      caddr_t 4marg24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mhandle24m    specifies the callback by id, or NULL
+
+4mfunc24m      specifies the callback by function
+
+4marg24m       specifies the function data to match
+
+This function determines if a callback is installed.  If
+handle is not NULL, it specifies the callback to look for,
+and the func and arg parameters are ignored.  If handle is
+NULL, the function will look for any callback for the speci-
+fied func and arg.  Returns 4mTrue24m if a matching callback
+
+
+
+
+
+
+
+
+
+			    -31-
+
+
+exists, else returns 4mFalse24m.
+
+
+1m13.  Display Queue Functions0m
+
+To use the functions and types defined in this section, you
+should include the header file <4mX11/Xmu/DisplayQue.h24m>.  It
+defines the following types:
+
+
+typedef struct _XmuDisplayQueueEntry {
+     struct _XmuDisplayQueueEntry *prev, *next;
+     Display *display;
+     CloseHook closehook;
+     caddr_t data;
+} XmuDisplayQueueEntry;
+
+typedef struct _XmuDisplayQueue {
+     int nentries;
+     XmuDisplayQueueEntry *head, *tail;
+     int (*closefunc)();
+     int (*freefunc)();
+     caddr_t data;
+} XmuDisplayQueue;
+
+
+
+XmuDisplayQueue *XmuDQCreate(4mclosefunc24m, 4mfreefunc24m, 4mdata24m)
+      int (*4mclosefunc24m)();
+      int (*4mfreefunc24m)();
+      caddr_t 4mdata24m;
+
+
+4mclosefunc24m specifies the close function
+
+4mfreefunc24m  specifies the free function
+
+4mdata24m      specifies private data for the functions
+
+This function creates and returns an empty 4mXmuDisplayQueue0m
+(which is really just a set of displays, but is called a
+queue for historical reasons).	The queue is initially
+empty, but displays can be added using 4mXmuAddDisplay24m.  The
+data value is simply stored in the queue for use by the
+closefunc and freefunc callbacks.  Whenever a display in the
+queue is closed using 4mXCloseDisplay24m, the closefunc (if non-
+NULL) is called with the queue and the display's 4mXmuDis-0m
+4mplayQueueEntry24m as follows:
+
+     (*closefunc)(queue, entry)
+
+The freeproc (if non-NULL) is called whenever the last dis-
+play in the queue is closed, as follows:
+
+
+
+
+
+
+
+
+
+
+			    -32-
+
+
+     (*freefunc)(queue)
+
+The application is responsible for actually freeing the
+queue, by calling 4mXmuDQDestroy24m.
+
+
+XmuDisplayQueueEntry *XmuDQAddDisplay(4mq24m, 4mdpy24m, 4mdata24m)
+      XmuDisplayQueue *4mq24m;
+      Display *4mdpy24m;
+      caddr_t 4mdata24m;
+
+
+4mq24m	       specifies the queue
+
+4mdpy24m       specifies the display to add
+
+4mdata24m      specifies private data for the free function
+
+This function adds the specified display to the queue.	If
+successful, the queue entry is returned, otherwise NULL is
+returned.  The data value is simply stored in the queue
+entry for use by the queue's freefunc callback.	 This func-
+tion does not attempt to prevent duplicate entries in the
+queue; the caller should use 4mXmuDQLookupDisplay24m to determine
+if a display has already been added to a queue.
+
+
+XmuDisplayQueueEntry *XmuDQLookupDisplay(4mq24m, 4mdpy24m)
+      XmuDisplayQueue *4mq24m;
+      Display *4mdpy24m;
+
+
+4mq24m	       specifies the queue
+
+4mdpy24m       specifies the display to lookup
+
+This function returns the queue entry for the specified dis-
+play, or NULL if the display is not in the queue.
+
+
+XmuDQNDisplays(4mq24m)
+
+
+This macro returns the number of displays in the specified
+queue.
+
+
+Bool XmuDQRemoveDisplay(4mq24m, 4mdpy24m)
+      XmuDisplayQueue *4mq24m;
+      Display *4mdpy24m;
+
+
+4mq24m	       specifies the queue
+
+
+
+
+
+
+
+
+
+
+			    -33-
+
+
+4mdpy24m       specifies the display to remove
+
+This function removes the specified display from the speci-
+fied queue.  No callbacks are performed.  If the display is
+not found in the queue, 4mFalse24m is returned, otherwise 4mTrue24m is
+returned.
+
+
+Bool XmuDQDestroy(4mq24m, 4mdocallbacks24m)
+      XmuDisplayQueue *4mq24m;
+      Bool 4mdocallbacks24m;
+
+
+4mq24m	       specifies the queue to destroy
+
+4mdocallbacks0m
+	  specifies whether close functions should be called
+
+This function releases all memory associated with the speci-
+fied queue.  If docallbacks is 4mTrue24m, then the queue's close-
+func callback (if non-NULL) is first called for each display
+in the queue, even though 4mXCloseDisplay24m is not called on the
+display.
+
+
+1m14.  Toolkit Convenience Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/Initer.h24m>.
+
+
+void XmuAddInitializer(4mfunc24m, 4mdata24m)
+      void (*4mfunc24m)();
+      caddr_t 4mdata24m;
+
+
+4mfunc24m      specifies the procedure to register
+
+4mdata24m      specifies private data for the procedure
+
+This function registers a procedure, to be invoked the first
+time 4mXmuCallInitializers24m is called on a given application
+context.  The procedure is called with the application con-
+text and the specified data:
+
+     (*func)(app_con, data)
+
+
+void XmuCallInitializers(4mapp_con24m)
+      XtAppContext 4mapp_con24m;
+
+
+4mapp_con24m   specifies the application context to initialize
+
+
+
+
+
+
+
+
+
+
+			    -34-
+
+
+This function calls each of the procedures that have been
+registered with 4mXmuAddInitializer24m, if this is the first time
+the application context has been passed to 4mXmuCallInitializ-0m
+4mers24m.  Otherwise, this function does nothing.
+
+
+1m15.  Standard Colormap Functions0m
+
+To use the functions defined in this section, you should
+include the header file <4mX11/Xmu/StdCmap.h24m>.
+
+
+Status XmuAllStandardColormaps(4mdpy24m)
+      Display *4mdpy24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+To create all of the appropriate standard colormaps for
+every visual of every screen on a given display, use 4mXmuAll-0m
+4mStandardColormaps24m.
+
+This function defines and retains as permanent resources all
+standard colormaps which are meaningful for the visuals of
+each screen of the display.  It returns 0 on failure, non-
+zero on success.  If the property of any standard colormap
+is already defined, this function will redefine it.
+
+This function is intended to be used by window managers or a
+special client at the start of a session.
+
+The standard colormaps of a screen are defined by properties
+associated with the screen's root window.  The property
+names of standard colormaps are predefined, and each prop-
+erty name except RGB_DEFAULT_MAP may describe at most one
+colormap.
+
+The standard colormaps are: RGB_BEST_MAP, RGB_RED_MAP,
+RGB_GREEN_MAP, RGB_BLUE_MAP, RGB_DEFAULT_MAP, and
+RGB_GRAY_MAP.  Therefore a screen may have at most 6 stan-
+dard colormap properties defined.
+
+A standard colormap is associated with a particular visual
+of the screen.	A screen may have multiple visuals defined,
+including visuals of the same class at different depths.
+Note that a visual id might be repeated for more than one
+depth, so the visual id and the depth of a visual identify
+the visual.  The characteristics of the visual will deter-
+mine which standard colormaps are meaningful under that
+visual, and will determine how the standard colormap is
+defined.  Because a standard colormap is associated with a
+specific visual, there must be a method of determining which
+visuals take precedence in defining standard colormaps.
+
+
+
+
+
+
+
+
+
+
+			    -35-
+
+
+The method used here is: for the visual of greatest depth,
+define all standard colormaps meaningful to that visual
+class, according to this order of (descending) precedence:
+4mDirectColor24m; 4mPseudoColor24m; 4mTrueColor24m and 4mGrayScale24m; and
+finally 4mStaticColor24m and 4mStaticGray24m.
+
+This function allows success, on a per screen basis.  For
+example, if a map on screen 1 fails, the maps on screen 0,
+created earlier, will remain.  However, none on screen 1
+will remain.  If a map on screen 0 fails, none will remain.
+
+See 4mXmuVisualStandardColormaps24m for which standard colormaps
+are meaningful under these classes of visuals.
+
+
+Status XmuVisualStandardColormaps(4mdpy24m, 4mscreen24m, 4mvisualid24m, 4mdepth24m, 4mreplace24m, 4mretain24m)
+      Display *4mdpy24m;
+      int 4mscreen24m;
+      VisualID 4mvisualid24m;
+      unsigned int 4mdepth24m;
+      Bool 4mreplace24m;
+      Bool 4mretain24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mscreen24m    specifies the screen of the display
+
+4mvisualid24m  specifies the visual type
+
+4mdepth24m     specifies the visual depth
+
+4mreplace24m   specifies whether or not to replace
+
+4mretain24m    specifies whether or not to retain
+
+To create all of the appropriate standard colormaps for a
+given visual on a given screen, use 4mXmuVisualStandardCol-0m
+4mormaps24m.
+
+This function defines all appropriate standard colormap
+properties for the given visual.  If replace is 4mTrue24m, any
+previous definition will be removed.  If retain is 4mTrue24m, new
+properties will be retained for the duration of the server
+session.  This function returns 0 on failure, non-zero on
+success.  On failure, no new properties will be defined, but
+old ones may have been removed if replace was True.
+
+Not all standard colormaps are meaningful to all visual
+classes.  This routine will check and define the following
+properties for the following classes, provided that the size
+of the colormap is not too small.  For 4mDirectColor24m and 4mPseu-0m
+4mdoColor24m: RGB_DEFAULT_MAP, RGB_BEST_MAP, RGB_RED_MAP,
+RGB_GREEN_MAP, RGB_BLUE_MAP, and RGB_GRAY_MAP.	For
+
+
+
+
+
+
+
+
+
+			    -36-
+
+
+4mTrueColor24m and 4mStaticColor24m: RGB_BEST_MAP.  For 4mGrayScale24m and
+4mStaticGray24m: RGB_GRAY_MAP.
+
+
+Status XmuLookupStandardColormap(4mdpy24m, 4mscreen24m, 4mvisualid24m, 4mdepth24m, 4mproperty24m, 4mreplace24m, 4mretain24m)
+      Display *4mdpy24m;
+      int 4mscreen24m;
+      VisualID 4mvisualid24m;
+      unsigned int 4mdepth24m;
+      Atom 4mproperty24m;
+      Bool 4mreplace24m;
+      Bool 4mretain24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mscreen24m    specifies the screen of the display
+
+4mvisualid24m  specifies the visual type
+
+4mdepth24m     specifies the visual depth
+
+4mproperty24m  specifies the standard colormap property
+
+4mreplace24m   specifies whether or not to replace
+
+4mretain24m    specifies whether or not to retain
+
+To create a standard colormap if one does not currently
+exist, or replace the currently existing standard colormap,
+use 4mXmuLookupStandardColormap24m.
+
+Given a screen, a visual, and a property, this function will
+determine the best allocation for the property under the
+specified visual, and determine the whether to create a new
+colormap or to use the default colormap of the screen.
+
+If replace is True, any previous definition of the property
+will be replaced.  If retain is True, the property and the
+colormap will be made permanent for the duration of the
+server session.	 However, pre-existing property definitions
+which are not replaced cannot be made permanent by a call to
+this function; a request to retain resources pertains to
+newly created resources.
+
+This function returns 0 on failure, non-zero on success.  A
+request to create a standard colormap upon a visual which
+cannot support such a map is considered a failure.  An exam-
+ple of this would be requesting any standard colormap prop-
+erty on a monochrome visual, or, requesting an RGB_BEST_MAP
+on a display whose colormap size is 16.
+
+
+
+
+
+
+
+
+
+
+
+
+			    -37-
+
+
+Status XmuGetColormapAllocation(4mvinfo24m, 4mproperty24m, 4mred_max24m, 4mgreen_max24m, 4mblue_max24m)
+      XVisualInfo *4mvinfo24m;
+      Atom 4mproperty24m;
+      unsigned long *4mred_max24m, *4mgreen_max24m, *4mblue_max24m;
+
+
+4mvinfo24m     specifies visual information for a chosen visual
+
+4mproperty24m  specifies one of the standard colormap property
+	  names
+
+4mred_max24m   returns maximum red value
+
+4mgreen_max24m returns maximum green value
+
+4mblue_max24m  returns maximum blue value
+
+To determine the best allocation of reds, greens, and blues
+in a standard colormap, use 4mXmuGetColormapAllocation24m.
+
+4mXmuGetColormapAllocation24m returns 0 on failure, non-zero on
+success.  It is assumed that the visual is appropriate for
+the colormap property.
+
+
+XStandardColormap *XmuStandardColormap(4mdpy24m, 4mscreen24m, 4mvisualid24m, 4mdepth24m, 4mproperty24m,
+				       4mcmap24m, 4mred_max24m, 4mgreen_max24m, 4mblue_max24m)
+      Display 4mdpy24m;
+      int 4mscreen24m;
+      VisualID 4mvisualid24m;
+      unsigned int 4mdepth24m;
+      Atom 4mproperty24m;
+      Colormap 4mcmap24m;
+      unsigned long 4mred_max24m, 4mgreen_max24m, 4mblue_max24m;
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mscreen24m    specifies the screen of the display
+
+4mvisualid24m  specifies the visual type
+
+4mdepth24m     specifies the visual depth
+
+4mproperty24m  specifies the standard colormap property
+
+4mcmap24m      specifies the colormap ID, or None
+
+4mred_max24m   specifies the red allocation
+
+4mgreen_max24m specifies the green allocation
+
+4mblue_max24m  specifies the blue allocation
+
+
+
+
+
+
+
+
+
+
+			    -38-
+
+
+To create any one standard colormap, use 4mXmuStandardCol-0m
+4mormap24m.
+
+This function creates a standard colormap for the given
+screen, visualid, and visual depth, with the given red,
+green, and blue maximum values, with the given standard
+property name.	Upon success, it returns a pointer to an
+4mXStandardColormap24m structure which describes the newly cre-
+ated colormap.	Upon failure, it returns NULL.	If cmap is
+the default colormap of the screen, the standard colormap
+will be defined on the default colormap; otherwise a new
+colormap is created.
+
+Resources created by this function are not made permanent;
+that is the caller's responsibility.
+
+
+Status XmuCreateColormap(4mdpy24m, 4mcolormap24m)
+      Display *4mdpy24m;
+      XStandardColormap *4mcolormap24m;
+
+
+4mdpy24m       specifies the connection under which the map is
+	  created
+
+4mcolormap24m  specifies the map to be created
+
+To create any one colormap which is described by an 4mXStan-0m
+4mdardColormap24m structure, use 4mXmuCreateColormap24m.
+
+This function returns 0 on failure, and non-zero on success.
+The base_pixel of the colormap is set on success.  Resources
+created by this function are not made permanent.  No argu-
+ment error checking is provided; use at your own risk.
+
+All colormaps are created with read-only allocations, with
+the exception of read-only allocations of colors which fail
+to return the expected pixel value, and these are individu-
+ally defined as read/write allocations.	 This is done so
+that all the cells defined in the colormap are contiguous,
+for use in image processing.  This typically happens with
+White and Black in the default map.
+
+Colormaps of static visuals are considered to be success-
+fully created if the map of the static visual matches the
+definition given in the standard colormap structure.
+
+
+void XmuDeleteStandardColormap(4mdpy24m, 4mscreen24m, 4mproperty24m)
+      Display *4mdpy24m;
+      int 4mscreen24m;
+      Atom 4mproperty24m;
+
+
+
+
+
+
+
+
+
+
+
+			    -39-
+
+
+4mdpy24m       specifies the connection to the X server
+
+4mscreen24m    specifies the screen of the display
+
+4mproperty24m  specifies the standard colormap property
+
+To remove any standard colormap property, use 4mXmuDeleteS-0m
+4mtandardColormap24m.  This function will remove the specified
+property from the specified screen, releasing any resources
+used by the colormap(s) of the property, if possible.
+
+
+1m16.  Widget Description Functions0m
+
+The functions defined in this section are for building a
+description of the structure of and resources associated
+with a hierarchy of widget classes.  This package is typi-
+cally used by applications that wish to manipulate the wid-
+get set itself.
+
+The definitions needed to use these interfaces are in the
+header file <4mX11/Xmu/WidgetNode.h24m>.  The following function
+must be called before any of the others described below:
+
+
+void XmuWnInitializeNodes(4mnode_array24m, 4mnum_nodes24m)
+      XmuWidgetNode *4mnode_array24m;
+      int 4mnum_nodes24m;
+
+
+4mnode_array0m
+	  specifies a list of widget classes, in alphabeti-
+	  cal order
+
+4mnum_nodes24m specfies the number of widget classes in the node
+	  array
+
+To determine the resources provided by a widget class or
+classes, use
+
+
+void XmuWnFetchResources(4mnode24m, 4mtoplevel24m, 4mtop_node24m)
+      XmuWidgetNode *4mnode24m;
+      Widget 4mtoplevel24m;
+      XmuWidgetNode *4mtop_node24m;
+
+
+4mnode24m      specifies the widget class for which resources
+	  should be obtained.
+
+4mtoplevel24m  specifies the widget that should be used for cre-
+	  ating an instance of 4mnode24m from which resources are
+	  extracted.  This is typically the value returned
+	  by 1mXtAppInitialize22m.
+
+
+
+
+
+
+
+
+
+			    -40-
+
+
+4mtop_node24m  specifies the ancestor of 4mnode24m that should be
+	  treated as the root of the widget inheritance tree
+	  (used in determining which ancestor contributed
+	  which resources).
+
+Each widget class inherits the resources of its parent.	 To
+count the number of resources contributed by a particular
+widget class, use:
+
+
+int XmuWnCountOwnedResources(4mnode24m, 4mowner_node24m, 4mconstraints24m)
+      XmuWidgetNode *4mnode24m;
+      XmuWidgetNode *4mowner_node24m;
+      Bool 4mconstraints24m;
+
+
+4mnode24m      specifies the widget class whose resources are
+	  being examined.
+
+4mowner_node0m
+	  specifies the widget class of the ancestor of 4mnode0m
+	  whose contributions are being counted.
+
+4mconstraints0m
+	  specifies whether or not to count constraint
+	  resources or normal resources.
+
+This routine returns the number of resources contributed (or
+``owned'') by the specified widget class.
+
+
+XmuWidgetNode *XmuWnNameToNode(4mnode_list24m, 4mnum_nodes24m, 4mname24m)
+      XmuWidgetNode *4mnode_list24m;
+      int 4mnum_nodes24m;
+      char *4mname24m;
+
+
+4mnode_list24m specifies a list of widget nodes
+
+4mnum_nodes24m specifies the number of nodes in the list
+
+4mname24m      specifies the name of the widget class in the node
+	  list to search for
+
+This function returns the WidgetNode in the list that
+matches the given widget name or widget class name.  If no
+match is found, it returns NULL.
+
+
+1m17.  Participation in the Editres Protocol0m
+
+To participate in the editres protocol, applications which
+are not based on the Athena widget set should include the
+header file <4mX11/Xmu/Editres.h24m>.
+
+
+
+
+
+
+
+
+
+			    -41-
+
+
+To participate in the editres protocol, Xt applications
+which do not rely on the Athena widget set should register
+the editres protocol handler on each shell widget in the
+application, specifying an event mask of 0, nonmaskable
+events, and client data as NULL:
+
+XtAddEventHandler(shell, (EventMask) 0, True, _XEd-
+itResCheckMessages, NULL);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

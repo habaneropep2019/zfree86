@@ -1,0 +1,9 @@
+XCOMM $XFree86: xc/programs/listres/Imakefile,v 1.3 2006/01/09 15:00:47 dawes Exp $
+
+        DEPLIBS = XawClientDepLibs
+LOCAL_LIBRARIES = XawClientLibs
+           SRCS = listres.c 
+           OBJS = listres.o 
+
+ComplexProgramTarget(listres)
+

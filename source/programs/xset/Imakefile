@@ -1,0 +1,17 @@
+XCOMM $XFree86: xc/programs/xset/Imakefile,v 3.12 2005/12/29 03:32:31 tsi Exp $
+
+#if BuildXF86MiscLibrary
+       DEPXF86LIBS = $(DEPXXF86MISCLIB)
+          XF86LIBS = $(XXF86MISCLIB)
+#endif
+#if BuildFontCacheLib
+      DEPFONTLIBS = $(DEPXFONTCACHELIB)
+         FONTLIBS = $(XFONTCACHELIB)
+#endif
+
+        DEFINES = DPMSDefines FontCacheExtensionDefines XkbDefines \
+		  MITMiscDefines XF86MiscExtensionDefines
+        DEPLIBS = $(DEPXMUULIB) $(DEPXLIB) $(DEPXF86LIBS) $(DEPFONTLIBS)
+LOCAL_LIBRARIES = $(XMUULIB) $(XF86LIBS) $(FONTLIBS) $(XLIB)
+
+SimpleProgramTarget(xset)

@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>DGA Extension </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>DGA Extension </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN14.html"><EM>DPMS Extension </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN16.html"><EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="63"></A>15. DGA Extension </H2>
+
+<p>Drivers can support the XFree86 Direct Graphics Architecture (DGA) by
+filling out a structure of function pointers and a list of modes and
+passing them to DGAInit.</p>
+<p>
+<blockquote>
+<p><code>Bool DGAInit(ScreenPtr pScreen, DGAFunctionPtr funcs,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DGAModePtr modes, int num)</code>
+<blockquote>
+<p>
+<pre>
+/** The DGAModeRec **/
+
+typedef struct {
+  int num;
+  DisplayModePtr mode;
+  int flags;
+  int imageWidth;
+  int imageHeight;
+  int pixmapWidth;
+  int pixmapHeight;
+  int bytesPerScanline;
+  int byteOrder;
+  int depth;
+  int bitsPerPixel;
+  unsigned long red_mask;
+  unsigned long green_mask;
+  unsigned long blue_mask;
+  int viewportWidth;
+  int viewportHeight;
+  int xViewportStep;
+  int yViewportStep;
+  int maxViewportX;
+  int maxViewportY;
+  int viewportFlags;
+  int offset;
+  unsigned char *address;
+  int reserved1;
+  int reserved2;
+} DGAModeRec, *DGAModePtr;
+</pre>
+</p>
+<p><code>num</code>
+<blockquote>
+Can be ignored.  The DGA DDX will assign these numbers.
+</blockquote>
+</p>
+<p><code>mode</code>
+<blockquote>
+A pointer to the <code>DisplayModeRec</code> for this mode.
+</blockquote>
+</p>
+<p><code>flags</code>
+<blockquote>
+<p>The following flags are defined and may be OR'd together:</p>
+<p><code>DGA_CONCURRENT_ACCESS</code>
+<blockquote>
+<p>Indicates that the driver supports concurrent graphics
+accelerator and linear framebuffer access.</p>
+
+</blockquote>
+</p>
+<p><code>DGA_FILL_RECT<br>
+DGA_BLIT_RECT<br>
+DGA_BLIT_RECT_TRANS</code>
+<blockquote>
+<p>Indicates that the driver supports the FillRect, BlitRect
+or BlitTransRect functions in this mode.</p>
+
+</blockquote>
+</p>
+<p><code>DGA_PIXMAP_AVAILABLE</code>
+<blockquote>
+<p>Indicates that Xlib may be used on the framebuffer.
+This flag will usually be set unless the driver wishes
+to prohibit this for some reason.</p>
+
+</blockquote>
+</p>
+<p><code>DGA_INTERLACED<br>
+DGA_DOUBLESCAN</code>
+<blockquote>
+<p>Indicates that these are interlaced or double scan modes.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+<p><code>imageWidth<br>
+imageHeight</code>
+<blockquote>
+<p>These are the dimensions of the linear framebuffer
+accessible by the client.</p>
+
+</blockquote>
+</p>
+<p><code>pixmapWidth<br>
+pixmapHeight</code>
+<blockquote>
+<p>These are the dimensions of the area of the
+framebuffer accessible by the graphics accelerator.</p>
+
+</blockquote>
+</p>
+<p><code>bytesPerScanline</code>
+<blockquote>
+<p>Pitch of the framebuffer in bytes.</p>
+
+</blockquote>
+</p>
+<p><code>byteOrder</code>
+<blockquote>
+<p>Usually the same as
+<code>pScrn-&gt;imageByteOrder</code>.</p>
+
+</blockquote>
+</p>
+<p><code>depth</code>
+<blockquote>
+<p>The depth of the framebuffer in this mode.</p>
+
+</blockquote>
+</p>
+<p><code>bitsPerPixel</code>
+<blockquote>
+<p>The number of bits per pixel in this mode.</p>
+
+</blockquote>
+</p>
+<p><code>red_mask<br>
+green_mask<br>
+blue_mask</code>
+<blockquote>
+<p>The RGB masks for this mode, if applicable.</p>
+
+</blockquote>
+</p>
+<p><code>viewportWidth<br>
+viewportHeight</code>
+<blockquote>
+<p>Dimensions of the visible part of the framebuffer.
+Usually <code>mode-&gt;HDisplay</code> and
+<code>mode-&gt;VDisplay</code>.</p>
+
+</blockquote>
+</p>
+<p><code>xViewportStep<br>
+yViewportStep</code>
+<blockquote>
+<p>The granularity of x and y viewport positions that
+the driver supports in this mode.</p>
+
+</blockquote>
+</p>
+<p><code>maxViewportX<br>
+maxViewportY</code>
+<blockquote>
+<p>The maximum viewport position supported by the
+driver in this mode.</p>
+
+</blockquote>
+</p>
+<p><code>viewportFlags</code>
+<blockquote>
+<p>The following may be OR'd together:</p>
+<p><code>DGA_FLIP_IMMEDIATE</code>
+<blockquote>
+<p>The driver supports immediate viewport changes.</p>
+
+</blockquote>
+
+<code>DGA_FLIP_RETRACE</code>
+<blockquote>
+<p>The driver supports viewport changes at retrace.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+<p><code>offset</code>
+<blockquote>
+<p>The offset into the linear framebuffer that corresponds to
+pixel (0,0) for this mode.</p>
+
+</blockquote>
+</p>
+<p><code>address</code>
+<blockquote>
+<p>The virtual address of the framebuffer as mapped by the driver.
+This is needed when DGA_PIXMAP_AVAILABLE is set.</p>
+
+</blockquote>
+</p>
+<p>
+<pre>
+/** The DGAFunctionRec **/
+
+typedef struct {
+  Bool (*OpenFramebuffer)(
+       ScrnInfoPtr pScrn,
+       char **name,
+       unsigned int *mem,
+       unsigned int *size,
+       unsigned int *offset,
+       unsigned int *extra
+  );
+  void (*CloseFramebuffer)(ScrnInfoPtr pScrn);
+  Bool (*SetMode)(ScrnInfoPtr pScrn, DGAModePtr pMode);
+  void (*SetViewport)(ScrnInfoPtr pScrn, int x, int y, int flags);
+  int  (*GetViewport)(ScrnInfoPtr pScrn);
+  void (*Sync)(ScrnInfoPtr);
+  void (*FillRect)(
+       ScrnInfoPtr pScrn,
+       int x, int y, int w, int h,
+       unsigned long color
+  );
+  void (*BlitRect)(
+       ScrnInfoPtr pScrn,
+       int srcx, int srcy,
+       int w, int h,
+       int dstx, int dsty
+  );
+  void (*BlitTransRect)(
+       ScrnInfoPtr pScrn,
+       int srcx, int srcy,
+       int w, int h,
+       int dstx, int dsty,
+       unsigned long color
+  );
+} DGAFunctionRec, *DGAFunctionPtr;
+</pre>
+</p>
+
+</blockquote>
+</p>
+<p><code>Bool OpenFramebuffer (pScrn, name, mem, size, offset, extra)</code>
+<blockquote>
+<p><code>OpenFramebuffer()</code> should pass the client everything
+it needs to know to be able to open the framebuffer.  These
+parameters are OS specific and their meanings are to be interpreted
+by an OS specific client library.</p>
+<p><code>name</code>
+<blockquote>
+<p>The name of the device to open or <code>NULL</code> if
+there is no special device to open.  A <code>NULL</code>
+name tells the client that it should open whatever device
+one would usually open to access physical memory.</p>
+
+</blockquote>
+
+<code>mem</code>
+<blockquote>
+<p>The physical address of the start of the framebuffer, or the
+<code>mmap(2)</code> offset into the device designated by
+<code>name</code>.  This is actually a pointer to two
+consecutive 32-bit values.  Regardless of hardware architecture,
+the first of these is to be set to the low-order 32 bits of the
+address or offset, and the second is to be set to the high-order
+32 bits.</p>
+
+</blockquote>
+
+<code>size</code>
+<blockquote>
+<p>The size of the framebuffer in bytes.</p>
+
+</blockquote>
+
+<code>offset</code>
+<blockquote>
+<p>Any offset into the device, if applicable.</p>
+
+</blockquote>
+
+<code>flags</code>
+<blockquote>
+<p>Any additional information that the client may need.
+Currently, only the <code>DGA_NEED_ROOT</code> flag is
+defined.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+<p><code>void CloseFramebuffer (pScrn)</code>
+<blockquote>
+<p><code>CloseFramebuffer()</code> merely informs the driver (if it
+even cares) that client no longer needs to access the framebuffer
+directly.  This function is optional.</p>
+
+</blockquote>
+</p>
+<p><code>Bool SetMode (pScrn, pMode)</code>
+<blockquote>
+<p><code>SetMode()</code> tells the driver to initialize the mode
+passed to it.  If <code>pMode</code> is <code>NULL</code>,
+then the driver should restore the original pre-DGA mode.</p>
+
+</blockquote>
+</p>
+<p><code>void SetViewport (pScrn, x, y, flags)</code>
+<blockquote>
+<p><code>SetViewport()</code> tells the driver to make the upper
+left-hand corner of the visible screen correspond to coordinate
+<code>(x,y)</code> on the framebuffer.  <code>Flags</code>
+currently defined are:</p>
+<p><code>DGA_FLIP_IMMEDIATE</code>
+<blockquote>
+<p>The viewport change should occur immediately.</p>
+
+</blockquote>
+
+<code>DGA_FLIP_RETRACE</code>
+<blockquote>
+<p>The viewport change should occur at the
+vertical retrace, but this function should
+return sooner if possible.</p>
+
+</blockquote>
+
+The <code>(x,y)</code> locations will be passed as the client
+specified them, however, the driver is expected to round these
+locations down to the next supported location as specified by the
+<code>xViewportStep</code> and <code>yViewportStep</code>
+for the current mode.</p>
+
+</blockquote>
+</p>
+<p><code>int GetViewport (pScrn)</code>
+<blockquote>
+<p><code>GetViewport()</code> gets the current page flip status.
+Set bits in the returned int correspond to viewport change requests
+still pending.  For instance, set bit zero if the last SetViewport
+request is still pending, bit one if the one before that is still
+pending, etc.</p>
+
+</blockquote>
+</p>
+<p><code>void Sync (pScrn)</code>
+<blockquote>
+<p>This function should ensure that any graphics accelerator operations
+have finished.  This function should not return until the graphics
+accelerator is idle.</p>
+
+</blockquote>
+</p>
+<p><code>void FillRect (pScrn, x, y, w, h, color)</code>
+<blockquote>
+<p>This optional function should fill a rectangle
+<code>w x h</code> located at
+<code>(x,y)</code> in the given color.</p>
+
+</blockquote>
+</p>
+<p><code>void BlitRect (pScrn, srcx, srcy, w, h, dstx, dsty)</code>
+<blockquote>
+<p>This optional function should copy an area
+<code>w x h</code> located at
+<code>(srcx,srcy)</code> to location <code>(dstx,dsty)</code>.
+This function will need to handle copy directions as appropriate.</p>
+
+</blockquote>
+</p>
+<p><code>void BlitTransRect (pScrn, srcx, srcy, w, h, dstx, dsty, color)</code>
+<blockquote>
+<p>This optional function is the same as BlitRect except that pixels
+in the source corresponding to the color key <code>color</code>
+should be skipped.</p>
+
+</blockquote>
+</p>
+</blockquote>
+</p>
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>DGA Extension </EM><BR>
+<b>Previous:</b> <A HREF="DESIGN14.html"><EM>DPMS Extension </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN16.html"><EM>The XFree86 X Video Extension (Xv) Device Dependent Layer </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728764" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

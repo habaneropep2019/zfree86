@@ -1,0 +1,1267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Some notes about writing a driver</TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Some notes about writing a driver</EM><BR>
+<b>Previous:</b> <A HREF="DESIGN19.html"><EM>The vgahw module </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="85"></A>20. Some notes about writing a driver<A NAME="sample"></A> 
+</H2>
+
+<p><em>NOTE: some parts of this are not up to date</em></p>
+<p>The following is an outline for writing a basic unaccelerated driver
+for a PCI video card with a linear mapped framebuffer, and which has a
+VGA core.  It includes some general information that is relevant to
+most drivers (even those which don't fit that basic description).</p>
+<p>The information here is based on the initial conversion of the Matrox
+Millennium driver to the ``new design''.  For a fleshing out and sample
+implementation of some of the bits outlined here, refer to that driver.
+Note that this is an example only.  The approach used here will not be
+appropriate for all drivers.</p>
+<p>Each driver must reserve a unique driver name, and a string that is used
+to prefix all of its externally visible symbols.  This is to avoid name
+space clashes when loading multiple drivers.  The examples here are for
+the ``ZZZ'' driver, which uses the ``ZZZ'' or ``zzz'' prefix for its externally
+visible symbols, with preference given to the uppercase prefix.
+Internal symbols should also follow this convention to facilitate the debugging
+of a statically built server.</p>
+
+<H3><A NAME="86"></A>20.1. Include files </H3>
+
+<p>All drivers normally include the following headers:
+<blockquote>
+<code>"xf86.h"<br>
+"xf86_OSproc.h"<br>
+"xf86_ansic.h"<br>
+"xf86Resources.h"</code>
+</blockquote>
+
+Wherever inb/outb (and related things) are used the following should be
+included:
+<blockquote>
+<code>"compiler.h"</code>
+</blockquote>
+
+Note: in drivers, this must be included after <code>"xf86_ansic.h"</code>.</p>
+<p>Drivers that need to access PCI vendor/device definitions need this:
+<blockquote>
+<code>"xf86PciInfo.h"</code>
+</blockquote>
+</p>
+<p>Drivers that need to access the PCI config space need this:
+<blockquote>
+<code>"xf86Pci.h"</code>
+</blockquote>
+</p>
+<p>Drivers using the mi banking wrapper need:</p>
+<p>
+<blockquote>
+<code>"mibank.h"</code>
+</blockquote>
+</p>
+<p>Drivers that initialise a SW cursor need this:
+<blockquote>
+<code>"mipointer.h"</code>
+</blockquote>
+</p>
+<p>All drivers implementing backing store need this:
+<blockquote>
+<code>"mibstore.h"</code>
+</blockquote>
+</p>
+<p>All drivers using the mi colourmap code need this:
+<blockquote>
+<code>"micmap.h"</code>
+</blockquote>
+</p>
+<p>If a driver uses the vgahw module, it needs this:
+<blockquote>
+<code>"vgaHW.h"</code>
+</blockquote>
+</p>
+<p>Drivers supporting VGA or Hercules monochrome screens need:
+<blockquote>
+<code>"xf1bpp.h"</code>
+</blockquote>
+</p>
+<p>Drivers supporting VGA or EGC 16-colour screens need:
+<blockquote>
+<code>"xf4bpp.h"</code>
+</blockquote>
+</p>
+<p>Drivers using cfb need:
+<blockquote>
+<code>#define PSZ 8<br>
+#include "cfb.h"<br>
+#undef PSZ</code>
+</blockquote>
+</p>
+<p>Drivers supporting bpp 16, 24 or 32 with cfb need one or more of:
+<blockquote>
+<code>"cfb16.h"<br>
+"cfb24.h"<br>
+"cfb32.h"</code>
+</blockquote>
+</p>
+<p>The driver's own header file:
+<blockquote>
+<code>"zzz.h"</code>
+</blockquote>
+</p>
+<p>Drivers must NOT include the following:</p>
+<p>
+<blockquote>
+<code>"xf86Priv.h"<br>
+"xf86Privstr.h"<br>
+"xf86_libc.h"<br>
+"xf86_OSlib.h"<br>
+&lt;X11/Xos.h&gt;</code><br>
+any OS header
+</blockquote>
+</p>
+
+
+<H3><A NAME="87"></A>20.2. Data structures and initialisation </H3>
+
+<p>
+<ul>
+<li>The following macros should be defined:
+<hr>
+<pre>
+#define VERSION &lt;version-as-an-int&gt;
+#define ZZZ_NAME "ZZZ"         /* the name used to prefix messages */
+#define ZZZ_DRIVER_NAME "zzz"  /* the driver name as used in config file */
+#define ZZZ_MAJOR_VERSION &lt;int&gt;
+#define ZZZ_MINOR_VERSION &lt;int&gt;
+#define ZZZ_PATCHLEVEL    &lt;int&gt;
+    
+</pre>
+<hr>
+
+<p>NOTE: <code>ZZZ_DRIVER_NAME</code> should match the name of the
+driver module without things like the "lib" prefix, the "_drv" suffix
+or filename extensions.</p>
+
+
+</li>
+<li>A DriverRec must be defined, which includes the functions required
+at the pre-probe phase.  The name of this DriverRec must be an
+upper-case version of ZZZ_DRIVER_NAME (for the purposes of static
+linking).
+<p>
+<hr>
+<pre>
+DriverRec ZZZ = {
+    VERSION,
+    ZZZ_DRIVER_NAME,
+    ZZZIdentify,
+    ZZZProbe,
+    ZZZAvailableOptions,
+    NULL,
+    0
+};
+    
+</pre>
+<hr>
+</p>
+
+</li>
+<li>Define list of supported chips and their matching ID:
+<p>
+<hr>
+<pre>
+static SymTabRec ZZZChipsets[] = {
+    { PCI_CHIP_ZZZ1234, "zzz1234a" },
+    { PCI_CHIP_ZZZ5678, "zzz5678a" },
+    { -1,               NULL }
+};
+    
+</pre>
+<hr>
+</p>
+<p>The token field may be any integer value that the driver may use to
+uniquely identify the supported chipsets.  For drivers that support
+only PCI devices using the PCI device IDs might be a natural choice,
+but this isn't mandatory.  For drivers that support both PCI and other
+devices (like ISA), some other ID should probably used.  When other
+IDs are used as the tokens it is recommended that the names be
+defined as an <code>enum</code> type.</p>
+
+</li>
+<li>If the driver uses the <code>xf86MatchPciInstances(</code>)
+helper (recommended for drivers that support PCI cards) a list that
+maps PCI IDs to chip IDs and fixed resources must be defined:
+<p>
+<hr>
+<pre>
+static PciChipsets ZZZPciChipsets[] = {
+    { PCI_CHIP_ZZZ1234, PCI_CHIP_ZZZ1234, RES_SHARED_VGA },
+    { PCI_CHIP_ZZZ5678, PCI_CHIP_ZZZ5678, RES_SHARED_VGA },
+    { -1,               -1,               RES_UNDEFINED }
+}
+    
+</pre>
+<hr>
+</p>
+
+</li>
+<li>Define the <code>XF86ModuleVersionInfo</code> struct for the
+driver.  This is required for the dynamically loaded version:
+<p>
+<hr>
+<pre>
+#ifdef XFree86LOADER
+static XF86ModuleVersionInfo zzzVersRec =
+{
+    "zzz",
+    MODULEVENDORSTRING,
+    MODINFOSTRING1,
+    MODINFOSTRING2,
+    XF86_VERSION_CURRENT,
+    ZZZ_MAJOR_VERSION, ZZZ_MINOR_VERSION, ZZZ_PATCHLEVEL,
+    ABI_CLASS_VIDEODRV,
+    ABI_VIDEODRV_VERSION,
+    MOD_CLASS_VIDEODRV,
+    {0,0,0,0}
+};
+#endif
+    
+</pre>
+<hr>
+</p>
+
+</li>
+<li>Define a data structure to hold the driver's screen-specific data.
+This must be used instead of global variables.  This would be defined
+in the <code>"zzz.h"</code> file, something like:
+<p>
+<hr>
+<pre>
+typedef struct {
+    type1  field1;
+    type2  field2;
+    int    fooHack;
+    Bool   pciRetry;
+    Bool   noAccel;
+    Bool   hwCursor;
+    CloseScreenProcPtr CloseScreen;
+    OptionInfoPtr Options;
+    ...
+} ZZZRec, *ZZZPtr;
+    
+</pre>
+<hr>
+</p>
+
+</li>
+<li>Define the list of config file Options that the driver accepts.  For
+consistency between drivers those in the list of ``standard'' options
+should be used where appropriate before inventing new options.
+<p>
+<hr>
+<pre>
+typedef enum {
+    OPTION_FOO_HACK,
+    OPTION_PCI_RETRY,
+    OPTION_HW_CURSOR,
+    OPTION_NOACCEL
+} ZZZOpts;
+
+static const OptionInfoRec ZZZOptions[] = {
+  { OPTION_FOO_HACK,  "FooHack",   OPTV_INTEGER, {0}, FALSE },
+  { OPTION_PCI_RETRY, "PciRetry",  OPTV_BOOLEAN, {0}, FALSE },
+  { OPTION_HW_CURSOR, "HWcursor",  OPTV_BOOLEAN, {0}, FALSE },
+  { OPTION_NOACCEL,   "NoAccel",   OPTV_BOOLEAN, {0}, FALSE },
+  { -1,               NULL,        OPTV_NONE,    {0}, FALSE }
+};
+    
+</pre>
+<hr>
+</p>
+
+</li>
+</ul>
+</p>
+
+<H3><A NAME="88"></A>20.3. Functions </H3>
+
+
+
+<H4><A NAME="89"></A>20.3.1. SetupProc </H4>
+
+<p>For dynamically loaded modules, a <code>ModuleData</code>
+variable is required.  It is should be the name of the driver
+prepended to "ModuleData".  A <code>Setup()</code> function is
+also required, which calls <code>xf86AddDriver()</code> to add
+the driver to the main list of drivers.</p>
+<p>
+<hr>
+<pre>
+#ifdef XFree86LOADER
+
+static MODULESETUPPROTO(mgaSetup);
+
+XF86ModuleData zzzModuleData = { &amp;zzzVersRec, zzzSetup, NULL };
+
+static pointer
+zzzSetup(pointer module, pointer opts, int *errmaj, int *errmin)
+{
+    static Bool setupDone = FALSE;
+
+    /* This module should be loaded only once, but check to be sure. */
+
+    if (!setupDone) {
+        /*
+         * Modules that this driver always requires may be loaded
+         * here  by calling LoadSubModule().
+         */
+
+        setupDone = TRUE;
+        xf86AddDriver(&amp;MGA, module, 0);
+
+        /*
+         * The return value must be non-NULL on success even though
+         * there is no TearDownProc.
+         */
+        return (pointer)1;
+    } else {
+        if (errmaj) *errmaj = LDR_ONCEONLY;
+        return NULL;
+    }
+}
+#endif
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="90"></A>20.3.2. GetRec, FreeRec </H4>
+
+<p>A function is usually required to allocate the driver's
+screen-specific data structure and hook it into the
+<code>ScrnInfoRec</code>'s <code>driverPrivate</code> field.
+The <code>ScrnInfoRec</code>'s <code>driverPrivate</code> is
+initialised to <code>NULL</code>, so it is easy to check if the
+initialisation has already been done.  After allocating it, initialise
+the fields.  By using <code>xnfcalloc()</code> to do the allocation
+it is zeroed, and if the allocation fails the server exits.</p>
+<p>NOTE:
+When allocating structures from inside the driver which are defined
+on the common level it is important to initialize the structure to
+zero.
+Only this guarantees that the server remains source compatible to
+future changes in common level structures.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZGetRec(ScrnInfoPtr pScrn)
+{
+    if (pScrn-&gt;driverPrivate != NULL)
+        return TRUE;
+    pScrn-&gt;driverPrivate = xnfcalloc(sizeof(ZZZRec), 1);
+    /* Initialise as required */
+    ...
+    return TRUE;
+}
+    
+</pre>
+<hr>
+</p>
+<p>Define a macro in <code>"zzz.h"</code> which gets a pointer to
+the <code>ZZZRec</code> when given <code>pScrn</code>:</p>
+<p>
+<hr>
+<pre>
+#define ZZZPTR(p) ((ZZZPtr)((p)-&gt;driverPrivate))
+    
+</pre>
+<hr>
+</p>
+<p>Define a function to free the above, setting it to <code>NULL</code>
+once it has been freed:</p>
+<p>
+<hr>
+<pre>
+static void
+ZZZFreeRec(ScrnInfoPtr pScrn)
+{
+    if (pScrn-&gt;driverPrivate == NULL)
+        return;
+    xfree(pScrn-&gt;driverPrivate);
+    pScrn-&gt;driverPrivate = NULL;
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="91"></A>20.3.3. Identify </H4>
+
+<p>Define the <code>Identify()</code> function.  It is run before
+the Probe, and typically prints out an identifying message, which
+might include the chipsets it supports.  This function is mandatory:</p>
+<p>
+<hr>
+<pre>
+static void
+ZZZIdentify(int flags)
+{
+    xf86PrintChipsets(ZZZ_NAME, "driver for ZZZ Tech chipsets",
+                      ZZZChipsets);
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="92"></A>20.3.4. Probe </H4>
+
+<p>Define the <code>Probe()</code> function.  The purpose of this
+is to find all instances of the hardware that the driver supports,
+and for the ones not already claimed by another driver, claim the
+slot, and allocate a <code>ScrnInfoRec</code>.  This should be
+a minimal probe, and it should under no circumstances leave the
+state of the hardware changed.  Because a device is found, don't
+assume that it will be used.  Don't do any initialisations other
+than the required <code>ScrnInfoRec</code> initialisations.
+Don't allocate any new data structures.</p>
+<p>This function is mandatory.</p>
+<p>NOTE: The <code>xf86DrvMsg()</code> functions cannot be used from
+the Probe.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZProbe(DriverPtr drv, int flags)
+{
+    Bool foundScreen = FALSE;
+    int numDevSections, numUsed;
+    GDevPtr *devSections;
+    int *usedChips;
+    int i;
+
+    /*
+     * Find the config file Device sections that match this
+     * driver, and return if there are none.
+     */
+    if ((numDevSections = xf86MatchDevice(ZZZ_DRIVER_NAME,
+                                          &amp;devSections)) &lt;= 0) {
+        return FALSE;
+    }
+
+    /*
+     * Since this is a PCI card, "probing" just amounts to checking
+     * the PCI data that the server has already collected.  If there
+     * is none, return.
+     *
+     * Although the config file is allowed to override things, it
+     * is reasonable to not allow it to override the detection
+     * of no PCI video cards.
+     *
+     * The provided xf86MatchPciInstances() helper takes care of
+     * the details.
+     */
+    /* test if PCI bus present */
+    if (xf86GetPciVideoInfo()) {
+
+        numUsed = xf86MatchPciInstances(ZZZ_NAME, PCI_VENDOR_ZZZ,
+                            ZZZChipsets, ZZZPciChipsets, devSections,
+                            numDevSections, drv, &amp;usedChips);
+
+        for (i = 0; i &lt; numUsed; i++) {
+            ScrnInfoPtr pScrn = NULL;
+            if ((pScrn = xf86ConfigPciEntity(pScrn, flags, usedChips[i],
+                                             ZZZPciChipsets, NULL, NULL,
+                                             NULL, NULL, NULL))) {
+               /* Allocate a ScrnInfoRec */
+               pScrn-&gt;driverVersion = VERSION;
+               pScrn-&gt;driverName    = ZZZ_DRIVER_NAME;
+               pScrn-&gt;name          = ZZZ_NAME;
+               pScrn-&gt;Probe         = ZZZProbe;
+               pScrn-&gt;PreInit       = ZZZPreInit;
+               pScrn-&gt;ScreenInit    = ZZZScreenInit;
+               pScrn-&gt;SwitchMode    = ZZZSwitchMode;
+               pScrn-&gt;AdjustFrame   = ZZZAdjustFrame;
+               pScrn-&gt;EnterVT       = ZZZEnterVT;
+               pScrn-&gt;LeaveVT       = ZZZLeaveVT;
+               pScrn-&gt;FreeScreen    = ZZZFreeScreen;
+               pScrn-&gt;ValidMode     = ZZZValidMode;
+               foundScreen = TRUE;
+               /* add screen to entity */
+           }
+        }
+        xfree(usedChips);
+    }
+
+#ifdef HAS_ISA_DEVS
+    /*
+     * If the driver supports ISA hardware, the following block
+     * can be included too.
+     */
+    numUsed = xf86MatchIsaInstances(ZZZ_NAME, ZZZChipsets,
+                             ZZZIsaChipsets, drv, ZZZFindIsaDevice,
+                             devSections, numDevSections, &amp;usedChips);
+    for (i = 0; i &lt; numUsed; i++) {
+        ScrnInfoPtr pScrn = NULL;
+	if ((pScrn = xf86ConfigIsaEntity(pScrn, flags, usedChips[i],
+					 ZZZIsaChipsets, NULL, NULL, NULL,
+					 NULL, NULL))) {
+            pScrn-&gt;driverVersion = VERSION;
+            pScrn-&gt;driverName    = ZZZ_DRIVER_NAME;
+            pScrn-&gt;name          = ZZZ_NAME;
+            pScrn-&gt;Probe         = ZZZProbe;
+            pScrn-&gt;PreInit       = ZZZPreInit;
+            pScrn-&gt;ScreenInit    = ZZZScreenInit;
+            pScrn-&gt;SwitchMode    = ZZZSwitchMode;
+            pScrn-&gt;AdjustFrame   = ZZZAdjustFrame;
+            pScrn-&gt;EnterVT       = ZZZEnterVT;
+            pScrn-&gt;LeaveVT       = ZZZLeaveVT;
+            pScrn-&gt;FreeScreen    = ZZZFreeScreen;
+            pScrn-&gt;ValidMode     = ZZZValidMode;
+            foundScreen = TRUE;
+        }
+    }
+    xfree(usedChips);
+#endif /* HAS_ISA_DEVS */
+
+    xfree(devSections);
+    return foundScreen;
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="93"></A>20.3.5. AvailableOptions </H4>
+
+<p>Define the <code>AvailableOptions()</code> function. The purpose
+of this is to return the available driver options back to the
+-configure option, so that an XF86Config file can be built and the
+user can see which options are available for them to use.</p>
+
+<H4><A NAME="94"></A>20.3.6. PreInit </H4>
+
+<p>Define the <code>PreInit()</code> function.  The purpose of
+this is to find all the information required to determine if the
+configuration is usable, and to initialise those parts of the
+<code>ScrnInfoRec</code> that can be set once at the beginning
+of the first server generation.  The information should be found in
+the least intrusive way possible.</p>
+<p>This function is mandatory.</p>
+<p>NOTES:
+<ol>
+<li>The <code>PreInit()</code> function is only called once
+during the life of the X server (at the start of the first
+generation).
+</li>
+<li>Data allocated here must be of the type that persists for
+the life of the X server.  This means that data that hooks into
+the <code>ScrnInfoRec</code>'s <code>privates</code>
+field should be allocated here, but data that hooks into the
+<code>ScreenRec</code>'s <code>devPrivates</code> field
+should not be allocated here.  The <code>driverPrivate</code>
+field should also be allocated here.
+</li>
+<li>Although the <code>ScrnInfoRec</code> has been allocated
+before this function is called, the <code>ScreenRec</code>
+has not been allocated.  That means that things requiring it
+cannot be used in this function.
+</li>
+<li>Very little of the <code>ScrnInfoRec</code> has been
+initialised when this function is called.  It is important to
+get the order of doing things right in this function.
+</li>
+</ol>
+</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZPreInit(ScrnInfoPtr pScrn, int flags)
+{
+    /* Fill in the monitor field */
+    pScrn-&gt;monitor = pScrn-&gt;confScreen-&gt;monitor;
+
+    /*
+     * If using the vgahw module, it will typically be loaded
+     * here by calling xf86LoadSubModule(pScrn, "vgahw");
+     */
+
+    /*
+     * Set the depth/bpp.  Use the globally preferred depth/bpp.  If the
+     * driver has special default depth/bpp requirements, the defaults should
+     * be specified here explicitly.
+     * We support both 24bpp and 32bpp framebuffer layouts.
+     * This sets pScrn-&gt;display also.
+     */
+    if (!xf86SetDepthBpp(pScrn, 0, 0, 0,
+                         Support24bppFb | Support32bppFb)) {
+        return FALSE;
+    } else {
+        if (depth/bpp isn't one we support) {
+            print error message;
+            return FALSE;
+        }
+    }
+    /* Print out the depth/bpp that was set */
+    xf86PrintDepthBpp(pScrn);
+
+    /* Set bits per RGB for 8bpp */
+    if (pScrn-&gt;depth &lt;= 8) {
+        /* Take into account a dac_6_bit option here */
+        pScrn-&gt;rgbBits = 6 or 8;
+    }
+
+    /*
+     * xf86SetWeight() and xf86SetDefaultVisual() must be called
+     * after pScrn-&gt;display is initialised.
+     */
+
+    /* Set weight/mask/offset for depth &gt; 8 */
+    if (pScrn-&gt;depth &gt; 8) {
+        if (!xf86SetWeight(pScrn, defaultWeight, defaultMask)) {
+            return FALSE;
+        } else {
+            if (weight isn't one we support) {
+                print error message;
+                return FALSE;
+            }
+        }
+    }
+
+    /* Set the default visual. */
+    if (!xf86SetDefaultVisual(pScrn, -1)) {
+        return FALSE;
+    } else {
+        if (visual isn't one we support) {
+            print error message;
+            return FALSE;
+        }
+    }
+
+    /* If the driver supports gamma correction, set the gamma. */
+    if (!xf86SetGamma(pScrn, default_gamma)) {
+        return FALSE;
+    }
+
+    /* This driver uses a programmable clock */
+    pScrn-&gt;progClock = TRUE;
+
+    /* Allocate the ZZZRec driverPrivate */
+    if (!ZZZGetRec(pScrn)) {
+        return FALSE;
+    }
+
+    pZzz = ZZZPTR(pScrn);
+
+    /* Collect all of the option flags (fill in pScrn-&gt;options) */
+    xf86CollectOptions(pScrn, NULL);
+
+    /*
+     * Process the options based on the information in ZZZOptions.
+     * The results are written to pZzz-&gt;Options.  If all of the options
+     * processing is done within this function a local variable "options"
+     * can be used instead of pZzz-&gt;Options.
+     */
+    if (!(pZzz-&gt;Options = xalloc(sizeof(ZZZOptions))))
+        return FALSE;
+    (void)memcpy(pZzz-&gt;Options, ZZZOptions, sizeof(ZZZOptions));
+    xf86ProcessOptions(pScrn-&gt;scrnIndex, pScrn-&gt;options, pZzz-&gt;Options);
+
+    /*
+     * Set various fields of ScrnInfoRec and/or ZZZRec based on
+     * the options found.
+     */
+    from = X_DEFAULT;
+    pZzz-&gt;hwCursor = FALSE;
+    if (xf86IsOptionSet(pZzz-&gt;Options, OPTION_HW_CURSOR)) {
+        from = X_CONFIG;
+        pZzz-&gt;hwCursor = TRUE;
+    }
+    xf86DrvMsg(pScrn-&gt;scrnIndex, from, "Using %s cursor\n",
+               pZzz-&gt;hwCursor ? "HW" : "SW");
+    if (xf86IsOptionSet(pZzz-&gt;Options, OPTION_NOACCEL)) {
+        pZzz-&gt;noAccel = TRUE;
+        xf86DrvMsg(pScrn-&gt;scrnIndex, X_CONFIG,
+                   "Acceleration disabled\n");
+    } else {
+        pZzz-&gt;noAccel = FALSE;
+    }
+    if (xf86IsOptionSet(pZzz-&gt;Options, OPTION_PCI_RETRY)) {
+        pZzz-&gt;UsePCIRetry = TRUE;
+        xf86DrvMsg(pScrn-&gt;scrnIndex, X_CONFIG, "PCI retry enabled\n");
+    }
+    pZzz-&gt;fooHack = 0;
+    if (xf86GetOptValInteger(pZzz-&gt;Options, OPTION_FOO_HACK,
+                             &amp;pZzz-&gt;fooHack)) {
+        xf86DrvMsg(pScrn-&gt;scrnIndex, X_CONFIG, "Foo Hack set to %d\n",
+                   pZzz-&gt;fooHack);
+    }
+
+    /*
+     * Find the PCI slot(s) that this screen claimed in the probe.
+     * In this case, exactly one is expected, so complain otherwise.
+     * Note in this case we're not interested in the card types so
+     * that parameter is set to NULL.
+     */
+    if ((i = xf86GetPciInfoForScreen(pScrn-&gt;scrnIndex, &amp;pciList, NULL))
+        != 1) {
+        print error message;
+        ZZZFreeRec(pScrn);
+        if (i &gt; 0)
+            xfree(pciList);
+        return FALSE;
+    }
+    /* Note that pciList should be freed below when no longer needed */
+
+    /*
+     * Determine the chipset, allowing config file chipset and
+     * chipid values to override the probed information.  The config
+     * chipset value has precedence over its chipid value if both
+     * are present.
+     *
+     * It isn't necessary to fill in pScrn-&gt;chipset if the driver
+     * keeps track of the chipset in its ZZZRec.
+     */
+
+    ...
+
+    /*
+     * Determine video memory, fb base address, I/O addresses, etc,
+     * allowing the config file to override probed values.
+     *
+     * Set the appropriate pScrn fields (videoRam is probably the
+     * most important one that other code might require), and
+     * print out the settings.
+     */
+
+    ...
+
+    /* Initialise a clockRanges list. */
+
+    ...
+
+    /* Set any other chipset specific things in the ZZZRec */
+
+    ...
+
+    /* Select valid modes from those available */
+
+    i = xf86ValidateModes(pScrn, pScrn-&gt;monitor-&gt;Modes,
+                          pScrn-&gt;display-&gt;modes, clockRanges,
+                          NULL, minPitch, maxPitch, rounding,
+                          minHeight, maxHeight,
+                          pScrn-&gt;display-&gt;virtualX,
+                          pScrn-&gt;display-&gt;virtualY,
+                          pScrn-&gt;videoRam * 1024,
+                          LOOKUP_BEST_REFRESH);
+    if (i == -1) {
+        ZZZFreeRec(pScrn);
+        return FALSE;
+    }
+
+    /* Prune the modes marked as invalid */
+
+    xf86PruneDriverModes(pScrn);
+
+    /* If no valid modes, return */
+
+    if (i == 0 || pScrn-&gt;modes == NULL) {
+        print error message;
+        ZZZFreeRec(pScrn);
+        return FALSE;
+    }
+
+    /*
+     * Initialise the CRTC fields for the modes.  This driver expects
+     * vertical values to be halved for interlaced modes.
+     */
+    xf86SetCrtcForModes(pScrn, INTERLACE_HALVE_V);
+
+    /* Set the current mode to the first in the list. */
+    pScrn-&gt;currentMode = pScrn-&gt;modes;
+
+    /* Print the list of modes being used. */
+    xf86PrintModes(pScrn);
+
+    /* Set the DPI */
+    xf86SetDpi(pScrn, 0, 0);
+
+    /* Load bpp-specific modules */
+    switch (pScrn-&gt;bitsPerPixel) {
+    case 1:
+        mod = "xf1bpp";
+        break;
+    case 4:
+        mod = "xf4bpp";
+        break;
+    case 8:
+        mod = "cfb";
+        break;
+    case 16:
+        mod = "cfb16";
+        break;
+    case 24:
+        mod = "cfb24";
+        break;
+    case 32:
+        mod = "cfb32";
+        break;
+    }
+    if (mod &amp;&amp; !xf86LoadSubModule(pScrn, mod))
+        ZZZFreeRec(pScrn);
+        return FALSE;
+
+    /* Load XAA if needed */
+    if (!pZzz-&gt;noAccel || pZzz-&gt;hwCursor)
+        if (!xf86LoadSubModule(pScrn, "xaa")) {
+            ZZZFreeRec(pScrn);
+            return FALSE;
+        }
+
+    /* Done */
+    return TRUE;
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="95"></A>20.3.7. MapMem, UnmapMem </H4>
+
+<p>Define functions to map and unmap the video memory and any other
+memory apertures required.  These functions are not mandatory, but
+it is often useful to have such functions.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZMapMem(ScrnInfoPtr pScrn)
+{
+    /* Call xf86MapPciMem() to map each PCI memory area */
+    ...
+    return TRUE or FALSE;
+}
+
+static Bool
+ZZZUnmapMem(ScrnInfoPtr pScrn)
+{
+    /* Call xf86UnMapVidMem() to unmap each memory area */
+    ...
+    return TRUE or FALSE;
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="96"></A>20.3.8. Save, Restore </H4>
+
+<p>Define functions to save and restore the original video state.  These
+functions are not mandatory, but are often useful.</p>
+<p>
+<hr>
+<pre>
+static void
+ZZZSave(ScrnInfoPtr pScrn)
+{
+    /*
+     * Save state into per-screen data structures.
+     * If using the vgahw module, vgaHWSave will typically be
+     * called here.
+     */
+    ...
+}
+
+static void
+ZZZRestore(ScrnInfoPtr pScrn)
+{
+    /*
+     * Restore state from per-screen data structures.
+     * If using the vgahw module, vgaHWRestore will typically be
+     * called here.
+     */
+    ...
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="97"></A>20.3.9. ModeInit </H4>
+
+<p>Define a function to initialise a new video mode.  This function isn't
+mandatory, but is often useful.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
+{
+    /*
+     * Program a video mode.  If using the vgahw module,
+     * vgaHWInit and vgaRestore will typically be called here.
+     * Once up to the point where there can't be a failure
+     * set pScrn-&gt;vtSema to TRUE.
+     */
+    ...
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="98"></A>20.3.10. ScreenInit </H4>
+
+<p>Define the <code>ScreenInit()</code> function.  This is called
+at the start of each server generation, and should fill in as much
+of the <code>ScreenRec</code> as possible as well as any other
+data that is initialised once per generation.  It should initialise
+the framebuffer layers it is using, and initialise the initial video
+mode.</p>
+<p>This function is mandatory.</p>
+<p>NOTE: The <code>ScreenRec</code> (<code>pScreen</code>) is
+passed to this driver, but it and the
+<code>ScrnInfoRecs</code> are not yet hooked into each
+other.  This means that in this function, and functions it
+calls, one cannot be found from the other.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+{
+    /* Get the ScrnInfoRec */
+    pScrn = xf86Screens[pScreen-&gt;myNum];
+
+    /*
+     * If using the vgahw module, its data structures and related
+     * things are typically initialised/mapped here.
+     */
+
+    /* Save the current video state */
+    ZZZSave(pScrn);
+
+    /* Initialise the first mode */
+    ZZZModeInit(pScrn, pScrn-&gt;currentMode);
+
+    /* Set the viewport if supported */
+
+    ZZZAdjustFrame(scrnIndex, pScrn-&gt;frameX0, pScrn-&gt;frameY0, 0);
+
+    /*
+     * Setup the screen's visuals, and initialise the framebuffer
+     * code.
+     */
+
+    /* Reset the visual list */
+    miClearVisualTypes();
+
+    /*
+     * Setup the visuals supported.  This driver only supports
+     * TrueColor for bpp &gt; 8, so the default set of visuals isn't
+     * acceptable.  To deal with this, call miSetVisualTypes with
+     * the appropriate visual mask.
+     */
+
+    if (pScrn-&gt;bitsPerPixel &gt; 8) {
+        if (!miSetVisualTypes(pScrn-&gt;depth, TrueColorMask,
+                              pScrn-&gt;rgbBits, pScrn-&gt;defaultVisual))
+            return FALSE;
+    } else {
+        if (!miSetVisualTypes(pScrn-&gt;depth,
+                              miGetDefaultVisualMask(pScrn-&gt;depth),
+                              pScrn-&gt;rgbBits, pScrn-&gt;defaultVisual))
+            return FALSE;
+    }
+
+    /*
+     * Initialise the framebuffer.
+     */
+
+    switch (pScrn-&gt;bitsPerPixel) {
+    case 1:
+        ret = xf1bppScreenInit(pScreen, FbBase,
+                               pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                               pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                               pScrn-&gt;displayWidth);
+        break;
+    case 4:
+        ret = xf4bppScreenInit(pScreen, FbBase,
+                               pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                               pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                               pScrn-&gt;displayWidth);
+        break;
+    case 8:
+        ret = cfbScreenInit(pScreen, FbBase,
+                            pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                            pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                            pScrn-&gt;displayWidth);
+        break;
+    case 16:
+        ret = cfb16ScreenInit(pScreen, FbBase,
+                              pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                              pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                              pScrn-&gt;displayWidth);
+        break;
+    case 24:
+        ret = cfb24ScreenInit(pScreen, FbBase,
+                              pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                              pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                              pScrn-&gt;displayWidth);
+        break;
+    case 32:
+        ret = cfb32ScreenInit(pScreen, FbBase,
+                              pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                              pScrn-&gt;xDpi, pScrn-&gt;yDpi,
+                              pScrn-&gt;displayWidth);
+        break;
+    default:
+        print a message about an internal error;
+        ret = FALSE;
+        break;
+    }
+
+    if (!ret)
+        return FALSE;
+
+    /* Override the default mask/offset settings */
+    if (pScrn-&gt;bitsPerPixel &gt; 8) {
+        for (i = 0, visual = pScreen-&gt;visuals;
+             i &lt; pScreen-&gt;numVisuals; i++, visual++) {
+            if ((visual-&gt;class | DynamicClass) == DirectColor) {
+                visual-&gt;offsetRed = pScrn-&gt;offset.red;
+                visual-&gt;offsetGreen = pScrn-&gt;offset.green;
+                visual-&gt;offsetBlue = pScrn-&gt;offset.blue;
+                visual-&gt;redMask = pScrn-&gt;mask.red;
+                visual-&gt;greenMask = pScrn-&gt;mask.green;
+                visual-&gt;blueMask = pScrn-&gt;mask.blue;
+            }
+        }
+    }
+
+    /*
+     * If banking is needed, initialise an miBankInfoRec (defined in
+     * "mibank.h"), and call miInitializeBanking().
+     */
+    if (!miInitializeBanking(pScreen, pScrn-&gt;virtualX, pScrn-&gt;virtualY,
+                                     pScrn-&gt;displayWidth, pBankInfo))
+        return FALSE;
+
+    /*
+     * If backing store is to be supported (as is usually the case),
+     * initialise it.
+     */
+    miInitializeBackingStore(pScreen);
+
+    /*
+     * Set initial black &amp; white colourmap indices.
+     */
+    xf86SetBlackWhitePixels(pScreen);
+
+    /*
+     * Install colourmap functions.  If using the vgahw module,
+     * vgaHandleColormaps would usually be called here.
+     */
+
+    ...
+
+    /*
+     * Initialise cursor functions.  This example is for the mi
+     * software cursor.
+     */
+    miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
+
+    /* Initialise the default colourmap */
+    switch (pScrn-&gt;depth) {
+    case 1:
+        if (!xf1bppCreateDefColormap(pScreen))
+            return FALSE;
+        break;
+    case 4:
+        if (!xf4bppCreateDefColormap(pScreen))
+            return FALSE;
+        break;
+    default:
+        if (!cfbCreateDefColormap(pScreen))
+            return FALSE;
+        break;
+    }
+
+    /*
+     * Wrap the CloseScreen vector and set SaveScreen.
+     */
+    ZZZPTR(pScrn)-&gt;CloseScreen = pScreen-&gt;CloseScreen;
+    pScreen-&gt;CloseScreen = ZZZCloseScreen;
+    pScreen-&gt;SaveScreen = ZZZSaveScreen;
+
+    /* Report any unused options (only for the first generation) */
+    if (serverGeneration == 1) {
+        xf86ShowUnusedOptions(pScrn-&gt;scrnIndex, pScrn-&gt;options);
+    }
+
+    /* Done */
+    return TRUE;
+}
+    
+</pre>
+<hr>
+</p>
+
+
+<H4><A NAME="99"></A>20.3.11. SwitchMode </H4>
+
+<p>Define the <code>SwitchMode()</code> function if mode switching
+is supported by the driver.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+{
+    return ZZZModeInit(xf86Screens[scrnIndex], mode);
+}
+    
+</pre>
+<hr>
+</p>
+
+
+<H4><A NAME="100"></A>20.3.12. AdjustFrame </H4>
+
+<p>Define the <code>AdjustFrame()</code> function if the driver
+supports this.</p>
+<p>
+<hr>
+<pre>
+static void
+ZZZAdjustFrame(int scrnIndex, int x, int y, int flags)
+{
+    /* Adjust the viewport */
+}
+    
+</pre>
+<hr>
+</p>
+
+
+<H4><A NAME="101"></A>20.3.13. EnterVT, LeaveVT </H4>
+
+<p>Define the <code>EnterVT()</code> and <code>LeaveVT()</code>
+functions.</p>
+<p>These functions are mandatory.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZEnterVT(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    return ZZZModeInit(pScrn, pScrn-&gt;currentMode);
+}
+
+static void
+ZZZLeaveVT(int scrnIndex, int flags)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ZZZRestore(pScrn);
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="102"></A>20.3.14. CloseScreen </H4>
+
+<p>Define the <code>CloseScreen()</code> function:</p>
+<p>This function is mandatory.  Note that it unwraps the previously
+wrapped <code>pScreen-&gt;CloseScreen</code>, and finishes by
+calling it.</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZCloseScreen(int scrnIndex, ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    if (pScrn-&gt;vtSema) {
+        ZZZRestore(pScrn);
+        ZZZUnmapMem(pScrn);
+    }
+    pScrn-&gt;vtSema = FALSE;
+    pScreen-&gt;CloseScreen = ZZZPTR(pScrn)-&gt;CloseScreen;
+    return (*pScreen-&gt;CloseScreen)(scrnIndex, pScreen);
+}
+    
+</pre>
+<hr>
+</p>
+
+<H4><A NAME="103"></A>20.3.15. SaveScreen </H4>
+
+<p>Define the <code>SaveScreen()</code> function (the screen
+blanking function).  When using the vgahw module, this will typically
+be:</p>
+<p>
+<hr>
+<pre>
+static Bool
+ZZZSaveScreen(ScreenPtr pScreen, int mode)
+{
+    return vgaHWSaveScreen(pScreen, mode);
+}
+    
+</pre>
+<hr>
+</p>
+<p>This function is mandatory.  Before modifying any hardware register
+directly this function needs to make sure that the Xserver is active
+by checking if <code>pScrn</code> is non-NULL and for
+<code>pScrn-&gt;vtSema == TRUE</code>.</p>
+
+<H4><A NAME="104"></A>20.3.16. FreeScreen </H4>
+
+<p>Define the <code>FreeScreen()</code> function.  This function
+is optional.  It should be defined if the <code>ScrnInfoRec</code>
+<code>driverPrivate</code> field is used so that it can be freed
+when a screen is deleted by the common layer for reasons possibly
+beyond the driver's control.  This function is not used in during
+normal (error free) operation.  The per-generation data is freed by
+the <code>CloseScreen()</code> function.</p>
+<p>
+<hr>
+<pre>
+static void
+ZZZFreeScreen(int scrnIndex, int flags)
+{
+    /*
+     * If the vgahw module is used vgaHWFreeHWRec() would be called
+     * here.
+     */
+    ZZZFreeRec(xf86Screens[scrnIndex]);
+}
+    
+</pre>
+<hr>
+</p>
+
+
+ <HR NOSHADE>
+<A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+ <b>:</b> <EM>Some notes about writing a driver</EM><BR>
+<b>Previous:</b> <A HREF="DESIGN19.html"><EM>The vgahw module </EM></A><BR>
+<b>Next:</b> <A HREF="DESIGN.html"><EM>XFree86&reg; server 4.x Design (DRAFT) </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728771" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

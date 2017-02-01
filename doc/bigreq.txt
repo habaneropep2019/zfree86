@@ -1,0 +1,330 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		   1mBig Requests Extension0m
+
+
+
+			Version 2.0
+		   X Consortium Standard
+		 X Version 11, Release 6.4
+
+
+
+
+
+
+		       Bob Scheifler
+		     X Consortium, Inc.
+
+
+
+
+
+
+
+
+
+Copyright © 1993, 1994 X Consortium
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documenta-
+tion files (the ``Software''), to deal in the Software with-
+out restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to
+whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall
+be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PUR-
+POSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSOR-
+TIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+
+
+
+
+
+
+
+
+
+
+
+
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Con-
+sortium shall not be used in advertising or otherwise to
+promote the sale, use or other dealings in this Software
+without prior written authorization from the X Consortium.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1m1.  Overview0m
+
+This extension enables the use of protocol requests that
+exceed 262140 bytes in length.
+
+The core protocol restricts the maximum length of a protocol
+request to 262140 bytes, in that it uses a 16-bit length
+field specifying the number of 4-byte units in the request.
+This is a problem in the core protocol when joining large
+numbers of lines (4mPolyLine24m) or arcs (4mPolyArc24m), since these
+requests cannot be broken up into smaller requests without
+disturbing the rendering of the join points.  It is also
+much more of a problem for certain protocol extensions that
+need to send long data lists in output commands.
+
+This extension defines a mechanism for extending the length
+field beyond 16 bits.  If the normal 16-bit length field of
+the protocol request is zero, then an additional 32-bit
+field containing the actual length (in 4-byte units) is
+inserted into the request, immediately following the 16-bit
+length field.
+
+For example, a normal 4mPolyLine24m encoding is:
+
+
+4mPolyLine0m
+  1  65			 opcode
+  1			 coordinate-mode
+     0	       Origin
+     1	       Previous
+  2  3+n		 request length
+  4  DRAWABLE		 drawable
+  4  GCONTEXT		 gc
+  4n LISTofPOINT	 points
+
+
+An extended-length 4mPolyLine24m encoding is:
+
+
+4mPolyLine0m
+  1  65			 opcode
+  1			 coordinate-mode
+     0	       Origin
+     1	       Previous
+  2  0			 extended length flag
+  4  4+n		 request length
+  4  DRAWABLE		 drawable
+  4  GCONTEXT		 gc
+  4n LISTofPOINT	 points
+
+
+Extended-length protocol encodings, once enabled, can be
+used on all protocol requests, including all extensions.
+
+
+
+
+			      1m10m
+
+
+
+
+
+		   Big Requests Extension
+
+
+1m2.  Requests0m
+
+4mBigReqEnable0m
+
+   =>
+
+     4mmaximum-request-length24m: CARD32
+
+     This request enables extended-length protocol requests
+     for the requesting client.	 It also returns the maximum
+     length of a request, in 4-byte units, that can be used
+     in extended-length protocol requests.  This value will
+     always be greater than the maximum-request-length
+     returned in the connection setup information.
+
+1m3.  Events and Errors0m
+
+No new events or errors are defined by this extension.
+
+1m4.  Encoding0m
+
+Please refer to the X11 Protocol Encoding document as this
+document uses conventions established there.
+
+The name of this extension is ``BIG-REQUESTS''.
+
+
+
+4mBigReqEnable0m
+  1  CARD8		 opcode
+  1  0			 bigreq opcode
+  2  1			 request length
+
+
+ =>
+  1  1			 Reply
+  1			 unused
+  2  CARD16		 sequence number
+  4  0			 length
+  4  CARD32		 maximum-request-length
+  20			 unused
+
+
+1m5.  C language binding0m
+
+It is desirable for core Xlib, and other extensions, to use
+this extension internally when necessary.  It is also desir-
+able to make the use of this extension as transparent as
+possible to the X client.  For example, if enabling of the
+extension were delayed until the first time it was needed,
+an application that used 4mXNextRequest24m to determine the
+sequence number of a request would no longer get the correct
+sequence number.  As such, 4mXOpenDisplay24m will determine if
+the extension is supported by the server and, if it is,
+
+
+
+			      1m20m
+
+
+
+
+
+		   Big Requests Extension
+
+
+enable extended-length encodings.
+
+The core Xlib functions 4mXDrawLines24m, 4mXDrawArcs24m, 4mXFillPolygon24m,
+4mXChangeProperty24m, 4mXSetClipRectangles24m, and 4mXSetRegion24m are
+required to use extended-length encodings when necessary, if
+supported by the server.  Use of extended-length encodings
+in other core Xlib functions (4mXDrawPoints24m, 4mXDrawRectangles24m,
+4mXDrawSegments24m, 4mXFillArcs24m, 4mXFillRectangles24m, 4mXPutImage24m) is
+permitted but not required; an Xlib implementation may
+choose to split the data across multiple smaller requests
+instead.
+
+To permit clients to know what the maximum-request-length
+for extended-length encodings is, the following function is
+added to Xlib:
+
+long
+XExtendedMaxRequestSize (display)
+     Display   *display;
+
+     Returns zero (0) if the specified display does not sup-
+     port this extension, otherwise returns the maximum-
+     request-length (in 4-byte units) supported by the
+     server through the extended-length encoding.
+
+1m6.  Acknowledgements0m
+
+Clive Feather (IXI) originated the extended-length encoding
+used in this extension proposal.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			      1m30m
+
+

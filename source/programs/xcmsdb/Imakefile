@@ -1,0 +1,8 @@
+XCOMM $Free86$
+SRCS = xcmsdb.c loadData.c
+OBJS = xcmsdb.o loadData.o
+DEPLIBS = $(DEPXONLYLIB)
+LOCAL_LIBRARIES = $(XONLYLIB)
+
+ComplexProgramTarget(xcmsdb)
+

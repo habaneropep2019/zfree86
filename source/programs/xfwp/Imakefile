@@ -1,0 +1,17 @@
+XCOMM $XFree86: xc/programs/xfwp/Imakefile,v 1.7 2006/01/09 15:01:12 dawes Exp $
+
+         DEPLIBS = $(DEPICELIB)
+ LOCAL_LIBRARIES = $(ICELIB)
+
+#if HasBSD44Sockets
+    SOCK_DEFINES = -DBSD44SOCKETS
+#endif
+
+
+           SRCS = xfwp.c misc.c pm.c transport.c io.c
+           OBJS = xfwp.o misc.o pm.o transport.o io.o
+
+SpecialCObjectRule(transport,$(ICONFIGFILES),$(SOCK_DEFINES))
+
+ComplexProgramTarget(xfwp)
+

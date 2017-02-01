@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Defining New Layouts </TITLE>
+</HEAD>
+<BODY BGCOLOR="#efefef" TEXT="black" LINK="blue" VLINK="#551A8B" ALINK="red">
+
+<A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+ <b>:</b> <EM>Defining New Layouts </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Enhancing3.html"><EM>Enhancing XKB Configuration </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+
+
+<HR NOSHADE>
+  <H2><A NAME="5"></A>4. Defining New Layouts </H2>
+<p>See <A href="http://www.tsu.ru/~pascal/en/xkb/internals.html">Some Words  About XKB internals</A> for explanation of used xkb terms and problems
+addressed by XKB extension.</p>
+<p>See <A href="http://www.tsu.ru/~pascal/en/xkb/gram-common.html">Common  notes about XKB configuration files language</A> for more precise explanation of 
+syntax of xkb configuration files.</p>
+
+<H3><A NAME="6"></A>4.1. Predefined XKB Symbol Sets </H3>
+<p>If you are about to define some European symbol map extension, you might
+want to use on of four predefined latin alphabet layouts.</p>
+<p>Okay, let's assume you want extend an existing keymap and you want to override
+a few keys. Let's take a simple U.K. keyboard as an example (defined in 
+<code>pc/gb</code>):</p>
+<p>
+<blockquote><code>
+<pre>
+partial default alphanumeric_keys
+xkb_symbols "basic" {
+  include "pc/latin"
+
+  name[Group1]="Great Britain";
+
+  key &lt;AE02&gt;  { [         2,   quotedbl,  twosuperior,    oneeighth ] };
+  key &lt;AE03&gt;  { [         3,   sterling, threesuperior,    sterling ] };
+  key &lt;AC11&gt;  { [apostrophe,         at, dead_circumflex, dead_caron] };
+  key &lt;TLDE&gt;  { [     grave,    notsign,          bar,          bar ] };
+  key &lt;BKSL&gt;  { [numbersign, asciitilde,   dead_grave,   dead_breve ] };
+  key &lt;RALT&gt;  { type[Group1]="TWO_LEVEL",
+                [ ISO_Level3_Shift, Multi_key ]   };
+
+  modifier_map Mod5   { &lt;RALT&gt; };
+};
+</pre>
+</code></blockquote>
+</p>
+<p>It defines a new layout in <code>basic</code> variant as an extension of common 
+latin alphabet layout. The layout (symbol set) name is set to "Great Britain".
+Then there are redefinitions of a few keycodes and a modifiers binding. As you 
+can see the number of shift levels is the same for <code>&lt;AE02&gt;</code>, 
+<code>&lt;AE03&gt;</code>, <code>&lt;AC11&gt;</code>, <code>&lt;TLDE&gt;</code> and 
+<code>&lt;BKSL&gt;</code> keys but it differs from number of shift levels of 
+<code>&lt;RALT&gt;</code>.</p>
+<p>Note that the <code>&lt;RALT&gt;</code> key itself is a binding key for Mod5 and 
+that it
+serves like a shift modifier for LevelThree, together with Shift
+as a multi-key. It is a good habit to respect this rule in a new similar
+layout.</p>
+<p>Okay, you could now define more variants of your new layout besides
+<code>basic</code> simply by including (augmenting/overriding/...) the basic 
+definition and altering what may be needed.</p>
+
+<H3><A NAME="7"></A>4.2. Key Types<A NAME="keytypes"></A> 
+</H3>
+
+<p>The differences in the number of columns (shift levels) are caused by 
+a different types of keys (see the types definition in section basics).  Most 
+keycodes have implicitly set the keytype in the included 
+<code>"pc/latin"</code> file to 
+<code>"FOUR_LEVEL_ALPHABETIC"</code>. The only exception is 
+<code>&lt;RALT&gt;</code> keycode which is explicitly set 
+<code>"TWO_LEVEL"</code> keytype.</p>
+<p>All those names refer to pre-defined shift level schemes. Usually you can
+choose a suitable shift level scheme from <code>default</code> types scheme list
+in proper xkb component's subdirectory. </p>
+<p>The most used schemes are:
+<dl>
+<dt><b>ONE_LEVEL</b><dd><p>The key does not depend on any modifiers. The symbol from first level
+is always chosen.</p>
+
+<dt><b>TWO_LEVEL</b><dd><p>The key uses a modifier Shift and may have two possible values.
+The second level may be chosen by Shift modifier. If Lock modifier
+(usually Caps-lock) applies the symbol is further processed using
+system-specific capitalization rules. If both Shift+Lock modifier apply the
+symbol from the second level is taken and capitalization rules are applied
+(and usually have no effect).</p>
+
+<dt><b>ALPHABETIC</b><dd><p>The key uses modifiers Shift and Lock. It may have two possible
+values. The second level may be chosen by Shift modifier. When Lock
+modifier applies, the symbol from the first level is taken and further
+processed using system-specific capitalization rules. If both Shift+Lock
+modifier apply the symbol from the first level is taken and no
+capitalization rules applied. This is often called shift-cancels-caps
+behaviour.</p>
+
+<dt><b>THREE_LEVEL</b><dd><p>Is the same as TWO_LEVEL but it considers an extra modifier -
+LevelThree which can be used to gain the symbol value from the third
+level. If both Shift+LevelThree modifiers apply the value from the third
+level is also taken. As in TWO_LEVEL, the Lock modifier doesn't influence
+the resulting level. Only Shift and LevelThree are taken into that
+consideration. If the Lock modifier is active capitalization rules
+are applied on the resulting symbol.</p>
+
+<dt><b>FOUR_LEVEL</b><dd><p>Is the same as THREE_LEVEL but unlike LEVEL_THREE if both Shift+LevelThree
+modifiers apply the symbol is taken from the fourth level.</p>
+
+<dt><b>FOUR_LEVEL_ALPHABETIC</b><dd><p>Is similar to FOUR_LEVEL but also defines shift-cancels-caps behaviour
+as in ALPHABETIC. If Lock+LevelThree apply the symbol from the
+third level is taken and the capitalization rules are applied.
+If Lock+Shift+LevelThree apply the symbol from the third level is taken
+and no capitalization rules are applied.</p>
+
+<dt><b>KEYPAD</b><dd><p>As the name suggest this scheme is primarily used for numeric keypads.
+The scheme considers two modifiers - Shift and NumLock. If none
+of modifiers applies the symbol from the first level is taken. If either 
+Shift or NumLock modifiers apply the symbol from the second level is taken.
+If both Shift+NumLock modifiers apply the symbol from the first level
+is taken. Again, shift-cancels-caps variant.</p>
+
+<dt><b>FOUR_LEVEL_KEYPAD</b><dd><p>Is similar to KEYPAD scheme but considers also LevelThree modifier.
+If LevelThree modifier applies the symbol from the third level is taken.
+If Shift+LevelThree or NumLock+LevelThree apply the symbol from the fourth
+level is taken. If all Shift+NumLock+LevelThree modifiers apply the symbol
+from the third level is taken. This also, shift-cancels-caps variant.</p>
+</dl>
+</p>
+<p>Besides that, there are several schemes for special purposes:
+<dl>
+<dt><b>PC_BREAK</b><dd><p>It is similar to TWO_LEVEL scheme but it considers the Control
+modifier rather than Shift. That means, the symbol from the second level
+is chosen by Control rather than by Shift.</p>
+<dt><b>PC_SYSRQ</b><dd><p>It is similar to TWO_LEVEL scheme but it considers the Alt modifier rather 
+than Shift. That means, the symbol from the second level
+is chosen by Alt rather than by Shift.</p>
+<dt><b>CTRL+ALT</b><dd><p>The key uses modifiers Alt and Control. It may have two possible
+values. If only one modifier (Alt or Control) applies the symbol
+from the first level is chosen. Only if both Alt+Control modifiers apply
+the symbol from the second level is chosen.</p>
+<dt><b>SHIFT+ALT</b><dd><p>The key uses modifiers Shift and Alt. It may have two possible values.
+If only one modifier (Alt or Shift) applies the symbol
+from the first level is chosen. Only if both Alt+Shift modifiers apply
+the symbol from the second level is chosen.</p>
+</dl>
+</p>
+<p>If needed, special <code>caps</code> schemes may be used. They redefine the 
+standard behaviour of all <code>*ALPHABETIC</code> types. The layouts (maps of 
+symbols) with keys defined in respective types then automatically change
+their behaviour accordingly. Possible redefinitions are:
+<ul>
+<li>internal</li>
+<li>internal_nocancel</li>
+<li>shift</li>
+<li>shift_nocancel</li>
+</ul>
+
+None of these schemes should be used directly. They are defined merely
+for <code>'caps:'</code> xkb options (used to globally change the layouts 
+behaviour).</p>
+<p>Don't alter any of existing key types. If you need a different behaviour
+create a new one.</p>
+
+<H4><A NAME="8"></A>4.2.1. More On Definitions Of Types </H4>
+<p>When the XKB software deals with a separate type description it gets
+a complete list of modifiers that should be taken into account from the 
+<code>'modifiers=&lt;list of modifiers&gt;'</code> list and expects that a set
+of <code>'map[&lt;combination of modifiers&gt;]=&lt;list of modifiers&gt;'</code>
+instructions that contain the mapping for each combination of modifiers 
+mentioned in that list. Modifiers that are not explicitly listed are NOT taken 
+into account
+when the resulting shift level is computed.
+If some combination is omitted the program (subroutine) should choose the first
+level for this combination (a quite reasonable behavior).</p>
+<p>Lets consider an example with two modifiers <code>ModOne</code> and <code>ModTwo</code>:
+<blockquote><code>
+<pre>
+type "..." {
+    modifiers = ModOne+ModTwo;
+    map[None] = Level1;
+    map[ModOne] = Level2;
+};
+</pre>
+</code></blockquote>
+
+In this case the map statements for <code>ModTwo</code> only and 
+<code>ModOne+ModTwo</code> are omitted.  It means that if the <code>ModTwo</code> is 
+active the subroutine can't found explicit mapping for such combination an will 
+use the <em>default level</em> i.e. Level1.</p>
+<p>But in the case the type described as:
+<blockquote><code>
+<pre>
+type "..." {
+    modifiers = ModOne;
+    map[None] = Level1;
+    map[ModOne] = Level2;
+};
+</pre>
+</code></blockquote>
+
+the ModTwo will not be taken into account and the resulting level depends on 
+the ModOne state only. That means, ModTwo alone produces the Level1 but the 
+combination ModOne+ModTwo produces the Level2 as well as ModOne alone.</p>
+<p>What does it mean if the second modifier is the Lock? It means that in
+the first case (the Lock itself is included in the list of modifiers but 
+combinations with this modifier aren't mentioned in the map statements) 
+the internal capitalization rules will be applied to the symbol from the first 
+level. But in the second case the capitalization will be applied to the symbol
+chosen accordingly to he first modifier - and this can be the symbol from the
+first as well as from the second level.</p>
+<p>Usually, all modifiers introduced in <code>'modifiers=&lt;list of modifiers&gt;'</code> list are used for shift level calculation and then 
+discarded. Sometimes this is not desirable. If you want to use a modifier
+for shift level calculation but you don't want to discard it, you may
+list in '<code>preserve[&lt;combination of modifiers&gt;]=&lt;list of modifiers&gt;'</code>. That means, for a given combination all listed modifiers
+will be preserved. If the Lock modifier is preserved then the resulting
+symbol is passed to internal capitalization routine regardless whether
+it has been used for a shift level calculation or not.</p>
+<p>Any key type description can use both real and virtual modifiers. Since real 
+modifiers always have standard names it is not necessary to explicitly declare  
+them. Virtual modifiers can have arbitrary names and can be declared (prior
+using them) directly in key type definition:
+<blockquote><code>
+<pre>
+virtual_modifiers &lt;comma-separated list of modifiers&gt;  ;
+</pre>
+</code></blockquote>
+
+as seen in for example <code>basic</code>, <code>pc</code> or <code>mousekeys</code> key 
+type definitions.</p>
+
+<H3><A NAME="9"></A>4.3. Rules </H3>
+<p>Once you are finished with your symbol map you need to add it
+to rules file. The rules file describes how all the
+five basic keycodes, types, compat, symbols and geometry components
+should be composed to give a sensible resulting xkb configuration.</p>
+<p>The main advantage of rules over formerly used keymaps is a possibility
+to simply parameterize (once) fixed patterns of configurations and thus
+to elegantly allow substitutions of various local configurations
+into predefined templates.</p>
+<p>A pattern in a rules file (often located in 
+<code>/usr/lib/X11/xkb/rules</code>) can be parameterized with four other arguments:
+<code>Model</code>, <code>Layout</code>, <code>Variant</code> and <code>Options</code>.
+For most cases parameters <code>model</code> and <code>layout</code> should
+be sufficient for choosing a functional keyboard mapping.</p>
+<p>The rules file itself is composed of pattern lines and lines with rules. The pattern line starts with an exclamation mark ('<code>!</code>') 
+and describes how will the xkb interpret the following lines (rules). A sample 
+rules file looks like this:
+<blockquote><code>
+<pre>
+! model 	                =	keycodes
+  macintosh_old	                =	macintosh
+  ...
+  *		                =	xfree86
+  
+! model		                =	symbols
+  hp		                =	+inet(%m)
+  microsoftpro	                =	+inet(%m)
+  geniuscomfy	                =	+inet(%m)
+
+! model	    layout[1]	        =	symbols
+  macintosh	us	        =	macintosh/us%(v[1])
+  *             *               =       pc/pc(%m)+pc/%l[1]%(v[1])
+  
+! model     layout[2]	        =	symbols
+  macintosh     us              =	+macintosh/us[2]%(v[2]):2
+  *		*               =	+pc/%l[2]%(v[2]):2
+  
+! option			=	types
+  caps:internal			=	+caps(internal)
+  caps:internal_nocancel	=	+caps(internal_nocancel)
+</pre>
+</code></blockquote>
+</p>
+<p>Each rule defines what certain combination of values on the left side
+of equal sign ('<code>=</code>') results in. For example a (keyboard) model 
+<code>macintosh_old</code> instructs xkb to take definitions of keycodes
+from file <code>keycodes/macintosh</code> while the rest of models
+(represented by a wild card '<code>*</code>') instructs it to take them from
+file <code>keycodes/xfree86</code>. The wild card represents all possible
+values on the left side which were not found in any of the previous rules.
+The more specialized (more complete) rules have higher precedence than general 
+ones, i.e. the more general rules supply reasonable default values.</p>
+<p>As you can see some lines contain substitution parameters - the parameters 
+preceded by the percent sign ('<code>%</code>'). The first alphabetical character 
+after the percent sign expands to the value which has been found on the left 
+side. For example <code>+%l%(v)</code> expands into <code>+cz(bksl)</code> if the 
+respective values on the left side were <code>cz</code> layout in its <code>bksl</code> 
+variant. More, if the layout resp. variant  parameter is followed by a pair of 
+brackets ('<code>[</code>', '<code>]</code>') it means that xkb should <em>place the 
+layout resp. variant into specified xkb group</em>. If the brackets are omitted
+the first group is the default value.</p>
+<p>So the second block of rules enhances symbol definitions for some particular 
+keyboard models with extra keys (for internet, multimedia, ...) . Other models 
+are left intact. Similarly, the last block overrides some key type definitions,
+so the common global behaviour ''shift cancels caps'' or ''shift doesn't cancel 
+caps'' can be selected. The rest of rules produces special symbols for each 
+variant <code>us</code> layout of <code>macintosh</code> keyboard and standard pc 
+symbols in appropriate variants as a default. </p>
+
+
+
+<H3><A NAME="10"></A>4.4. Descriptive Files of Rules </H3>
+<p>Now you just need to add a detailed description to <code>&lt;rules&gt;.xml</code> 
+description file so the other users (and external programs which often parse 
+this file) know what is your work about.</p>
+
+
+
+<H4><A NAME="11"></A>4.4.1. Old Descriptive Files </H4>
+<p>The formerly used descriptive files were named <code>&lt;rules&gt;.lst</code>
+Its structure is very simple and quite self descriptive but such simplicity
+had also some cavities, for example there was no way how to describe local 
+variants of layouts and there were problems with the localization of 
+descriptions. To preserve compatibility with some older programs,
+new XML descriptive files can be converted to old format '.lst'.</p>
+<p>For each parameter of rules file should be described its meaning. For the rules 
+file described above the <code>.lst</code> file could look like:
+<blockquote><code>
+<pre>
+! model
+  pc104		Generic 104-key PC
+  microsoft	Microsoft Natural
+  pc98		PC-98xx Series
+  macintosh     Original Macintosh
+  ...
+
+! layout
+  us		U.S. English
+  cz		Czech
+  de		German
+  ...
+
+! option
+  caps:internal		 uses internal capitalization. Shift cancels Caps
+  caps:internal_nocancel uses internal capitalization. Shift doesn't cancel Caps  
+  
+</pre>
+</code></blockquote>
+</p>
+<p>And that should be it. Enjoy creating your own xkb mapping.</p>
+
+ <HR NOSHADE>
+<A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+ <b>:</b> <EM>Defining New Layouts </EM><BR>
+<b>Previous:</b> <A HREF="XKB-Enhancing3.html"><EM>Enhancing XKB Configuration </EM></A><BR>
+<b>Next:</b> <A HREF="XKB-Enhancing.html"><EM>How to further enhance XKB configuration </EM></A>
+
+
+
+</BODY>
+</HTML>
+<!-- text below generated by server. PLEASE REMOVE --><!-- Counter/Statistics data collection code --><script language="JavaScript" src="http://l.yimg.com/d/lib/smb/js/hosting/cp/js_source/whv2_001.js"></script><script language="javascript">geovisit();</script><noscript><img src="http://visit.webhosting.yahoo.com/visit.gif?us1481728791" alt="setstats" border="0" width="1" height="1"></noscript><script type="text/javascript">(function (d, w) {var x = d.getElementsByTagName('SCRIPT')[0];var f = function () {var s = d.createElement('SCRIPT');s.type = 'text/javascript';s.async = true;s.src = "//np.lexity.com/embed/YW/b1fe8415ea3afdda4a8ad34ee7cf1614?id=41958ae7bc0f";x.parentNode.insertBefore(s, x);};w.attachEvent ? w.attachEvent('onload',f) :w.addEventListener('load',f,false);}(document, window));</script>

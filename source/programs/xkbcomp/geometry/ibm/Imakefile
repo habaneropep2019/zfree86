@@ -1,0 +1,7 @@
+XCOMM $XFree86: xc/programs/xkbcomp/geometry/ibm/Imakefile,v 1.2 2006/12/29 19:19:57 tsi Exp $
+
+    DATAFILES = thinkpad
+
+all::
+
+InstallMultiple($(DATAFILES),$(LIBDIR)/xkb/geometry/ibm)

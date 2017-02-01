@@ -1,0 +1,11 @@
+XCOMM $XFree86: xc/programs/xwininfo/Imakefile,v 1.6 2006/01/09 15:01:56 dawes Exp $
+
+        DEPLIBS = $(DEPXMUULIB) $(DEPXLIB)
+LOCAL_LIBRARIES = $(XMUULIB) $(XLIB)
+           SRCS = xwininfo.c dsimple.c
+           OBJS = xwininfo.o dsimple.o
+
+LinkSourceFile(dsimple.c,../xlsfonts)
+LinkSourceFile(dsimple.h,../xlsfonts)
+
+ComplexProgramTarget(xwininfo)

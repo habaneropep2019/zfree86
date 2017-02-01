@@ -1,0 +1,16 @@
+XCOMM $XFree86: xc/lib/lbxutil/lbx_zlib/Imakefile,v 1.2 2005/10/14 15:16:07 tsi Exp $
+
+#include <Library.tmpl>
+
+SRCS = lbx_zlib.c lbx_zlib_io.c reqstats.c
+
+OBJS = lbx_zlib.o lbx_zlib_io.o reqstats.o
+
+INCLUDES = -I$(SERVERSRC)/include -I../../zlib
+
+SubdirLibraryRule($(OBJS))
+NormalLibraryObjectRule()
+NormalLintTarget($(SRCS))
+
+DependTarget()
+
